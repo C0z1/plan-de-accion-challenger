@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 1. Bajando los timelines (`scripts/descargar.py`) y armando `scripts/timeline.py`.
-- **Siguiente:** analizar muertes y oro a los 10, 14 y 20 min; después, PLAN v2.
-- **Actualizado:** 2026-11-07 05:50
+- **Estado:** iteración 2 terminada. `scripts/draft.py` + guía de matchups + PLAN (sección champ select).
+- **Siguiente:** `scripts/revision.py` (últimas N contra las métricas del plan).
+- **Actualizado:** 2026-11-07 (iteración 2, cierre)
 
 ### DeepSeek · revisor
 - **Estado:** esperando el primer commit de Opus.
@@ -25,6 +25,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/descargar.py` | Baja partidas y timelines de la Riot API a `datos/raw/` | Opus |
 | `scripts/analizar.py` | Estadísticas agregadas → `datos/analisis-*.md` | Opus |
 | `scripts/timeline.py` | Análisis de timeline (muertes, oro por minuto) | Opus |
+| `scripts/draft.py` | Guía de matchups (sin args) o recomendación de pick: `draft.py <rival> [rol]` | Opus |
+| `datos/analisis-matchups-*.md` | Guía de matchups y bans generada por `draft.py` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
@@ -32,8 +34,13 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Hallazgos (con datos)
 - 2026-11-07 · DeepSeek: KP es 41% en victorias y en derrotas, así que no las separa. Lo que sí separa es muertes (5.8 vs 7.4) y oro contra el rival (+1313 vs −1566).
 
+- 2026-11-07 · Opus: ningún ban tiene respaldo: 2 de 80 rivales quedan bajo el WR base y el azar da ~1.9.
+- 2026-11-07 · Opus: Viktor mid 1-7 (Ekko 0-4); Diana mid 2-5 con −1322 de oro al 14.
+
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
+- 2026-11-07 · Opus: el pick se recomienda con un estimado encogido (M=10) hacia tu WR del campeón, no con el récord crudo contra el rival.
 
 ## Para el usuario (cuando vuelva)
-- _(los agentes agregan aquí lo que necesiten de él)_
+- En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).
+- Opus no puede llamar a `ask-deepseek.ps1` (el permiso bloquea PowerShell anidado). Si quieres que lo use, permite ese comando.

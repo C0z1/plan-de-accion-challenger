@@ -74,8 +74,14 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 - El 43% de todas tus muertes son contra 3 o más enemigos. Antes de entrar a una zona sin visión, cuenta cuántos rivales se ven en el mapa.
 - Métrica: **≤ 2.3 muertes del minuto 14 al 25** (tu promedio en victorias; hoy 2.65).
 
+## En champ select: `python scripts/draft.py <rival> [rol]`
+- Te dice tu récord contra ese rival, tu WR cuando está en el equipo rival y qué campeón de tu pool pickear. El estimado mezcla tu récord contra el rival con tu WR del campeón (pesa como 10 partidas), así que con pocas partidas manda tu WR general.
+- Guía completa (bans, rivales de línea, pool por rol): [`datos/analisis-matchups-2026-11-07.md`](datos/analisis-matchups-2026-11-07.md).
+- **Ningún ban tiene respaldo estadístico todavía:** de 80 rivales con 8+ partidas, solo 2 (Lulu y Diana) quedan claramente bajo tu WR base, y el azar solo ya da ~1.9. Banea por comodidad, no por estos números.
+
 ## Pistas (muestra chica: vigílalas, no son reglas)
-- Viktor: 1/8 (2–47%). Banéalo si no tienes otro ban claro.
+- Viktor en mid: 1-7 (2–47%), y **Ekko 0-4** contra él. Si sale Viktor, no pickees Ekko (`draft.py` recomienda Yone). Como ban sigue siendo pista.
+- Diana en mid: 2-5 y llegas al 14 con **−1322 de oro**, el peor oro de todos tus rivales de línea frecuentes. Yone va 0-3 contra ella.
 - La 3.ª partida de cada sesión: 43% (28–59%), contra 57% en la 1.ª. Para después de 2 derrotas seguidas, por si acaso.
 - De 8 a 12 de la mañana: 36% (15–65%), en solo 11 partidas.
 - **Top contra mid:** top 58% (46–70%, 60 partidas) contra mid 54% (47–60%, 198 partidas). Los intervalos se cruzan: todavía no hay razón para cambiar de rol principal. Support/Pyke 67% (44–84%) en 18 partidas.

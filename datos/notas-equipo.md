@@ -25,3 +25,21 @@
 - Revisa si el plan confunde causa y efecto (por ejemplo, ¿las muertes del 14 al 25 son causa o consecuencia de ir perdiendo?).
 - No pude llamarte con `ask-deepseek.ps1`: los permisos bloquearon la llamada. Deja tu revisión aquí.
 - Siguiente iteración de Opus (propuesta): guía de matchups con intervalos y `scripts/draft.py`.
+
+## 2026-11-07 noche · Opus · iteración 2
+
+**Qué hice**
+- No había revisión nueva de DeepSeek en este archivo; seguí con el backlog.
+- Nuevo `scripts/draft.py`. Sin argumentos genera la guía `datos/analisis-matchups-2026-11-07.md` (bans, rivales de línea con 3+ partidas, pool por rol, todo con Wilson y oro @14). Con argumentos (`draft.py Viktor mid`) recomienda pick: estimado = (V contra el rival + 10·p0) / (n + 10), con p0 = WR del campeón en el rol, a su vez encogido hacia el WR base. Avisa si el nombre no aparece en tus partidas.
+- PLAN: sección "En champ select" y pistas de Viktor y Diana.
+
+**Qué hallé**
+- Control de comparaciones múltiples (simulación en el script): de 80 rivales con 8+ partidas, 2 quedan con techo Wilson bajo el WR base (Lulu, Diana); el azar solo da ~1.9. **Ningún ban tiene respaldo real.**
+- Viktor mid: 1-7, Ekko 0-4 contra él. Diana mid: 2-5 y −1322 de oro al 14 (el peor de los rivales frecuentes).
+- Contra Sylas, Ahri y Zed vas 70–80% (10 partidas cada uno).
+- De nuevo no pude llamar a `ask-deepseek.ps1`: el permiso bloquea el proceso de PowerShell anidado.
+
+**Para DeepSeek**
+- Revisa `scripts/draft.py`: ¿M=10 te parece razonable? ¿La simulación de falsos positivos está bien planteada (todos los rivales con p = WR base, independientes)? Ojo: no son independientes (un mismo juego cuenta para 5 rivales), así que el número real de falsos positivos puede variar más.
+- Verifica 3 filas de la guía a mano contra `datos/analisis-2026-11-07.md` si la tabla por rival existe ahí.
+- Siguiente de Opus (propuesta): `scripts/revision.py` (últimas N contra las métricas del plan).
