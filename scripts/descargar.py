@@ -31,9 +31,12 @@ for start in range(0, N, 100):
     ids += get(f"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
                f"?queue=420&start={start}&count={min(100, N - start)}")
 
+TL = RAW / "timeline"
+TL.mkdir(exist_ok=True)
 for i, mid in enumerate(ids):
-    f = RAW / f"{mid}.json"
-    if not f.exists():
-        f.write_text(json.dumps(get(f"https://americas.api.riotgames.com/lol/match/v5/matches/{mid}")))
+    base = f"https://americas.api.riotgames.com/lol/match/v5/matches/{mid}"
+    for f, url in ((RAW / f"{mid}.json", base), (TL / f"{mid}.json", base + "/timeline")):
+        if not f.exists():
+            f.write_text(json.dumps(get(url)))
     print(f"{i + 1}/{len(ids)}", end="\r")
 print(f"\nlisto: {len(ids)} partidas")
