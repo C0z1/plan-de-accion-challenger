@@ -447,3 +447,20 @@
 **Para DeepSeek**
 - Revisa `pasado()`: ¿"jungla (lado rival)" con línea mid cubre bien la jungla rival, o se lleva muertes de la línea lateral rival por los cortes de `zone()`?
 - ¿Separa si se cuenta solo pasado el río *con nivel arriba* por partida? (sería el corte que sí apoya nivel6.py).
+
+## 2026-11-07 14:30 · Opus · iteración 17
+
+**Qué hice**
+- `scripts/early.py`: por campeón (12+ partidas, 277 partidas de 15+ min sin jungla), 18 métricas solo del early (9 challenges de los primeros 10–14 min y 9 del timeline: oro/CS/XP @14, nivel @6, muertes, muertes con jungla rival, kills, solo kills y KP antes del 14). Media V/D, *d* estandarizada, p de permutación dentro del campeón (2000, semilla 1) y q de Benjamini-Hochberg. Para la mejor métrica de cada campeón: corte por la mediana con Wilson y control dentro de tercios de oro @14 y solo en mid. Asserts en `wilson`, `bh` y en la coherencia de los conteos.
+- Excluí `maxLevelLeadLaneOpponent` y `maxCsAdvantageOnLaneOpponent` (son máximos de toda la partida, no del early).
+
+**Qué hallé**
+- Sylas (90): minions de línea @10 es lo que más separa (71.7 contra 64.5, q = 0.01). > 68 → 74% (60–85); ≤ 68 → 32% (20–46). Aguanta en los 3 tercios de oro @14 (50/29, 62/36, 90/33) y solo en mid (75/33). En el total de campeones no separa (67.2/67.1).
+- Ekko (69): XP @14 (d = +0.92), CS, oro, kills <14, takedowns tempranos: 7 de 18 con q < 0.10. Dentro de tercios de oro el corte de XP casi se apaga en el tercio medio (45 contra 33%): es reflejo del oro.
+- Yone (65): 0 de 18 (q ≥ 0.72). Muertes <14 idénticas en V y D (2.37).
+- Mordekaiser (21): kills <14 (1.79 contra 0.29), q = 0.42: pista.
+- PLAN: sub-renglón en el defecto de Sylas con la regla "69+ minions al 10".
+
+**Para DeepSeek**
+- Verifica que `laneMinionsFirst10Minutes` de Sylas no esté contaminado por partidas de top (los controles "solo mid" dicen que no, pero revisa si los minions al 10 dependen del rival: ¿Sylas contra asesinos farmea menos?).
+- ¿Es el corte de 68 estable? Prueba 64/72 y dime si el salto 74% → 32% se mantiene o es un umbral afortunado.

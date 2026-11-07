@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** iteración 16 terminada. `revision.py`: nueva métrica de muertes <14 pasado el río (monitor, no separa V/D: 1.10 contra 1.05) y se quita la fila de `turretPlatesTaken` que seguía ahí.
-- **Siguiente:** early por campeón (qué separa V/D en Yone/Ekko/Morde con challenges), o revisar lo que deje DeepSeek de 4558ec2.
-- **Actualizado:** 2026-11-07 13:50 (iteración 16, cierre)
+- **Estado:** iteración 17 terminada. `scripts/early.py`: qué separa V/D en el early por campeón (18 métricas, permutación + BH). Sylas: minions @10 (74% contra 32%, aguanta a igual oro).
+- **Siguiente:** meter "minions @10 con Sylas" en `revision.py` como meta, o revisar lo que deje DeepSeek de 4558ec2/daf6d43.
+- **Actualizado:** 2026-11-07 14:30 (iteración 17, cierre)
 
 ### DeepSeek · revisor
 - **Estado:** revisé 94a8816+f4a3d62 (castigo/xp) y de85952+9477093 (placas + filtro 19:xx). Todos corren limpio y reproducen sus salidas. Hallazgo: el "vivo en tu línea separa" de placas.py NO aguanta con fotos fiables (≤15 s de un frame): 63 vs 48% → 54 vs 56%, y se invierte en 2 bandas; es artefacto de la foto gruesa.
@@ -45,6 +45,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-placas-*.md` | Salida de `placas.py` | Opus |
 | `scripts/nivel6.py` | Diferencia de nivel con tu rival 0–14: muertes/kills por 10 min (con y sin jungla rival), zona de la muerte (arriba contra igual), carrera al 2 y al 6 | Opus |
 | `datos/analisis-nivel-*.md` | Salida de `nivel6.py` | Opus |
+| `scripts/early.py` | Qué separa V/D en el early por campeón (challenges + timeline @14, permutación y q de BH, control a igual oro) | Opus |
+| `datos/analisis-early-*.md` | Salida de `early.py` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
@@ -89,6 +91,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: tu ward en los 90 s previos a morir no cambia la proporción de ganks (arriba 64% contra 67%); el timeline no trae la posición del ward.
 - 2026-11-07 · Opus: bootstrap por partida: ×1.31 (1.07–1.58), pasado el río ×1.89 (1.28–2.62) aguantan; pero en mid 1 arriba ×1.12 (0.85–1.44) y pasado el río ×1.43 (0.82–2.25). Es efecto de top/bot (×2.43).
 - 2026-11-07 · Opus: muertes <14 pasado el río por partida no separan V/D (1.10 contra 1.05; 0 → 51%, 1+ → 57%): el riesgo es cruzar con nivel arriba, no cruzar.
+- 2026-11-07 · Opus: Sylas con > 68 minions de línea al 10: 74% (60–85); ≤ 68: 32% (20–46), q = 0.01. Aguanta en cada tercio de oro @14 y solo en mid. En el total no separa (67.2 contra 67.1).
+- 2026-11-07 · Opus: Yone: ninguna de 18 métricas del early separa V/D (q ≥ 0.72). Ekko: XP/CS/oro @14 y kills <14 (q ≤ 0.03), casi todo reflejo del oro.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -108,6 +112,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: en el PLAN, las placas perdidas en tu línea pasan a "sin causa clara" (revisión de DeepSeek).
 - 2026-11-07 · Opus: la regla de "ventaja de nivel → gank" se acota a top/bot; en mid queda la general (no seguir al rival a su jungla).
 - 2026-11-07 · Opus: `revision.py` ya no muestra `turretPlatesTaken` (no son tus placas) y suma "muertes <14 pasado el río" como monitor sin meta.
+- 2026-11-07 · Opus: regla nueva para Sylas en el PLAN: no tradear ni roamear a costa de oleadas antes del 10 (meta 69+ minions al 10).
 
 ## Para el usuario (cuando vuelva)
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).
