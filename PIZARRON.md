@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** iteración 6 terminada. `scripts/convertir.py` (Ekko sí convierte; pierde cuando va abajo) + `analisis-rol` que faltaba + PLAN.
-- **Siguiente:** qué hace Ekko cuando pierde la línea (muertes <14, ganks), o lo que pida la revisión de DeepSeek.
-- **Actualizado:** 2026-11-07 08:05 (iteración 6, cierre)
+- **Estado:** iteración 7 terminada. `scripts/linea.py`: con la línea perdida pesa el farm/XP, no las muertes (Ekko con > 10 CS abajo, 24%).
+- **Siguiente:** CS al 10/14 por rival de línea (¿el farm perdido depende del matchup?), o lo que pida la revisión de DeepSeek.
+- **Actualizado:** 2026-11-07 08:40 (iteración 7, cierre)
 
 ### DeepSeek · revisor
-- **Estado:** revisé 59e6e88 (timeline), 7166539 (draft.py) y 59119ff (revision.py). Todo correcto, salvo detalles menores.
-- **Siguiente:** revisar el análisis de derrotas con oro ≥ 0 al 14 (mid game).
-- **Actualizado:** 2026-11-07 06:07
+- **Estado:** revisé bab24d7 (midgame.py) y b55f665 (rol.py). Correctos. n=1,678 verificado; causalidad de muertes 14–25 se mantiene aunque se debilita al cortar por oro al 20.
+- **Siguiente:** revisar `scripts/convertir.py` (Ekko) cuando Opus lo commitee.
+- **Actualizado:** 2026-11-07 06:15
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -35,6 +35,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-rol-*.md` | Salida de `rol.py` | Opus |
 | `scripts/convertir.py` | Línea ganada al 14 por campeón y V/D de uno: `convertir.py [Campeón]` (Ekko por defecto) | Opus |
 | `datos/analisis-convertir-*.md` | Salida de `convertir.py` | Opus |
+| `scripts/linea.py` | Línea perdida al 14: muertes por gank/1v1, CS, XP, por campeón y V/D: `linea.py [Campeón]` | Opus |
+| `datos/analisis-linea-*.md` | Salida de `linea.py` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
@@ -50,10 +52,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: con la línea ganada al 14, si el equipo va < 0 de oro gana 40% (25–58), y si va ≥ 0, 69% (60–78). Con 3+ muertes del 14 al 25, 50%; con 1–2, 74%.
 - 2026-11-07 · Opus: en las derrotas, el 72% de las muertes del 14 al 25 vienen seguidas de un objetivo perdido en 90 s (línea base 58%). Los pick-offs no separan (37% contra 33%).
 - 2026-11-07 · Opus: la permutación a nivel de partida (sugerida por DeepSeek) confirma que no hay bans con respaldo: 2 reales contra ~1.7 del azar (p = 0.50).
+- 2026-11-07 · DeepSeek: la base de "objetivo perdido en 90 s" tiene sesgo leve por partidas cortas (56% vs 58% en partidas ≥ 25 min): no cambia la conclusión.
+- 2026-11-07 · DeepSeek: cortando por oro del equipo al 20 (con equipo ≥ 0), 0–2 muertes 14–25 → 84% (n=44) y 3+ → 61% (n=36, IC se cruzan): el efecto de las muertes se mantiene pero se debilita.
 - 2026-11-07 · Opus: top 58% contra mid 54% es ruido (permutación p = 0.55). Top es bueno por Mordekaiser (68%); top sin Morde, 53%. Sylas top 4/11.
 - 2026-11-07 · Opus: las muertes del 14 al 25 pesan aunque el equipo vaya bien: con línea y equipo ≥ 0 al 14, 0–2 muertes → 82% (69–90); 3+ → 57% (43–70).
 - 2026-11-07 · Opus: Ekko sí convierte: con línea ganada 60% (45–74), igual que el resto (62%). Con línea perdida 42%, como Sylas (43%); Yone 57%.
 - 2026-11-07 · Opus: `turretPlatesTaken` no mide tus placas (da hasta 23 por jugador; el máximo de un equipo es 15). Se quitó del PLAN.
+- 2026-11-07 · Opus: con la línea perdida (148), las muertes <14 no separan (V 2.62, D 2.32); sí CS y XP @14 (−11/−529 contra −16/−806). Solo 5/148 líneas perdidas sin morir.
+- 2026-11-07 · Opus: Ekko con línea perdida: V llega con CS −0.2 y XP +24, D con −17 y −715. > 10 CS abajo: 4/17 (24%); ≤ 10: 9/14 (64%).
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -61,6 +67,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: la meta del mid game baja a ≤ 2 muertes del 14 al 25 (también en revision.py) y queda como monitor. La regla nueva: no pelear si no hace falta antes de que salga un objetivo.
 - 2026-11-07 · Opus: mid sigue siendo el rol principal; si toca top, Mordekaiser o Yone (no Sylas).
 - 2026-11-07 · Opus: si esperas perder la línea, Yone antes que Ekko (aguanta ir abajo).
+- 2026-11-07 · Opus: regla nueva en prioridad 1: si ya vas abajo, cuida el farm (bajo torre, no roamear a costa de oleadas) más que evitar muertes.
 
 ## Para el usuario (cuando vuelva)
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).

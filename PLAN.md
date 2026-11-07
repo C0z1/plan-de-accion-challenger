@@ -53,6 +53,7 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 2. **Sylas es tu campeón más jugado y el que peor rinde:** 92 partidas, 52% (42–62%), −264 de oro al 14 (−615 en derrotas).
 3. **Mala racha actual:** 44% en las últimas 50 y 35% en las últimas 20. **No es la línea:** en las últimas 20 llegas al 14 con oro ≥ 0 en el 60% (antes 45%) y con +360 de oro, pero de esas 12 solo ganaste 5 (42%, contra 65% antes), mueres 2.95 veces del 14 al 25 (antes 2.62) y el 60% fueron con campeones fuera del pool (Sylas, Locke, Zeri, Rakan). Muestra chica (n=12 y 20): pista, pero apunta a las prioridades 2 y 3, no a la 1. Fuente: `datos/analisis-revision-2026-11-07.md`.
 4. **Ekko no aguanta ir abajo:** con oro < 0 al 14 gana 42% (26–59%), como Sylas (43%); Yone, en cambio, 57% (41–71%). Su 52% no es por no convertir, es por cómo juega cuando pierde la línea. Fuente: [`datos/analisis-convertir-2026-11-07.md`](datos/analisis-convertir-2026-11-07.md), `scripts/convertir.py`.
+   - **Lo que hunde a Ekko abajo es el farm, no las muertes:** con la línea perdida muere igual en V y en D (2.31 contra 2.17 antes del 14), pero en las victorias llega al 14 con CS −0.2 y XP +24, y en las derrotas con CS −17 y XP −715. Si pierde más de 10 de CS al 14, 4/17 = 24% (10–47%); si no, 9/14 = 64% (39–84%). Fuente: [`datos/analisis-linea-2026-11-07.md`](datos/analisis-linea-2026-11-07.md), `scripts/linea.py`.
 
 ## Prioridades (máximo 3)
 
@@ -61,6 +62,7 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 - Pierdes menos farm si no te matan en ganks: a los 2:45–3:15 (primer gank posible) y cada vez que el jungla rival desaparece del mapa, no pases de la mitad de la línea sin visión del río.
 - **Compra 1 control ward en cada regreso a base** y ponlo en el río o en el arbusto lateral de tu línea. Hoy lo haces en el 7% de las partidas. Por sí sola, la visión no separa victorias de derrotas: el objetivo es evitar los ganks, no subir el número.
 - No sigas al rival a la jungla ni al río antes del 14 si no sabes dónde está su jungla (ahí pasan 1 de cada 3 de tus muertes tempranas en mid).
+- **Si ya vas abajo, cuida el farm más que las muertes** (`scripts/linea.py`, 148 líneas perdidas): con la línea perdida mueres antes del 14 casi lo mismo en V que en D (2.62 contra 2.32), pero en las derrotas vas −16 de CS y −806 de XP contra −11 y −529 en las victorias. Perder > 10 de CS al 14: 44% (34–55%); ≤ 10: 53% (41–65%). Con Ekko la brecha es mayor (24% contra 64%). Abajo: farmea bajo torre y no roamees si eso te cuesta oleadas. (El CS es parte del oro, así que esto dice *qué parte* de la desventaja pesa, no que sea otra causa.)
 - Métricas: **oro ≥ 0 contra tu rival al 14 en más del 55% de las partidas** (hoy 46%: 128 de 280) y CS al 14 sin desventaja en promedio (hoy −3).
 
 ### 2. Cerrar el champion pool
@@ -75,7 +77,7 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 - **Cuando ganas la línea y pierdes la partida** (48 de 128; fuente: [`datos/analisis-midgame-2026-11-07.md`](datos/analisis-midgame-2026-11-07.md), `scripts/midgame.py`):
   - Lo que más pesa es tu equipo: con tu línea ganada y el equipo con oro < 0 al 14 ganas 40% (25–58%), y con el equipo ≥ 0, 69% (60–78%). En las derrotas el equipo pasa de +502 al 14 a −438 al 20.
   - Lo que sí depende de ti es cuántas veces mueres: con 1–2 muertes del 14 al 25 ganas 74% (60–84%), y con 3 o más, 50% (38–62%).
-  - **No es solo consecuencia de que tu equipo vaya abajo:** con tu línea ganada *y* el equipo con oro ≥ 0 al 14, ganas 82% (69–90%, 49 partidas) con 0–2 muertes del 14 al 25 y 57% (43–70%, 49) con 3 o más.
+  - **No es solo consecuencia de que tu equipo vaya abajo:** con tu línea ganada *y* el equipo con oro ≥ 0 al 14, ganas 82% (69–90%, 49 partidas) con 0–2 muertes del 14 al 25 y 57% (43–70%, 49) con 3 o más. Si además el equipo sigue ≥ 0 al 20, 84% contra 61% (revisión de DeepSeek): el efecto se mantiene pero los intervalos ya se cruzan, así que es pista fuerte, no hecho.
   - En las derrotas, el 72% de esas muertes vienen seguidas de un objetivo perdido (dragón, heraldo, barón o torre) en los 90 s siguientes. Desde un instante cualquiera de esas partidas la cifra es 58%: morir regala objetivos.
   - Morir solo (pick-off) **no** separa victorias de derrotas: 37% de tus muertes en victorias contra 33% en derrotas. El problema es cuántas veces mueres y cuándo, no si estabas solo.
   - Regla: **antes de que salga un dragón, heraldo o barón, no pelees si no hace falta**. Y si tu equipo va abajo aunque tú ganes la línea, juega a no morir y que tu ventaja no se pierda: el rival necesita tu muerte para tomar el objetivo.
