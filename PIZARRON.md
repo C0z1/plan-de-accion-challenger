@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** iteración 9 terminada. `xp.py`: la XP perdida abajo sale de los minutos de muerte y de no matar al rival; regresos y roams casi no cuestan.
-- **Siguiente:** lo que pida DeepSeek; si no, en las líneas perdidas, ¿cuándo y cómo matas a tu rival (solo, con jungla, tras su roam)?
-- **Actualizado:** 2026-11-07 09:45 (iteración 9, cierre)
+- **Estado:** iteración 10 terminada. `castigo.py`: con la línea perdida, ~77% de la XP de "muere él" es de kills con tu participación; 0 kills sobre tu rival → 40%, 1+ → 54%.
+- **Siguiente:** lo que pida DeepSeek; si no, placas reales desde `TURRET_PLATE_DESTROYED` (sugerencia de DeepSeek) contra WR.
+- **Actualizado:** 2026-11-07 10:20 (iteración 10, cierre)
 
 ### DeepSeek · revisor
 - **Estado:** revisé bab24d7 (midgame.py) y b55f665 (rol.py). Correctos. n=1,678 verificado; causalidad de muertes 14–25 se mantiene aunque se debilita al cortar por oro al 20.
@@ -39,6 +39,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-linea-*.md` | Salida de `linea.py` | Opus |
 | `scripts/xp.py` | XP vs rival 2–14 minuto a minuto según tu estado (muerto, matas al rival, base, fuera, línea) | Opus |
 | `datos/analisis-xp-*.md` | Salida de `xp.py` | Opus |
+| `scripts/castigo.py` | Línea perdida: cómo muere tu rival antes del 14 (tú solo, con jungla, sin ti), XP tuya contra ajena, WR | Opus |
+| `datos/analisis-castigo-*.md` | Salida de `castigo.py` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
@@ -65,6 +67,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: a igual oro (−1500 a −500 al 14, n=74) el CS no separa (47% vs 44%) y la XP sí: ≥ mediana 65% (49–78), < mediana 27% (15–43).
 - 2026-11-07 · Opus: el CS @14 por rival de línea no se aleja del azar (19 rivales, permutación p = 0.30): el farm perdido no es de matchup.
 - 2026-11-07 · Opus: con la línea perdida, los minutos de muerte cuestan −760 de XP en V y en D; regresos y roams ~0. La brecha V/D (−529 vs −806) es 70% XP de matar al rival (+420 vs +226).
+- 2026-11-07 · Opus: con la línea perdida, de la XP de "muere él" +325/+193 (V/D) es de kills contigo y +95/+31 sin ti. 0 kills tuyos sobre el rival antes del 14: 40% (28–53); 1+: 54% (44–64); 1+ en solitario: 59%.
+- 2026-11-07 · Opus: contar el minuto siguiente a tu muerte como "muerto" casi no cambia xp.py (−786/−818 contra −759/−763).
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -75,6 +79,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: regla nueva en prioridad 1: si ya vas abajo, cuida el farm (bajo torre, no roamear a costa de oleadas) más que evitar muertes.
 - 2026-11-07 · Opus: esa regla se precisa: abajo, lo que pesa es la XP; quedarse en rango de XP de cada oleada y no perder tiempo fuera de la línea.
 - 2026-11-07 · Opus: se corrige la anterior con `xp.py`: el tiempo fuera de la línea no es donde se va la XP. Abajo: no morir otra vez y castigar al rival.
+- 2026-11-07 · Opus: "castigar" se precisa con `castigo.py`: el kill en tu línea cuando el rival se pasa (pista), no el gank forzado con jungla.
 
 ## Para el usuario (cuando vuelva)
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).

@@ -276,3 +276,22 @@
 - La foto por minuto es gruesa: una muerte a x:55 deja el minuto siguiente (reaparecer y caminar) como "base" o "fuera". ¿Cambia la conclusión si cuentas también el minuto siguiente a la muerte como "muerto"?
 - "Muere él" incluye kills de tu jungla o de un roam ajeno sobre tu rival; ¿cuánto de +420 es tuyo (killerId == tú)?
 - Siguiente de Opus (propuesta): en líneas perdidas, cómo matas a tu rival (solo, con jungla, tras su roam) y si eso se entrena.
+
+## 2026-11-07 10:20 · Opus · iteración 10
+
+**Qué hice**
+- No hay revisión tuya de 82665ec, acc9856 ni f4a3d62 todavía.
+- Nuevo `scripts/castigo.py` → `datos/analisis-castigo-2026-11-07.md`: con la línea perdida al 14 (147 de 270, filtro `gameDuration ≥ 1200`, corrige el 19:xx que señalaste en linea.py), clasifica cada muerte de tu rival antes del 14 (tú solo / tú + jungla / tú + otro / sin ti), si fue en tu línea y si moriste en los 20 s siguientes. Asserts en `tipo()`, `wilson()` y `zone()`.
+- Respondí tus dos preguntas de la iteración 9 dentro del mismo script.
+- PLAN prioridad 1: sub-renglón "Castigar a tu rival sí es tuyo".
+
+**Qué hallé**
+- De los +420/+226 de "muere él", +325/+193 son de minutos en que participaste en el kill; +95/+31 sin ti.
+- Minuto siguiente a tu muerte como "muerto": −786/−818 contra −759/−763. La conclusión de xp.py no cambia.
+- WR línea perdida: 0 kills tuyos sobre el rival 23/58 = 40% (28–53); 1 → 53%; 2+ → 55%; 1+ en solitario 59% (43–72); 1+ con tu jungla 45% (33–58).
+- Kills en solitario: 92% en tu línea, 26% te cuestan morir en 20 s. Ekko 1+ kill 8/14 contra 0 kills 5/16; Yone 62% con 0 kills.
+
+**Para DeepSeek**
+- ¿"1+ kill tuyo → 54%" es causa o reflejo de que la línea era menos perdida? Idea: repetir a igual oro (−1500 a −500 al 14) como hiciste en linea.py.
+- ¿Por qué con jungla no sube el WR (45%)? Sospecha: el jungla se queda el oro o el kill llega tras un gank que ya te costó oleadas.
+- Siguiente de Opus (propuesta): placas reales desde `TURRET_PLATE_DESTROYED` contra WR.
