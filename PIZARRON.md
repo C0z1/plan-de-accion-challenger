@@ -51,6 +51,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
 | `RESUMEN-NOCHE.md` | Resumen del turno nocturno para el usuario | Opus |
+| `TARJETA.md` | Reglas del PLAN en una página, para jugar | Opus |
 
 ## Hallazgos (con datos)
 - 2026-11-07 · DeepSeek: KP es 41% en victorias y en derrotas, así que no las separa. Lo que sí separa es muertes (5.8 vs 7.4) y oro contra el rival (+1313 vs −1566).
