@@ -50,6 +50,8 @@ Intervalos Wilson 95%. "Gank" = el jungla rival mató o asistió; "1 contra 1" =
 | Pierdes > 1000 | 30/70 = 43% (32%–55%) | 2/11 = 18% (5%–48%) |
 | Pierdes ≤ 10 de CS al 14 | 34/64 = 53% (41%–65%) | 9/14 = 64% (39%–84%) |
 | Pierdes > 10 de CS | 37/84 = 44% (34%–55%) | 4/17 = 24% (10%–47%) |
+| Pierdes ≤ 500 de XP al 14 | 36/61 = 59% (46%–70%) | 10/16 = 62% (39%–82%) |
+| Pierdes > 500 de XP | 35/87 = 40% (31%–51%) | 3/15 = 20% (7%–45%) |
 | Recortas la desventaja del 14 al 20 | 38/68 = 56% (44%–67%) | 7/14 = 50% (27%–73%) |
 
 ## Ekko: victorias contra derrotas con la línea perdida
@@ -67,3 +69,45 @@ Intervalos Wilson 95%. "Gank" = el jungla rival mató o asistió; "1 contra 1" =
 |   1 contra 1 (solo tu rival) | 0.77 | 0.83 |
 | Tus kills <14 | 1.46 | 1.06 |
 | Muertes de tu rival <14 | 1.77 | 1.06 |
+
+## A igual oro: solo partidas entre −1500 y −500 de oro al 14 (74)
+
+| | Victorias | Derrotas |
+|---|---|---|
+| Partidas | 34 | 40 |
+| Oro vs rival @14 | -881 | -1009 |
+| Oro vs rival @20 | -770 | -1396 |
+| CS vs rival @10 | -9.2 | -9.7 |
+| CS vs rival @14 | -9.4 | -15.0 |
+| XP vs rival @14 | -272 | -799 |
+| Tus muertes <14 | 2.44 | 2.23 |
+| WR con CS @14 ≥ mediana (-12) | 18/38 = 47% (32%–63%) | |
+| WR con CS @14 < mediana | 16/36 = 44% (30%–60%) | |
+| WR con XP @14 ≥ mediana (-566) | 24/37 = 65% (49%–78%) | |
+| WR con XP @14 < mediana | 10/37 = 27% (15%–43%) | |
+
+## CS por rival de línea (todas las partidas de 20+ min, rivales con 5+: 19 rivales, 131 partidas)
+
+Test de permutación (2000 barajadas del rival): la dispersión real del CS @14 entre rivales es 71.9 contra 62.4 del azar, p = 0.30. Con p alta, el matchup no explica tu farm perdido.
+
+| Rival | Partidas | CS @10 | CS @14 | Oro @14 | % CS @14 < −10 | WR |
+|---|---|---|---|---|---|---|
+| Yasuo | 10 | -10.2 | -20.4 | -402 | 60% | 5/10 = 50% (24%–76%) |
+| Qiyana | 9 | -11.8 | -17.9 | -899 | 67% | 4/9 = 44% (19%–73%) |
+| Viktor | 8 | -12.9 | -17.0 | -120 | 50% | 1/8 = 12% (2%–47%) |
+| Yone | 6 | -7.7 | -13.8 | -666 | 67% | 2/6 = 33% (10%–70%) |
+| Galio | 6 | -14.2 | -13.2 | -358 | 33% | 3/6 = 50% (19%–81%) |
+| Syndra | 6 | -8.7 | -11.3 | -10 | 50% | 4/6 = 67% (30%–90%) |
+| Vladimir | 5 | -4.8 | -10.0 | -589 | 60% | 3/5 = 60% (23%–88%) |
+| Diana | 7 | -3.1 | -5.7 | -1322 | 43% | 2/7 = 29% (8%–64%) |
+| Lissandra | 5 | -8.2 | -4.6 | -160 | 40% | 3/5 = 60% (23%–88%) |
+| Sion | 5 | -2.6 | -3.4 | -423 | 40% | 3/5 = 60% (23%–88%) |
+| Malzahar | 7 | -6.7 | -2.7 | +593 | 43% | 2/7 = 29% (8%–64%) |
+| Malphite | 5 | +0.0 | -2.6 | -358 | 20% | 2/5 = 40% (12%–77%) |
+| Fizz | 6 | -1.3 | -0.2 | -338 | 17% | 2/6 = 33% (10%–70%) |
+| Sylas | 10 | -1.5 | +0.5 | -430 | 30% | 8/10 = 80% (49%–94%) |
+| Locke | 6 | +3.0 | +0.8 | -322 | 33% | 4/6 = 67% (30%–90%) |
+| Ahri | 10 | +1.0 | +3.2 | +293 | 20% | 7/10 = 70% (40%–89%) |
+| Zed | 10 | +0.8 | +3.3 | -383 | 10% | 7/10 = 70% (40%–89%) |
+| Gwen | 5 | -1.4 | +4.2 | +418 | 20% | 3/5 = 60% (23%–88%) |
+| Katarina | 5 | -1.8 | +7.2 | -354 | 20% | 1/5 = 20% (4%–62%) |

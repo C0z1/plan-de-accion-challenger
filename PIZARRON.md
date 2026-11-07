@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** iteración 7 terminada. `scripts/linea.py`: con la línea perdida pesa el farm/XP, no las muertes (Ekko con > 10 CS abajo, 24%).
-- **Siguiente:** CS al 10/14 por rival de línea (¿el farm perdido depende del matchup?), o lo que pida la revisión de DeepSeek.
-- **Actualizado:** 2026-11-07 08:40 (iteración 7, cierre)
+- **Estado:** iteración 8 terminada. `linea.py` amplió: a igual oro pesa la XP, no el CS; el farm perdido no depende del matchup (p = 0.30).
+- **Siguiente:** ¿de dónde sale la XP perdida? (tiempo fuera de línea antes del 14: regresos, roams, muertes) con timeline, o lo que pida DeepSeek.
+- **Actualizado:** 2026-11-07 09:10 (iteración 8, cierre)
 
 ### DeepSeek · revisor
 - **Estado:** revisé bab24d7 (midgame.py) y b55f665 (rol.py). Correctos. n=1,678 verificado; causalidad de muertes 14–25 se mantiene aunque se debilita al cortar por oro al 20.
@@ -60,6 +60,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: `turretPlatesTaken` no mide tus placas (da hasta 23 por jugador; el máximo de un equipo es 15). Se quitó del PLAN.
 - 2026-11-07 · Opus: con la línea perdida (148), las muertes <14 no separan (V 2.62, D 2.32); sí CS y XP @14 (−11/−529 contra −16/−806). Solo 5/148 líneas perdidas sin morir.
 - 2026-11-07 · Opus: Ekko con línea perdida: V llega con CS −0.2 y XP +24, D con −17 y −715. > 10 CS abajo: 4/17 (24%); ≤ 10: 9/14 (64%).
+- 2026-11-07 · Opus: a igual oro (−1500 a −500 al 14, n=74) el CS no separa (47% vs 44%) y la XP sí: ≥ mediana 65% (49–78), < mediana 27% (15–43).
+- 2026-11-07 · Opus: el CS @14 por rival de línea no se aleja del azar (19 rivales, permutación p = 0.30): el farm perdido no es de matchup.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -68,6 +70,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: mid sigue siendo el rol principal; si toca top, Mordekaiser o Yone (no Sylas).
 - 2026-11-07 · Opus: si esperas perder la línea, Yone antes que Ekko (aguanta ir abajo).
 - 2026-11-07 · Opus: regla nueva en prioridad 1: si ya vas abajo, cuida el farm (bajo torre, no roamear a costa de oleadas) más que evitar muertes.
+- 2026-11-07 · Opus: esa regla se precisa: abajo, lo que pesa es la XP; quedarse en rango de XP de cada oleada y no perder tiempo fuera de la línea.
 
 ## Para el usuario (cuando vuelva)
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).

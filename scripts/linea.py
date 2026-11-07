@@ -1,7 +1,7 @@
 """¿Cómo pierdes la línea y cuál línea perdida se remonta? En partidas con oro < 0 contra tu rival al 14,
 separa la desventaja por causa (muertes por gank, muertes 1 contra 1, farm, XP) por campeón, y compara
 V contra D. Uso: python scripts/linea.py [Campeón] > datos/analisis-linea-AAAA-MM-DD.md   (por defecto Ekko)"""
-import json, math, pathlib, statistics as st, sys
+import json, math, pathlib, random, statistics as st, sys
 from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -50,7 +50,7 @@ for tf in (RAW / "timeline").glob("LA1_*.json"):
     ev = [e for f in fr for e in f["events"] if e["type"] == "CHAMPION_KILL" and e["timestamp"] < 14 * 60000]
     mias = Counter(tipo(e, pid, oid, jid) for e in ev if e["victimId"] == pid)
     games.append(dict(
-        win=me["win"], champ=me["championName"],
+        win=me["win"], champ=me["championName"], rival=opp["championName"],
         gd14=dif(14, lambda p: p["totalGold"]), gd20=dif(20, lambda p: p["totalGold"]),
         cs14=dif(14, lambda p: p["minionsKilled"] + p["jungleMinionsKilled"]), xp14=dif(14, lambda p: p["xp"]),
         cs10=dif(10, lambda p: p["minionsKilled"] + p["jungleMinionsKilled"]),
@@ -91,6 +91,7 @@ CONDS = [("0 muertes antes del 14", lambda g: g["d14"] == 0), ("1 muerte", lambd
          ("Primera muerte antes del 6", lambda g: g["primera"] is not None and g["primera"] < 6),
          ("Pierdes ≤ 1000 de oro al 14", lambda g: g["gd14"] > -1000), ("Pierdes > 1000", lambda g: g["gd14"] <= -1000),
          ("Pierdes ≤ 10 de CS al 14", lambda g: g["cs14"] >= -10), ("Pierdes > 10 de CS", lambda g: g["cs14"] < -10),
+         ("Pierdes ≤ 500 de XP al 14", lambda g: g["xp14"] >= -500), ("Pierdes > 500 de XP", lambda g: g["xp14"] < -500),
          ("Recortas la desventaja del 14 al 20", lambda g: g["gd20"] > g["gd14"])]
 foco = [g for g in perd if g["champ"] == FOCO]
 print(f"\n## WR con la línea perdida, según cómo la perdiste\n\n| Condición | Todos | {FOCO} |\n|---|---|---|")
@@ -102,3 +103,46 @@ FW, FL = [g for g in foco if g["win"]], [g for g in foco if not g["win"]]
 print(f"| Partidas | {len(FW)} | {len(FL)} |")
 for lbl, k, f in FILAS:
     print(f"| {lbl} | {avg(FW, k):{f}} | {avg(FL, k):{f}} |")
+
+# ¿El CS separa por sí mismo o solo porque es parte del oro? Compara a igual oro @14.
+banda = [g for g in perd if -1500 <= g["gd14"] <= -500]
+print(f"\n## A igual oro: solo partidas entre −1500 y −500 de oro al 14 ({len(banda)})\n\n| | Victorias | Derrotas |\n|---|---|---|")
+BW, BL = [g for g in banda if g["win"]], [g for g in banda if not g["win"]]
+print(f"| Partidas | {len(BW)} | {len(BL)} |")
+for lbl, k, f in FILAS[:6]:
+    print(f"| {lbl} | {avg(BW, k):{f}} | {avg(BL, k):{f}} |")
+mcs = st.median(g["cs14"] for g in banda)
+print(f"| WR con CS @14 ≥ mediana ({mcs:+.0f}) | {wr([g for g in banda if g['cs14'] >= mcs])} | |")
+print(f"| WR con CS @14 < mediana | {wr([g for g in banda if g['cs14'] < mcs])} | |")
+mxp = st.median(g["xp14"] for g in banda)
+print(f"| WR con XP @14 ≥ mediana ({mxp:+.0f}) | {wr([g for g in banda if g['xp14'] >= mxp])} | |")
+print(f"| WR con XP @14 < mediana | {wr([g for g in banda if g['xp14'] < mxp])} | |")
+
+
+# ¿El CS perdido depende del matchup? Todas las partidas (ganadas o no), rivales de línea con 5+.
+def dispersion(gs, etiqueta):
+    """Varianza entre grupos de la media de CS @14 (ponderada por n): alta si el rival explica el farm."""
+    grupos = {}
+    for g in gs: grupos.setdefault(etiqueta(g), []).append(g["cs14"])
+    mu = st.mean(g["cs14"] for g in gs)
+    return sum(len(v) * (st.mean(v) - mu) ** 2 for v in grupos.values()) / len(gs)
+assert dispersion([{"cs14": 1, "r": "a"}, {"cs14": 1, "r": "a"}, {"cs14": 3, "r": "b"}], lambda g: g["r"]) > 0
+
+
+freq = {c for c, n in Counter(g["rival"] for g in games).items() if n >= 5}
+con = [g for g in games if g["rival"] in freq]
+real = dispersion(con, lambda g: g["rival"])
+rng, etq = random.Random(7), [g["rival"] for g in con]
+sims = []
+for _ in range(2000):
+    rng.shuffle(etq); m = dict(zip(map(id, con), etq))
+    sims.append(dispersion(con, lambda g: m[id(g)]))
+p = sum(s >= real for s in sims) / len(sims)
+print(f"\n## CS por rival de línea (todas las partidas de 20+ min, rivales con 5+: {len(freq)} rivales, {len(con)} partidas)\n")
+print(f"Test de permutación (2000 barajadas del rival): la dispersión real del CS @14 entre rivales es {real:.1f} "
+      f"contra {st.mean(sims):.1f} del azar, p = {p:.2f}. Con p alta, el matchup no explica tu farm perdido.\n")
+print("| Rival | Partidas | CS @10 | CS @14 | Oro @14 | % CS @14 < −10 | WR |\n|---|---|---|---|---|---|---|")
+for c in sorted(freq, key=lambda c: avg([g for g in con if g["rival"] == c], "cs14")):
+    rs = [g for g in con if g["rival"] == c]
+    print(f"| {c} | {len(rs)} | {avg(rs, 'cs10'):+.1f} | {avg(rs, 'cs14'):+.1f} | {avg(rs, 'gd14'):+.0f} | "
+          f"{sum(g['cs14'] < -10 for g in rs) / len(rs):.0%} | {wr(rs)} |")
