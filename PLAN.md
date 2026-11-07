@@ -39,12 +39,12 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 - **El 52% de tus muertes antes del 14 incluyen al jungla rival.** Las zonas donde más mueres son tu mitad de la línea de mid (182 muertes tempranas) y el río (65% con el jungla rival presente).
 - Jugando mid, 1 de cada 3 muertes tempranas (139/414) pasa **fuera de la línea**: río (62) y jungla rival (32).
 - **Casi nunca compras control wards:** 0.16 por partida, y en el 93% de tus partidas no compraste ninguno.
-- Lo que más separa victorias de derrotas en el early (challenges): ventaja máxima de nivel sobre tu rival (+0.75), placas de torre (+0.86) y kills en solitario (+0.47). Los skillshots esquivados y la visión casi no influyen.
+- Lo que más separa victorias de derrotas en el early (challenges): ventaja máxima de nivel sobre tu rival (+0.75) y kills en solitario (+0.47). (Se quita `turretPlatesTaken`: da hasta 23 por jugador y una línea solo tiene 5 placas por torre exterior, así que no mide tus placas.) Los skillshots esquivados y la visión casi no influyen.
 
 ## Virtudes (con datos)
 - **Yone:** 65 partidas, 58% (46–70%). Va −234 de oro al 14 en promedio (−151 incluso cuando gana): es de escalar, no necesita ganar la línea.
 - **Mordekaiser top:** 22 partidas, 68% (47–84%), aunque pierde la línea (−428 al 14).
-- **Ekko gana la línea:** +177 al 14, +623 cuando gana. Pero solo tiene 52% de WR: no convierte la ventaja.
+- **Ekko gana la línea:** +177 al 14 y llega arriba en el 56% de sus partidas (Yone y Sylas, 41–43%). **Y sí convierte:** con la línea ganada gana 60% (45–74%), igual que el resto (62%).
 - **Kills en solitario:** 2.1 por partida (2.5 en victorias). Mecánicamente le ganas a tu rival.
 - **No hay patrón de tilt:** después de una derrota tienes 55% WR.
 
@@ -52,7 +52,7 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 1. **Pierdes la línea por farm y XP:** en las derrotas llegas al 14 con −452 de oro, −8 de CS y −335 de XP. Además, mueres 2.2 veces antes del 14 (la mitad por gank) y 3.06 veces del 14 al 25 en las derrotas.
 2. **Sylas es tu campeón más jugado y el que peor rinde:** 92 partidas, 52% (42–62%), −264 de oro al 14 (−615 en derrotas).
 3. **Mala racha actual:** 44% en las últimas 50 y 35% en las últimas 20. **No es la línea:** en las últimas 20 llegas al 14 con oro ≥ 0 en el 60% (antes 45%) y con +360 de oro, pero de esas 12 solo ganaste 5 (42%, contra 65% antes), mueres 2.95 veces del 14 al 25 (antes 2.62) y el 60% fueron con campeones fuera del pool (Sylas, Locke, Zeri, Rakan). Muestra chica (n=12 y 20): pista, pero apunta a las prioridades 2 y 3, no a la 1. Fuente: `datos/analisis-revision-2026-11-07.md`.
-4. **Ekko no convierte:** gana la línea pero tiene el mismo WR que Sylas.
+4. **Ekko no aguanta ir abajo:** con oro < 0 al 14 gana 42% (26–59%), como Sylas (43%); Yone, en cambio, 57% (41–71%). Su 52% no es por no convertir, es por cómo juega cuando pierde la línea. Fuente: [`datos/analisis-convertir-2026-11-07.md`](datos/analisis-convertir-2026-11-07.md), `scripts/convertir.py`.
 
 ## Prioridades (máximo 3)
 
@@ -64,13 +64,13 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 - Métricas: **oro ≥ 0 contra tu rival al 14 en más del 55% de las partidas** (hoy 46%: 128 de 280) y CS al 14 sin desventaja en promedio (hoy −3).
 
 ### 2. Cerrar el champion pool
-- **Mid:** Yone (principal) y Ekko (secundario).
+- **Mid:** Yone (principal) y Ekko (secundario). Si el matchup es malo y crees que vas a perder la línea, Yone (aguanta ir abajo: 57% contra 42% de Ekko).
 - **Top / flexible:** Mordekaiser.
 - **Sylas** solo cuando el matchup sea claramente bueno, no por costumbre.
 - Métrica: más del 80% de tus partidas con esos 3 campeones.
 
 ### 3. Mid game: convertir la ventaja y no regalar muertes del 14 al 25
-- Con ventaja (sobre todo con Ekko): empuja, toma placas y rota al objetivo con tu jungla, en vez de farmear en mid. Las placas son de lo que más separa victorias de derrotas (11.7 contra 6.8).
+- Con ventaja: empuja, toma torres y rota al objetivo con tu jungla, en vez de farmear en mid. Con Ekko y la línea ganada, en las victorias haces 4.5 takedowns de torre contra 2.2 en las derrotas y pasas el 25% del 15 al 24 en tu línea contra el 34% (WR 69% si estás < 50% en línea, 25% en 8 partidas si no: pista).
 - El 43% de todas tus muertes son contra 3 o más enemigos. Antes de entrar a una zona sin visión, cuenta cuántos rivales se ven en el mapa.
 - **Cuando ganas la línea y pierdes la partida** (48 de 128; fuente: [`datos/analisis-midgame-2026-11-07.md`](datos/analisis-midgame-2026-11-07.md), `scripts/midgame.py`):
   - Lo que más pesa es tu equipo: con tu línea ganada y el equipo con oro < 0 al 14 ganas 40% (25–58%), y con el equipo ≥ 0, 69% (60–78%). En las derrotas el equipo pasa de +502 al 14 a −438 al 20.

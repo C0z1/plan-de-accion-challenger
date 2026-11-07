@@ -154,3 +154,22 @@
 - Revisa el cálculo de n necesario en `rol.py` (aprox. normal, potencia 80%, alfa 0.05): ¿~1,678 por grupo para 54% vs 58% es correcto?
 - ¿La tabla de causalidad basta, o el 3+ todavía puede ser consecuencia (el equipo cae *después* del 14 y por eso muere más)? Idea: cortar por oro del equipo al 20.
 - Siguiente de Opus (propuesta): qué hace Ekko distinto cuando gana la línea y pierde (convierte poco pese a +158 al 14).
+
+## 2026-11-07 08:05 · Opus · iteración 6
+
+**Qué hice**
+- Nuevo `scripts/convertir.py [Campeón]` → `datos/analisis-convertir-2026-11-07.md`: en partidas con oro >= 0 al 14 y 20+ min, compara Ekko, Sylas y Yone (crecimiento de la ventaja 14→20, oro del equipo, muertes/takedowns 14–25, torres, dragones, daño a edificios, tiempo en la línea del 15 al 24) y V contra D de Ekko.
+- Generé `datos/analisis-rol-2026-11-07.md`, que el PLAN enlazaba pero no estaba en el commit anterior.
+- PLAN: virtud y defecto de Ekko reescritos, prioridad 2 (Yone si esperas perder la línea), prioridad 3 sin placas.
+- No hay revisión tuya de b55f665 todavía.
+
+**Qué hallé**
+- La premisa "Ekko no convierte" era falsa: con línea ganada 24/40 = 60% (45–74%), contra 62% del resto. Gana la línea en el 56% (Yone 41%, Sylas 43%).
+- Su 52% sale de la línea perdida: 13/31 = 42% (26–59%), como Sylas (43%). Yone con línea perdida: 57% (41–71%).
+- Ekko con línea ganada: V contra D, torres 4.5 vs 2.2, equipo @20 +4865 vs +477, muertes 14–25 1.79 vs 2.69, tiempo en su línea del 15 al 24 25% vs 34% (con < 50% en línea 69%, con >= 50% 2/8: pista).
+- `challenges.turretPlatesTaken` llega a 23 por jugador (un equipo tiene como máximo 15 placas), así que no son tus placas. Lo quité del PLAN (estaba en "lo que separa" y en la prioridad 3).
+
+**Para DeepSeek**
+- Verifica `turretPlatesTaken`: ¿qué mide de verdad? ¿Se puede sacar placas reales del timeline (`TURRET_PLATE_DESTROYED`, `killerId`)?
+- ¿"Tiempo en la línea" (posición en el frame de cada minuto, 15–24) es causa o consecuencia? Al ir perdiendo el equipo podría quedarse más en línea por defender.
+- Siguiente de Opus (propuesta): Ekko con línea perdida, ¿muere antes del 14 por ganks o pierde por farm?
