@@ -17,6 +17,22 @@ Diferencia de nivel = tu nivel − el de tu rival de línea en cada instante (ev
 
 Chequeo: midiendo el nivel **en el instante** de tu muerte (incluye el nivel que le da tu kill al rival; por eso se usa 3 s antes): 2+ abajo 3.39, 1 abajo 2.07, igual 1.38, 1 arriba 1.62, 2+ arriba 0.94
 
+## ¿Dónde mueres yendo arriba de nivel? (0–14 min)
+
+Igual = mismo nivel; arriba = 1+ niveles sobre tu rival. Por 10 min = muertes en esa zona por cada 10 min en ese estado. Razón = arriba contra igual (IC Poisson; shortcut: ignora que las muertes se agrupan por partida).
+
+| Zona de la muerte | Igual: muertes | % | Por 10 min | Con jungla rival | Arriba: muertes | % | Por 10 min | Con jungla rival | Razón |
+|---|---|---|---|---|---|---|---|---|---|
+| tu línea, tu lado | 155 | 45% | 0.67 | 41% | 35 | 26% | 0.50 | 69% | ×0.75 (0.52–1.08) |
+| tu línea, pasado el río | 93 | 27% | 0.40 | 47% | 53 | 39% | 0.75 | 60% | ×1.89 (1.35–2.64) |
+| río | 48 | 14% | 0.21 | 65% | 22 | 16% | 0.31 | 64% | ×1.52 (0.92–2.51) |
+| jungla propia | 13 | 4% | 0.06 | 92% | 2 | 1% | 0.03 | 100% | ×0.51 (0.11–2.26) |
+| jungla rival | 17 | 5% | 0.07 | 59% | 13 | 10% | 0.18 | 69% | ×2.53 (1.23–5.21) |
+| otra línea / base | 17 | 5% | 0.07 | 35% | 10 | 7% | 0.14 | 70% | ×1.95 (0.89–4.25) |
+
+Igual: 343 muertes; ward tuyo en los 90 s previos 51%; 1 contra 1 38%; 3+ rivales 17%; con ward: 47% con jungla rival (n=176); sin ward: 51% con jungla rival (n=167)
+Arriba: 135 muertes; ward tuyo en los 90 s previos 59%; 1 contra 1 29%; 3+ rivales 21%; con ward: 64% con jungla rival (n=80); sin ward: 67% con jungla rival (n=55)
+
 Victorias — muertes por 10 min: 2+ abajo 2.36, 1 abajo 1.16, igual 1.50, 1 arriba 1.86, 2+ arriba 1.23; tiempo abajo (1+): 17%
 
 Derrotas — muertes por 10 min: 2+ abajo 1.37, 1 abajo 1.86, igual 1.44, 1 arriba 2.04, 2+ arriba 3.06; tiempo abajo (1+): 24%

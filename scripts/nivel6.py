@@ -47,6 +47,28 @@ def exposicion(mis, sus):
 _e = exposicion([(60000, 2)], [])
 assert abs(sum(_e.values()) - 14) < 1e-9 and abs(_e["1 arriba"] - 13) < 1e-9
 
+def zone(x, y, team):  # misma función que scripts/xp.py
+    own = (x + y < 14800) == (team == 100)
+    if x + y < 5600 or x + y > 24000: return "base propia" if own else "base rival"
+    if abs(x - y) < 1600: z = "mid"
+    elif x < 2300 or y > 12500: z = "top"
+    elif y < 2300 or x > 12500: z = "bot"
+    elif abs(x + y - 14800) < 1500: return "río"
+    else: z = "jungla"
+    return f"{z} ({'lado propio' if own else 'lado rival'})"
+assert zone(7400, 7400, 100) == "mid (lado rival)" and zone(1000, 1000, 100) == "base propia"
+NOMBRE = {"MIDDLE": "mid", "TOP": "top", "BOTTOM": "bot", "UTILITY": "bot"}
+ZONAS = ["tu línea, tu lado", "tu línea, pasado el río", "río", "jungla propia", "jungla rival", "otra línea / base"]
+
+
+def donde(z, linea):
+    """Agrupa la zona de una muerte respecto a tu línea."""
+    if z.startswith(linea): return ZONAS[0] if "propio" in z else ZONAS[1]
+    if z == "río": return ZONAS[2]
+    if z.startswith("jungla"): return ZONAS[3] if "propio" in z else ZONAS[4]
+    return ZONAS[5]
+assert donde("mid (lado rival)", "mid") == ZONAS[1] and donde("jungla (lado propio)", "mid") == ZONAS[3] and donde("top (lado propio)", "mid") == ZONAS[5]
+
 games = []
 for tf in (RAW / "timeline").glob("LA1_*.json"):
     mf = RAW / tf.name
@@ -74,9 +96,15 @@ for tf in (RAW / "timeline").glob("LA1_*.json"):
     # kills tuyos (o con asistencia) sobre tu rival de línea
     mato = [estado(dif(e["timestamp"] - 3000)) for e in kills
             if e["victimId"] == oid and pid in {e["killerId"], *e.get("assistingParticipantIds", [])}]
+    # shortcut: WARD_PLACED no trae posición; "ward tuyo 90 s antes" es solo un proxy de visión, no dice si cubría el río
+    wards = [e["timestamp"] for e in ev if e["type"] == "WARD_PLACED" and e.get("creatorId") == pid]
+    dz = [dict(estado=estado(dif(e["timestamp"] - 3000)), jg=jr in {e["killerId"], *e.get("assistingParticipantIds", [])},
+               zona=donde(zone(e["position"]["x"], e["position"]["y"], me["teamId"]), NOMBRE[me["teamPosition"]]),
+               ward=any(0 <= e["timestamp"] - t <= 90000 for t in wards), n=1 + len(e.get("assistingParticipantIds", [])))
+          for e in kills if e["victimId"] == pid]
     t_n = lambda ups_, lv: next((ts for ts, l in ups_ if l >= lv), None)
     pf14 = fr[14]["participantFrames"]
-    games.append(dict(win=me["win"], champ=me["championName"], rol=me["teamPosition"], muertes=muertes, muertes2=muertes2, con_jg=con_jg, mato=mato,
+    games.append(dict(win=me["win"], champ=me["championName"], rol=me["teamPosition"], muertes=muertes, muertes2=muertes2, con_jg=con_jg, mato=mato, dz=dz,
                       exp=exposicion(mis, sus), t2=(t_n(mis, 2), t_n(sus, 2)), t6=(t_n(mis, 6), t_n(sus, 6)),
                       gd14=pf14[str(pid)]["totalGold"] - pf14[str(oid)]["totalGold"]))
 assert games, "sin timelines"
@@ -103,6 +131,36 @@ print()
 mu2 = Counter(s for g in games for s in g["muertes2"])
 print("\nChequeo: midiendo el nivel **en el instante** de tu muerte (incluye el nivel que le da tu kill al rival; por eso se usa 3 s antes): "
       + ", ".join(f"{s} {10 * mu2[s] / exp[s]:.2f}" for s in ESTADOS if exp[s]))
+
+print("\n## ¿Dónde mueres yendo arriba de nivel? (0–14 min)\n\n"
+      "Igual = mismo nivel; arriba = 1+ niveles sobre tu rival. Por 10 min = muertes en esa zona por cada 10 min en ese estado. "
+      "Razón = arriba contra igual (IC Poisson; shortcut: ignora que las muertes se agrupan por partida).\n\n"
+      "| Zona de la muerte | Igual: muertes | % | Por 10 min | Con jungla rival | Arriba: muertes | % | Por 10 min | Con jungla rival | Razón |\n|---|---|---|---|---|---|---|---|---|---|")
+arr = lambda s: s in ("1 arriba", "2+ arriba")
+grupos = {"igual": lambda s: s == "igual", "arriba": arr}
+dzs = [d for g in games for d in g["dz"]]
+ex = {"igual": exp["igual"], "arriba": exp["1 arriba"] + exp["2+ arriba"]}
+sel = {k: [d for d in dzs if f(d["estado"])] for k, f in grupos.items()}
+assert len(sel["igual"]) == mu["igual"] and len(sel["arriba"]) == mu["1 arriba"] + mu["2+ arriba"]
+for z in ZONAS:
+    fila = []
+    for k in grupos:
+        ds = [d for d in sel[k] if d["zona"] == z]
+        fila += [len(ds), f"{len(ds) / len(sel[k]):.0%}", f"{10 * len(ds) / ex[k]:.2f}", f"{sum(d['jg'] for d in ds) / len(ds):.0%}" if ds else "-"]
+    a, b = fila[4], fila[0]
+    if a and b:
+        r = (a / ex["arriba"]) / (b / ex["igual"]); se = math.sqrt(1 / a + 1 / b)
+        razon = f"×{r:.2f} ({r * math.exp(-1.96 * se):.2f}–{r * math.exp(1.96 * se):.2f})"
+    else: razon = "-"
+    print(f"| {z} | " + " | ".join(map(str, fila)) + f" | {razon} |")
+for k in grupos:
+    ds = sel[k]
+    print(f"\n{k.capitalize()}: {len(ds)} muertes; ward tuyo en los 90 s previos {sum(d['ward'] for d in ds) / len(ds):.0%}; "
+          f"1 contra 1 {sum(d['n'] == 1 for d in ds) / len(ds):.0%}; 3+ rivales {sum(d['n'] >= 3 for d in ds) / len(ds):.0%}", end="")
+    for w in (True, False):
+        s = [d for d in ds if d["ward"] == w]
+        print(f"; {'con' if w else 'sin'} ward: {sum(d['jg'] for d in s) / len(s):.0%} con jungla rival (n={len(s)})", end="")
+print()
 
 for lbl, rs in [("victorias", [g for g in games if g["win"]]), ("derrotas", [g for g in games if not g["win"]])]:
     e = Counter(); d = Counter()

@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** iteración 13 terminada. Integré tu castigo a igual oro en el PLAN. `nivel6.py`: yendo 1 nivel arriba mueres ×1.31 (1.06–1.61), casi todo por el jungla rival; abajo no mueres más. Regla nueva en prioridad 1.
-- **Siguiente:** ¿las muertes con nivel arriba son en tu línea (gank) o por seguir al rival? Luego otra idea de backlog.
-- **Actualizado:** 2026-11-07 12:15 (iteración 13, cierre)
+- **Estado:** iteración 14 terminada. `nivel6.py` ahora dice dónde mueres: yendo arriba, pasado el río ×1.89 y en jungla rival ×2.53; en tu lado de la línea ×0.75. Sub-regla en el PLAN. Integré tu revisión de placas (el "en tu línea separa" no aguanta) y los 2 números cosméticos.
+- **Siguiente:** otra idea de backlog (p. ej. revisar `revision.py` con las reglas nuevas de nivel/río, o early por campeón).
+- **Actualizado:** 2026-11-07 12:50 (iteración 14, cierre)
 
 ### DeepSeek · revisor
-- **Estado:** revisé 94a8816 (castigo.py) y f4a3d62 (xp.py). Corren limpios y reproducen sus salidas; números del PLAN verificados. Respondí las 2 preguntas de Opus (iteración 10): a igual oro (−1500 a −500) el "1+ kill → 54%" baja a 39% vs 52% (IC cruzados), y el kill con jungla llega con el peor CS @14 (−16.1).
-- **Siguiente:** revisar `scripts/placas.py` (iteración 11) cuando Opus lo commitee.
-- **Actualizado:** 2026-11-07 06:40
+- **Estado:** revisé 94a8816+f4a3d62 (castigo/xp) y de85952+9477093 (placas + filtro 19:xx). Todos corren limpio y reproducen sus salidas. Hallazgo: el "vivo en tu línea separa" de placas.py NO aguanta con fotos fiables (≤15 s de un frame): 63 vs 48% → 54 vs 56%, y se invierte en 2 bandas; es artefacto de la foto gruesa.
+- **Siguiente:** revisar `4a62dd8` (nivel6.py).
+- **Actualizado:** 2026-11-07 06:55
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -43,7 +43,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-castigo-*.md` | Salida de `castigo.py` | Opus |
 | `scripts/placas.py` | Placas reales del timeline en tu línea (tuyas, del equipo, perdidas) contra WR, a igual oro y por campeón | Opus |
 | `datos/analisis-placas-*.md` | Salida de `placas.py` | Opus |
-| `scripts/nivel6.py` | Diferencia de nivel con tu rival 0–14: muertes/kills por 10 min (con y sin jungla rival), carrera al 2 y al 6 | Opus |
+| `scripts/nivel6.py` | Diferencia de nivel con tu rival 0–14: muertes/kills por 10 min (con y sin jungla rival), zona de la muerte (arriba contra igual), carrera al 2 y al 6 | Opus |
 | `datos/analisis-nivel-*.md` | Salida de `nivel6.py` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
@@ -79,10 +79,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: tus placas antes del 14 no separan V/D (ganada 2.17/2.02, perdida 1.28/1.13). Las perdidas sí, a igual oro: 0–1 contra 3+ → 58/36, 65/54, 76/50% en las 3 bandas (pista).
 - 2026-11-07 · DeepSeek: a igual oro (−1500 a −500, n=73) el "1+ kill → 54%" baja a 39% vs 52% (IC 25–56 vs 37–67): parte es ir menos perdido (−844 vs −1201 de oro); el kill con jungla llega con el peor CS @14 (−16.1).
 - 2026-11-07 · Opus: placas perdidas <14: estando fuera (base/roam) no separan (0 → 56%, 1+ → 52%); estando en tu línea sí (63% contra 48%); muerto 0.89/1.18 V/D. Es el rival con prioridad, no irte.
+- 2026-11-07 · DeepSeek: ese "estando en tu línea separa" es artefacto de la foto gruesa: con placas a ≤15 s de un frame (316/645) pasa de 63 vs 48% a 54 vs 56%, y se invierte en 2 bandas. No concluyente.
 - 2026-11-07 · Opus: el filtro `gameDuration ≥ 1200` en linea/convertir/xp saca 2 derrotas de 19:xx; nada cambia de conclusión (Ekko abajo 43%, XP en D −816).
 - 2026-11-07 · Opus: yendo 1 nivel arriba de tu rival antes del 14 mueres ×1.31 (1.06–1.61) que a nivel igual; 65% con el jungla rival (49% igual). Abajo, ×1.04: no mueres más.
 - 2026-11-07 · Opus: medir el nivel en el instante de la muerte da un "1 abajo" falso (×1.5) por el LEVEL_UP que tu kill le da al rival; se mide 3 s antes.
 - 2026-11-07 · Opus: primero al 6: 62% contra 48%, pero a igual oro 52/44, 56/47, 69/62 (IC cruzados): casi todo es reflejo de ir arriba. Primero al 2: 59% contra 51%.
+- 2026-11-07 · DeepSeek: placas perdidas "estando en tu línea" no separan con placas a ≤ 15 s de una foto (54% contra 56%): era artefacto de la foto por minuto.
+- 2026-11-07 · Opus: yendo arriba de nivel, en tu lado de la línea mueres menos (×0.75, 0.52–1.08); pasado el río ×1.89 (1.35–2.64); jungla rival ×2.53 (1.23–5.21).
+- 2026-11-07 · Opus: tu ward en los 90 s previos a morir no cambia la proporción de ganks (arriba 64% contra 67%); el timeline no trae la posición del ward.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -98,6 +102,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 
 - 2026-11-07 · Opus: se quita la regla "no te vayas a base con la oleada entrando" (placas perdidas fuera de línea no separan).
 - 2026-11-07 · Opus: regla nueva en prioridad 1: al sacar ventaja de nivel, asume que viene el gank (mira el río, no empujes sin ver al jungla).
+- 2026-11-07 · Opus: se precisa: con ventaja de nivel, tradea hasta la mitad de la línea y no persigas más allá sin ver al jungla rival.
+- 2026-11-07 · Opus: en el PLAN, las placas perdidas en tu línea pasan a "sin causa clara" (revisión de DeepSeek).
 
 ## Para el usuario (cuando vuelva)
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).
