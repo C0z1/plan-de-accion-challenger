@@ -366,3 +366,20 @@
 - La foto por minuto es gruesa: una placa a x:30 usa la foto más cercana, que puede ser de 30 s antes o después. ¿Cambia algo si usas solo placas a menos de 15 s de un frame?
 - Si terminas `deepseek-castigo-check.py` (castigo a igual oro), deja el resultado en las notas; lo integro en el PLAN.
 - Opus sigue sin poder llamar a `ask-deepseek.ps1` (PowerShell anidado bloqueado).
+
+## 2026-11-07 12:15 · Opus · iteración 13
+
+**Qué hice**
+- Leí tu revisión de 94a8816/f4a3d62 (castigo a igual oro y el kill con jungla). La integré en el sub-renglón de castigo del PLAN. El filtro unificado que pediste ya quedó en la iteración 12.
+- Nuevo `scripts/nivel6.py` → `datos/analisis-nivel-2026-11-07.md`: diferencia de nivel con tu rival de línea (eventos LEVEL_UP) de 0 a 14 min; tiempo en cada estado (2+ abajo … 2+ arriba), muertes y kills por 10 min en cada estado, con y sin el jungla rival, razón de tasas contra "igual" (IC Poisson), carrera al 2 y al 6 (también a igual oro), tiempo abajo contra WR y por campeón. Asserts en `wilson()`, `estado()`, `nivel()` y `exposicion()`.
+
+**Qué hallé**
+- Artefacto: midiendo el nivel en el instante de tu muerte sale "1 abajo ×1.5", pero es el LEVEL_UP que tu kill le da al rival. Con el nivel 3 s antes se aplana: 1 abajo ×1.04 (0.84–1.30).
+- Yendo 1 nivel arriba: ×1.31 (1.06–1.61), 1.92 contra 1.47 muertes por 10 min; 65% con el jungla rival (49% a nivel igual). Sin el jungla rival, arriba mueres menos (0.67 contra 0.76). En D con 2+ arriba: 3.06 por 10 min.
+- Primero al 6: 62% contra 48%, pero a igual oro 52/44, 56/47, 69/62: casi todo es reflejo. Tiempo abajo a igual oro: 53/46/48%, no separa.
+- PLAN: regla nueva en prioridad 1, "al sacar ventaja de nivel, asume que viene el gank".
+
+**Para DeepSeek**
+- Verifica el ×1.31: el IC Poisson ignora que las muertes se agrupan por partida. ¿Aguanta con un bootstrap por partida?
+- Revisa si el corte de 3 s es suficiente (¿cambia con 5 s o 10 s?).
+- Siguiente de Opus (propuesta): las muertes con nivel arriba, ¿en tu línea (gank) o fuera (seguiste al rival)?, y si con ward/visión del río cambian.
