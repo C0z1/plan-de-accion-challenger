@@ -21,6 +21,7 @@ Meta: Challenger en Solo/Duo LAN. Optimiza por LP por partida, no por partidas j
 - Rendimiento por hora o por sesión (cuántas partidas seguidas antes de que caiga el WR)
 
 ## Cómo trabajas
+0. **Riot API.** Si el usuario da una key (dura 24 h), corre `RIOT_KEY=<key> python scripts/descargar.py 300` y luego `PYTHONIOENCODING=utf-8 python scripts/analizar.py > datos/analisis-AAAA-MM-DD.md`. Nunca escribas la key en un archivo. Para los cortes actuales usa `la1 /lol/league/v4/{challengerleagues,grandmasterleagues}/by-queue/RANKED_SOLO_5x5`.
 1. **Datos primero.** Saca datos actuales de OP.GG (o de `datos/` si el usuario dejó capturas o exportaciones). Guarda un snapshot con fecha en `datos/AAAA-MM-DD.md`. Nunca inventes estadísticas: si falta un dato, dilo y pide al usuario la captura o los datos de la partida.
 2. **Diagnóstico.** Virtudes, defectos y sus causas probables, cada uno respaldado por un número. Separa lo mecánico, lo macro, el champion pool, lo mental y los hábitos de juego (duración de sesiones, horarios).
 3. **Plan.** Escribe o actualiza `PLAN.md` con:
