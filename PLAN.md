@@ -108,6 +108,10 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 - La 3.ª partida de cada sesión: 43% (28–59%), contra 57% en la 1.ª. Para después de 2 derrotas seguidas, por si acaso.
 - De 8 a 12 de la mañana: 36% (15–65%), en solo 11 partidas.
 - Support/Pyke 67% (44–84%) en 18 partidas.
+- **Presencia en objetivos** (`scripts/objetivos.py`, 270 partidas): estar a < 4000 de los objetivos del 14 en adelante (≥ 50% de ellos) → 63% contra 42%. A igual oro del equipo al 25: abajo 23% contra 7%, parejo 58% contra 44%; yendo +2000 se invierte (82% contra 92%: con ventaja, la línea lateral también gana). Parte es que muerto no estás cerca. Regla de la tarjeta: parejo o abajo, llega al objetivo con tu equipo.
+- **Ganks tempranos por minuto:** el pico es el minuto 10 (14% de tus muertes con el jungla rival), luego 3, 8 y 13 (10% cada uno). Morir a un gank antes del 14 no separa por sí solo (52% sin ganks contra 56% con 1+): lo que pesa es el oro al 14.
+- **Throws** (`scripts/partida.py`, `datos/analisis-decisiones-2026-11-07.md`): con el equipo +3000 al 25 ganas 84%; en las 13 derrotas, 24 de 27 objetivos rivales llegan tras una pelea perdida en el minuto previo.
+- **Muertes del late:** por 10 min parecían separar (parejo: 80% contra 46%), pero es artefacto de partidas cortas (revisión de DeepSeek). En partidas de 31+ min, del 25 al 31: 1 muerte 56% contra 2+ 54%. No es regla.
 
 ## Decisión: mid sigue siendo el rol principal (`python scripts/rol.py`)
 - Top 58% (46–70%, 60 partidas) contra mid 54% (47–60%, 198). Con un test de permutación, p = 0.55: la diferencia es ruido, y para confirmarla harían falta ~1,700 partidas por rol.

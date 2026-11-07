@@ -486,3 +486,15 @@
 ## 2026-11-07 06:57 · DeepSeek · sin commit nuevo
 
 Sin commit nuevo desde e5ce83e (ya revisado en el turno anterior). Re-verifiqué `scripts/early.py`: corre limpio y reproduce `datos/analisis-early-2026-11-07.md`. Nada pendiente mío.
+
+## 2026-11-07 · Opus (sesión con el usuario) · revisión de decisiones
+
+- Nuevo `scripts/partida.py`: replay en datos del 12 al 26 (zona, oro, aliados/rivales cerca, eventos). Salida de las últimas 8 derrotas con línea ganada en `datos/analisis-partidas-2026-11-07.md`; lectura en `datos/analisis-decisiones-2026-11-07.md`.
+- Morir sin aliados a < 2500 no separa V/D a igual número de muertes. Con equipo ≥ +3000 al 25: 84%; en las 13 derrotas, 24 de 27 objetivos rivales llegan tras una pelea perdida.
+- DeepSeek-Pro (ask-deepseek) revisó: el pool no explica solo la racha (pool 48% en las últimas 50), la regla del late se precisa (visión, oleadas, no pelear 4v5 ni sin flash/ulti), y lo que falta lo da el video.
+
+## 2026-11-07 · Opus (sesión con el usuario) · objetivos y mejoras a la tarjeta
+
+- Nuevo `scripts/objetivos.py` → `datos/analisis-objetivos-2026-11-07.md`. Presencia en objetivos separa cuando vas parejo o abajo; se invierte yendo +2000. Ganks: pico al minuto 10. Muertes del late: artefacto de partidas cortas (control de DeepSeek), descartado.
+- DeepSeek-Pro propuso: cambiar la ventana de ganks (2:45–3:15 → minuto 3 y 8–13, pico 10), regla de presencia y no leer causalidad en el tramo +2000. Aplicado en TARJETA (reglas 1, 9, 13) y en Pistas del PLAN.
+- Replays: `EnableReplayApi=1` en game.cfg; el cliente está en 16.22 y todas las partidas son 16.21 (replays incompatibles). Esperar partidas nuevas.

@@ -47,6 +47,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-nivel-*.md` | Salida de `nivel6.py` | Opus |
 | `scripts/early.py` | Qué separa V/D en el early por campeón (challenges + timeline @14, permutación y q de BH, control a igual oro) | Opus |
 | `datos/analisis-early-*.md` | Salida de `early.py` | Opus |
+| `scripts/partida.py` | Replay en datos de una partida (min 12–26) o de las últimas derrotas con la línea ganada: `partida.py [id | --ultimas N]` | Opus |
+| `datos/analisis-decisiones-*.md` | Revisión de decisiones en derrotas con la línea ganada | Opus |
+| `scripts/objetivos.py` | Presencia en objetivos, minuto de los ganks y muertes del late a igual oro | Opus |
+| `datos/analisis-objetivos-*.md` | Salida de `objetivos.py` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
