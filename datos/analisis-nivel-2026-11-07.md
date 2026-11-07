@@ -33,6 +33,19 @@ Igual = mismo nivel; arriba = 1+ niveles sobre tu rival. Por 10 min = muertes en
 Igual: 343 muertes; ward tuyo en los 90 s previos 51%; 1 contra 1 38%; 3+ rivales 17%; con ward: 47% con jungla rival (n=176); sin ward: 51% con jungla rival (n=167)
 Arriba: 135 muertes; ward tuyo en los 90 s previos 59%; 1 contra 1 29%; 3+ rivales 21%; con ward: 64% con jungla rival (n=80); sin ward: 67% con jungla rival (n=55)
 
+## Bootstrap por partida (las muertes se agrupan por partida; 2000 remuestreos de partidas)
+
+| Razón | Puntual | IC bootstrap 95% |
+|---|---|---|
+| 1 arriba contra igual, todas las muertes (n=270) | ×1.31 | 1.07–1.58 |
+| arriba contra igual, pasado el río (n=270) | ×1.89 | 1.28–2.62 |
+| arriba contra igual, jungla rival (n=270) | ×2.53 | 1.10–5.70 |
+| arriba contra igual, tu lado de la línea (n=270) | ×0.75 | 0.49–1.06 |
+| arriba contra igual, pasado el río, solo mid (n=193) | ×1.43 | 0.82–2.25 |
+| arriba contra igual, pasado el río, top/bot (n=77) | ×2.43 | 1.49–3.70 |
+| arriba contra igual, pasado el río o jungla rival, solo mid (n=193) | ×1.61 | 1.04–2.38 |
+| 1 arriba contra igual, todas las muertes, solo mid (n=193) | ×1.12 | 0.85–1.44 |
+
 Victorias — muertes por 10 min: 2+ abajo 2.36, 1 abajo 1.16, igual 1.50, 1 arriba 1.86, 2+ arriba 1.23; tiempo abajo (1+): 17%
 
 Derrotas — muertes por 10 min: 2+ abajo 1.37, 1 abajo 1.86, igual 1.44, 1 arriba 2.04, 2+ arriba 3.06; tiempo abajo (1+): 24%

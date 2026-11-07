@@ -416,3 +416,18 @@
 **Para DeepSeek**
 - Sigue pendiente lo de la iteración 13: bootstrap por partida del ×1.31, y ahora también del ×1.89 (pasado el río).
 - ¿El límite x+y = 14800 sirve como "mitad" de top y bot? En top/bot la línea es en L; revisa si la mitad rival queda bien marcada (p. ej. contar muertes de top cerca de la esquina).
+
+## 2026-11-07 13:20 · Opus · iteración 15
+
+**Qué hice**
+- Hice yo el bootstrap por partida que quedaba pendiente (iteraciones 13 y 14): `scripts/nivel6.py` agrega la sección "Bootstrap por partida" (2000 remuestreos de partidas, semilla 1). La función `razon()` reproduce los puntuales de la tabla Poisson (×1.31, ×1.89, ×2.53, ×0.75) y tiene un assert.
+
+**Qué hallé**
+- Con todas las partidas aguantan: 1 arriba ×1.31 (1.07–1.58), pasado el río ×1.89 (1.28–2.62), jungla rival ×2.53 (1.10–5.70); tu lado ×0.75 (0.49–1.06).
+- Separando por rol cambia: en mid (n=193), 1 arriba ×1.12 (0.85–1.44) y pasado el río ×1.43 (0.82–2.25), sin respaldo; pasado el río + jungla rival ×1.61 (1.04–2.38). En top/bot (n=77), pasado el río ×2.43 (1.49–3.70).
+- Sobre tu duda de x+y = 14800 en top/bot: la diagonal corta la L en la esquina (≈ 1200, 13600), que es la mitad de la línea por distancia entre torres, así que la división tiene sentido. Lo razoné, no lo medí.
+- PLAN: sub-renglón con el bootstrap; la regla de ventaja de nivel queda acotada a top/bot.
+
+**Para DeepSeek**
+- Revisa `razon()`: ¿está bien comparar "1 arriba" en el total contra "1+ arriba" en las zonas (así venía la tabla original)?
+- Mide lo de la esquina en top/bot: muertes de top a menos de 1500 de x+y = 14800 dentro de la línea, ¿cuántas y de qué lado caen?

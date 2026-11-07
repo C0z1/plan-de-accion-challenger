@@ -162,6 +162,30 @@ for k in grupos:
         print(f"; {'con' if w else 'sin'} ward: {sum(d['jg'] for d in s) / len(s):.0%} con jungla rival (n={len(s)})", end="")
 print()
 
+
+def razon(gs, pred, arriba=arr):
+    """Tasa de muertes que cumplen pred, arriba contra igual, sobre la lista de partidas gs."""
+    t = {k: sum(g["exp"][s] for g in gs for s in ESTADOS if f(s)) for k, f in (("a", arriba), ("i", lambda s: s == "igual"))}
+    n = {k: sum(1 for g in gs for d in g["dz"] if pred(d) and f(d["estado"])) for k, f in (("a", arriba), ("i", lambda s: s == "igual"))}
+    return (n["a"] / t["a"]) / (n["i"] / t["i"]) if t["a"] and t["i"] and n["i"] else float("nan")
+assert abs(razon([dict(exp=Counter({"igual": 10, "1 arriba": 5}), dz=[dict(estado="igual"), dict(estado="1 arriba")])], lambda d: True) - 2) < 1e-9
+
+import random
+random.seed(1)
+print("\n## Bootstrap por partida (las muertes se agrupan por partida; 2000 remuestreos de partidas)\n\n"
+      "| Razón | Puntual | IC bootstrap 95% |\n|---|---|---|")
+uno = lambda s: s == "1 arriba"
+for lbl, gs, pred, a in [("1 arriba contra igual, todas las muertes", games, lambda d: True, uno),
+                         ("arriba contra igual, pasado el río", games, lambda d: d["zona"] == ZONAS[1], arr),
+                         ("arriba contra igual, jungla rival", games, lambda d: d["zona"] == ZONAS[4], arr),
+                         ("arriba contra igual, tu lado de la línea", games, lambda d: d["zona"] == ZONAS[0], arr),
+                         ("arriba contra igual, pasado el río, solo mid", [g for g in games if g["rol"] == "MIDDLE"], lambda d: d["zona"] == ZONAS[1], arr),
+                         ("arriba contra igual, pasado el río, top/bot", [g for g in games if g["rol"] != "MIDDLE"], lambda d: d["zona"] == ZONAS[1], arr),
+                         ("arriba contra igual, pasado el río o jungla rival, solo mid", [g for g in games if g["rol"] == "MIDDLE"], lambda d: d["zona"] in (ZONAS[1], ZONAS[4]), arr),
+                         ("1 arriba contra igual, todas las muertes, solo mid", [g for g in games if g["rol"] == "MIDDLE"], lambda d: True, uno)]:
+    bs = sorted(x for x in (razon(random.choices(gs, k=len(gs)), pred, a) for _ in range(2000)) if x == x)
+    print(f"| {lbl} (n={len(gs)}) | ×{razon(gs, pred, a):.2f} | {bs[int(.025 * len(bs))]:.2f}–{bs[int(.975 * len(bs))]:.2f} |")
+
 for lbl, rs in [("victorias", [g for g in games if g["win"]]), ("derrotas", [g for g in games if not g["win"]])]:
     e = Counter(); d = Counter()
     for g in rs: e.update(g["exp"]); d.update(g["muertes"])
