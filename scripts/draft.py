@@ -41,7 +41,7 @@ def gd(rs):
 games = []
 for f in RAW.glob("LA1_*.json"):
     m = json.loads(f.read_text())["info"]
-    if m["gameDuration"] < 300 or m.get("gameEndedInEarlySurrender"): continue
+    if m["gameDuration"] < 300: continue  # remakes
     ps = m["participants"]
     me = next(p for p in ps if p["puuid"] == puuid)
     opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
@@ -80,12 +80,17 @@ def guia():
     for p, c, rs in sorted(filas, key=lambda x: x[0])[:12]:
         hi = wilson(sum(r["win"] for r in rs), len(rs))[1]
         print(f"| {c} | {len(rs)} | {wr(rs)} | {'sí' if hi < base else 'no'} |")
-    # control de comparaciones múltiples: cuántos «sí» saldrían por puro azar si todos los rivales te dieran tu WR base
-    rnd = random.Random(1); ns = [len(rs) for _, _, rs in filas]
-    real = sum(wilson(sum(r["win"] for r in rs), len(rs))[1] < base for _, _, rs in filas)
-    azar = st.mean(sum(wilson(sum(rnd.random() < base for _ in range(n)), n)[1] < base for n in ns) for _ in range(1000))
-    print(f"\nControl: de {len(ns)} rivales con 8+ partidas, {real} tienen techo < base; por puro azar saldrían ~{azar:.1f}. "
-          f"{'Ningún ban tiene respaldo real todavía: úsalos como pista.' if real <= azar * 1.5 else 'Hay más de lo que da el azar.'}")
+    # control de comparaciones múltiples: permutación a nivel de partida (barajar V/D entre partidas conserva que
+    # una misma partida cuenta para 5 rivales); ¿cuántos «sí» saldrían si el rival no importara?
+    idx = {id(g): i for i, g in enumerate(games)}
+    grupos = [[idx[id(r)] for r in rs] for _, _, rs in filas]
+    cuenta = lambda w: sum(wilson(sum(w[i] for i in gi), len(gi))[1] < base for gi in grupos)
+    real, rnd, w = cuenta([g["win"] for g in games]), random.Random(1), [g["win"] for g in games]
+    perms = [cuenta(rnd.sample(w, len(w))) for _ in range(1000)]
+    pval = sum(c >= real for c in perms) / len(perms)
+    print(f"\nControl (permutación de 1000 barajadas de V/D): de {len(grupos)} rivales con 8+ partidas, {real} tienen techo < base; "
+          f"por puro azar saldrían ~{st.mean(perms):.1f}, y {real} o más en el {pval:.0%} de las barajadas. "
+          f"{'Ningún ban tiene respaldo real todavía: úsalos como pista.' if pval >= 0.05 else 'Hay más de lo que da el azar.'}")
 
     print("\n## Rivales de línea (3+ partidas)\n\n| Rival | Rol | Partidas | WR (IC 95%) | Oro @14 | Con qué jugaste (V-D) |\n|---|---|---|---|---|---|")
     by = defaultdict(list)

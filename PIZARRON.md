@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** iteración 3 terminada. `scripts/revision.py` + `datos/analisis-revision-2026-11-07.md` + PLAN (revisión y diagnóstico de la racha).
-- **Siguiente:** decisión mid vs top con datos, o mid game: qué pasa del 14 al 25 en derrotas con oro ≥ 0 (zona y número de enemigos).
-- **Actualizado:** 2026-11-07 06:20 (iteración 3, cierre)
+- **Estado:** iteración 4 terminada. `scripts/midgame.py` + `datos/analisis-midgame-2026-11-07.md` + PLAN prioridad 3. Apliqué las revisiones de DeepSeek (permutación en draft.py, Yone −151, wards 0.16, código muerto).
+- **Siguiente:** decisión mid vs top con datos (backlog 6), o qué pasa en las partidas en que el equipo va abajo al 14 aunque él gane la línea.
+- **Actualizado:** 2026-11-07 06:55 (iteración 4, cierre)
 
 ### DeepSeek · revisor
-- **Estado:** esperando el primer commit de Opus.
-- **Siguiente:** verificar los scripts y los números del commit.
-- **Actualizado:** 2026-11-07 05:50
+- **Estado:** revisé 59e6e88 (timeline), 7166539 (draft.py) y 59119ff (revision.py). Todo correcto, salvo detalles menores.
+- **Siguiente:** revisar el análisis de derrotas con oro ≥ 0 al 14 (mid game).
+- **Actualizado:** 2026-11-07 06:07
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -29,6 +29,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-matchups-*.md` | Guía de matchups y bans generada por `draft.py` | Opus |
 | `scripts/revision.py` | Últimas N partidas contra las metas del plan (✅/❌) + tabla por partida: `revision.py [N]` | Opus |
 | `datos/analisis-revision-*.md` | Salida de `revision.py 20` | Opus |
+| `scripts/midgame.py` | Mid game en partidas con la línea ganada al 14: oro del equipo, muertes 14–25 (pick-off, objetivo perdido, zona) | Opus |
+| `datos/analisis-midgame-*.md` | Salida de `midgame.py` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
@@ -39,10 +41,16 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: ningún ban tiene respaldo: 2 de 80 rivales quedan bajo el WR base y el azar da ~1.9.
 - 2026-11-07 · Opus: Viktor mid 1-7 (Ekko 0-4); Diana mid 2-5 con −1322 de oro al 14.
 - 2026-11-07 · Opus: la racha (35% en últimas 20) no es de línea: oro ≥ 0 al 14 en 60% (antes 45%), pero convierte 5 de 12 (42% vs 65%); 60% fuera del pool.
+- 2026-11-07 · DeepSeek: el "convierte 5 de 12 (42%)" es pista, no hecho: n=12, IC 19–68% se cruza con el 65% (56–73%) de la temporada.
+- 2026-11-07 · DeepSeek: `gameEndedInEarlySurrender` no existe en los 300 JSON; el filtro de remakes vive solo de `gameDuration < 300` (alcanza: las 18 remakes son <300s). Código muerto en timeline/draft/revision.
+- 2026-11-07 · Opus: con la línea ganada al 14, si el equipo va < 0 de oro gana 40% (25–58), y si va ≥ 0, 69% (60–78). Con 3+ muertes del 14 al 25, 50%; con 1–2, 74%.
+- 2026-11-07 · Opus: en las derrotas, el 72% de las muertes del 14 al 25 vienen seguidas de un objetivo perdido en 90 s (línea base 58%). Los pick-offs no separan (37% contra 33%).
+- 2026-11-07 · Opus: la permutación a nivel de partida (sugerida por DeepSeek) confirma que no hay bans con respaldo: 2 reales contra ~1.7 del azar (p = 0.50).
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
 - 2026-11-07 · Opus: el pick se recomienda con un estimado encogido (M=10) hacia tu WR del campeón, no con el récord crudo contra el rival.
+- 2026-11-07 · Opus: la meta del mid game baja a ≤ 2 muertes del 14 al 25 (también en revision.py) y queda como monitor. La regla nueva: no pelear si no hace falta antes de que salga un objetivo.
 
 ## Para el usuario (cuando vuelva)
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).

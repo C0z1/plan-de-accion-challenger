@@ -21,7 +21,7 @@ Mínimo 8 partidas. «Techo» = el WR más alto que es compatible con tus datos:
 | Kayn | 22 | 36% (20%–57%) | no |
 | Ornn | 8 | 38% (14%–69%) | no |
 
-Control: de 80 rivales con 8+ partidas, 2 tienen techo < base; por puro azar saldrían ~1.9. Ningún ban tiene respaldo real todavía: úsalos como pista.
+Control (permutación de 1000 barajadas de V/D): de 80 rivales con 8+ partidas, 2 tienen techo < base; por puro azar saldrían ~1.7, y 2 o más en el 50% de las barajadas. Ningún ban tiene respaldo real todavía: úsalos como pista.
 
 ## Rivales de línea (3+ partidas)
 

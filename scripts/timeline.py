@@ -38,7 +38,7 @@ for tf in (RAW / "timeline").glob("LA1_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]
-    if m["gameDuration"] < 300 or m.get("gameEndedInEarlySurrender"): continue
+    if m["gameDuration"] < 300: continue  # remakes (los JSON no traen gameEndedInEarlySurrender)
     ps = m["participants"]
     me = next(p for p in ps if p["puuid"] == puuid)
     opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)

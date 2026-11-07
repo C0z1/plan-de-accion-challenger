@@ -38,11 +38,11 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 - **Las muertes que sí separan son las del mid game:** del minuto 14 al 25 mueres 2.29 veces en las victorias y 3.06 en las derrotas; del 25 en adelante, 1.34 contra 2.05. (Parte es consecuencia de ir perdiendo, pero ahí está la diferencia.)
 - **El 52% de tus muertes antes del 14 incluyen al jungla rival.** Las zonas donde más mueres son tu mitad de la línea de mid (182 muertes tempranas) y el río (65% con el jungla rival presente).
 - Jugando mid, 1 de cada 3 muertes tempranas (139/414) pasa **fuera de la línea**: río (62) y jungla rival (32).
-- **Casi nunca compras control wards:** 0.2 por partida, y en el 93% de tus partidas no compraste ninguno.
+- **Casi nunca compras control wards:** 0.16 por partida, y en el 93% de tus partidas no compraste ninguno.
 - Lo que más separa victorias de derrotas en el early (challenges): ventaja máxima de nivel sobre tu rival (+0.75), placas de torre (+0.86) y kills en solitario (+0.47). Los skillshots esquivados y la visión casi no influyen.
 
 ## Virtudes (con datos)
-- **Yone:** 65 partidas, 58% (46–70%). Va −234 de oro al 14 incluso cuando gana: es de escalar, no necesita ganar la línea.
+- **Yone:** 65 partidas, 58% (46–70%). Va −234 de oro al 14 en promedio (−151 incluso cuando gana): es de escalar, no necesita ganar la línea.
 - **Mordekaiser top:** 22 partidas, 68% (47–84%), aunque pierde la línea (−428 al 14).
 - **Ekko gana la línea:** +177 al 14, +623 cuando gana. Pero solo tiene 52% de WR: no convierte la ventaja.
 - **Kills en solitario:** 2.1 por partida (2.5 en victorias). Mecánicamente le ganas a tu rival.
@@ -72,12 +72,18 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 ### 3. Mid game: convertir la ventaja y no regalar muertes del 14 al 25
 - Con ventaja (sobre todo con Ekko): empuja, toma placas y rota al objetivo con tu jungla, en vez de farmear en mid. Las placas son de lo que más separa victorias de derrotas (11.7 contra 6.8).
 - El 43% de todas tus muertes son contra 3 o más enemigos. Antes de entrar a una zona sin visión, cuenta cuántos rivales se ven en el mapa.
-- Métrica: **≤ 2.3 muertes del minuto 14 al 25** (tu promedio en victorias; hoy 2.65).
+- **Cuando ganas la línea y pierdes la partida** (48 de 128; fuente: [`datos/analisis-midgame-2026-11-07.md`](datos/analisis-midgame-2026-11-07.md), `scripts/midgame.py`):
+  - Lo que más pesa es tu equipo: con tu línea ganada y el equipo con oro < 0 al 14 ganas 40% (25–58%), y con el equipo ≥ 0, 69% (60–78%). En las derrotas el equipo pasa de +502 al 14 a −438 al 20.
+  - Lo que sí depende de ti es cuántas veces mueres: con 1–2 muertes del 14 al 25 ganas 74% (60–84%), y con 3 o más, 50% (38–62%).
+  - En las derrotas, el 72% de esas muertes vienen seguidas de un objetivo perdido (dragón, heraldo, barón o torre) en los 90 s siguientes. Desde un instante cualquiera de esas partidas la cifra es 58%: morir regala objetivos.
+  - Morir solo (pick-off) **no** separa victorias de derrotas: 37% de tus muertes en victorias contra 33% en derrotas. El problema es cuántas veces mueres y cuándo, no si estabas solo.
+  - Regla: **antes de que salga un dragón, heraldo o barón, no pelees si no hace falta**. Y si tu equipo va abajo aunque tú ganes la línea, juega a no morir y que tu ventaja no se pierda: el rival necesita tu muerte para tomar el objetivo.
+- Métrica: **≤ 2 muertes del minuto 14 al 25** (tu promedio en victorias es 2.29; hoy 2.65). Como parte de esas muertes es consecuencia de ir perdiendo, sirve más para vigilar que como meta por sí sola.
 
 ## En champ select: `python scripts/draft.py <rival> [rol]`
 - Te dice tu récord contra ese rival, tu WR cuando está en el equipo rival y qué campeón de tu pool pickear. El estimado mezcla tu récord contra el rival con tu WR del campeón (pesa como 10 partidas), así que con pocas partidas manda tu WR general.
 - Guía completa (bans, rivales de línea, pool por rol): [`datos/analisis-matchups-2026-11-07.md`](datos/analisis-matchups-2026-11-07.md).
-- **Ningún ban tiene respaldo estadístico todavía:** de 80 rivales con 8+ partidas, solo 2 (Lulu y Diana) quedan claramente bajo tu WR base, y el azar solo ya da ~1.9. Banea por comodidad, no por estos números.
+- **Ningún ban tiene respaldo estadístico todavía:** de 80 rivales con 8+ partidas, solo 2 (Lulu y Diana) quedan claramente bajo tu WR base, y barajando al azar tus victorias y derrotas salen ~1.7, con 2 o más en la mitad de las barajadas. Banea por comodidad, no por estos números.
 
 ## Después de cada sesión y los domingos: `python scripts/revision.py [N]`
 - Compara tus últimas N partidas (20 por defecto) contra las anteriores en cada meta del plan (WR, oro y CS al 14, WR cuando vas arriba al 14, muertes por fase, control wards, pool) y marca ✅/❌. Abajo trae la tabla partida por partida. Antes corre `scripts/descargar.py` para bajar las nuevas.
@@ -91,4 +97,4 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 
 ## Metas semanales
 - Semana 1: cortar la racha. 55% o más de WR, oro ≥ 0 al 14 en más de la mitad de las partidas, al menos 1 control ward por partida, pool cerrado.
-- Después: 58% o más sostenido, con oro ≥ 0 al 14 en más del 55% y ≤ 2.3 muertes del 14 al 25. Revisa los números cada domingo con `scripts/revision.py` (y, para el detalle, `scripts/analizar.py` y `scripts/timeline.py`) (antes corre `scripts/descargar.py` para bajar las partidas nuevas y sus timelines).
+- Después: 58% o más sostenido, con oro ≥ 0 al 14 en más del 55% y ≤ 2 muertes del 14 al 25. Revisa los números cada domingo con `scripts/revision.py` (y, para el detalle, `scripts/analizar.py` y `scripts/timeline.py`) (antes corre `scripts/descargar.py` para bajar las partidas nuevas y sus timelines).

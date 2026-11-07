@@ -10,7 +10,7 @@
 | Oro contra tu rival al 14 (media) | +359.6 | -191.7 | ≥ 0 | ✅ |
 | CS contra tu rival al 14 (media) | +0.7 | -3.4 | ≥ 0 | ✅ |
 | Muertes antes del 14 | 1.95 | 2.22 | referencia: 2.12 en victorias | ✅ |
-| Muertes del 14 al 25 | 2.95 | 2.62 | ≤ 2.3 | ❌ |
+| Muertes del 14 al 25 | 2.95 | 2.62 | ≤ 2 | ❌ |
 | Partidas con ≥ 1 control ward | 10% (3%–30%, n=20) | 7% (4%–11%, n=262) | 100% (1 por regreso a base) | ❌ |
 | Control wards por partida | 0.15 | 0.20 | ≥ 1 | ❌ |
 | Partidas con el pool (Yone, Ekko, Mordekaiser) | 40% (22%–61%, n=20) | 57% (51%–63%, n=262) | > 80% | ❌ |
