@@ -47,7 +47,7 @@ for tf in (RAW / "timeline").glob("LA1_*.json"):
     me = next(p for p in ps if p["puuid"] == puuid)
     opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
     fr = json.loads(tf.read_text())["info"]["frames"]
-    if not opp or len(fr) <= 20: continue  # hace falta el minuto 20
+    if not opp or len(fr) <= 20 or m["gameDuration"] < 1200: continue  # 20+ min reales (sin 19:xx)
     pid, oid, team = me["participantId"], opp["participantId"], me["teamId"]
     pf = lambda mn, i: fr[mn]["participantFrames"][str(i)]
     oro = lambda mn, i: pf(mn, i)["totalGold"]

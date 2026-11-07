@@ -63,7 +63,7 @@ for tf in (RAW / "timeline").glob("LA1_*.json"):
     if me["teamPosition"] not in LINEA: continue  # sin jungla
     opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
     fr = json.loads(tf.read_text())["info"]["frames"]
-    if not opp or len(fr) <= 20: continue  # 20+ min, igual que linea.py
+    if not opp or len(fr) <= 20 or m["gameDuration"] < 1200: continue  # 20+ min reales (sin 19:xx)
     pid, oid = me["participantId"], opp["participantId"]
     linea = LINEA[me["teamPosition"]]
     xp = lambda mn, i: fr[mn]["participantFrames"][str(i)]["xp"]

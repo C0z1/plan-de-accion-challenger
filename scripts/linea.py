@@ -43,7 +43,7 @@ for tf in (RAW / "timeline").glob("LA1_*.json"):
     rival = lambda pos: next((p for p in ps if p["teamPosition"] == pos and p["teamId"] != me["teamId"]), None)
     opp, jg = rival(me["teamPosition"]), rival("JUNGLE")
     fr = json.loads(tf.read_text())["info"]["frames"]
-    if not opp or not jg or len(fr) <= 20 or me["teamPosition"] == "JUNGLE": continue
+    if not opp or not jg or len(fr) <= 20 or m["gameDuration"] < 1200 or me["teamPosition"] == "JUNGLE": continue
     pid, oid, jid = me["participantId"], opp["participantId"], jg["participantId"]
     pf = lambda mn, i: fr[mn]["participantFrames"][str(i)]
     dif = lambda mn, f: f(pf(mn, pid)) - f(pf(mn, oid))

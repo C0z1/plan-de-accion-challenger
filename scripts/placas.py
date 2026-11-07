@@ -35,6 +35,29 @@ _ev = [{"laneType": "MID_LANE", "teamId": 200, "killerId": 3, "timestamp": 5}, {
        {"laneType": "MID_LANE", "teamId": 200, "killerId": 3, "timestamp": 99}]
 assert placas(_ev, "MID_LANE", 100, 3, 50) == (1, 2, 1)
 
+# Tiempo de reaparición base por nivel (antes del 15 no hay recargo por minuto) + ~20 s de caminar a la línea.
+# shortcut: tabla fija del parche actual y caminata fija, ajustar si Riot cambia los tiempos.
+RESPAWN = [10, 10, 12, 12, 14, 16, 20, 25, 28, 32.5, 35, 37.5, 40, 42.5, 45, 47.5, 50, 52.5]
+CAMINAR = 20
+
+
+def ausente(t, muertes):
+    """¿La placa que cayó en t (ms) cayó mientras estabas muerto o volviendo a la línea? muertes = [(t, nivel)]."""
+    return any(tm <= t <= tm + (RESPAWN[nv - 1] + CAMINAR) * 1000 for tm, nv in muertes)
+assert ausente(70000, [(60000, 6)]) and not ausente(100000, [(60000, 6)]) and not ausente(50000, [(60000, 6)])
+
+def zone(x, y, team):  # misma función que scripts/xp.py
+    own = (x + y < 14800) == (team == 100)
+    if x + y < 5600 or x + y > 24000: return "base propia" if own else "base rival"
+    if abs(x - y) < 1600: z = "mid"
+    elif x < 2300 or y > 12500: z = "top"
+    elif y < 2300 or x > 12500: z = "bot"
+    elif abs(x + y - 14800) < 1500: return "río"
+    else: z = "jungla"
+    return f"{z} ({'lado propio' if own else 'lado rival'})"
+assert zone(7400, 7400, 100) == "mid (lado rival)" and zone(1000, 1000, 100) == "base propia"
+LINEA = {"MIDDLE": "mid", "TOP": "top", "BOTTOM": "bot", "UTILITY": "bot"}
+
 games, total_ev = [], Counter()
 for tf in (RAW / "timeline").glob("LA1_*.json"):
     mf = RAW / tf.name
@@ -54,10 +77,20 @@ for tf in (RAW / "timeline").glob("LA1_*.json"):
     pf = lambda mn, i, k: fr[mn]["participantFrames"][str(i)][k]
     lane, team = LANE[me["teamPosition"]], me["teamId"]
     t14, tfin = placas(ev, lane, team, pid, 14 * 60000), placas(ev, lane, team, pid, 10 ** 9)
+    muertes = [(e["timestamp"], pf(e["timestamp"] // 60000, pid, "level")) for f in fr for e in f["events"]
+               if e["type"] == "CHAMPION_KILL" and e["victimId"] == pid and e["timestamp"] <= 14 * 60000]
+    perdidas = [e["timestamp"] for e in ev if e["laneType"] == lane and e["teamId"] == team and e["timestamp"] <= 14 * 60000]
+    muerto14 = sum(ausente(t, muertes) for t in perdidas)
+    # Vivo: ¿la foto más cercana (una por minuto) te pone en tu línea? Aproximación gruesa.
+    pos = lambda t: fr[round(t / 60000)]["participantFrames"][str(pid)]["position"]
+    enlinea14 = sum(not ausente(t, muertes) and zone(pos(t)["x"], pos(t)["y"], team).startswith(LINEA[me["teamPosition"]])
+                    for t in perdidas)
     games.append(dict(win=me["win"], champ=me["championName"], rol=me["teamPosition"],
-                      gd14=pf(14, pid, "totalGold") - pf(14, oid, "totalGold"),
+                      gd14=pf(14, pid, "totalGold") - pf(14, oid, "totalGold"), muerto14=muerto14, vivo14=len(perdidas) - muerto14,
+                      enlinea14=enlinea14, fuera14=len(perdidas) - muerto14 - enlinea14,
                       mias14=t14[0], eq14=t14[1], perd14=t14[2], mias=tfin[0], eq=tfin[1], perd=tfin[2]))
 assert games, "sin timelines con placas"
+assert all(g["muerto14"] + g["vivo14"] == g["perd14"] for g in games)
 
 avg = lambda rs, f: st.mean([f(r) for r in rs]) if rs else float("nan")
 gan, perd = [g for g in games if g["gd14"] >= 0], [g for g in games if g["gd14"] < 0]
@@ -89,6 +122,29 @@ for lo, hi in [(-1500, -500), (-500, 500), (500, 1500)]:
           f"{avg(v, lambda g: g['mias14']):.2f} / {avg(d, lambda g: g['mias14']):.2f} | "
           f"{avg(v, lambda g: g['perd14']):.2f} / {avg(d, lambda g: g['perd14']):.2f} | "
           f"{wr([g for g in rs if g['perd14'] <= 1])} | {wr([g for g in rs if g['perd14'] >= 3])} |")
+
+# ¿Causa o reflejo? Si solo separan las placas perdidas mientras estás muerto, es reflejo de las muertes.
+print("\n## Placas perdidas <14: estando muerto o vivo (DeepSeek: ¿causa o reflejo?)\n\n"
+      f"**Muerto** = cayó entre tu muerte y tu reaparición + {CAMINAR} s de caminar (reaparición por nivel); **vivo** = el resto "
+      "(en línea, en base o fuera).\n\n| Oro vs rival al 14 | Partidas | Muerto V / D | Vivo V / D | 0 vivo | 1 vivo | 2+ vivo |\n|---|---|---|---|---|---|---|")
+for lo, hi in [(-1500, -500), (-500, 500), (500, 1500), (-10 ** 9, 10 ** 9)]:
+    rs = [g for g in games if lo <= g["gd14"] < hi]
+    v, d = [g for g in rs if g["win"]], [g for g in rs if not g["win"]]
+    print(f"| {'todas' if lo < -10 ** 6 else f'{lo:+} a {hi:+}'} | {len(rs)} | "
+          f"{avg(v, lambda g: g['muerto14']):.2f} / {avg(d, lambda g: g['muerto14']):.2f} | "
+          f"{avg(v, lambda g: g['vivo14']):.2f} / {avg(d, lambda g: g['vivo14']):.2f} | "
+          f"{wr([g for g in rs if g['vivo14'] == 0])} | {wr([g for g in rs if g['vivo14'] == 1])} | {wr([g for g in rs if g['vivo14'] >= 2])} |")
+
+print("\n### Vivo, separado: en tu línea contra fuera de ella (base, roam, jungla; foto del minuto más cercano)\n\n"
+      "| Oro vs rival al 14 | En línea V / D | Fuera V / D | 0 fuera | 1+ fuera | 0 en línea | 1+ en línea |\n|---|---|---|---|---|---|---|")
+for lo, hi in [(-1500, -500), (-500, 500), (500, 1500), (-10 ** 9, 10 ** 9)]:
+    rs = [g for g in games if lo <= g["gd14"] < hi]
+    v, d = [g for g in rs if g["win"]], [g for g in rs if not g["win"]]
+    print(f"| {'todas' if lo < -10 ** 6 else f'{lo:+} a {hi:+}'} | "
+          f"{avg(v, lambda g: g['enlinea14']):.2f} / {avg(d, lambda g: g['enlinea14']):.2f} | "
+          f"{avg(v, lambda g: g['fuera14']):.2f} / {avg(d, lambda g: g['fuera14']):.2f} | "
+          f"{wr([g for g in rs if not g['fuera14']])} | {wr([g for g in rs if g['fuera14']])} | "
+          f"{wr([g for g in rs if not g['enlinea14']])} | {wr([g for g in rs if g['enlinea14']])} |")
 
 print("\n## Por campeón (8+)\n\n| Campeón | Partidas | WR | Placas tuyas <14 (V) | (D) | Perdidas <14 (V) | (D) | WR con 1+ tuya <14 | WR con 0 |\n|---|---|---|---|---|---|---|---|---|")
 for c, n in Counter(g["champ"] for g in games).most_common():

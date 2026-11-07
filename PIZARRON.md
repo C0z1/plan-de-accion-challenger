@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** iteración 11 terminada. `placas.py`: tus placas antes del 14 no separan; las perdidas en tu línea sí, a igual oro (pista).
-- **Siguiente:** control a igual oro de castigo.py ("1+ kill → 54%") si DeepSeek no lo hace; arreglar el filtro 19:xx en linea/convertir/xp.
-- **Actualizado:** 2026-11-07 10:55 (iteración 11, cierre)
+- **Estado:** iteración 12 terminada. Filtro 19:xx corregido en linea/convertir/xp (conclusiones iguales). `placas.py`: las placas que pierdes estando fuera no separan; estando en tu línea sí → reflejo de la línea perdida. Se quitó la regla de placas.
+- **Siguiente:** si DeepSeek no lo hace, castigo.py a igual oro ("1+ kill → 54%"); luego otra idea de backlog con valor para el WR.
+- **Actualizado:** 2026-11-07 11:30 (iteración 12, cierre)
 
 ### DeepSeek · revisor
 - **Estado:** revisé 82665ec (linea.py), 87dbc71 (convertir.py) y acc9856 (a igual oro). Correctos y convergen con mi verificación (n=74, XP −272/−799). Hallazgos: el p=0.30 del matchup diluye 3 rivales que sí niegan farm (Yasuo/Qiyana/Viktor); el filtro "20+ min" deja entrar 2 partidas de 19:xx (menor).
@@ -75,6 +75,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: contar el minuto siguiente a tu muerte como "muerto" casi no cambia xp.py (−786/−818 contra −759/−763).
 - 2026-11-07 · Opus: corrige el renglón de `turretPlatesTaken`: en este parche hay hasta 15 placas por línea y equipo (3 torres) y caen después del 14. Igual no son tus placas (cuadra con los last hits del timeline en 159/600).
 - 2026-11-07 · Opus: tus placas antes del 14 no separan V/D (ganada 2.17/2.02, perdida 1.28/1.13). Las perdidas sí, a igual oro: 0–1 contra 3+ → 58/36, 65/54, 76/50% en las 3 bandas (pista).
+- 2026-11-07 · Opus: placas perdidas <14: estando fuera (base/roam) no separan (0 → 56%, 1+ → 52%); estando en tu línea sí (63% contra 48%); muerto 0.89/1.18 V/D. Es el rival con prioridad, no irte.
+- 2026-11-07 · Opus: el filtro `gameDuration ≥ 1200` en linea/convertir/xp saca 2 derrotas de 19:xx; nada cambia de conclusión (Ekko abajo 43%, XP en D −816).
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -87,6 +89,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: se corrige la anterior con `xp.py`: el tiempo fuera de la línea no es donde se va la XP. Abajo: no morir otra vez y castigar al rival.
 - 2026-11-07 · Opus: regla de placas en prioridad 1 (pista): antes del 14 no te vayas a base ni roamees con la oleada rival entrando a tu torre.
 - 2026-11-07 · Opus: "castigar" se precisa con `castigo.py`: el kill en tu línea cuando el rival se pasa (pista), no el gank forzado con jungla.
+
+- 2026-11-07 · Opus: se quita la regla "no te vayas a base con la oleada entrando" (placas perdidas fuera de línea no separan).
 
 ## Para el usuario (cuando vuelva)
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).
