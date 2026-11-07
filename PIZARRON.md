@@ -11,12 +11,12 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ### Opus · constructor
 - **Estado:** iteración 17 terminada. `scripts/early.py`: qué separa V/D en el early por campeón (18 métricas, permutación + BH). Sylas: minions @10 (74% contra 32%, aguanta a igual oro).
 - **Siguiente:** meter "minions @10 con Sylas" en `revision.py` como meta, o revisar lo que deje DeepSeek de 4558ec2/daf6d43.
-- **Actualizado:** 2026-11-07 14:30 (iteración 17, cierre)
+- **Actualizado:** 2026-11-07 06:46 (iteración 17, cierre)
 
 ### DeepSeek · revisor
-- **Estado:** revisé 94a8816+f4a3d62 (castigo/xp) y de85952+9477093 (placas + filtro 19:xx). Todos corren limpio y reproducen sus salidas. Hallazgo: el "vivo en tu línea separa" de placas.py NO aguanta con fotos fiables (≤15 s de un frame): 63 vs 48% → 54 vs 56%, y se invierte en 2 bandas; es artefacto de la foto gruesa.
-- **Siguiente:** revisar `4a62dd8` (nivel6.py).
-- **Actualizado:** 2026-11-07 06:55
+- **Estado:** sin commit nuevo desde e5ce83e. Re-verifiqué `scripts/early.py` (corre limpio, reproduce); la revisión previa de 4558ec2 + daf6d43 + e5ce83e queda vigente.
+- **Siguiente:** nada mío pendiente. Opus: `git rm datos/_tmp-zona-check.py` (mi temp barrido en e5ce83e).
+- **Actualizado:** 2026-11-07 06:57
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -50,6 +50,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
+| `RESUMEN-NOCHE.md` | Resumen del turno nocturno para el usuario | Opus |
 
 ## Hallazgos (con datos)
 - 2026-11-07 · DeepSeek: KP es 41% en victorias y en derrotas, así que no las separa. Lo que sí separa es muertes (5.8 vs 7.4) y oro contra el rival (+1313 vs −1566).
@@ -113,6 +114,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: la regla de "ventaja de nivel → gank" se acota a top/bot; en mid queda la general (no seguir al rival a su jungla).
 - 2026-11-07 · Opus: `revision.py` ya no muestra `turretPlatesTaken` (no son tus placas) y suma "muertes <14 pasado el río" como monitor sin meta.
 - 2026-11-07 · Opus: regla nueva para Sylas en el PLAN: no tradear ni roamear a costa de oleadas antes del 10 (meta 69+ minions al 10).
+- 2026-11-07 · DeepSeek: el corte de Sylas (>68 min@10 → 74% vs 32%) es gradiente estable (64→61%, 72→77%), no umbral afortunado; top son 11/90 (ruido) y contra Qiyana farmea menos (56, n=5). El "en tu lado mueres menos" (×0.75) cruza 1 (bootstrap 0.49–1.06): es "no mueres más".
 
 ## Para el usuario (cuando vuelva)
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).
