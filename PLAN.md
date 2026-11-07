@@ -51,7 +51,7 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 ## Defectos (con datos)
 1. **Pierdes la línea por farm y XP:** en las derrotas llegas al 14 con −452 de oro, −8 de CS y −335 de XP. Además, mueres 2.2 veces antes del 14 (la mitad por gank) y 3.06 veces del 14 al 25 en las derrotas.
 2. **Sylas es tu campeón más jugado y el que peor rinde:** 92 partidas, 52% (42–62%), −264 de oro al 14 (−615 en derrotas).
-3. **Mala racha actual:** 44% en las últimas 50 y 35% en las últimas 20.
+3. **Mala racha actual:** 44% en las últimas 50 y 35% en las últimas 20. **No es la línea:** en las últimas 20 llegas al 14 con oro ≥ 0 en el 60% (antes 45%) y con +360 de oro, pero de esas 12 solo ganaste 5 (42%, contra 65% antes), mueres 2.95 veces del 14 al 25 (antes 2.62) y el 60% fueron con campeones fuera del pool (Sylas, Locke, Zeri, Rakan). Muestra chica (n=12 y 20): pista, pero apunta a las prioridades 2 y 3, no a la 1. Fuente: `datos/analisis-revision-2026-11-07.md`.
 4. **Ekko no convierte:** gana la línea pero tiene el mismo WR que Sylas.
 
 ## Prioridades (máximo 3)
@@ -79,6 +79,9 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 - Guía completa (bans, rivales de línea, pool por rol): [`datos/analisis-matchups-2026-11-07.md`](datos/analisis-matchups-2026-11-07.md).
 - **Ningún ban tiene respaldo estadístico todavía:** de 80 rivales con 8+ partidas, solo 2 (Lulu y Diana) quedan claramente bajo tu WR base, y el azar solo ya da ~1.9. Banea por comodidad, no por estos números.
 
+## Después de cada sesión y los domingos: `python scripts/revision.py [N]`
+- Compara tus últimas N partidas (20 por defecto) contra las anteriores en cada meta del plan (WR, oro y CS al 14, WR cuando vas arriba al 14, muertes por fase, control wards, pool) y marca ✅/❌. Abajo trae la tabla partida por partida. Antes corre `scripts/descargar.py` para bajar las nuevas.
+
 ## Pistas (muestra chica: vigílalas, no son reglas)
 - Viktor en mid: 1-7 (2–47%), y **Ekko 0-4** contra él. Si sale Viktor, no pickees Ekko (`draft.py` recomienda Yone). Como ban sigue siendo pista.
 - Diana en mid: 2-5 y llegas al 14 con **−1322 de oro**, el peor oro de todos tus rivales de línea frecuentes. Yone va 0-3 contra ella.
@@ -88,4 +91,4 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 
 ## Metas semanales
 - Semana 1: cortar la racha. 55% o más de WR, oro ≥ 0 al 14 en más de la mitad de las partidas, al menos 1 control ward por partida, pool cerrado.
-- Después: 58% o más sostenido, con oro ≥ 0 al 14 en más del 55% y ≤ 2.3 muertes del 14 al 25. Revisa los números cada domingo con `scripts/analizar.py` y `scripts/timeline.py` (antes corre `scripts/descargar.py` para bajar las partidas nuevas y sus timelines).
+- Después: 58% o más sostenido, con oro ≥ 0 al 14 en más del 55% y ≤ 2.3 muertes del 14 al 25. Revisa los números cada domingo con `scripts/revision.py` (y, para el detalle, `scripts/analizar.py` y `scripts/timeline.py`) (antes corre `scripts/descargar.py` para bajar las partidas nuevas y sus timelines).
