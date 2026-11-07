@@ -108,6 +108,11 @@ for lbl, cond in [("Equipo con oro >= 0 al 14", lambda g: g["tg14"] >= 0),
                   ("Entregaste 1+ shutdown del 14 al 25", lambda g: g["shut"] >= 1)]:
     print(f"| {lbl} | {wr([g for g in ok if cond(g)])} |")
 
+# causalidad: si las muertes solo fueran consecuencia de que el equipo va abajo, con el equipo >= 0 no separarían
+print("\n### Muertes del 14 al 25 según el oro del equipo al 14\n\n| Muertes 14–25 | Equipo >= 0 al 14 | Equipo < 0 al 14 |\n|---|---|---|")
+for lbl, cond in [("0–2", lambda g: g["d1425"] <= 2), ("3+", lambda g: g["d1425"] >= 3)]:
+    print(f"| {lbl} | {wr([g for g in ok if cond(g) and g['tg14'] >= 0])} | {wr([g for g in ok if cond(g) and g['tg14'] < 0])} |")
+
 dl = [d for d in deaths if d["lane_ok"]]
 print(f"\n## Las {len(dl)} muertes del 14 al 25 en esas partidas\n\n"
       "| | En victorias | En derrotas |\n|---|---|---|")

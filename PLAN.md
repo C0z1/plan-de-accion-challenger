@@ -75,6 +75,7 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 - **Cuando ganas la línea y pierdes la partida** (48 de 128; fuente: [`datos/analisis-midgame-2026-11-07.md`](datos/analisis-midgame-2026-11-07.md), `scripts/midgame.py`):
   - Lo que más pesa es tu equipo: con tu línea ganada y el equipo con oro < 0 al 14 ganas 40% (25–58%), y con el equipo ≥ 0, 69% (60–78%). En las derrotas el equipo pasa de +502 al 14 a −438 al 20.
   - Lo que sí depende de ti es cuántas veces mueres: con 1–2 muertes del 14 al 25 ganas 74% (60–84%), y con 3 o más, 50% (38–62%).
+  - **No es solo consecuencia de que tu equipo vaya abajo:** con tu línea ganada *y* el equipo con oro ≥ 0 al 14, ganas 82% (69–90%, 49 partidas) con 0–2 muertes del 14 al 25 y 57% (43–70%, 49) con 3 o más.
   - En las derrotas, el 72% de esas muertes vienen seguidas de un objetivo perdido (dragón, heraldo, barón o torre) en los 90 s siguientes. Desde un instante cualquiera de esas partidas la cifra es 58%: morir regala objetivos.
   - Morir solo (pick-off) **no** separa victorias de derrotas: 37% de tus muertes en victorias contra 33% en derrotas. El problema es cuántas veces mueres y cuándo, no si estabas solo.
   - Regla: **antes de que salga un dragón, heraldo o barón, no pelees si no hace falta**. Y si tu equipo va abajo aunque tú ganes la línea, juega a no morir y que tu ventaja no se pierda: el rival necesita tu muerte para tomar el objetivo.
@@ -93,7 +94,14 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 - Diana en mid: 2-5 y llegas al 14 con **−1322 de oro**, el peor oro de todos tus rivales de línea frecuentes. Yone va 0-3 contra ella.
 - La 3.ª partida de cada sesión: 43% (28–59%), contra 57% en la 1.ª. Para después de 2 derrotas seguidas, por si acaso.
 - De 8 a 12 de la mañana: 36% (15–65%), en solo 11 partidas.
-- **Top contra mid:** top 58% (46–70%, 60 partidas) contra mid 54% (47–60%, 198 partidas). Los intervalos se cruzan: todavía no hay razón para cambiar de rol principal. Support/Pyke 67% (44–84%) en 18 partidas.
+- Support/Pyke 67% (44–84%) en 18 partidas.
+
+## Decisión: mid sigue siendo el rol principal (`python scripts/rol.py`)
+- Top 58% (46–70%, 60 partidas) contra mid 54% (47–60%, 198). Con un test de permutación, p = 0.55: la diferencia es ruido, y para confirmarla harían falta ~1,700 partidas por rol.
+- Lo que hace bueno a top es **Mordekaiser** (15-7, 68%), no el rol: top sin Mordekaiser va 53% (37–68%). Yone rinde igual en mid (59%) que en top (58%).
+- En top llegas peor al 14 (−358 de oro contra −112 en mid) y en las últimas 20 de top vas 8-12 (40%).
+- **Sylas top: 4-7 (36%, 15–65%).** Si te toca top, Mordekaiser o Yone, no Sylas.
+- Fuente: [`datos/analisis-rol-2026-11-07.md`](datos/analisis-rol-2026-11-07.md).
 
 ## Metas semanales
 - Semana 1: cortar la racha. 55% o más de WR, oro ≥ 0 al 14 en más de la mitad de las partidas, al menos 1 control ward por partida, pool cerrado.

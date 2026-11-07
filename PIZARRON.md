@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** iteración 4 terminada. `scripts/midgame.py` + `datos/analisis-midgame-2026-11-07.md` + PLAN prioridad 3. Apliqué las revisiones de DeepSeek (permutación en draft.py, Yone −151, wards 0.16, código muerto).
-- **Siguiente:** decisión mid vs top con datos (backlog 6), o qué pasa en las partidas en que el equipo va abajo al 14 aunque él gane la línea.
-- **Actualizado:** 2026-11-07 06:55 (iteración 4, cierre)
+- **Estado:** iteración 5 terminada. `scripts/rol.py` (mid vs top) + chequeo de causalidad en `midgame.py` + PLAN (decisión de rol).
+- **Siguiente:** por qué Ekko no convierte (gana la línea, 54% de WR), o lo que pida la revisión de DeepSeek.
+- **Actualizado:** 2026-11-07 07:25 (iteración 5, cierre)
 
 ### DeepSeek · revisor
 - **Estado:** revisé 59e6e88 (timeline), 7166539 (draft.py) y 59119ff (revision.py). Todo correcto, salvo detalles menores.
@@ -31,6 +31,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-revision-*.md` | Salida de `revision.py 20` | Opus |
 | `scripts/midgame.py` | Mid game en partidas con la línea ganada al 14: oro del equipo, muertes 14–25 (pick-off, objetivo perdido, zona) | Opus |
 | `datos/analisis-midgame-*.md` | Salida de `midgame.py` | Opus |
+| `scripts/rol.py` | Mid contra top (y demás roles): WR, línea, conversión, campeones, tendencia, permutación | Opus |
+| `datos/analisis-rol-*.md` | Salida de `rol.py` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
@@ -46,11 +48,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: con la línea ganada al 14, si el equipo va < 0 de oro gana 40% (25–58), y si va ≥ 0, 69% (60–78). Con 3+ muertes del 14 al 25, 50%; con 1–2, 74%.
 - 2026-11-07 · Opus: en las derrotas, el 72% de las muertes del 14 al 25 vienen seguidas de un objetivo perdido en 90 s (línea base 58%). Los pick-offs no separan (37% contra 33%).
 - 2026-11-07 · Opus: la permutación a nivel de partida (sugerida por DeepSeek) confirma que no hay bans con respaldo: 2 reales contra ~1.7 del azar (p = 0.50).
+- 2026-11-07 · Opus: top 58% contra mid 54% es ruido (permutación p = 0.55). Top es bueno por Mordekaiser (68%); top sin Morde, 53%. Sylas top 4/11.
+- 2026-11-07 · Opus: las muertes del 14 al 25 pesan aunque el equipo vaya bien: con línea y equipo ≥ 0 al 14, 0–2 muertes → 82% (69–90); 3+ → 57% (43–70).
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
 - 2026-11-07 · Opus: el pick se recomienda con un estimado encogido (M=10) hacia tu WR del campeón, no con el récord crudo contra el rival.
 - 2026-11-07 · Opus: la meta del mid game baja a ≤ 2 muertes del 14 al 25 (también en revision.py) y queda como monitor. La regla nueva: no pelear si no hace falta antes de que salga un objetivo.
+- 2026-11-07 · Opus: mid sigue siendo el rol principal; si toca top, Mordekaiser o Yone (no Sylas).
 
 ## Para el usuario (cuando vuelva)
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).

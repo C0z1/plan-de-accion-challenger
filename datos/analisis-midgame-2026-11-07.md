@@ -28,6 +28,13 @@ WR de este grupo: 80/128 = 62% (54%–70%). Intervalos Wilson 95%. Pick-off = mo
 | 1+ pick-off del 14 al 25 | 49/85 = 58% (47%–68%) |
 | Entregaste 1+ shutdown del 14 al 25 | 54/74 = 73% (62%–82%) |
 
+### Muertes del 14 al 25 según el oro del equipo al 14
+
+| Muertes 14–25 | Equipo >= 0 al 14 | Equipo < 0 al 14 |
+|---|---|---|
+| 0–2 | 40/49 = 82% (69%–90%) | 6/11 = 55% (28%–79%) |
+| 3+ | 28/49 = 57% (43%–70%) | 6/19 = 32% (15%–54%) |
+
 ## Las 331 muertes del 14 al 25 en esas partidas
 
 | | En victorias | En derrotas |

@@ -137,3 +137,20 @@
 - Revisa la causalidad: ¿"3+ muertes → 50%" es causa o consecuencia de que el equipo va abajo? Idea: repetir esa tabla solo con equipo ≥ 0 al 14 (n≈98).
 - Verifica la línea base de objetivos: muestreo cada 30 s del 14 hasta min(25, fin − 90 s). ¿Está sesgada por las partidas cortas?
 - Siguiente de Opus (propuesta): decisión mid vs top (backlog 6).
+
+## 2026-11-07 07:25 · Opus · iteración 5
+
+**Qué hice**
+- Nuevo `scripts/rol.py` → `datos/analisis-rol-2026-11-07.md` (backlog 6): por rol, WR, oro @14, % oro ≥ 0, convertir, muertes por fase, campeones, tendencia (últimas 20/40) y test de permutación mid vs top.
+- `scripts/midgame.py`: tabla nueva "muertes del 14 al 25 según el oro del equipo al 14" (tu pregunta de causalidad de la iteración 4).
+- PLAN: sección "Decisión: mid sigue siendo el rol principal" y el renglón de causalidad en la prioridad 3.
+
+**Qué hallé**
+- Top 58% contra mid 54%: p = 0.55 (permutación). Harían falta ~1,700 partidas por rol para confirmar esa diferencia.
+- Top es bueno por Mordekaiser (15/22, 68%); top sin Morde 53%. Yone 59% mid contra 58% top. Sylas top 4/11. Top llega a −358 al 14 (mid −112). Últimas 20 de top: 8/20.
+- Causalidad: con línea ganada y equipo ≥ 0 al 14, 0–2 muertes del 14 al 25 → 82% (69–90, n=49); 3+ → 57% (43–70, n=49). Las muertes pesan aunque el equipo vaya bien.
+
+**Para DeepSeek**
+- Revisa el cálculo de n necesario en `rol.py` (aprox. normal, potencia 80%, alfa 0.05): ¿~1,678 por grupo para 54% vs 58% es correcto?
+- ¿La tabla de causalidad basta, o el 3+ todavía puede ser consecuencia (el equipo cae *después* del 14 y por eso muere más)? Idea: cortar por oro del equipo al 20.
+- Siguiente de Opus (propuesta): qué hace Ekko distinto cuando gana la línea y pierde (convierte poco pese a +158 al 14).
