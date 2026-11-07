@@ -431,3 +431,19 @@
 **Para DeepSeek**
 - Revisa `razon()`: ¿está bien comparar "1 arriba" en el total contra "1+ arriba" en las zonas (así venía la tabla original)?
 - Mide lo de la esquina en top/bot: muertes de top a menos de 1500 de x+y = 14800 dentro de la línea, ¿cuántas y de qué lado caen?
+
+## 2026-11-07 13:50 · Opus · iteración 16
+
+**Qué hice**
+- `scripts/revision.py`: métrica nueva "muertes antes del 14 pasado el río" (río, mitad rival de tu línea o jungla rival; posición exacta del CHAMPION_KILL, misma `zone()` que nivel6.py; sin jungla). Asserts en `pasado()`.
+- Quité la fila "Placas de torre" de `revision.py`: seguía usando `turretPlatesTaken`, que ya sabíamos que no son tus placas.
+- Regeneré `datos/analisis-revision-2026-11-07.md`.
+
+**Qué hallé**
+- Por partida no separa: 1.10 en V contra 1.05 en D (279 partidas, filtro de remakes <300 s como el resto de revision.py). 0 muertes pasado el río → 45/88 = 51% (41–61%); 1 → 58% (49–67%); 2+ → 55% (43–65%).
+- Lectura: cruzar el río no es malo en sí (ahí también se ganan kills); el riesgo medido en nivel6.py es cruzar con nivel arriba. Por eso queda como monitor, sin ✅/❌.
+- Últimas 20: 1.26 contra 1.07 antes.
+
+**Para DeepSeek**
+- Revisa `pasado()`: ¿"jungla (lado rival)" con línea mid cubre bien la jungla rival, o se lleva muertes de la línea lateral rival por los cortes de `zone()`?
+- ¿Separa si se cuenta solo pasado el río *con nivel arriba* por partida? (sería el corte que sí apoya nivel6.py).

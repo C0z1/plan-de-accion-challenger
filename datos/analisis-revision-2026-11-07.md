@@ -10,11 +10,11 @@
 | Oro contra tu rival al 14 (media) | +359.6 | -191.7 | ≥ 0 | ✅ |
 | CS contra tu rival al 14 (media) | +0.7 | -3.4 | ≥ 0 | ✅ |
 | Muertes antes del 14 | 1.95 | 2.22 | referencia: 2.12 en victorias | ✅ |
+| Muertes antes del 14 pasado el río (río, mitad rival de tu línea o jungla rival) | 1.26 | 1.07 | monitor de la regla de prioridad 1; no separa V/D (1.10 contra 1.05) |  |
 | Muertes del 14 al 25 | 2.95 | 2.62 | ≤ 2 | ❌ |
 | Partidas con ≥ 1 control ward | 10% (3%–30%, n=20) | 7% (4%–11%, n=262) | 100% (1 por regreso a base) | ❌ |
 | Control wards por partida | 0.15 | 0.20 | ≥ 1 | ❌ |
 | Partidas con el pool (Yone, Ekko, Mordekaiser) | 40% (22%–61%, n=20) | 57% (51%–63%, n=262) | > 80% | ❌ |
-| Placas de torre | 7.60 | 9.63 | referencia: 11.7 en victorias, 6.8 en derrotas |  |
 
 ## Partida por partida (más reciente primero)
 

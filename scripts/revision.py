@@ -7,6 +7,25 @@ sys.stdout.reconfigure(encoding="utf-8")
 RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 POOL = {"Yone", "Ekko", "Mordekaiser"}  # PLAN, prioridad 2
+NOMBRE = {"MIDDLE": "mid", "TOP": "top", "BOTTOM": "bot", "UTILITY": "bot"}  # misma tabla que scripts/nivel6.py
+
+
+def zone(x, y, team):  # misma función que scripts/nivel6.py
+    own = (x + y < 14800) == (team == 100)
+    if x + y < 5600 or x + y > 24000: return "base propia" if own else "base rival"
+    if abs(x - y) < 1600: z = "mid"
+    elif x < 2300 or y > 12500: z = "top"
+    elif y < 2300 or x > 12500: z = "bot"
+    elif abs(x + y - 14800) < 1500: return "río"
+    else: z = "jungla"
+    return f"{z} ({'lado propio' if own else 'lado rival'})"
+
+
+def pasado(z, linea):
+    """¿La muerte fue pasado el río (mitad rival de tu línea, río o jungla rival)? Ver PLAN, prioridad 1."""
+    return z == "río" or (z.endswith("(lado rival)") and (z.startswith(linea) or z.startswith("jungla")))
+assert pasado(zone(7400, 7400, 100), "mid") and not pasado(zone(5000, 5000, 100), "mid") and pasado("río", "top")
+assert not pasado("top (lado rival)", "mid") and pasado("jungla (lado rival)", "bot")
 
 
 def wilson(k, n, z=1.96):
@@ -25,7 +44,7 @@ for f in RAW.glob("LA1_*.json"):
     me = next(p for p in ps if p["puuid"] == puuid)
     opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
     g = dict(win=me["win"], champ=me["championName"], t=m["gameCreation"], cw=me.get("visionWardsBoughtInGame", 0),
-             placas=me.get("challenges", {}).get("turretPlatesTaken", 0), gd14=None, cd14=None, d14=None, d25=None)
+             gd14=None, cd14=None, d14=None, d25=None, rio14=None)
     tf = RAW / "timeline" / f.name
     if tf.exists():
         fr = json.loads(tf.read_text())["info"]["frames"]; pid = me["participantId"]
@@ -35,6 +54,10 @@ for f in RAW.glob("LA1_*.json"):
             g["cd14"] = a["minionsKilled"] + a["jungleMinionsKilled"] - b["minionsKilled"] - b["jungleMinionsKilled"]
         mins = [e["timestamp"] / 60000 for x in fr for e in x["events"] if e["type"] == "CHAMPION_KILL" and e["victimId"] == pid]
         g["d14"] = sum(t < 14 for t in mins); g["d25"] = sum(14 <= t < 25 for t in mins)
+        if me["teamPosition"] in NOMBRE:  # sin jungla: no tiene "tu línea"
+            g["rio14"] = sum(pasado(zone(e["position"]["x"], e["position"]["y"], me["teamId"]), NOMBRE[me["teamPosition"]])
+                             for x in fr for e in x["events"]
+                             if e["type"] == "CHAMPION_KILL" and e["victimId"] == pid and e["timestamp"] < 14 * 60000)
     games.append(g)
 games.sort(key=lambda g: g["t"])
 assert games, "sin partidas"
@@ -67,13 +90,14 @@ METRICAS = [
     ("Oro contra tu rival al 14 (media)", lambda rs: media(rs, "gd14"), "≥ 0", lambda v: v >= 0),
     ("CS contra tu rival al 14 (media)", lambda rs: media(rs, "cd14"), "≥ 0", lambda v: v >= 0),
     ("Muertes antes del 14", lambda rs: media(rs, "d14"), "referencia: 2.12 en victorias", lambda v: v <= 2.12),
+    ("Muertes antes del 14 pasado el río (río, mitad rival de tu línea o jungla rival)", lambda rs: media(rs, "rio14"),
+     "monitor de la regla de prioridad 1; no separa V/D (1.10 contra 1.05)", None),
     ("Muertes del 14 al 25", lambda rs: media(rs, "d25"), "≤ 2", lambda v: v <= 2),
     ("Partidas con ≥ 1 control ward", lambda rs: prop(rs, lambda r: r["cw"] >= 1), "100% (1 por regreso a base)",
      lambda v: v >= .9),
     ("Control wards por partida", lambda rs: media(rs, "cw"), "≥ 1", lambda v: v >= 1),
     ("Partidas con el pool (Yone, Ekko, Mordekaiser)", lambda rs: prop(rs, lambda r: r["champ"] in POOL), "> 80%",
      lambda v: v > .8),
-    ("Placas de torre", lambda rs: media(rs, "placas"), "referencia: 11.7 en victorias, 6.8 en derrotas", None),
 ]
 
 fecha = lambda g: datetime.fromtimestamp(g["t"] / 1000)
