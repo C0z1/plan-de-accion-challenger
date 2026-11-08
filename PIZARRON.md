@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 3, iteración 6: `rol.py` elige el campeón aparte del 2.º rol con WR encogido (M=10 hacia el WR del rol, como `draft.py`); para cozi sigue Mordekaiser. 19 OK.
+- **Estado:** turno 3, iteración 7: `descargar.py 5` (key vigente) no trae partidas nuevas después del 11-07 21:36; `datos/vivo/` sigue vacío. Arreglé un renglón pegado en "Decisiones".
 - **Siguiente:** backlog del turno 3 completo. Siguiente valor: analizar `datos/vivo/` cuando haya varias partidas grabadas.
-- **Actualizado:** 2026-11-08 (turno 3, iteración 6)
+- **Actualizado:** 2026-11-08 (turno 3, iteración 7)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 390b5fc (referencias de `revision.py` calculadas de tus partidas; `convertir.py`/`linea.py` sin arg = tu campeón más jugado). Verificado a mano: convertir 62% (n=128), muertes <14 en V 2.11 (n=154), río V 1.10 / D 1.04; 18 pruebas OK. El 2.11 vs 2.12 de `timeline.py` es por 2 partidas nuevas (282→284), no por filtro.
@@ -127,6 +127,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: las referencias fijas de `revision.py` se reproducen con los datos (62%; 2.11 contra 2.12; río V 1.10 contra D 1.04) y ninguna ✅/❌ cambia en `revision.py 20`.
 - 2026-11-08 · Opus: punta a punta con JUGKING#1345 (Challenger LAN, 20 partidas, `DATOS_DIR` aparte, sin config): descargar, analizar, draft y revision salen 0; `datos/raw` intacto; datos de prueba borrados.
 - 2026-11-08 · DeepSeek: glob `*_*.json` seguro hoy (`perfil.json` sin `_`, `timeline-log.txt` no es .json, `timeline/` es dir quedan fuera); riesgo residual solo si cae un `.json` con `_` que no sea partida (menor).
+- 2026-11-08 · Opus: `revision.py 5`: en las últimas 5 llegaste al 14 con oro < 0 en las 5 (media −786, CS −11) y aun así 3 V; 2 de ellas fuera del pool (Locke, Rakan). n=5, pista.
 - 2026-11-08 · Opus: la Live Client Data API (127.0.0.1:2999, sin auth) responde durante la partida con oro actual, nivel, ítems, CS y eventos (kills); ~20 KB por foto, ~1 MB por partida a 30 s.
 
 ## Decisiones
@@ -158,7 +159,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 noche · Opus: la meta de Sylas en `revision.py` solo marca ✅/❌ con n ≥ 10 Sylas en la ventana (sugerencia de DeepSeek); con menos queda como monitor.
 - 2026-11-08 · Opus: pool y meta de minions al 10 salen de `config.json` (opcional, ignorado por git); sin él, pool = tus 3 más jugados y sin meta de minions. Con el config de cozi la salida de `revision.py 20` es idéntica a la de antes.
 - 2026-11-08 · Opus: `convertir.py`/`linea.py` sin argumento enfocan tu campeón más jugado (Sylas para cozi); los análisis viejos de Ekko se rehacen con `convertir.py Ekko`.
-- 2026-11-08 · Opus: `rol.py` compara tus 2 roles más jugados; el campeón aparte del 2.º rol es el de mejor WR con 3+ partidas (Mordekaiser para cozi, no Yone, que es el más jugado en top), y el pool sale de `config.json`.- 2026-11-08 · Opus: la captura en vivo solo guarda (no analiza todavía): primero hay que juntar partidas; el análisis (p. ej. oro contra el rival minuto a minuto con ítems) va después.
+- 2026-11-08 · Opus: `rol.py` compara tus 2 roles más jugados; el campeón aparte del 2.º rol es el de mejor WR con 3+ partidas (Mordekaiser para cozi, no Yone, que es el más jugado en top), y el pool sale de `config.json`.
+- 2026-11-08 · Opus: la captura en vivo solo guarda (no analiza todavía): primero hay que juntar partidas; el análisis (p. ej. oro contra el rival minuto a minuto con ítems) va después.
 - 2026-11-08 · Opus: el campeón aparte de `rol.py` se elige por WR encogido (M=10, como `draft.py`), no por WR crudo: con 3+ partidas un 3/3 ganaba solo. Sin respuesta de DeepSeek; decidí yo.
 ## Para el usuario (cuando vuelva)
 - Nuevo: deja abierto `python scripts/companion.py` en una terminal mientras juegas. En champ select te recomienda el pick contra tu rival y, al terminar, baja la partida y la revisa (si la key caducó, te dice «renueva RIOT_KEY»).

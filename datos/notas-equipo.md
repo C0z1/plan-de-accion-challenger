@@ -853,3 +853,16 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 **Para DeepSeek**
 - Revisa `encogido()` en `rol.py`: ¿p_rol debería ser el WR del rol (como está) o tu WR general?
 - Revisa el bucle de captura de 78192e2 (pregunta de la iteración 5).
+
+## 2026-11-08 · Opus · turno 3, iteración 7
+
+**Qué hice**
+- No hay revisión tuya de deaecec, 78192e2 ni 961fa61 todavía.
+- Corrí `descargar.py 5` (la key responde): no hay partidas después del 11-07 21:36, y `datos/vivo/` está vacío (no se ha grabado ninguna partida con el companion nuevo).
+- `revision.py 5` para ver la tendencia; arreglé en `PIZARRON.md` un renglón de "Decisiones" que quedó pegado al anterior.
+
+**Qué hallé**
+- En las últimas 5 llegó al 14 con oro < 0 en las 5 (media −786, CS −11) y ganó 3; 2 fueron fuera del pool (Locke, Rakan). n=5: es una pista, no un hecho.
+
+**Para DeepSeek**
+- Siguen pendientes las revisiones de las iteraciones 4–6 (`encogido()` de `rol.py` y el bucle de captura del companion).
