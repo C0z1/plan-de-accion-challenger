@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 3, iteración 4: `rol.py` ya no tiene nada fijo de cozi (tus 2 roles más jugados, pool de `config.json`, mejor campeón del 2.º rol). Salida de cozi idéntica byte a byte; 18 OK.
-- **Siguiente:** opcional: captura Live Client Data durante `InProgress`.
-- **Actualizado:** 2026-11-08 (turno 3, iteración 4)
+- **Estado:** turno 3, iteración 5: `companion.py` guarda cada 30 s una foto de la Live Client Data API en `datos/vivo/<inicio>.jsonl` durante `InProgress`. Probado contra una partida real en curso; 19 OK.
+- **Siguiente:** backlog del turno 3 completo. Pendiente: respuesta de DeepSeek sobre el criterio del campeón aparte en `rol.py` (3+ partidas o encogido).
+- **Actualizado:** 2026-11-08 (turno 3, iteración 5)
 
 ### DeepSeek · revisor
-- **Estado:** revisado 23af793 (DATOS_DIR, `*_*.json`, config.json) y 11c5626 (CI + --help). Verificado: revision con/sin config OK (pool deducido Sylas/Ekko/Yone), CI simulado 18 OK (1 saltado). Menor: `*_*.json` aceptaría un `.json` con `_` que no sea partida.
+- **Estado:** revisado 390b5fc (referencias de `revision.py` calculadas de tus partidas; `convertir.py`/`linea.py` sin arg = tu campeón más jugado). Verificado a mano: convertir 62% (n=128), muertes <14 en V 2.11 (n=154), río V 1.10 / D 1.04; 18 pruebas OK. El 2.11 vs 2.12 de `timeline.py` es por 2 partidas nuevas (282→284), no por filtro.
 - **Siguiente:** nada pendiente mío.
-- **Actualizado:** 2026-11-08 00:09
+- **Actualizado:** 2026-11-08 00:13
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -56,6 +56,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/wards.py` | Control wards: tú y los 1,431 jugadores de línea ajenos (gank <14 y WR, a igual oro y por rol) | Opus |
 | `datos/analisis-wards-*.md` | Salida de `wards.py` | Opus |
 | `scripts/companion.py` | Lee el cliente de LoL (solo lectura): en champ select corre `draft.py` contra tu rival; al terminar, `descargar.py 5` + `revision.py 1`. `--fixture <carpeta>` para probar | Opus |
+| `datos/vivo/` | Fotos en vivo de la Live Client Data API que guarda `companion.py` (una línea JSON cada 30 s; en `.gitignore`) | Opus |
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
 | `scripts/test_companion.py` | Pruebas sin red: `python -m unittest discover scripts` | Opus |
 | `scripts/test_draft.py` | Pruebas de `draft.py` (funciones y recomendación con partidas sintéticas) y humo de `revision.py 1` | Opus |
@@ -126,6 +127,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: las referencias fijas de `revision.py` se reproducen con los datos (62%; 2.11 contra 2.12; río V 1.10 contra D 1.04) y ninguna ✅/❌ cambia en `revision.py 20`.
 - 2026-11-08 · Opus: punta a punta con JUGKING#1345 (Challenger LAN, 20 partidas, `DATOS_DIR` aparte, sin config): descargar, analizar, draft y revision salen 0; `datos/raw` intacto; datos de prueba borrados.
 - 2026-11-08 · DeepSeek: glob `*_*.json` seguro hoy (`perfil.json` sin `_`, `timeline-log.txt` no es .json, `timeline/` es dir quedan fuera); riesgo residual solo si cae un `.json` con `_` que no sea partida (menor).
+- 2026-11-08 · Opus: la Live Client Data API (127.0.0.1:2999, sin auth) responde durante la partida con oro actual, nivel, ítems, CS y eventos (kills); ~20 KB por foto, ~1 MB por partida a 30 s.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -156,7 +158,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 noche · Opus: la meta de Sylas en `revision.py` solo marca ✅/❌ con n ≥ 10 Sylas en la ventana (sugerencia de DeepSeek); con menos queda como monitor.
 - 2026-11-08 · Opus: pool y meta de minions al 10 salen de `config.json` (opcional, ignorado por git); sin él, pool = tus 3 más jugados y sin meta de minions. Con el config de cozi la salida de `revision.py 20` es idéntica a la de antes.
 - 2026-11-08 · Opus: `convertir.py`/`linea.py` sin argumento enfocan tu campeón más jugado (Sylas para cozi); los análisis viejos de Ekko se rehacen con `convertir.py Ekko`.
-- 2026-11-08 · Opus: `rol.py` compara tus 2 roles más jugados; el campeón aparte del 2.º rol es el de mejor WR con 3+ partidas (Mordekaiser para cozi, no Yone, que es el más jugado en top), y el pool sale de `config.json`.
+- 2026-11-08 · Opus: `rol.py` compara tus 2 roles más jugados; el campeón aparte del 2.º rol es el de mejor WR con 3+ partidas (Mordekaiser para cozi, no Yone, que es el más jugado en top), y el pool sale de `config.json`.- 2026-11-08 · Opus: la captura en vivo solo guarda (no analiza todavía): primero hay que juntar partidas; el análisis (p. ej. oro contra el rival minuto a minuto con ítems) va después.
 ## Para el usuario (cuando vuelva)
 - Nuevo: deja abierto `python scripts/companion.py` en una terminal mientras juegas. En champ select te recomienda el pick contra tu rival y, al terminar, baja la partida y la revisa (si la key caducó, te dice «renueva RIOT_KEY»).
 - Para revisar tus primeras muertes: `python scripts/partida.py <id> --early` (minuto a minuto del 1 al 12, con tu nivel contra el de tu rival).
@@ -169,3 +171,4 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - Hay 4 `.pyc` de `scripts/__pycache__/` rastreados en git (ya están en `.gitignore`, pero Opus no tiene `git rm`): corre `git rm -r --cached scripts/__pycache__` y haz commit antes del push.
 - El CI (`.github/workflows/pruebas.yml`) arranca solo al hacer push.
 - Opus no puede llamar a `ask-deepseek.ps1` (el permiso bloquea PowerShell anidado). Si quieres que lo use, permite ese comando.
+- Nuevo: con `companion.py` abierto, cada partida queda grabada en `datos/vivo/` (fotos cada 30 s, solo en tu PC). Reinicia el companion para que tome el cambio.

@@ -4,6 +4,7 @@ Uso:
   python scripts/companion.py --fixture scripts/fixtures/champselect   una pasada con JSON de ejemplo
 - ChampSelect: identifica tu posición y a tu rival (o a todos los rivales ya elegidos si no se sabe su rol)
   y corre draft.py; imprime una vez por cada cambio de rivales.
+- InProgress: cada 30 s guarda una foto de la Live Client Data API (puerto 2999) en datos/vivo/<inicio>.jsonl.
 - EndOfGame/PreEndOfGame: espera 60 s y corre descargar.py 5 y revision.py 1 (si la key caducó, lo avisa).
 Lockfile: C:\\Riot Games\\League of Legends\\lockfile (o la variable LOL_LOCKFILE)."""
 import argparse, base64, json, os, pathlib, ssl, subprocess, sys, time, urllib.request
@@ -23,6 +24,24 @@ def lcu(path):
         req = urllib.request.Request(f"{proto}://127.0.0.1:{port}{path}", headers={"Authorization": f"Basic {auth}"})
         with urllib.request.urlopen(req, context=SSL, timeout=5) as r: return json.load(r)
     except (OSError, ValueError): return None  # sin lockfile, cliente cerrándose o 404 fuera de champ select
+
+
+VIVO = DIR.parent / "datos" / "vivo"
+
+
+def vivo():
+    """Foto de /liveclientdata/allgamedata (sin auth, solo durante la partida); None si no responde."""
+    try:
+        with urllib.request.urlopen("https://127.0.0.1:2999/liveclientdata/allgamedata", context=SSL, timeout=5) as r: return json.load(r)
+    except (OSError, ValueError): return None
+
+
+def capturar(archivo):
+    """Agrega una foto en vivo a archivo (lo crea en VIVO al primer dato); devuelve el archivo."""
+    if (d := vivo()) is None: return archivo
+    if archivo is None: VIVO.mkdir(parents=True, exist_ok=True); archivo = VIVO / f"{time.strftime('%Y%m%d-%H%M%S')}.jsonl"
+    with open(archivo, "a", encoding="utf-8") as f: f.write(json.dumps(d, ensure_ascii=False) + "\n")
+    return archivo
 
 
 def rivales(s):
@@ -68,7 +87,7 @@ def main(argv=None):
     if a.fixture:
         d = pathlib.Path(a.fixture)
         get = lambda path: json.loads((d / ("session.json" if "champ-select" in path else "gameflow-phase.json")).read_text())
-    m, visto, fase_ant = None, None, None
+    m, visto, fase_ant, archivo, ult = None, None, None, None, 0
     while True:
         fase = get("/lol-gameflow/v1/gameflow-phase")
         if fase is None and fase_ant != "cerrado": print("Cliente cerrado: espero…")
@@ -78,6 +97,8 @@ def main(argv=None):
             if ids and (pos, ids) != visto:
                 m = m or nombres(); recomendar(pos, ids, m); visto = (pos, ids)
         elif fase != "ChampSelect": visto = None
+        if fase == "InProgress" and get is lcu and time.time() - ult >= 30: archivo, ult = capturar(archivo), time.time()
+        elif fase != "InProgress": archivo = None  # partida nueva, archivo nuevo
         if fase in ("PreEndOfGame", "EndOfGame") and fase_ant not in ("PreEndOfGame", "EndOfGame") and get is lcu: post_partida()
         fase_ant = fase or "cerrado"
         if get is not lcu: return

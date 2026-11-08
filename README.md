@@ -52,6 +52,7 @@ Opcional:
 | Momento | Qué hace |
 |---|---|
 | Champ select | Cuando tu rival de línea elige, corre `draft.py <rival> <tu rol>` y te muestra qué pickear. Sin roles asignados (normales), lo corre contra cada rival ya elegido. |
+| En partida | Cada 30 s guarda una foto de la Live Client Data API (oro, nivel, ítems, eventos) en `datos/vivo/<inicio>.jsonl` (no se sube a git). |
 | Fin de partida | Espera 60 s, baja tus 5 últimas (`descargar.py 5`) y revisa la nueva (`revision.py 1`). |
 | Key caducada o partida sin publicar | Te dice qué correr a mano después. |
 

@@ -50,8 +50,25 @@ class PostPartida(unittest.TestCase):
         companion.lcu = lambda path: next(fases)  # al acabarse las fases, StopIteration corta el bucle
         companion.post_partida = lambda: llamadas.append(1)
         companion.time.sleep = lambda _: None
-        with self.assertRaises(StopIteration): companion.main([])
-        self.assertEqual(llamadas, [1])  # PreEndOfGame → EndOfGame no repite la descarga
+        orig = companion.capturar; companion.capturar = lambda a: llamadas.append("vivo") or a
+        try:
+            with self.assertRaises(StopIteration): companion.main([])
+        finally: companion.capturar = orig
+        self.assertEqual(llamadas, ["vivo", 1])  # captura en InProgress; PreEndOfGame → EndOfGame no repite la descarga
+
+    def test_capturar_agrega_fotos_al_mismo_archivo(self):
+        import tempfile
+        orig = companion.vivo, companion.VIVO
+        with tempfile.TemporaryDirectory() as t:
+            try:
+                companion.VIVO = pathlib.Path(t) / "vivo"
+                companion.vivo = lambda: None
+                self.assertIsNone(companion.capturar(None))  # sin partida no crea nada
+                companion.vivo = lambda: {"gameData": {"gameTime": 30.0}}
+                a = companion.capturar(None)
+                self.assertEqual(companion.capturar(a), a)
+                self.assertEqual([json.loads(l)["gameData"]["gameTime"] for l in a.read_text(encoding="utf-8").splitlines()], [30.0, 30.0])
+            finally: companion.vivo, companion.VIVO = orig
 
     def corre(self, codigos):
         cmds = []
