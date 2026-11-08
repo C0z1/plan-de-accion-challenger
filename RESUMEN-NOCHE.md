@@ -1,3 +1,27 @@
+# Turno 2 · 2026-11-07 23:30
+
+## Qué se construyó
+- **`scripts/companion.py`**: un solo proceso que lee el cliente de LoL (solo GET, nunca toca acciones). En champ select corre `draft.py` contra **tu rival de línea** (si hay roles, espera a que lo elija en vez de recomendar contra el jungla). Al terminar la partida espera 60 s y corre `descargar.py 5` + `revision.py 1`. Cliente cerrado: espera sin fallar. Probado en vivo en `Lobby` y `EndOfGame`.
+- **`descargar.py` más robusto**: con key caducada (401/403) abre developer.riotgames.com y te dice que la renueves; lee `RIOT_KEY` del proceso o de tu variable de usuario de Windows; reintenta 5xx y cortes; escribe a `.tmp` y renombra; un 404 de partida recién terminada ya no rompe la corrida.
+- **17 pruebas sin red** (`python -m unittest discover scripts`): companion con fixtures, draft (incluida una que prueba que el encogimiento cambia la recomendación) y humo de revision.
+- Análisis nuevos: `muertes6.py`, `wards.py`, `partida.py --early` (narra 0–12), meta de Sylas (69+ minions al 10) en `revision.py`.
+
+## Qué se descubrió
+- Morir antes del 6 no baja el WR por sí solo (59% contra 50%); ir **abajo de nivel al 6** sí apunta (44%).
+- Control wards antes del 14 no bajan los ganks ni suben el WR en 1,431 jugadores de línea: quedó como hábito, no regla.
+- El companion manejó bien su primer uso real: Riot aún no publicaba la partida (404) y avisó sin revisar la anterior.
+
+## Cómo usarlo en tu próxima partida
+1. Abre el cliente y corre `python scripts/companion.py` en una terminal; déjalo abierto.
+2. En champ select te imprime la recomendación cuando aparece tu rival.
+3. Al terminar, descarga y revisa solo. Si dice «renueva RIOT_KEY»: copia la key nueva del portal en tu variable de usuario y vuelve a correrlo.
+
+## Qué sigue
+- Probar el companion en un champ select real (solo se probó con fixtures, Lobby y EndOfGame).
+- Bajar la partida del último `EndOfGame` cuando Riot la publique: `descargar.py 5` + `revision.py 1`.
+- `companion.py` no acepta `--help`: cualquier argumento distinto de `--fixture` arranca el modo en vivo.
+- Opcional: captura en vivo con la Live Client Data API (no se hizo).
+
 # Resumen de la noche · 2026-11-07 (05:42 → 06:58)
 
 ## Cómo fue
