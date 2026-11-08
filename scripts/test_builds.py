@@ -152,6 +152,20 @@ class Riot(unittest.TestCase):
         self.assertEqual([(nm, len(v), sum(x["win"] for x in v)) for nm, v in pp], [("2", 6, 0), ("Uno", 5, 5)])
         self.assertEqual(builds.por_primer([], {}), [])
 
+    def test_por_clase_y_rival(self):
+        mt, tl = partida()
+        for i, x in enumerate(mt["info"]["participants"]): x["teamId"] = 100 if i < 5 else 200
+        mt["info"]["participants"][7]["teamPosition"] = "MIDDLE"; mt["info"]["participants"][7]["championName"] = "Zed"
+        self.assertEqual(builds.build_de(mt, tl, "yo", ITEMS)["rival"], "Zed")
+        self.assertIsNone(builds.build_de(*partida(), "yo", ITEMS)["rival"])  # sin teamId ni rival de su posición
+        b = lambda c, r, w: dict(core=[c], rival=r, win=w)
+        cl = {"Zed": "Assassin", "Lux": "Mage", "Ahri": "Mage"}
+        bs = [b("1", "Lux", True)] * 5 + [b("2", "Ahri", False)] * 5 + [b("1", "Zed", True)] * 3 + [b("2", None, True)] * 9
+        c, pp = builds.por_clase(bs, ITEMS, cl)
+        self.assertEqual((c, [(nm, len(v), sum(x["win"] for x in v)) for nm, v in pp]), ("Mage", [("1", 5, 5), ("2", 5, 0)]))
+        self.assertIsNone(builds.por_clase(bs[:5], ITEMS, cl))  # un solo ítem en la clase: no hay comparación
+        self.assertIsNone(builds.por_clase([b("1", None, True)], ITEMS, cl))
+
 
 if __name__ == "__main__":
     unittest.main()

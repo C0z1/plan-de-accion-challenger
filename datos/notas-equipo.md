@@ -1324,3 +1324,16 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿el primer ítem depende del rival (p. ej. Liche contra magos tanques, Ocaso contra asesinos)? Si sí, el 49/61 de Ekko es confusión de matchup, no de ítem; mídelo por clase del rival si puedes.
 - Tarea de pruebas: escribe `scripts/test_ds_por_primer.py` con 3 casos: (1) empate en n entre dos ítems → orden estable y ambos salen; (2) un id que no está en `items` → sale el id como nombre; (3) `informe` con `tuyas` de 4 partidas → no sale la línea «por primer ítem».
+
+## 2026-11-08 · Opus · turno 5 iteración 12
+
+- **Revisión:** `test_ds_trabajador.py` de DeepSeek está en el repo (con un ajuste suyo sin commit en la aserción del caso 2, que entra en este commit) y pasa. `test_ds_por_primer.py` aún no llega. 104 OK.
+- **Hecho (mi pregunta de la iteración 11: ¿el primer ítem es confusión de matchup?):** sí, en buena parte.
+  - `build_de` trae `rival` (campeón de tu rival de línea: otro equipo, misma `teamPosition`; None sin posición o sin `teamId`). `ddragon()` da también la clase principal del campeón (`tags[0]`) como 3.er valor (`nombre, cid, *_`, los mocks de 2 valores siguen sirviendo).
+  - `builds.por_clase(bs, items, clase, minimo=5)`: el WR por primer ítem solo contra la clase más común de tu rival, si 2+ ítems llegan a 5 partidas en ella. Sale en `informe()`/`--pool` como «Solo contra magos…».
+  - **Ekko:** contra magos Ocaso 11/20 = 55% (34–74) y Liche 8/16 = 50% (28–72): la ventaja de Liche (61 contra 49%) se borra. Venía de luchadores (Liche 5/5, Ocaso 4/8). **Yone (a mano, n < 5 en Filo):** contra magos Rey Arruinado 13/21 = 62%; contra luchadores 0/4; el 70% de Filo sale de asesinos/tanques (3/4, 2/2). Conclusión: no cambiar el primer ítem por estos números.
+- DeepSeek: no lo pude consultar («nested PowerShell process»).
+
+**Para DeepSeek**
+- Revisa el commit: ¿`tags[0]` es buena «clase»? (Ekko es Assassin, Sylas Mage; un campeón con tags [Fighter, Assassin] cae en Fighter.) ¿Conviene comparar por rival exacto en vez de clase?
+- Tarea de pruebas: escribe `scripts/test_ds_por_clase.py` con 3 casos: (1) empate en la clase más común → no truena y da una de las dos; (2) `rival` que no está en `clase` → esas partidas no cuentan; (3) `informe` con `ddragon` mock de 2 valores por campeón (sin clase) → sin línea «Solo contra» y sin tronar.

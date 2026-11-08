@@ -60,7 +60,7 @@ def get(url, ttl=None, riot=False):
 
 
 def ddragon():
-    """(ítems {id: dict}, runas {id: nombre}, campeones {nombre normalizado: (id, key numérica)}) de Data Dragon en español."""
+    """(ítems {id: dict}, runas {id: nombre}, campeones {nombre normalizado: (id, key numérica, clase)}) de Data Dragon en español."""
     v = get("https://ddragon.leagueoflegends.com/api/versions.json", ttl=DIA)[0]
     cdn = f"https://ddragon.leagueoflegends.com/cdn/{v}/data/es_MX/"
     items = get(cdn + "item.json")["data"]
@@ -69,8 +69,9 @@ def ddragon():
         runas[s["id"]] = s["name"]
         for slot in s["slots"]:
             for r in slot["runes"]: runas[r["id"]] = r["name"]
-    champs = {norm(c["id"]): (c["id"], int(c["key"])) for c in get(cdn + "champion.json")["data"].values()}
-    champs.update({norm(c["name"]): (c["id"], int(c["key"])) for c in get(cdn + "champion.json")["data"].values()})
+    cs = get(cdn + "champion.json")["data"].values()
+    champs = {norm(c["id"]): (c["id"], int(c["key"]), c["tags"][0]) for c in cs}  # tags[0] = clase principal (Mage, Fighter…)
+    champs.update({norm(c["name"]): (c["id"], int(c["key"]), c["tags"][0]) for c in cs})
     return items, runas, champs
 
 
@@ -106,7 +107,9 @@ def build_de(match, timeline, puuid, items):
         if rango[s] == 3: llega3.setdefault(s, n)
     orden = sorted((1, 2, 3), key=lambda s: (llega3.get(s, math.inf), -rango[s]))
     st = p["perks"]["styles"]
-    return dict(champ=p["championName"], pos=p["teamPosition"], win=p["win"], core=core[:3],
+    riv = next((x["championName"] for x in match["info"]["participants"]
+                if x.get("teamId") != p.get("teamId") and p["teamPosition"] and x["teamPosition"] == p["teamPosition"]), None)
+    return dict(champ=p["championName"], pos=p["teamPosition"], win=p["win"], core=core[:3], rival=riv,
                 botas=next((i for i in compras if botas(items.get(i), i)), None),
                 runas=(st[0]["style"], st[0]["selections"][0]["perk"],
                        tuple(s["perk"] for s in st[0]["selections"]) + (st[1]["style"],) + tuple(s["perk"] for s in st[1]["selections"])),
@@ -207,11 +210,24 @@ def por_primer(bs, items, minimo=5):
     return [(items.get(i, {}).get("name", i), v) for i, v in sorted(g.items(), key=lambda x: -len(x[1])) if len(v) >= minimo]
 
 
+CLASE = dict(Mage="magos", Assassin="asesinos", Fighter="luchadores", Tank="tanques", Marksman="tiradores", Support="soportes")
+
+
+def por_clase(bs, items, clase, minimo=5):
+    """(clase más común de tu rival de línea, por_primer de esas partidas) si 2+ primeros ítems llegan a `minimo` en ella;
+    si no, None. Compara ítems contra el mismo tipo de rival: quita parte de la confusión de matchup."""
+    cl = Counter(clase.get(b.get("rival")) for b in bs if clase.get(b.get("rival")))
+    if not cl: return None
+    c = cl.most_common(1)[0][0]
+    pp = por_primer([b for b in bs if clase.get(b.get("rival")) == c], items, minimo)
+    return (c, pp) if len(pp) >= 2 else None
+
+
 def informe(campeon, pos=None):
     """(texto markdown, resumen de los mejores o None, el tuyo o None)."""
     items, runas, champs = ddragon()
     if norm(campeon) not in champs: return f"Campeón desconocido: {campeon}", None, None
-    nombre, cid = champs[norm(campeon)]
+    nombre, cid, *_ = champs[norm(campeon)]
     rol = f" {pos}" if pos else ""
     txt = [f"## {nombre}{rol}\n"]
     try:
@@ -229,6 +245,10 @@ def informe(campeon, pos=None):
     txt += [""] + [l + "  " for l in lineas(tu, "Tú")]
     if (pp := por_primer(mias, items)):
         txt += ["", "Tu WR por primer ítem (5+ partidas; pista, no causa): " + "; ".join(f"{nm} {wr(bs)}" for nm, bs in pp) + "."]
+        clase = {v[0]: v[2] for v in champs.values() if len(v) > 2}
+        if (pc := por_clase(mias, items, clase)):
+            txt += [f"Solo contra {CLASE.get(pc[0], pc[0])} (tu rival más común, para quitar parte del matchup): "
+                    + "; ".join(f"{nm} {wr(bs)}" for nm, bs in pc[1]) + "."]
     if rt and mias and rt["core"]:
         uno = rt["core"][0][2]
         si = [b for b in mias if b["core"][:1] == [uno]]; no = [b for b in mias if b["core"][:1] != [uno]]

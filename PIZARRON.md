@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 5, iteración 11: `builds.py` da tu WR por primer legendario (5+ partidas, sin key). 100 OK.
-- **Siguiente:** revisión de DeepSeek (`test_ds_trabajador.py`, `test_ds_por_primer.py`); resumen del turno si es la última iteración.
-- **Actualizado:** 2026-11-08 (turno 5, iteración 11)
+- **Estado:** turno 5, iteración 12: `builds.py` compara el primer ítem solo contra la clase más común de tu rival (`por_clase`); la ventaja de Liche en Ekko era matchup. 104 OK.
+- **Siguiente:** revisión de DeepSeek (`test_ds_por_primer.py`, `test_ds_por_clase.py`); resumen del turno si es la última iteración.
+- **Actualizado:** 2026-11-08 (turno 5, iteración 12)
 
 ### DeepSeek · revisor
 - **Estado:** revisados 0c67ab0 (duelo de score.py: 124/284=44%, justo — la corrección de rol se cancela; `individualPosition` 0/284 difieren; `test_ds_duelo.py` 3 casos) y 971463f (avisos como dict: sin `q.put(("aviso", str))` sueltos, minuto correcto, 429 ya no da UnboundLocalError; `test_ds_aviso_dict.py` 3 casos). Suite 90 OK.
@@ -169,6 +169,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: la Live Client Data puede traer `activePlayer`/`allPlayers`/`gameData` en null al cargar; `.get(k, {})` no protege (la clave existe). Tumbaba los avisos en vivo; arreglado con `get(k) or {}`.
 - 2026-11-08 · Opus: en la ventana del companion, una excepción en el bucle dejaba la fase vieja: repetía el evento de fase y el mismo error cada 3 s (4 y 4 en 4 vueltas) sin subir la espera. Ahora el estado se actualiza fuera del `try` (como la consola) y el error repetido sale una vez.
 - 2026-11-08 · Opus: tu WR por primer ítem: Ekko Ocaso 49% (33–64, n=35) contra Liche 61% (41–78, n=23); Yone Rey Arruinado 52% (n=27) contra Filo de la Tormenta 70% (n=10). Intervalos cruzados y puede ser matchup: pista.
+- 2026-11-08 · Opus: era matchup: contra magos, Ekko Ocaso 55% (11/20) y Liche 50% (8/16); la ventaja de Liche venía de luchadores (5/5). Yone contra magos: Rey Arruinado 62% (13/21); el 70% de Filo viene de asesinos/tanques (n=6).
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -219,8 +220,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: tu WR con el primer ítem de los mejores sale en champ select (4.ª línea de la build) solo si tienes partidas con ese ítem y sin él; siempre con «pista, no causa».
 - 2026-11-08 · Opus: la meta de la fase en vivo no trae «oro al 14» (la Live Client Data API no da el oro del rival); solo nivel contra tu rival y CS. Va en la línea de perfil, no en el cuerpo, para no tapar una revisión pendiente.
 - 2026-11-08 · Opus: el duelo de `score.py` sigue con `teamPosition` (rol asignado), no `individualPosition`: cambiaría 0/284 partidas y Riot a veces trae «Invalid».
+- 2026-11-08 · Opus: el WR por primer ítem se muestra también contra la clase más común del rival (`tags[0]` de Data Dragon), no por rival exacto (n por rival es de 1–3).
 
 ## Para el usuario (cuando vuelva)
+- Corrige lo de abajo: no cambies el primer ítem por esos números. Comparando contra el mismo tipo de rival (magos), Ekko gana igual con Ocaso (55%) que con Liche (50%), y Yone abre bien con Rey Arruinado (62%). `builds.py --pool` ahora lo muestra («Solo contra magos…»).
 - Nuevo: `builds.py --pool` (sin key) te da tu WR por primer ítem con cada campeón. Con Ekko abres más con Ocaso y Alba (49%) que con Liche (61%); con Yone, Rey Arruinado 52% contra Filo de la Tormenta 70% (10 partidas). Pista, no causa: puede depender del rival.
 - Nuevo: en partida, la ventana del companion muestra arriba tu nivel contra el de tu rival y tu CS (con la meta al 10 si juegas Sylas), cada 30 s. Y la etiqueta «key ok / falta RIOT_KEY» se actualiza sola tras `setx`. Recompila `Companion.exe` para tenerlo.
 - Nuevo: cuando haya build de los mejores (con key), champ select te dice además tu WR cuando abres con su primer ítem contra cuando abres con otro («Tú con Rey Arruinado primero: …»). Es pista, no causa.

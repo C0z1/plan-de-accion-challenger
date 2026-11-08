@@ -21,6 +21,7 @@ Tú (70 partidas, WR 54%): Ocaso y Alba (50%) → Lumbría (61%) → Sombrero Mo
   Habilidades: Q>E>W (100%)  
 
 Tu WR por primer ítem (5+ partidas; pista, no causa): Ocaso y Alba 17/35 = 49% (33%–64%); Maldición del Liche 14/23 = 61% (41%–78%); Cinturón Cohete Hextech 7/12 = 58% (32%–81%).
+Solo contra magos (tu rival más común, para quitar parte del matchup): Ocaso y Alba 11/20 = 55% (34%–74%); Maldición del Liche 8/16 = 50% (28%–72%); Cinturón Cohete Hextech 3/5 = 60% (23%–88%).
 
 ## Yone MIDDLE
 
