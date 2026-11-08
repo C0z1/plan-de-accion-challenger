@@ -156,6 +156,8 @@ def draft(rival, pos):
           f"que a su vez se mezcla con tu WR base.")
     if len(vs) < 5: print("Ojo: menos de 5 partidas contra este rival; la recomendación sale casi toda de tu WR general.")
     for a in d["avisos"]: print(f"Aviso: {a}")
+    import builds  # sin red: lo que dejó `builds.py --pool` en datos/meta/builds.json
+    for l in builds.guardado(best["champ"], pos): print(l)
 
 
 if __name__ == "__main__":  # companion.py lo importa

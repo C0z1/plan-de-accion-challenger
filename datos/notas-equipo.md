@@ -1087,3 +1087,19 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿la corrección por rol con jugadores ajenos sesga algo cuando cozi juega un rol raro (p. ej. support con 11 Pyke)? ¿Pesar los 8 componentes igual infla el KP (que ya está metido en daño y oro)?
 - Tarea de pruebas: escribe `scripts/test_ds_score.py` con 3 casos sobre `score.z_partida`/`score.de`: (1) partida con un equipo de 0 kills (no divide entre 0 y el KP de ese equipo es 0); (2) un jugador AFK (todo en 0, 1 muerte) sale último de los 10; (3) `de` con un `puuid` que no está en la partida → None.
+
+## 2026-11-08 · Opus · turno 5 iteración 2
+
+- **Hecho (pedido 1 del usuario, builds de los mejores):** `scripts/builds.py <Campeón> [rol]` y `--pool`.
+  - Los mejores, de la Riot API: Challenger + GM de la1 y kr por LP (los 60 primeros por región) → maestría del campeón jugada hace < 14 días → los 2 primeros por región con partidas → sus últimas 20 ranked con ese campeón (y rol) + timeline. Caché en `datos/meta/` (en `.gitignore`; ligas y maestría 1 día, partidas para siempre; un 401 no se guarda; la key nunca se escribe). Pausa 1.2 s entre llamadas.
+  - Build = 3 primeros legendarios en orden de compra (sin los `ITEM_UNDO`), primeras botas tier 2, runa principal y su página más común, orden de max Q/W/E (el que llega antes a 3 puntos). Nombres de Data Dragon en español (público, sin key).
+  - La misma agregación corre sobre tus partidas de `datos/raw`, y con los dos: tu WR con el primer ítem de los top contra otro (Wilson, sin causa).
+  - `--pool` = tus campeones con 10+ partidas (Sylas, Ekko, Yone mid; Mordekaiser top; Pyke sup) → `datos/analisis-builds-2026-11-08.md` y `datos/meta/builds.json`; `draft.py` lee ese JSON (sin red) y muestra la build del pick recomendado en 3 líneas.
+- **Con la key caducada (401)** solo sale tu parte; la de los mejores queda lista y probada con la API simulada. Tú con Yone mid: Rey Arruinado → Arcoescudo → Filo, Grebas, Cadencia Letal, Q>E>W (40 partidas, 57%).
+- Pruebas: `scripts/test_builds.py` (6, sin red). Entra `test_ds_score.py` de DeepSeek. 69 OK.
+- DeepSeek: no lo pude consultar (el permiso bloquea `ask-deepseek.ps1`: «nested PowerShell process»).
+- Pendiente: la GUI aún no muestra la build (el Diseñador pidió datos estructurados: `builds.json` ya guarda el dict de `resumir`); el companion en consola sí, porque llama a `draft.draft`.
+
+**Para DeepSeek**
+- Revisa el commit: ¿«legendario = sin `into`, ≥ 2000 de oro y sin tag Boots» deja fuera algo común (ítems de support que se mejoran, Mejai, ítems de Ornn)? ¿El orden de max por «primero en llegar a 3 puntos» falla con campeones que suben R distinto (Udyr, Jayce, Aphelios, Yone/Yasuo están bien)?
+- Tarea de pruebas: escribe `scripts/test_ds_builds.py` con 3 casos: (1) `build_de` con dos `ITEM_UNDO` seguidos del mismo ítem comprado 2 veces → no queda ninguno; (2) `resumir` con builds sin ningún legendario (partida corta) → `core == []` y `lineas` no truena; (3) `mejores` con la liga de una región vacía (`entries: []`) y la otra con un jugador válido → solo devuelve las partidas de esa región.
