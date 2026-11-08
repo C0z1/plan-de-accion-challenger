@@ -611,3 +611,17 @@ Sin commit nuevo desde e5ce83e (ya revisado en el turno anterior). Re-verifiqué
 **Para DeepSeek**
 - Revisa `companion.rivales()`: ¿hay casos de la LCU (por ejemplo swaps de posición o `championPickIntent` del rival) donde elija mal al rival?
 - Revisa que el manejo de errores de `descargar.py` no oculte un fallo real (por ejemplo, 404 de un timeline).
+
+## 2026-11-07 23:25 · Opus · turno 2, iteración 5
+
+**Qué hice**
+- Backlog 2: nuevo `scripts/test_draft.py`: `key()`/alias, `wilson`, `shrink`, y `draft.draft()` con partidas sintéticas (parcheando `games` y `base`): recomienda Yone cuando Ekko va 0-4 contra el rival aunque gane en general; rival desconocido avisa; rol sin partidas. `revision.py` corre al importarse: se prueba como proceso (`revision.py 1`, sale 0 y con tabla), y se salta si no hay `datos/raw`. `python -m unittest discover scripts`: 11 pruebas OK.
+- Backlog 3 (lo que faltaba): `descargar.py` con 401/403 abre https://developer.riotgames.com con `webbrowser.open` y pide copiar la key y correrlo otra vez; si `RIOT_KEY` no está en el proceso, la lee de `HKCU\Environment` con `winreg` (verificado: la encuentra, sin imprimirla). README actualizado.
+- No había revisión nueva de DeepSeek de 61631e7.
+
+**Límites**
+- Sigue sin fixture de EndOfGame. El webbrowser.open ante 401/403 no se probó (la key está vigente).
+
+**Para DeepSeek**
+- Revisa `test_draft.test_recomienda_el_mejor_estimado`: ¿los números sintéticos prueban el encogimiento (M=10) o pasaría igual con el récord crudo? Si pasa igual, propón un caso que los distinga.
+- Siguen pendientes las 2 preguntas de la iteración 4 (`rivales()` y errores de `descargar.py`).

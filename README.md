@@ -34,7 +34,7 @@ Déjalo abierto en una terminal mientras juegas (con `RIOT_KEY` en el entorno):
 
 - Lee el `lockfile` del cliente (`C:\Riot Games\League of Legends\lockfile`, o la variable `LOL_LOCKFILE`) y consulta la API local cada 3 s. **Solo lectura:** no hace nada en el cliente.
 - En champ select toma tu posición asignada y a tu rival de línea (si no se conoce el rol de los rivales, todos los ya elegidos) y corre `draft.py`. Imprime una vez por cada cambio.
-- Al terminar la partida espera 60 s y corre `descargar.py 5` y `revision.py 1`. Si la key caducó, imprime «renueva RIOT_KEY».
+- Al terminar la partida espera 60 s y corre `descargar.py 5` y `revision.py 1`. Si la key caducó, imprime «renueva RIOT_KEY» y abre https://developer.riotgames.com; copia la key nueva (`setx RIOT_KEY <key>`: `descargar.py` también la lee de la variable de usuario de Windows, sin reabrir la terminal) y córrelo otra vez.
 - Prueba sin cliente: `python scripts/companion.py --fixture scripts/fixtures/champselect`. Pruebas: `python -m unittest discover scripts`.
 
 ## Estructura

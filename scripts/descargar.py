@@ -1,7 +1,17 @@
 """Descarga partidas de Solo/Duo de Riot API a datos/raw/. Uso: RIOT_KEY=... python scripts/descargar.py [N]"""
-import json, os, sys, time, urllib.request, urllib.error, pathlib
+import json, os, sys, time, urllib.request, urllib.error, pathlib, webbrowser
 
-KEY = os.environ.get("RIOT_KEY") or sys.exit("Falta RIOT_KEY en el entorno")  # nunca commitear la key
+
+def key_de_usuario():  # variable de usuario de Windows (setx), por si la terminal se abrió antes de cambiarla
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as k:
+            return winreg.QueryValueEx(k, "RIOT_KEY")[0]
+    except (ImportError, OSError):
+        return None
+
+
+KEY = os.environ.get("RIOT_KEY") or key_de_usuario() or sys.exit("Falta RIOT_KEY en el entorno")  # nunca commitear la key
 NAME, TAG = "cozi", "1134"
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 100
 RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
@@ -20,7 +30,9 @@ def get(url):
                 time.sleep(int(e.headers.get("Retry-After", 10)))
                 continue
             if e.code in (401, 403):  # companion.py lee el código 2
-                print(f"\nRiot respondió {e.code}: renueva RIOT_KEY (la dev key caduca en ~24 h)", file=sys.stderr)
+                print(f"\nRiot respondió {e.code}: renueva RIOT_KEY (la dev key caduca en ~24 h). "
+                      "Copia la key nueva del portal (setx RIOT_KEY <key>) y córrelo otra vez.", file=sys.stderr)
+                webbrowser.open("https://developer.riotgames.com")
                 sys.exit(2)
             if e.code < 500 or fallos >= 3: raise
         except (urllib.error.URLError, TimeoutError):
