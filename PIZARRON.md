@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 3, iteración 9: leí la revisión de DeepSeek (78192e2 + 961fa61): confirma el bucle y el prior = WR del rol, que ya es lo que hace `rol.py`; nada que corregir. `descargar.py 5`: sin partidas nuevas (última 11-07 21:36); `datos/vivo/` sigue vacío.
+- **Estado:** turno 3, iteración 10: `descargar.py 5` sin partidas nuevas. Intenté `git rm --cached scripts/__pycache__` (DeepSeek: los `.pyc` traen la ruta personal) pero el permiso lo bloquea; queda para el usuario (ver "Para el usuario").
 - **Siguiente:** backlog del turno 3 completo. Siguiente valor: analizar `datos/vivo/` cuando haya varias partidas grabadas.
-- **Actualizado:** 2026-11-08 (turno 3, iteración 9)
+- **Actualizado:** 2026-11-08 (turno 3, iteración 10)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 78192e2 + 961fa61 (captura en vivo de companion.py; campeón aparte de rol.py por WR encogido). 19 pruebas OK. El bucle no captura fuera de InProgress ni reutiliza archivo; el prior del encogido debe ser el WR del rol (58.3%), no el general.
@@ -129,6 +129,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · DeepSeek: glob `*_*.json` seguro hoy (`perfil.json` sin `_`, `timeline-log.txt` no es .json, `timeline/` es dir quedan fuera); riesgo residual solo si cae un `.json` con `_` que no sea partida (menor).
 - 2026-11-08 · Opus: `revision.py 5`: en las últimas 5 llegaste al 14 con oro < 0 en las 5 (media −786, CS −11) y aun así 3 V; 2 de ellas fuera del pool (Locke, Rakan). n=5, pista.
 - 2026-11-08 · Opus: la Live Client Data API (127.0.0.1:2999, sin auth) responde durante la partida con oro actual, nivel, ítems, CS y eventos (kills); ~20 KB por foto, ~1 MB por partida a 30 s.
+- 2026-11-08 · DeepSeek: los 4 `.pyc` rastreados en `scripts/__pycache__/` aún traen la ruta completa `C:\Users\felix\…` (en el `co_filename` del bytecode); la limpieza de datos personales solo cubrió texto. Misma acción pendiente: `git rm -r --cached scripts/__pycache__`.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -171,7 +172,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - Al terminar cada sesión: `python scripts/descargar.py` y luego `python scripts/revision.py` (o `revision.py 10`).
 - Si la key caducó, `descargar.py` abre el portal de Riot: copia la key, `setx RIOT_KEY <key>` y córrelo otra vez (ya no hace falta reabrir la terminal).
 - Tu `config.json` (copia de `config.ejemplo.json`, con tu pool y la meta de Sylas) ya está en la carpeta y no se sube a git.
-- Hay 4 `.pyc` de `scripts/__pycache__/` rastreados en git (ya están en `.gitignore`, pero Opus no tiene `git rm`): corre `git rm -r --cached scripts/__pycache__` y haz commit antes del push.
+- Hay 4 `.pyc` de `scripts/__pycache__/` rastreados en git (ya están en `.gitignore`, pero Opus no tiene `git rm`): corre `git rm -r --cached scripts/__pycache__` y haz commit antes del push. Importa también por privacidad: el bytecode trae tu ruta `C:\Users\…` completa (lo halló DeepSeek).
 - El CI (`.github/workflows/pruebas.yml`) arranca solo al hacer push.
 - Opus no puede llamar a `ask-deepseek.ps1` (el permiso bloquea PowerShell anidado). Si quieres que lo use, permite ese comando.
 - Antes del push: el historial de git aún trae tu ruta `C:\Users\…` y el saldo de DeepSeek en commits viejos (ya no en los archivos). Si te importa, reescribe el historial o déjalo así; no hay keys.

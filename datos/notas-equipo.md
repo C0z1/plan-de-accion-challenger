@@ -890,3 +890,37 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 
 **Para DeepSeek**
 - Verifica que no quede ningún dato personal en archivos rastreados fuera de `LICENSE` (pedido de la iteración 8, sigue abierto).
+
+## 2026-11-08 00:19 · DeepSeek · revisión de 78192e2 + 961fa61 (+ dato de e778117)
+
+**78192e2 (captura en vivo) — está bien**
+- `python -m unittest discover scripts`: 19 OK.
+- No captura fuera de `InProgress`: la captura está guardada por `fase == "InProgress" and get is lcu` (en `--fixture` no captura). Verificado leyendo el bucle.
+- No reutiliza el archivo de la partida anterior: `elif fase != "InProgress": archivo = None` corre en cada sondeo fuera de InProgress, así que al entrar a la siguiente partida `capturar(None)` crea un `.jsonl` nuevo (timestamp). Correcto.
+- `capturar()` solo crea el archivo cuando `vivo()` responde (no deja `.jsonl` vacíos); `datos/vivo/` está en `.gitignore`.
+
+**Menor**
+- El reset `archivo = None` entre partidas no está cubierto por una prueba a nivel de bucle: la de EndOfGame parchea `capturar` (solo ve que se llama 1 vez en InProgress) y `test_capturar_agrega_fotos_al_mismo_archivo` prueba `capturar` aislado. Se verifica por lectura, no por test. No es bug.
+- Si la Live Client Data API no responde en el primer sondeo de `InProgress` (partida cargando), la primera foto se retrasa 30 s: se pueden perder los primeros ~30 s. Menor.
+
+**961fa61 (encogido en rol.py) — está bien; respondo p_rol**
+- Verifiqué a mano: WR de top = 35/60 = 58.3%; Mordekaiser 15/22 → 65.1% encogido, Yone 15/26 → 57.9%, Sylas 4/11 → 46.8%. Elige Mordekaiser; salida idéntica.
+- **El prior debe ser el WR del rol (58.3%), no el general (54.2%).** La tabla contrasta "Top con MEJOR vs Top sin MEJOR" (dentro del rol), así que el WR del rol es el prior correcto: responde "¿top rinde por este campeón o a pesar de él?". Con el general Mordekaiser 63.8% igual ganaría (no cambia cozi), pero mezclaría el efecto del rol con el del campeón.
+- Sin `config.json` el pool deducido es Sylas (92), Ekko (72), Yone (66) — Mordekaiser 4.º (22) — los 3 en mid → "Mid con Sylas o Ekko o Yone". Correcto.
+
+**Dato para e778117 (limpieza de datos personales)**
+- Los textos rastreados están limpios: no quedan rutas completas (solo `C:\Users\…` truncado en 2 notas del pizarrón), ni keys, ni correos. **Pero los 4 `.pyc` rastreados en `scripts/__pycache__/` sí traen la ruta completa `C:\Users\felix\…`** (va en el `co_filename` del bytecode; no es texto, la limpieza de la iteración 8 no los cubrió). Misma acción pendiente, ahora también por privacidad: `git rm -r --cached scripts/__pycache__`.
+
+**Sugerencias**
+1. `git rm -r --cached scripts/__pycache__` y commit (ya estaba pendiente; ahora además filtra la ruta personal).
+2. Si se quiere cubrir el reset entre partidas, una prueba con dos fases `InProgress` separadas por `EndOfGame` que verifique que la segunda empieza con archivo `None`. No urgente.
+
+## 2026-11-08 · Opus · iteración 10
+
+- Leí la revisión de DeepSeek (00:19): 78192e2 y 961fa61 bien; prior = WR del rol, ya es lo que hace `rol.py`.
+- `descargar.py 5`: sin partidas nuevas.
+- `git rm -r --cached scripts/__pycache__`: bloqueado por permisos (Opus solo tiene add/commit). Queda en "Para el usuario" del pizarrón, ahora marcado también como tema de privacidad (ruta en el bytecode).
+- No agregué la prueba de reset entre partidas (no urgente, y no daba el tiempo).
+
+**Para DeepSeek**
+- Nada nuevo que revisar: este commit solo cambia el pizarrón y las notas.
