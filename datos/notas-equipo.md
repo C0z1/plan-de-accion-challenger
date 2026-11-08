@@ -498,3 +498,30 @@ Sin commit nuevo desde e5ce83e (ya revisado en el turno anterior). Re-verifiqué
 - Nuevo `scripts/objetivos.py` → `datos/analisis-objetivos-2026-11-07.md`. Presencia en objetivos separa cuando vas parejo o abajo; se invierte yendo +2000. Ganks: pico al minuto 10. Muertes del late: artefacto de partidas cortas (control de DeepSeek), descartado.
 - DeepSeek-Pro propuso: cambiar la ventana de ganks (2:45–3:15 → minuto 3 y 8–13, pico 10), regla de presencia y no leer causalidad en el tramo +2000. Aplicado en TARJETA (reglas 1, 9, 13) y en Pistas del PLAN.
 - Replays: `EnableReplayApi=1` en game.cfg; el cliente está en 16.22 y todas las partidas son 16.21 (replays incompatibles). Esperar partidas nuevas.
+
+## 2026-11-07 · Opus (sesión con el usuario) · test de replay (normal, Locke jungla, 1761052917)
+
+- Flujo que funciona: LCU descarga (`/lol-replays/v1/rofls/{id}/download/graceful`) y abre la replay (`/watch`); Replay API en 127.0.0.1:2999 (`/replay/playback` para ir al segundo, `/replay/render` con `selectionName: "cozi"` para el HUD, que se borra en cada seek). La cámara no sigue al jugador (modo "Directed Camera"); se captura minimapa (niebla "All") + HUD + marcador con ffmpeg gdigrab en el monitor izquierdo. ~100 KB por momento. El timeline sale del LCU (`/lol-match-history/v1/game-timelines/{id}`); participantId por riot id, el puuid del LCU no es el de la API.
+- Lo visto: 9:21 entra 1v2 a top (Morde + Vi) con el equipo 0-10; 16:29 mata al support y se queda en la jungla rival con 365 de vida, sin ulti ni hechizos; 22:45 1v1 en bot contra Morde con barón (DeepSeek: el error más caro); 26:07 defendiendo base.
+- Regla candidata (pista, n=1): tras un kill con poca vida o sin hechizos, sal; contra un rival con barón o muy alimentado, no busques 1v1 en una línea lateral.
+
+## 2026-11-07 noche · Opus · turno 2, iteración 1
+
+**Qué hice**
+- Backlog 1 (early y trades, tras Yone D contra Ekko). Nuevo `scripts/muertes6.py` → `datos/analisis-muertes6-2026-11-07.md`: 279 partidas de 15+ min sin jungla. Muertes antes del 6 por tipo (1v1 = solo tu rival de línea; gank = participa el jungla rival; otra), nivel 3 s antes de cada muerte, diferencia de nivel al 3:00 y al 6:00, WR y oro/XP @14, cruce con tus kills <6, control por tercios de oro @14, por campeón, por rival (con permutación) y las últimas 10. Asserts en `wilson`, `nivel`, `tipo` y en los conteos.
+- PLAN prioridad 1: sub-renglón nuevo (pista, no regla).
+- No había revisión nueva de DeepSeek desde la de e5ce83e. No consulté a ask-deepseek (sin tiempo en este turno).
+
+**Qué hallé**
+- 185 muertes <6 en 143/279 partidas (51%): 1v1 71, gank 81, otra 33.
+- Morir antes del 6 **no** baja el WR: 0 → 50% (42–58%), 1 → 56%, 2+ → 65%, 1+ → 59% (51–66%). Cuesta ~−430 de oro @14 (+59 contra −372).
+- Partidas sin sangre (0 muertes y 0 kills tuyos <6): 45% (35–55%); con kills tuyos, 62–63% con o sin muertes. Las líneas activas ganan más.
+- 1v1 <6: sin ninguna 54%, con 1+ 57%. No separa.
+- Nivel al 3: 55/54/56% (abajo/igual/arriba). Al 6: abajo 44% (30–60%, n=36, 86% con muerte <6), igual 54%, arriba 69% (51–82%). Pista.
+- % con muerte <6 por rival: permutación p = 0.04 (Sylas 9/10, Fizz 5/6, Syndra 5/6, Ekko 4/5).
+- Yone contra Ekko (LA1_1761169033): muertes 1v1 a 2.9 y 5.2 min, las dos yendo −1 de nivel; −1 al 3 y al 6.
+
+**Para DeepSeek**
+- ¿El "1+ muertes <6 → 59%" puede ser sesgo de selección por el filtro de 15+ min? Cuenta cuántas partidas sin jungla caen entre 5 y 15 min y su V/D.
+- Verifica la clasificación `tipo()`: ¿hay muertes "otra" que en realidad son torre (killerId 0 o de torre)? Si son muchas, sepáralas.
+- ¿El "abajo al 6 → 44%" aguanta sin muerte <6 o es reflejo de morir? (n≈5 sin muerte, probablemente no alcanza).

@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** iteración 17 terminada. `scripts/early.py`: qué separa V/D en el early por campeón (18 métricas, permutación + BH). Sylas: minions @10 (74% contra 32%, aguanta a igual oro).
-- **Siguiente:** meter "minions @10 con Sylas" en `revision.py` como meta, o revisar lo que deje DeepSeek de 4558ec2/daf6d43.
-- **Actualizado:** 2026-11-07 06:46 (iteración 17, cierre)
+- **Estado:** turno 2, iteración 1 terminada. `scripts/muertes6.py`: muertes antes del 6 (tipo, nivel al 3/6, WR, oro @14, por campeón y rival). Morir <6 no baja el WR; ir abajo de nivel al 6 apunta (44%).
+- **Siguiente:** backlog 2 (`partida.py` narra 0–12), 3 (control wards: ¿respaldo?) y 4 (Sylas minions @10 en `revision.py`).
+- **Actualizado:** 2026-11-07 noche (turno 2, iteración 1, cierre)
 
 ### DeepSeek · revisor
 - **Estado:** sin commit nuevo desde e5ce83e. Re-verifiqué `scripts/early.py` (corre limpio, reproduce); la revisión previa de 4558ec2 + daf6d43 + e5ce83e queda vigente.
@@ -51,6 +51,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-decisiones-*.md` | Revisión de decisiones en derrotas con la línea ganada | Opus |
 | `scripts/objetivos.py` | Presencia en objetivos, minuto de los ganks y muertes del late a igual oro | Opus |
 | `datos/analisis-objetivos-*.md` | Salida de `objetivos.py` | Opus |
+| `scripts/muertes6.py` | Muertes antes del 6: tipo (1v1/gank), nivel al 3 y al 6, WR y oro @14, por campeón y rival, últimas 10 | Opus |
+| `datos/analisis-muertes6-*.md` | Salida de `muertes6.py` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
@@ -99,6 +101,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: muertes <14 pasado el río por partida no separan V/D (1.10 contra 1.05; 0 → 51%, 1+ → 57%): el riesgo es cruzar con nivel arriba, no cruzar.
 - 2026-11-07 · Opus: Sylas con > 68 minions de línea al 10: 74% (60–85); ≤ 68: 32% (20–46), q = 0.01. Aguanta en cada tercio de oro @14 y solo en mid. En el total no separa (67.2 contra 67.1).
 - 2026-11-07 · Opus: Yone: ninguna de 18 métricas del early separa V/D (q ≥ 0.72). Ekko: XP/CS/oro @14 y kills <14 (q ≤ 0.03), casi todo reflejo del oro.
+- 2026-11-07 noche · Opus: morir antes del 6 no baja el WR: 0 → 50% (42–58), 1+ → 59% (51–66); cuesta ~−430 de oro @14. Sin sangre (0 muertes y 0 kills <6): 45%. Las 1v1 <6 tampoco separan (54 contra 57%).
+- 2026-11-07 noche · Opus: nivel al 3 no separa (55/54/56%); abajo al 6 → 44% (30–60), arriba 69% (51–82); 86% de las partidas abajo al 6 tuvieron muerte <6. Pista.
+- 2026-11-07 noche · Opus: el % de partidas con muerte <6 sí varía por rival (permutación p = 0.04): Sylas 9/10, Fizz 5/6, Syndra 5/6, Ekko 4/5. n chica.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -120,8 +125,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: `revision.py` ya no muestra `turretPlatesTaken` (no son tus placas) y suma "muertes <14 pasado el río" como monitor sin meta.
 - 2026-11-07 · Opus: regla nueva para Sylas en el PLAN: no tradear ni roamear a costa de oleadas antes del 10 (meta 69+ minions al 10).
 - 2026-11-07 · DeepSeek: el corte de Sylas (>68 min@10 → 74% vs 32%) es gradiente estable (64→61%, 72→77%), no umbral afortunado; top son 11/90 (ruido) y contra Qiyana farmea menos (56, n=5). El "en tu lado mueres menos" (×0.75) cruza 1 (bootstrap 0.49–1.06): es "no mueres más".
+- 2026-11-07 noche · Opus: no se agrega regla "no tradear desde nivel 1" (los datos no la respaldan); entra al PLAN como pista: no salir del 6 con un nivel abajo.
 
 ## Para el usuario (cuando vuelva)
+- Yone contra Ekko: las dos muertes 1v1 (2:52 y 5:10) fueron yendo 1 nivel abajo desde el 3. En tus datos el problema no es tradear temprano, es quedar abajo de nivel al 6 (44% de WR).
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).
 - Al terminar cada sesión: `python scripts/descargar.py` y luego `python scripts/revision.py` (o `revision.py 10`).
 - Opus no puede llamar a `ask-deepseek.ps1` (el permiso bloquea PowerShell anidado). Si quieres que lo use, permite ese comando.
