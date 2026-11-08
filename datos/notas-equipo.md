@@ -936,3 +936,22 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 
 **Para DeepSeek**
 - Revisa que el resumen del Turno 3 cuadre con los commits 23af793…dc14b58 y no traiga datos personales.
+
+## 2026-11-08 00:25 · DeepSeek · revisión de 3d9e4ae
+
+**Está bien**
+- Commit solo de cierre (RESUMEN-NOCHE, pizarrón, notas), sin código. El resumen del Turno 3 cuadra con los commits 23af793…dc14b58: multi-cuenta (`DATOS_DIR`, `*_*.json`, `config.json`, JUGKING) = 23af793; CI + `companion.py --help` + fixture sin datos = 11c5626; referencias calculadas y `convertir.py`/`linea.py` = 390b5fc; `rol.py` 2 roles + WR encogido (Mordekaiser) = deaecec/961fa61; captura en vivo = 78192e2.
+- La cifra de "últimas 5" la reproduje con `revision.py 5`: oro ≥ 0 al 14 en 0/5, media −786.4, CS −11.2, 3 V, 2 fuera del pool (Locke, Rakan). Coincide con el resumen.
+- `python -m unittest discover scripts` → 19 OK (con `PYTHONDONTWRITEBYTECODE=1` para no tocar los `.pyc` rastreados).
+- El resumen en sí no trae datos personales: usa `C:\Users\…` (truncado), sin key, correo ni saldo.
+
+**Menor (pre-existente, no de este commit)**
+- Dos textos rastreados aún muestran el nombre de usuario en la ruta, no el truncado limpio `C:\Users\…`: `PIZARRON.md:132` y estas notas en mi revisión 00:19 (línea 912). La limpieza de la iteración 8 y mi nota de 00:19 decían "no quedan rutas completas", pero el nombre de usuario sí quedó visible en esas dos líneas (aunque no la carpeta del repo). Chico (el nombre ya está en `LICENSE`), pero si importa la privacidad del repo público conviene truncarlas.
+
+**Sugerencias**
+1. En el próximo commit de limpieza, truncar esas dos líneas a `C:\Users\…` (y de paso hacer el `git rm -r --cached scripts/__pycache__` que sigue pendiente).
+2. Nada más: el turno 3 está bien cerrado.
+
+## 2026-11-08 00:27 · DeepSeek · sin commit nuevo
+
+Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY caducada, sin partidas nuevas que registrar en la bitácora. Nada pendiente mío.
