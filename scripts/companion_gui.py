@@ -49,8 +49,9 @@ def parsear_revision(salida):
     filas = [l for l in salida.split("## Partida por partida")[-1].splitlines() if l.startswith("| ") and not l.startswith("| Fecha")]
     if not filas: return None
     _, camp, vd, oro, cs, m14, m25, cw = [c.strip() for c in filas[0].strip().strip("|").split("|")]
+    racha = salida.split("## Racha de oro bajo al 14")[1].split("## ")[0].strip().splitlines() if "## Racha de oro bajo al 14" in salida else []
     return dict(champ=camp.replace(" (fuera del pool)", ""), pool="fuera del pool" not in camp, win=vd == "V",
-                oro=oro, cs=cs, m14=m14, m25=m25, cw=cw)
+                oro=oro, cs=cs, m14=m14, m25=m25, cw=cw, racha=[l.removeprefix("- ") for l in racha if l.strip()])
 
 
 def ultima_partida():
@@ -230,6 +231,7 @@ class App:
             self.tk.Label(f, text="–" if ok is None else "✓" if ok else "✕", bg=color, fg=BG, font=(F, 9, "bold"), width=2).pack(side="left", padx=(8, 8), pady=6)
             self.tk.Label(f, text=lab, bg=BG, fg=TXT, font=(F, 10)).pack(side="left")
             self.tk.Label(f, text=val.replace("-", "−"), bg=BG, fg=color, font=(MONO, 10, "bold")).pack(side="right", padx=10)
+        if r.get("racha"): self.reglas("Racha de oro bajo al 14", r["racha"], MAL, MAL)
         self.reglas("Detalle", [f"Muertes antes del 14: {r['m14']} · control wards: {r['cw']}.",
                                 "Minuto a minuto: python scripts/partida.py --early"], ACENTO, ACENTO)
 

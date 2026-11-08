@@ -47,7 +47,7 @@ for f in RAW.glob("*_*.json"):
     me = next(p for p in ps if p["puuid"] == puuid)
     opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
     g = dict(win=me["win"], champ=me["championName"], t=m["gameCreation"], cw=me.get("visionWardsBoughtInGame", 0),
-             gd14=None, cd14=None, d14=None, d25=None, rio14=None,
+             gd14=None, cd14=None, xd14=None, lv6=None, d14=None, d25=None, rio14=None,
              lm10=me.get("challenges", {}).get("laneMinionsFirst10Minutes") if M10 and me["championName"] == M10["campeon"] else None)
     tf = RAW / "timeline" / f.name
     if tf.exists():
@@ -56,6 +56,9 @@ for f in RAW.glob("*_*.json"):
             a, b = fr[14]["participantFrames"][str(pid)], fr[14]["participantFrames"][str(opp["participantId"])]
             g["gd14"] = a["totalGold"] - b["totalGold"]
             g["cd14"] = a["minionsKilled"] + a["jungleMinionsKilled"] - b["minionsKilled"] - b["jungleMinionsKilled"]
+            g["xd14"] = a["xp"] - b["xp"]
+            a6, b6 = fr[6]["participantFrames"][str(pid)], fr[6]["participantFrames"][str(opp["participantId"])]
+            g["lv6"] = a6["level"] - b6["level"]  # foto del minuto 6, como el aviso en vivo de companion.py
         mins = [e["timestamp"] / 60000 for x in fr for e in x["events"] if e["type"] == "CHAMPION_KILL" and e["victimId"] == pid]
         g["d14"] = sum(t < 14 for t in mins); g["d25"] = sum(14 <= t < 25 for t in mins)
         if me["teamPosition"] in NOMBRE:  # sin jungla: no tiene "tu línea"
@@ -129,6 +132,46 @@ for nombre, calc, meta, cumple in METRICAS:
     (txt, v), (txt0, _) = calc(rec), calc(ant)
     marca = "" if cumple is None or v is None else ("✅" if cumple(v) else "❌")
     print(f"| {nombre} | {txt} | {txt0} | {meta} | {marca} |")
+
+
+def racha(games):
+    """Si 3+ de tus últimas 5 partidas llegan al 14 con oro < 0: 2 sugerencias medibles sacadas de tus partidas
+    con oro < 0 al 14 (XP @14 y nivel al 6). Devuelve [] si no hay racha."""
+    ult = games[-5:]
+    k = sum(g["gd14"] is not None and g["gd14"] < 0 for g in ult)
+    if k < 3: return []
+    abajo = [g for g in games if g["gd14"] is not None and g["gd14"] < 0]
+
+    def wr(rs):
+        lo, hi = wilson(sum(r["win"] for r in rs), len(rs))
+        return f"{sum(r['win'] for r in rs) / len(rs):.0%} ({lo:.0%}–{hi:.0%}, n={len(rs)})" if rs else "-"
+
+    def pista(a, b):  # con intervalos cruzados la diferencia puede ser azar
+        (la, ha), (lb, hb) = (wilson(sum(r["win"] for r in x), len(x)) for x in (a, b))
+        return " (pista: los intervalos se cruzan)" if a and b and la <= hb and lb <= ha else ""
+
+    def ult5(key, fmt):
+        vs = [g[key] for g in ult if g[key] is not None]
+        return f"tus últimas 5: media {fmt.format(st.mean(vs))}" if vs else "tus últimas 5: sin dato"
+
+    lineas = [f"Llegaste al 14 con oro < 0 contra tu rival en {k} de tus últimas 5 partidas."]
+    xs = sorted(g["xd14"] for g in abajo if g["xd14"] is not None)
+    if xs:
+        m = round(st.median(xs))
+        a = [g for g in abajo if g["xd14"] is not None and g["xd14"] >= m]
+        b = [g for g in abajo if g["xd14"] is not None and g["xd14"] < m]
+        lineas.append(f"- XP al 14 a {m:+d} o mejor contra tu rival (la mediana de tus partidas con oro < 0): ahí ganas "
+                      f"{wr(a)}, debajo {wr(b)}{pista(a, b)}; {ult5('xd14', '{:+.0f}')}.")
+    ls = [g for g in abajo if g["lv6"] is not None]
+    if ls:
+        a, b = [g for g in ls if g["lv6"] >= 0], [g for g in ls if g["lv6"] < 0]
+        lineas.append(f"- Al minuto 6 con nivel igual o arriba de tu rival: con oro < 0 al 14 ganas {wr(a)}, abajo "
+                      f"{wr(b)}{pista(a, b)}; {ult5('lv6', '{:+.1f}')} niveles. No tradees hasta igualar.")
+    return lineas
+
+
+if rs := racha(games):
+    print("\n## Racha de oro bajo al 14\n\n" + "\n".join(rs))
 
 print(f"\n## Partida por partida (más reciente primero)\n\n| Fecha | Campeón | | Oro @14 | CS @14 | Muertes <14 | Muertes 14–25 | Control wards |\n|---|---|---|---|---|---|---|---|")
 f = lambda v, fmt="{:+d}": "-" if v is None else fmt.format(v)

@@ -64,4 +64,36 @@ class Revision(unittest.TestCase):  # revision.py corre al importarse: se prueba
         self.assertIn("|", r.stdout)  # sale la tabla por partida
 
 
+class Racha(unittest.TestCase):  # partidas sintéticas en un DATOS_DIR temporal (corre también en el CI)
+    def correr(self, oros):
+        import json, tempfile
+        with tempfile.TemporaryDirectory() as d:
+            d = pathlib.Path(d); (d / "timeline").mkdir()
+            (d / "perfil.json").write_text(json.dumps({"account": {"puuid": "yo"}}))
+            for i, oro in enumerate(oros):  # la más nueva al final; gana si oro >= 0
+                ps = [dict(puuid=u, participantId=p, teamId=t, teamPosition="MIDDLE", championName=c, win=(oro >= 0) == (u == "yo"))
+                      for u, p, t, c in (("yo", 1, 100, "Ekko"), ("el", 2, 200, "Zed"))]
+                (d / f"XX_{i}.json").write_text(json.dumps({"info": dict(gameDuration=1800, gameCreation=i * 10**8, participants=ps)}))
+                pf = lambda o, xp, lv: dict(totalGold=5000 + o, minionsKilled=100, jungleMinionsKilled=0, xp=xp, level=lv)
+                fr = [dict(events=[], participantFrames={"1": pf(oro, 7000 + oro, 6 if oro >= 0 else 5), "2": pf(0, 7000, 6)})
+                      for _ in range(16)]
+                (d / "timeline" / f"XX_{i}.json").write_text(json.dumps({"info": {"frames": fr}}))
+            r = subprocess.run([sys.executable, str(AQUI / "revision.py"), "1"], capture_output=True, text=True,
+                               encoding="utf-8", env={**os.environ, "DATOS_DIR": str(d)})
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return r.stdout
+
+    def test_3_de_5_con_oro_bajo_marca_la_racha(self):
+        out = self.correr([500, 500, 500, -300, 800, 400, -200, -900])  # últimas 5: 3 con oro < 0
+        self.assertIn("en 3 de tus últimas 5", out)
+        self.assertEqual(out.split("## Racha")[1].count("\n- "), 2)  # las 2 sugerencias
+        self.assertIn("ganas -, abajo 0% (", out.split("Al minuto 6")[1])  # con oro < 0 todas van 1 nivel abajo y pierden
+        import companion_gui
+        self.assertEqual(len(companion_gui.parsear_revision(out)["racha"]), 3)
+
+    def test_2_de_5_no_marca(self):
+        out = self.correr([-500, -500, -500, 300, -800, 400, -200, 900])
+        self.assertNotIn("Racha", out)
+
+
 if __name__ == "__main__": unittest.main()

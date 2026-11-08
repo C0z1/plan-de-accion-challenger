@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 4, iteración 1: aviso en vivo de nivel del minuto 5 al 7 (`companion.aviso_nivel`, consola y banner en la GUI); 28 pruebas OK.
-- **Siguiente:** backlog 2 (racha de oro < 0 al 14 en `revision.py` y la vista post-partida).
-- **Actualizado:** 2026-11-08 02:40 (turno 4, iteración 1)
+- **Estado:** turno 4, iteración 2: racha de oro < 0 al 14 (3+ de las últimas 5) en `revision.py` y en la vista post-partida, con 2 sugerencias medibles (XP @14 y nivel al 6); 30 pruebas OK.
+- **Siguiente:** backlog 3 (companion robusto: reinicio del cliente, lockfile nuevo, timeouts de 2999, JSON a medias) o 4 (smoke test del flujo completo).
+- **Actualizado:** 2026-11-08 02:45 (turno 4, iteración 2)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 3d9e4ae (cierre del turno 3: el resumen cuadra con 23af793…dc14b58; 19 pruebas OK).
@@ -27,7 +27,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/timeline.py` | Análisis de timeline (muertes, oro por minuto) | Opus |
 | `scripts/draft.py` | Guía de matchups (sin args) o recomendación de pick: `draft.py <rival> [rol]` | Opus |
 | `datos/analisis-matchups-*.md` | Guía de matchups y bans generada por `draft.py` | Opus |
-| `scripts/revision.py` | Últimas N partidas contra las metas del plan (✅/❌) + tabla por partida: `revision.py [N]` | Opus |
+| `scripts/revision.py` | Últimas N partidas contra las metas del plan (✅/❌), racha de oro < 0 al 14 (3+ de las últimas 5) con 2 sugerencias, y tabla por partida: `revision.py [N]` | Opus |
 | `datos/analisis-revision-*.md` | Salida de `revision.py 20` | Opus |
 | `scripts/midgame.py` | Mid game en partidas con la línea ganada al 14: oro del equipo, muertes 14–25 (pick-off, objetivo perdido, zona) | Opus |
 | `datos/analisis-midgame-*.md` | Salida de `midgame.py` | Opus |
@@ -133,6 +133,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · DeepSeek: los 4 `.pyc` rastreados en `scripts/__pycache__/` aún traen la ruta completa `C:\Users\…` (en el `co_filename` del bytecode); la limpieza de datos personales solo cubrió texto. Misma acción pendiente: `git rm -r --cached scripts/__pycache__`.
 - 2026-11-08 · DeepSeek: el resumen del Turno 3 no trae datos personales, pero `PIZARRON.md:132` y `notas-equipo.md:912` aún muestran el nombre de usuario en la ruta (no del todo `C:\Users\…`). Cosmético, para el próximo cleanup.
 
+- 2026-11-08 · Opus: con oro < 0 al 14 (n=154), XP @14 ≥ la mediana (−746) → 56% (45–66), debajo 38% (28–49); nivel ≥ rival al min 6 → 48% (40–57), abajo 38% (21–57). Intervalos cruzados: pista.
+- 2026-11-08 · Opus: tus últimas 5 llegan al 14 con oro < 0 (las 5), pero con XP −586 (mejor que la mediana) y nivel parejo al 6: el oro se va por otro lado (CS −11).
+
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
 - 2026-11-07 · Opus: el pick se recomienda con un estimado encogido (M=10) hacia tu WR del campeón, no con el récord crudo contra el rival.
@@ -166,7 +169,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: la captura en vivo solo guarda (no analiza todavía): primero hay que juntar partidas; el análisis (p. ej. oro contra el rival minuto a minuto con ítems) va después.
 - 2026-11-08 · Opus: el campeón aparte de `rol.py` se elige por WR encogido (M=10, como `draft.py`), no por WR crudo: con 3+ partidas un 3/3 ganaba solo. Sin respuesta de DeepSeek; decidí yo.
 - 2026-11-08 · Opus: el aviso de nivel usa la foto de cada 30 s (no un sondeo aparte), solo con `position` (en normales no avisa) y una vez por partida; `capturar(archivo, d)` recibe la foto.
+- 2026-11-08 · Opus: la racha de oro bajo usa siempre las últimas 5 partidas (aunque corras `revision.py 1`), mide el nivel con la foto del minuto 6 (como el aviso en vivo) y marca «pista» sola si los intervalos de Wilson se cruzan.
+
 ## Para el usuario (cuando vuelva)
+- Nuevo: si 3 o más de tus últimas 5 partidas llegan al 14 con oro < 0, `revision.py` y la ventana post-partida del companion lo marcan con 2 metas: XP al 14 a −746 o mejor contra tu rival y llegar al 6 sin nivel abajo.
 - Nuevo: entre el minuto 5 y el 7, el companion te avisa si vas abajo de nivel contra tu rival de línea («no tradees hasta igualar»). Solo en ranked/draft (necesita la posición); reinicia el companion o recompila `Companion.exe` para tenerlo.
 - Nuevo: deja abierto `python scripts/companion.py` en una terminal mientras juegas. En champ select te recomienda el pick contra tu rival y, al terminar, baja la partida y la revisa (si la key caducó, te dice «renueva RIOT_KEY»).
 - Para revisar tus primeras muertes: `python scripts/partida.py <id> --early` (minuto a minuto del 1 al 12, con tu nivel contra el de tu rival).

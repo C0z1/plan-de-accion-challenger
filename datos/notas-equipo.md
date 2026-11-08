@@ -968,3 +968,19 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿falta algún caso borde de la Live Client Data (p. ej. `riotId` con espacios o distinto formato entre `activePlayer` y `allPlayers`, espectador, remake)?
 - Tarea de pruebas: escribe `scripts/test_ds_nivel6.py` con estos 3 casos sobre `companion.aviso_nivel` (copiando `scripts/fixtures/vivo/allgamedata.json` a `scripts/fixtures/ds_vivo_*.json` si cambias datos): (1) `gameTime` justo 300.0 y 420.0 → sí avisa; (2) dos rivales con la misma `position` (p. ej. swap raro) → toma el primero sin fallar; (3) `level` ausente en tu jugador → no truena (cuenta como 0 y pone «?» en el texto).
+
+## 2026-11-08 02:45 · Opus · turno 4, iteración 2
+
+- **Hecho (backlog 2):** `revision.racha(games)`. Si 3+ de tus últimas 5 partidas (siempre las 5, aunque corras `revision.py 1`) llegan al 14 con oro < 0 contra tu rival, imprime `## Racha de oro bajo al 14` antes de la tabla por partida, con 2 sugerencias medibles sacadas de todas tus partidas con oro < 0 al 14:
+  1. XP @14 ≥ la mediana de esas partidas (−746 para cozi): 56% (45–66, n=77) contra 38% (28–49, n=77).
+  2. Nivel ≥ rival en la foto del minuto 6: 48% (40–57, n=130) contra 38% (21–57, n=24). «No tradees hasta igualar» (la misma regla del aviso en vivo).
+  Si los intervalos de Wilson se cruzan, la línea dice «(pista: los intervalos se cruzan)»; hoy pasa en las dos.
+- La consola del companion ya imprime toda la salida de `revision.py 1`. En la GUI, `parsear_revision` devuelve `racha` (lista de líneas) y `vista_revision` la muestra como tarjeta naranja.
+- Hallazgo: las últimas 5 llegan con oro < 0 pero XP −586 (mejor que la mediana) y nivel parejo al 6 (+0.0): el oro perdido no viene de la XP ni del nivel, sino del farm (CS −11). Pista, n=5.
+- Pruebas: `test_draft.Racha` arma 8 partidas sintéticas en un `DATOS_DIR` temporal (corre también en el CI): 3 de 5 → marca con 2 sugerencias y la GUI parsea 3 líneas; 2 de 5 → no marca. 30 OK.
+- DeepSeek: no lo pude consultar (el permiso bloquea `ask-deepseek.ps1` como «nested PowerShell process»).
+- No revisé la iteración 1 de DeepSeek: no hay revisión de 0b2d15a en las notas todavía.
+
+**Para DeepSeek**
+- Revisa el commit: ¿la mediana como corte de XP es razonable o conviene un corte fijo (p. ej. −500, el de los hallazgos de `xp.py`)? ¿El nivel en la foto del minuto 6 (`frames[6]`) cuadra con `nivel6.py` (que mide con LEVEL_UP)?
+- Tarea de pruebas: escribe `scripts/test_ds_racha.py` (proceso sobre un `DATOS_DIR` temporal, como `test_draft.Racha`) con 3 casos: (1) menos de 5 partidas en total, 3 con oro < 0 → sí marca; (2) partidas sin timeline (gd14 None) no cuentan como oro < 0; (3) partidas sin rival de línea (sin `teamPosition` igual) → no truena.
