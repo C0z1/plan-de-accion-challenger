@@ -1,14 +1,14 @@
 """¿Por qué un campeón no convierte la línea ganada? En partidas con oro >= 0 contra tu rival al 14,
 compara por campeón (y V contra D del campeón elegido): cómo crece tu ventaja del 14 al 20, el oro del equipo,
 muertes y takedowns del 14 al 25, torres, objetivos y dónde estás en el mapa del 15 al 24.
-Uso: python scripts/convertir.py [Campeón] > datos/analisis-convertir-AAAA-MM-DD.md   (por defecto Ekko)"""
+Uso: python scripts/convertir.py [Campeón] > datos/analisis-convertir-AAAA-MM-DD.md   (por defecto tu campeón más jugado)"""
 import json, os, math, pathlib, statistics as st, sys
 from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
 RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
-FOCO = sys.argv[1] if len(sys.argv) > 1 else "Ekko"
+FOCO = sys.argv[1] if len(sys.argv) > 1 else None  # sin argumento: tu campeón más jugado
 
 
 def wilson(k, n, z=1.96):
@@ -69,6 +69,7 @@ for tf in (RAW / "timeline").glob("*_*.json"):
         en_linea=zonas["mid" if me["teamPosition"] == "MIDDLE" else me["teamPosition"].lower()] / max(1, sum(zonas.values())),
         dur=m["gameDuration"] / 60))
 assert games, "sin timelines"
+FOCO = FOCO or Counter(g["champ"] for g in games).most_common(1)[0][0]
 todas = games
 games = [g for g in todas if g["gd14"] >= 0]  # solo línea ganada
 

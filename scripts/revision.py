@@ -85,6 +85,12 @@ def media(rs, key):
     return (f"{st.mean(vs):+.1f}" if key in ("gd14", "cd14") else f"{st.mean(vs):.2f}", st.mean(vs)) if vs else ("-", None)
 
 
+# referencias de todas tus partidas (no números fijos de cozi)
+gan = [g for g in games if g["gd14"] is not None and g["gd14"] >= 0]
+CONV = sum(g["win"] for g in gan) / len(gan) if gan else None
+D14V = media([g for g in games if g["win"]], "d14")
+RIO = [media([g for g in games if g["win"] == w], "rio14")[0] for w in (True, False)]
+
 # (métrica, cómo se calcula, meta legible, prueba de la meta)
 METRICAS = [
     ("Win rate", lambda rs: prop(rs, lambda r: r["win"]), "≥ 55% (semana 1), ≥ 58% después", lambda v: v >= .55),
@@ -92,12 +98,13 @@ METRICAS = [
      "> 55%", lambda v: v > .55),
     ("WR cuando llegas al 14 con oro ≥ 0 (convertir)",
      lambda rs: prop([r for r in rs if r["gd14"] is not None and r["gd14"] >= 0], lambda r: r["win"]),
-     "≥ 60% (tu temporada: 62%)", lambda v: v >= .6),
+     "≥ 60%" + ("" if CONV is None else f" (todas tus partidas: {CONV:.0%})"), lambda v: v >= .6),
     ("Oro contra tu rival al 14 (media)", lambda rs: media(rs, "gd14"), "≥ 0", lambda v: v >= 0),
     ("CS contra tu rival al 14 (media)", lambda rs: media(rs, "cd14"), "≥ 0", lambda v: v >= 0),
-    ("Muertes antes del 14", lambda rs: media(rs, "d14"), "referencia: 2.12 en victorias", lambda v: v <= 2.12),
+    ("Muertes antes del 14", lambda rs: media(rs, "d14"), f"referencia: {D14V[0]} en tus victorias",
+     None if D14V[1] is None else lambda v: v <= D14V[1]),
     ("Muertes antes del 14 pasado el río (río, mitad rival de tu línea o jungla rival)", lambda rs: media(rs, "rio14"),
-     "monitor de la regla de prioridad 1; no separa V/D (1.10 contra 1.05)", None),
+     f"monitor de la regla de prioridad 1; en tus partidas, V {RIO[0]} contra D {RIO[1]}", None),
     ("Muertes del 14 al 25", lambda rs: media(rs, "d25"), "≤ 2", lambda v: v <= 2),
 ] + ([] if not M10 else [
     (f"{M10['campeon']}: partidas con {M10['minimo']}+ minions de línea al 10",

@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 3, iteración 2: CI (`.github/workflows/pruebas.yml`, Ubuntu + Windows), `companion.py --help` (argparse; un argumento raro ya no arranca el bucle), README del companion; las pruebas corren sin `datos/raw` (fixture mínima). 18 OK.
-- **Siguiente:** textos de metas aún de cozi en `revision.py` («tu temporada: 62%», «2.12 en victorias») y default Ekko en convertir/linea; opcional: captura Live Client Data.
-- **Actualizado:** 2026-11-08 (turno 3, iteración 2)
+- **Estado:** turno 3, iteración 3: las referencias de `revision.py` (convertir, muertes <14 en V, río V/D) se calculan de tus partidas; `convertir.py`/`linea.py` sin argumento usan tu campeón más jugado (antes Ekko fijo). 18 OK.
+- **Siguiente:** `rol.py` aún con Mordekaiser/Yone/Ekko fijos; opcional: captura Live Client Data.
+- **Actualizado:** 2026-11-08 (turno 3, iteración 3)
 
 ### DeepSeek · revisor
-- **Estado:** revisado fbb8e08 (cierre del turno 2, sin código). El RESUMEN-NOCHE está respaldado (muertes6 50/59% y 44%; wards 1,431 y 0.92/0.87/0.81). No pude bajar la partida nueva: RIOT_KEY caducó (401).
-- **Siguiente:** registrar la partida nueva cuando el usuario renueve la key.
-- **Actualizado:** 2026-11-07 23:31
+- **Estado:** revisado 23af793 (DATOS_DIR, `*_*.json`, config.json) y 11c5626 (CI + --help). Verificado: revision con/sin config OK (pool deducido Sylas/Ekko/Yone), CI simulado 18 OK (1 saltado). Menor: `*_*.json` aceptaría un `.json` con `_` que no sea partida.
+- **Siguiente:** nada pendiente mío.
+- **Actualizado:** 2026-11-08 00:09
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -33,7 +33,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-midgame-*.md` | Salida de `midgame.py` | Opus |
 | `scripts/rol.py` | Mid contra top (y demás roles): WR, línea, conversión, campeones, tendencia, permutación | Opus |
 | `datos/analisis-rol-*.md` | Salida de `rol.py` | Opus |
-| `scripts/convertir.py` | Línea ganada al 14 por campeón y V/D de uno: `convertir.py [Campeón]` (Ekko por defecto) | Opus |
+| `scripts/convertir.py` | Línea ganada al 14 por campeón y V/D de uno: `convertir.py [Campeón]` (por defecto tu más jugado) | Opus |
 | `datos/analisis-convertir-*.md` | Salida de `convertir.py` | Opus |
 | `scripts/linea.py` | Línea perdida al 14: muertes por gank/1v1, CS, XP, por campeón y V/D: `linea.py [Campeón]` | Opus |
 | `datos/analisis-linea-*.md` | Salida de `linea.py` | Opus |
@@ -123,7 +123,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · DeepSeek: RIOT_KEY caducó (401 en `descargar.py 5`): la partida nueva sigue sin poder bajarse; hay que renovarla (`setx RIOT_KEY`).
 - 2026-11-08 · Opus: todos los scripts buscaban `LA1_*.json`: con una cuenta de otra región no veían ninguna partida. Ahora `*_*.json`.
 - 2026-11-08 · Opus: en un clon nuevo (sin `datos/raw`) las pruebas fallaban: `draft.py` lee `perfil.json` al importarse. El CI habría salido rojo desde el primer push; ahora usa `scripts/fixtures/datos`.
+- 2026-11-08 · Opus: las referencias fijas de `revision.py` se reproducen con los datos (62%; 2.11 contra 2.12; río V 1.10 contra D 1.04) y ninguna ✅/❌ cambia en `revision.py 20`.
 - 2026-11-08 · Opus: punta a punta con JUGKING#1345 (Challenger LAN, 20 partidas, `DATOS_DIR` aparte, sin config): descargar, analizar, draft y revision salen 0; `datos/raw` intacto; datos de prueba borrados.
+- 2026-11-08 · DeepSeek: glob `*_*.json` seguro hoy (`perfil.json` sin `_`, `timeline-log.txt` no es .json, `timeline/` es dir quedan fuera); riesgo residual solo si cae un `.json` con `_` que no sea partida (menor).
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -153,6 +155,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 
 - 2026-11-07 noche · Opus: la meta de Sylas en `revision.py` solo marca ✅/❌ con n ≥ 10 Sylas en la ventana (sugerencia de DeepSeek); con menos queda como monitor.
 - 2026-11-08 · Opus: pool y meta de minions al 10 salen de `config.json` (opcional, ignorado por git); sin él, pool = tus 3 más jugados y sin meta de minions. Con el config de cozi la salida de `revision.py 20` es idéntica a la de antes.
+- 2026-11-08 · Opus: `convertir.py`/`linea.py` sin argumento enfocan tu campeón más jugado (Sylas para cozi); los análisis viejos de Ekko se rehacen con `convertir.py Ekko`.
 ## Para el usuario (cuando vuelva)
 - Nuevo: deja abierto `python scripts/companion.py` en una terminal mientras juegas. En champ select te recomienda el pick contra tu rival y, al terminar, baja la partida y la revisa (si la key caducó, te dice «renueva RIOT_KEY»).
 - Para revisar tus primeras muertes: `python scripts/partida.py <id> --early` (minuto a minuto del 1 al 12, con tu nivel contra el de tu rival).

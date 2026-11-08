@@ -1,13 +1,13 @@
 """¿Cómo pierdes la línea y cuál línea perdida se remonta? En partidas con oro < 0 contra tu rival al 14,
 separa la desventaja por causa (muertes por gank, muertes 1 contra 1, farm, XP) por campeón, y compara
-V contra D. Uso: python scripts/linea.py [Campeón] > datos/analisis-linea-AAAA-MM-DD.md   (por defecto Ekko)"""
+V contra D. Uso: python scripts/linea.py [Campeón] > datos/analisis-linea-AAAA-MM-DD.md   (por defecto tu campeón más jugado)"""
 import json, os, math, pathlib, random, statistics as st, sys
 from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
 RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
-FOCO = sys.argv[1] if len(sys.argv) > 1 else "Ekko"
+FOCO = sys.argv[1] if len(sys.argv) > 1 else None  # sin argumento: tu campeón más jugado
 
 
 def wilson(k, n, z=1.96):  # misma función que scripts/convertir.py
@@ -58,7 +58,8 @@ for tf in (RAW / "timeline").glob("*_*.json"):
         k14=sum(e["killerId"] == pid for e in ev), od14=sum(e["victimId"] == oid for e in ev),
         primera=min((e["timestamp"] / 60000 for e in ev if e["victimId"] == pid), default=None)))
 assert games, "sin timelines"
-perd = [g for g in games if g["gd14"] < 0]
+FOCO = FOCO or Counter(g["champ"] for g in games).most_common(1)[0][0]
+perd =[g for g in games if g["gd14"] < 0]
 
 FILAS = [("Oro vs rival @14", "gd14", "+.0f"), ("Oro vs rival @20", "gd20", "+.0f"), ("CS vs rival @10", "cs10", "+.1f"),
          ("CS vs rival @14", "cs14", "+.1f"), ("XP vs rival @14", "xp14", "+.0f"), ("Tus muertes <14", "d14", ".2f"),
