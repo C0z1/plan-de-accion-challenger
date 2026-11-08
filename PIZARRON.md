@@ -9,14 +9,19 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 4, iteración 6: aviso en vivo de minions al minuto 10 (`companion.aviso_minions`, consola y banner de la GUI) para el campeón de `minions10` en `config.json` (Sylas 69+). Los avisos van en un set por partida. 52 OK.
-- **Siguiente:** cotejar con una foto real de `datos/vivo/` si `creepScore` en vivo es exacto o va de 10 en 10, y cuánto se aleja de `laneMinionsFirst10Minutes`.
-- **Actualizado:** 2026-11-08 (turno 4, iteración 6)
+- **Estado:** turno 5, iteración 1: `scripts/score.py` (score por partida contra los 10, corregido por rol), metido en `revision.py` (métrica y columna) y en la vista post-partida de la GUI. lolalytics descartado (su robots.txt bloquea a ClaudeBot/anthropic-ai). 60 OK.
+- **Siguiente:** `scripts/builds.py <Campeón> [rol]` con la Riot API (Challenger/GM de LAN y KR → sus partidas → ítems del timeline y runas), probado con fixtures, más «tu build contra la de los mejores» con `datos/raw`.
+- **Actualizado:** 2026-11-08 (turno 5, iteración 1)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 0b2d15a→41e6c14 (turno 4): aviso de nivel, racha de oro y robustez del companion; hallé bugs de `level: null`/`gameTime: null` e `IncompleteRead`, ya arreglados por Opus. Escribí `test_ds_nivel6.py`, `test_ds_racha.py` y `test_ds_robusto.py` (11 pruebas).
 - **Siguiente:** revisar 9b8dce2 (aviso de draft) y el flujo de punta a punta de la iteración 5.
 - **Actualizado:** 2026-11-08 02:29
+
+### Diseñador
+- **Estado:** iteración 1: `datos/diseno-auditoria.md` (20 problemas; críticos: ventana no visible in-game, avisos de 9 pt sin caducidad).
+- **Siguiente:** `datos/diseno-propuesta.md` con preguntas para el usuario.
+- **Actualizado:** 2026-11-08 (turno 5, iteración 1)
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -60,6 +65,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
 | `scripts/fixtures/vivo/allgamedata.json` | Foto sintética de la Live Client Data API (min 6, Ekko 5 contra Zed 6; nombres inventados) | Opus |
 | `scripts/test_companion.py` | Pruebas sin red: `python -m unittest discover scripts` (incluye `Robusto`: lockfile, timeouts, JSON cortado, reinicio a media partida) | Opus |
+| `scripts/score.py` | Score por partida contra tu equipo y la partida (8 componentes en z contra los 10, corregido por rol; 50 = típico): tendencia, V/D, por campeón, qué te baja: `score.py [N]` | Opus |
+| `datos/analisis-score-*.md` | Salida de `score.py` | Opus |
+| `scripts/test_score.py` | Pruebas de `score.py` y de la columna Score de `revision.py` | Opus |
 | `scripts/test_ds_*.py` | Pruebas de casos borde que escribe DeepSeek | DeepSeek |
 | `scripts/test_flujo.py` | Humo del companion de punta a punta sin cliente (champ select, partida, post-partida); corre en el CI | Opus |
 | `scripts/test_draft.py` | Pruebas de `draft.py` (funciones y recomendación con partidas sintéticas) y humo de `revision.py 1` | Opus |
@@ -144,6 +152,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: el aviso de draft no salta con ninguno de tus 99 rivales de mid/top: el único counter duro de tu pool (Ekko 0-4 contra Viktor) ya no sale recomendado por el encogido M=10.
 - 2026-11-08 · Opus: el flujo completo del companion (draft en champ select, 3 fotos en un archivo, 1 aviso, descarga + revisión una vez) pasa sin cliente; solo toca 127.0.0.1.
 - 2026-11-08 · Opus: meter el `get` de la fase dentro del `try` de `companion.main` (sugerencia de DeepSeek) cuelga las pruebas: el `except Exception` se traga el `StopIteration` con que cortan el bucle. Queda fuera; `lcu()` ya atrapa todo.
+- 2026-11-08 · Opus: score (`score.py`, 284 partidas): 49.6 de media (típico de tu rol); V 51.1 contra D 47.9; ajenos 52.1 contra 47.9. Tu componente más bajo es el KP (−0.33 contra tu rol, también en V); en D lo que más cae es la línea (−0.50) y las muertes (−0.42). Sin tendencia: últimas 20 49.2 contra 49.7.
+- 2026-11-08 · Opus: Mordekaiser es tu mejor WR (68%) con el score más bajo (47.5): gana sin destacar en las stats (pista, n=22).
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -184,8 +194,11 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: «counter duro» en draft = techo Wilson del récord del pick contra el rival < tu WR base (el criterio de los bans); la alternativa es el siguiente por estimado que no lo sea. El aviso no cambia la recomendación, solo la anota.
 - 2026-11-08 · Opus: el humo del flujo simula solo `urlopen`, reloj, sleep y la descarga (sin red ni key); `draft` y `revision.py` corren de verdad sobre datos de fixture.
 - 2026-11-08 · Opus: el aviso de minions al 10 usa `scores.creepScore` en vivo (incluye monstruos; sin cotejar con una partida real) contra la meta de `config.json`; avisa solo con ese campeón, entre 10:00 y 11:00, una vez.
+- 2026-11-08 · Opus: no se usa lolalytics: su robots.txt prohíbe ClaudeBot, anthropic-ai y Claude-Web, y esta herramienta la construye Claude. Las builds de los mejores saldrán de la Riot API (cuando haya key).
+- 2026-11-08 · Opus: el score se normaliza contra los 10 de la partida y luego se le resta la media de su rol (sacada de los jugadores ajenos), para que un support o un jungla no salgan mal por CS o bien por objetivos. Es monitor sin meta: sube al ganar.
 
 ## Para el usuario (cuando vuelva)
+- Nuevo: `python scripts/score.py` te da un score por partida contra tu equipo y la partida (50 = típico de tu rol; cada 15 puntos, una desviación), tu puesto entre los 10 y en tu equipo, la tendencia y qué componente te baja. También sale en `revision.py` y en la ventana post-partida.
 - Nuevo: con Sylas, si al minuto 10 llevas menos de 69 de CS, el companion te avisa («no roamees ni tradees a costa de oleadas hasta el 14»). Sale de `minions10` en tu `config.json`; recompila `Companion.exe` para tenerlo en la ventana.
 - Nuevo: en champ select, si el pick recomendado tiene menos de 5 partidas en el rol o es un counter duro del rival (incluso en el mejor caso queda bajo tu WR base), `draft.py` y la ventana lo avisan en rojo y te dan una alternativa.
 - Nuevo: si el cliente de LoL se reinicia a media partida, el companion sigue grabando la misma partida y no repite avisos; con el cliente cerrado sondea cada vez menos (hasta cada 30 s). Recompila `Companion.exe` para tenerlo.

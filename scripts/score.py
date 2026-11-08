@@ -1,0 +1,165 @@
+"""Score por partida, relativo a tu equipo y a la partida (estilo DPM/op.gg), con su tendencia y V contra D.
+Uso: python scripts/score.py [N]   (N = partidas de la tabla final; por defecto 10). Sin red: lee datos/raw.
+
+Fórmula (por partida, para cada uno de los 10 jugadores):
+  1. 8 componentes crudos:
+       daño      = daño a campeones / daño a campeones de su equipo
+       oro       = oro ganado / oro de su equipo
+       kp        = (kills + asistencias) / kills de su equipo
+       muertes   = −muertes por minuto
+       visión    = visionScore por minuto
+       cs        = (minions + monstruos) por minuto
+       objetivos = daño a objetivos (torres, dragones, barón…) / el de su equipo
+       línea     = (oro − oro de su rival de línea) por minuto (0 si no hay rival con su misma posición)
+  2. Cada componente pasa a z contra los 10 de esa partida (media 0, desviación 1), recortado a ±3.
+  3. Corrección por rol: a cada z se le resta la media de ese componente en su rol (teamPosition), sacada de
+     los jugadores ajenos de todas tus partidas (un support siempre tiene poco CS; un jungla, mucho objetivo).
+  4. score = 50 + 15 × media de los 8 z corregidos. 50 = un jugador típico de su rol en esa partida.
+  Puesto = lugar del score entre los 10 (1 = el mejor) y entre los 5 de tu equipo.
+Ojo: el score sale de stats que suben al ganar (oro, KP, objetivos), así que V > D no dice qué causa qué.
+Lo útil es compararte contigo: la tendencia, por campeón, y qué componente te baja en las derrotas."""
+import json, math, os, pathlib, statistics as st, sys
+from collections import defaultdict
+from datetime import datetime
+
+COMP = ("daño", "oro", "kp", "muertes", "visión", "cs", "objetivos", "línea")
+
+
+def z_partida(info):
+    """[(puuid, rol, equipo, win, {componente: z})] de los 10 jugadores, o [] si no es la Grieta o es remake."""
+    if info.get("mapId") != 11 or info["gameDuration"] < 300: return []
+    ps, mins = info["participants"], info["gameDuration"] / 60
+    tot = defaultdict(lambda: defaultdict(float))
+    for p in ps:
+        t = tot[p["teamId"]]
+        t["daño"] += p["totalDamageDealtToChampions"]; t["oro"] += p["goldEarned"]
+        t["kills"] += p["kills"]; t["obj"] += p["damageDealtToObjectives"]
+    crudo = []
+    for p in ps:
+        t = tot[p["teamId"]]
+        opp = next((q for q in ps if p["teamPosition"] and q["teamPosition"] == p["teamPosition"] and q["teamId"] != p["teamId"]), None)
+        crudo.append({"daño": p["totalDamageDealtToChampions"] / (t["daño"] or 1), "oro": p["goldEarned"] / (t["oro"] or 1),
+                      "kp": (p["kills"] + p["assists"]) / (t["kills"] or 1), "muertes": -p["deaths"] / mins,
+                      "visión": p["visionScore"] / mins, "cs": (p["totalMinionsKilled"] + p["neutralMinionsKilled"]) / mins,
+                      "objetivos": p["damageDealtToObjectives"] / (t["obj"] or 1),
+                      "línea": (p["goldEarned"] - opp["goldEarned"]) / mins if opp else 0.0})
+    z = [{} for _ in ps]
+    for c in COMP:
+        vs = [r[c] for r in crudo]; m, s = st.mean(vs), st.pstdev(vs)
+        for i, v in enumerate(vs): z[i][c] = max(-3.0, min(3.0, (v - m) / s)) if s else 0.0
+    return [(p["puuid"], p["teamPosition"], p["teamId"], p["win"], z[i]) for i, p in enumerate(ps)]
+
+
+def medias_rol(partidas, yo):
+    """{rol: {componente: media de z}} con los jugadores ajenos (no tú) de una lista de salidas de z_partida."""
+    acc = defaultdict(lambda: defaultdict(list))
+    for zs in partidas:
+        for puuid, rol, _, _, z in zs:
+            if puuid != yo:
+                for c in COMP: acc[rol][c].append(z[c])
+    return {rol: {c: st.mean(v) for c, v in cs.items()} for rol, cs in acc.items()}
+
+
+def de(zs, yo, med):
+    """Tu resultado en una partida: dict(score, puesto 1–10, puesto_eq 1–5, comp {componente: z corregido}) o None."""
+    if not zs: return None
+    res = []
+    for puuid, rol, eq, _, z in zs:
+        m = med.get(rol, {})
+        comp = {c: z[c] - m.get(c, 0.0) for c in COMP}
+        res.append((puuid, eq, 50 + 15 * st.mean(comp.values()), comp))
+    mio = next((r for r in res if r[0] == yo), None)
+    if not mio: return None
+    s = mio[2]
+    return dict(score=s, puesto=1 + sum(r[2] > s for r in res),
+                puesto_eq=1 + sum(r[2] > s for r in res if r[1] == mio[1]), comp=mio[3])
+
+
+def _ic(vs):  # media ± 1.96·error estándar
+    if len(vs) < 2: return f"{st.mean(vs):.1f}" if vs else "-"
+    m, h = st.mean(vs), 1.96 * st.stdev(vs) / math.sqrt(len(vs))
+    return f"{m:.1f} ({m - h:.1f}–{m + h:.1f}, n={len(vs)})"
+
+
+def _prueba():
+    """Partida sintética: el que lo hace todo mejor sale 1.º; con medias de rol en 0 el score medio de los 10 es 50."""
+    ps = [dict(puuid=f"p{i}", teamPosition=pos, teamId=100 if i < 5 else 200, win=i < 5, kills=k, assists=1, deaths=5 - k,
+               totalDamageDealtToChampions=1000 * (k + 1), goldEarned=8000 + 500 * k, damageDealtToObjectives=500 * (k + 1),
+               visionScore=10 + k, totalMinionsKilled=100 + 10 * k, neutralMinionsKilled=0)
+          for i, (pos, k) in enumerate([(p, k) for k, p in zip((5, 1, 2, 1, 1), ("MIDDLE", "TOP", "JUNGLE", "BOTTOM", "UTILITY"))]
+                                       + [(p, 1) for p in ("MIDDLE", "TOP", "JUNGLE", "BOTTOM", "UTILITY")])]
+    zs = z_partida(dict(mapId=11, gameDuration=1800, participants=ps))
+    r = de(zs, "p0", {})
+    assert r["puesto"] == 1 and r["puesto_eq"] == 1 and r["score"] > 60 and r["comp"]["línea"] > 0, r
+    assert abs(st.mean(de(zs, f"p{i}", {})["score"] for i in range(10)) - 50) < 1e-9
+    assert z_partida(dict(mapId=12, gameDuration=1800, participants=ps)) == []  # ARAM fuera
+    assert de(zs, "p0", {"MIDDLE": {c: 1.0 for c in COMP}})["score"] == r["score"] - 15  # corrección por rol
+_prueba()
+
+
+def main():
+    sys.stdout.reconfigure(encoding="utf-8")
+    raw = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
+    yo = json.loads((raw / "perfil.json").read_text())["account"]["puuid"]
+    n_tabla = int(sys.argv[1]) if len(sys.argv) > 1 else 10
+    gs = []
+    for f in raw.glob("*_*.json"):
+        info = json.loads(f.read_text())["info"]
+        zs = z_partida(info)
+        me = next((p for p in info["participants"] if p["puuid"] == yo), None)
+        if zs and me: gs.append(dict(t=info["gameCreation"], win=me["win"], champ=me["championName"], rol=me["teamPosition"],
+                                     kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", zs=zs))
+    gs.sort(key=lambda g: g["t"])
+    assert gs, "sin partidas"
+    med = medias_rol((g["zs"] for g in gs), yo)
+    for g in gs: g.update(de(g["zs"], yo, med))
+    V, D = [g for g in gs if g["win"]], [g for g in gs if not g["win"]]
+    sc = lambda rs: [g["score"] for g in rs]
+    # validación: entre los jugadores ajenos, ¿el score sube al ganar? (si no, la fórmula no mide nada)
+    otros = [(w, 50 + 15 * st.mean(z[c] - med.get(rol, {}).get(c, 0) for c in COMP))
+             for g in gs for p, rol, _, w, z in g["zs"] if p != yo]
+
+    print(f"# Score por partida ({len(gs)} partidas en la Grieta, sin remakes)\n")
+    print("50 = un jugador típico de tu rol en esa partida; cada 15 puntos es 1 desviación de los 10 jugadores. "
+          "Fórmula: ver el encabezado de `scripts/score.py`. El score sube al ganar (oro, KP, objetivos): "
+          "V contra D no dice qué causa qué; compárate contigo.\n")
+    print(f"- Tu score: {_ic(sc(gs))}; puesto medio {st.mean(g['puesto'] for g in gs):.1f} de 10 y "
+          f"{st.mean(g['puesto_eq'] for g in gs):.1f} de 5 en tu equipo.")
+    print(f"- En victorias {_ic(sc(V))}; en derrotas {_ic(sc(D))}.")
+    print(f"- Derrotas en las que fuiste el mejor de tu equipo: {sum(g['puesto_eq'] == 1 for g in D)} de {len(D)}; "
+          f"victorias en las que fuiste el peor: {sum(g['puesto_eq'] == 5 for g in V)} de {len(V)}.")
+    ov, od = [s for w, s in otros if w], [s for w, s in otros if not w]
+    print(f"- Control (los {len(otros):,} jugadores ajenos): ganadores {_ic(ov)}, perdedores {_ic(od)}.\n")
+
+    print("## Tendencia (bloques de 20, del más viejo al más nuevo)\n\n| Partidas | Fechas | Score | Puesto en tu equipo | WR |\n|---|---|---|---|---|")
+    fecha = lambda g: datetime.fromtimestamp(g["t"] / 1000)
+    for i in range(0, len(gs), 20):
+        b = gs[i:i + 20]
+        print(f"| {i + 1}–{i + len(b)} | {fecha(b[0]):%m-%d} a {fecha(b[-1]):%m-%d} | {_ic(sc(b))} | "
+              f"{st.mean(g['puesto_eq'] for g in b):.1f} | {sum(g['win'] for g in b) / len(b):.0%} |")
+    rec, ant = gs[-20:], gs[:-20]
+    if ant: print(f"\nÚltimas 20: {_ic(sc(rec))} contra las {len(ant)} anteriores: {_ic(sc(ant))}.")
+
+    print("\n## Qué te sube y qué te baja (z corregido por rol; 0 = típico de tu rol, +1 = una desviación arriba)\n")
+    print("| Componente | Todas | Victorias | Derrotas | Últimas 20 |\n|---|---|---|---|---|")
+    for c in COMP:
+        m = lambda rs: f"{st.mean(g['comp'][c] for g in rs):+.2f}" if rs else "-"
+        print(f"| {c} | {m(gs)} | {m(V)} | {m(D)} | {m(rec)} |")
+
+    print("\n## Por campeón (5+ partidas)\n\n| Campeón | Partidas | Score | Score en D | WR |\n|---|---|---|---|---|")
+    por = defaultdict(list)
+    for g in gs: por[g["champ"]].append(g)
+    for c, rs in sorted(por.items(), key=lambda x: -len(x[1])):
+        if len(rs) < 5: continue
+        print(f"| {c} | {len(rs)} | {st.mean(sc(rs)):.1f} | {st.mean(sc([g for g in rs if not g['win']]) or [float('nan')]):.1f} | "
+              f"{sum(g['win'] for g in rs) / len(rs):.0%} |")
+
+    print(f"\n## Últimas {n_tabla} (más reciente primero)\n\n| Fecha | Campeón | | KDA | Score | Puesto (10) | Puesto (equipo) | Lo que más bajó |\n|---|---|---|---|---|---|---|---|")
+    for g in reversed(gs[-n_tabla:]):
+        peor = min(COMP, key=lambda c: g["comp"][c])
+        print(f"| {fecha(g):%m-%d %H:%M} | {g['champ']} | {'V' if g['win'] else 'D'} | {g['kda']} | {g['score']:.0f} | "
+              f"{g['puesto']} | {g['puesto_eq']} | {peor} ({g['comp'][peor]:+.1f}) |")
+
+
+if __name__ == "__main__":
+    main()

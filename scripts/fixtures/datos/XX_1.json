@@ -1,4 +1,45 @@
-{"info": {"gameDuration": 1800, "gameCreation": 0, "participants": [
-  {"puuid": "yo", "participantId": 1, "teamId": 100, "teamPosition": "MIDDLE", "championName": "Ekko", "championId": 245, "win": true},
-  {"puuid": "rival", "participantId": 6, "teamId": 200, "teamPosition": "MIDDLE", "championName": "Zed", "championId": 238, "win": false}
-]}}
+{
+ "info": {
+  "gameDuration": 1800,
+  "gameCreation": 0,
+  "participants": [
+   {
+    "puuid": "yo",
+    "participantId": 1,
+    "teamId": 100,
+    "teamPosition": "MIDDLE",
+    "championName": "Ekko",
+    "championId": 245,
+    "win": true,
+    "kills": 3,
+    "deaths": 2,
+    "assists": 4,
+    "totalDamageDealtToChampions": 15000,
+    "goldEarned": 10000,
+    "damageDealtToObjectives": 4000,
+    "visionScore": 20,
+    "totalMinionsKilled": 180,
+    "neutralMinionsKilled": 8
+   },
+   {
+    "puuid": "rival",
+    "participantId": 6,
+    "teamId": 200,
+    "teamPosition": "MIDDLE",
+    "championName": "Zed",
+    "championId": 238,
+    "win": false,
+    "kills": 4,
+    "deaths": 2,
+    "assists": 4,
+    "totalDamageDealtToChampions": 17000,
+    "goldEarned": 10500,
+    "damageDealtToObjectives": 4000,
+    "visionScore": 20,
+    "totalMinionsKilled": 180,
+    "neutralMinionsKilled": 8
+   }
+  ],
+  "mapId": 11
+ }
+}

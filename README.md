@@ -110,6 +110,7 @@ flowchart LR
 | Recolección | `analizar.py` | Resume `datos/raw/*.json` en estadísticas agregadas. |
 | Antes de la partida | `draft.py` | Matchups y draft con tus datos. |
 | Después de la partida | `revision.py` | Revisa tus últimas N partidas contra las metas del PLAN. |
+| Después de la partida | `score.py` | Score por partida contra tu equipo y la partida (50 = típico de tu rol), tendencia, V/D y qué componente te baja. |
 | Después de la partida | `partida.py` | Replay en datos minuto a minuto; usa `--early` para narrar 0–12. |
 | Análisis profundo | `early.py` | ¿Qué separa victorias de derrotas en el early por campeón? |
 | Análisis profundo | `timeline.py` | Diferencias a 10/14/20, muertes por fase y objetivos. |

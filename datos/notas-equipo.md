@@ -1062,3 +1062,28 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿`creepScore` de la Live Client Data es exacto o se actualiza de 10 en 10? Si sabes, ¿incluye monstruos?
 - Tarea de pruebas: escribe `scripts/test_ds_minions.py` con 3 casos sobre `companion.aviso_minions`: (1) sin `config.json` (pasa `m10=None` con `companion.CFG` apuntando a un archivo que no existe) → None; (2) `scores` ausente → avisa «llevas 0»; (3) el bucle de `companion.main` con fotos a 610 s y luego 640 s → un solo aviso de minions.
+
+## 2026-11-08 · Diseñador · iteración 1
+
+- **Hecho:** `datos/diseno-auditoria.md` (20 problemas de la GUI ordenados por impacto en partida; 5 críticos).
+- **Lo más grave:** la ventana no es `topmost` ni compacta, así que con LoL en pantalla completa no se ve; los avisos en vivo son un banner de 9 pt sin caducidad que se pisa entre sí y comparte estilo con los errores.
+- DeepSeek: no lo pude consultar (el permiso bloquea `ask-deepseek.ps1` como «nested PowerShell process», desde Bash y desde PowerShell).
+- **Para Opus (una línea cada uno):**
+  - `post_partida` bloquea el hilo del sondeo hasta ~7 min (`companion_gui.py` l.92–104, 125): si el usuario pone cola enseguida, el champ select siguiente no se detecta. Va a un hilo aparte.
+  - Exponer los avisos como `{texto, tipo: consejo|error, minuto}` en vez de cadenas.
+  - Cuando existan, builds de los top y score relativo al equipo (con las últimas N) como datos estructurados, no texto de tabla.
+- **Siguiente (iteración 2):** `datos/diseno-propuesta.md` con las pantallas y 5–10 preguntas para el usuario.
+
+## 2026-11-08 · Opus · turno 5 iteración 1
+
+- **Hecho:** `scripts/score.py` (pedido 2 del usuario, score tipo DPM). Fórmula en su encabezado: 8 componentes por jugador (cuota de daño y de oro del equipo, KP, −muertes/min, visión/min, CS/min, cuota de daño a objetivos, oro contra su rival de línea por minuto), cada uno en z contra los 10 de la partida (±3), menos la media de su rol (jugadores ajenos de todas las partidas), y score = 50 + 15 × media. Puesto entre los 10 y en el equipo. Solo la Grieta (mapId 11), sin remakes. Se puede importar: `z_partida`, `medias_rol`, `de`.
+- Entra en `revision.py`: métrica «Score contra tu partida» (monitor sin meta, con V contra D de referencia) y columna `Score` en «Partida por partida». `companion_gui.parsear_revision` lee la columna si está (con la salida vieja da «-») y la vista post-partida la muestra en «Detalle».
+- **Hallazgos** (284 partidas, `datos/analisis-score-2026-11-08.md`): media 49.6; V 51.1 contra D 47.9 (ajenos 52.1/47.9: la fórmula sí sigue al resultado, pero con poca pendiente). KP es tu componente más bajo (−0.33 contra tu rol, −0.27 aun en V), cuadra con el «KP 41%» de antes. En D lo que se va es la línea (−0.50) y las muertes (−0.42). Sin tendencia (últimas 20: 49.2 contra 49.7). Mordekaiser 68% de WR con score 47.5.
+- **lolalytics descartado:** su `robots.txt` prohíbe `ClaudeBot`, `anthropic-ai` y `Claude-Web`. Como esta herramienta la escribe Claude, usar ese sitio con otro user-agent sería saltar el bloqueo. Las builds salen de la Riot API.
+- El fixture `scripts/fixtures/datos/XX_1.json` ganó `mapId` y stats; con él salió un bug (con 1 partida `st.mean([])` tronaba la línea de control) que ya quedó arreglado.
+- Pruebas: `scripts/test_score.py` (3) más las aserciones de `score._prueba` al importar. 60 OK.
+- DeepSeek: no lo pude consultar (el permiso bloquea `ask-deepseek.ps1`, desde PowerShell y desde Bash).
+
+**Para DeepSeek**
+- Revisa el commit: ¿la corrección por rol con jugadores ajenos sesga algo cuando cozi juega un rol raro (p. ej. support con 11 Pyke)? ¿Pesar los 8 componentes igual infla el KP (que ya está metido en daño y oro)?
+- Tarea de pruebas: escribe `scripts/test_ds_score.py` con 3 casos sobre `score.z_partida`/`score.de`: (1) partida con un equipo de 0 kills (no divide entre 0 y el KP de ese equipo es 0); (2) un jugador AFK (todo en 0, 1 muerte) sale último de los 10; (3) `de` con un `puuid` que no está en la partida → None.

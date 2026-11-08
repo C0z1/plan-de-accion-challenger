@@ -1,6 +1,7 @@
 """Revisión: tus últimas N partidas contra las metas del PLAN (para los domingos y al terminar cada sesión).
 Uso: python scripts/revision.py [N]   (por defecto 20; antes corre scripts/descargar.py para bajar las nuevas)"""
 import json, os, math, pathlib, statistics as st, sys
+import score  # scripts/score.py
 from collections import Counter
 from datetime import datetime
 
@@ -44,10 +45,11 @@ for f in RAW.glob("*_*.json"):
     m = json.loads(f.read_text())["info"]
     if m["gameDuration"] < 300 or m.get("gameEndedInEarlySurrender"): continue
     ps = m["participants"]
+    zs = score.z_partida(m)
     me = next(p for p in ps if p["puuid"] == puuid)
     opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
     g = dict(win=me["win"], champ=me["championName"], t=m["gameCreation"], cw=me.get("visionWardsBoughtInGame", 0),
-             gd14=None, cd14=None, xd14=None, lv6=None, d14=None, d25=None, rio14=None,
+             zs=zs, sc=None, gd14=None, cd14=None, xd14=None, lv6=None, d14=None, d25=None, rio14=None,
              lm10=me.get("challenges", {}).get("laneMinionsFirst10Minutes") if M10 and me["championName"] == M10["campeon"] else None)
     tf = RAW / "timeline" / f.name
     if tf.exists():
@@ -68,6 +70,8 @@ for f in RAW.glob("*_*.json"):
     games.append(g)
 games.sort(key=lambda g: g["t"])
 assert games, "sin partidas"
+MED = score.medias_rol((g["zs"] for g in games), puuid)
+for g in games: g["sc"] = (score.de(g.pop("zs"), puuid, MED) or {}).get("score")
 # sin config: el pool son tus 3 campeones más jugados
 POOL = (CFG.get("pool") or [c for c, _ in Counter(g["champ"] for g in games).most_common(3)])
 
@@ -85,13 +89,14 @@ def prop(rs, ok):
 
 def media(rs, key):
     vs = [r[key] for r in rs if r[key] is not None]
-    return (f"{st.mean(vs):+.1f}" if key in ("gd14", "cd14") else f"{st.mean(vs):.2f}", st.mean(vs)) if vs else ("-", None)
+    return (f"{st.mean(vs):+.1f}" if key in ("gd14", "cd14") else f"{st.mean(vs):.1f}" if key == "sc" else f"{st.mean(vs):.2f}", st.mean(vs)) if vs else ("-", None)
 
 
 # referencias de todas tus partidas (no números fijos de cozi)
 gan = [g for g in games if g["gd14"] is not None and g["gd14"] >= 0]
 CONV = sum(g["win"] for g in gan) / len(gan) if gan else None
 D14V = media([g for g in games if g["win"]], "d14")
+SCO = [media([g for g in games if g["win"] == w], "sc")[0] for w in (True, False)]
 RIO = [media([g for g in games if g["win"] == w], "rio14")[0] for w in (True, False)]
 
 # (métrica, cómo se calcula, meta legible, prueba de la meta)
@@ -109,6 +114,8 @@ METRICAS = [
     ("Muertes antes del 14 pasado el río (río, mitad rival de tu línea o jungla rival)", lambda rs: media(rs, "rio14"),
      f"monitor de la regla de prioridad 1; en tus partidas, V {RIO[0]} contra D {RIO[1]}", None),
     ("Muertes del 14 al 25", lambda rs: media(rs, "d25"), "≤ 2", lambda v: v <= 2),
+    ("Score contra tu partida (score.py; 50 = típico de tu rol)", lambda rs: media(rs, "sc"),
+     f"monitor sin meta (sube al ganar); en tus partidas, V {SCO[0]} contra D {SCO[1]}", None),
 ] + ([] if not M10 else [
     (f"{M10['campeon']}: partidas con {M10['minimo']}+ minions de línea al 10",
      # con ~4 por cada 20 partidas la marca es ruido: solo se marca con n ≥ 10 (revisión de DeepSeek)
@@ -173,8 +180,8 @@ def racha(games):
 if rs := racha(games):
     print("\n## Racha de oro bajo al 14\n\n" + "\n".join(rs))
 
-print(f"\n## Partida por partida (más reciente primero)\n\n| Fecha | Campeón | | Oro @14 | CS @14 | Muertes <14 | Muertes 14–25 | Control wards |\n|---|---|---|---|---|---|---|---|")
+print(f"\n## Partida por partida (más reciente primero)\n\n| Fecha | Campeón | | Oro @14 | CS @14 | Muertes <14 | Muertes 14–25 | Control wards | Score |\n|---|---|---|---|---|---|---|---|---|")
 f = lambda v, fmt="{:+d}": "-" if v is None else fmt.format(v)
 for g in reversed(rec):
     print(f"| {fecha(g):%m-%d %H:%M} | {g['champ']}{'' if g['champ'] in POOL else ' (fuera del pool)'} | "
-          f"{'V' if g['win'] else 'D'} | {f(g['gd14'])} | {f(g['cd14'])} | {f(g['d14'], '{}')} | {f(g['d25'], '{}')} | {g['cw']} |")
+          f"{'V' if g['win'] else 'D'} | {f(g['gd14'])} | {f(g['cd14'])} | {f(g['d14'], '{}')} | {f(g['d25'], '{}')} | {g['cw']} | {f(g['sc'], '{:.0f}')} |")

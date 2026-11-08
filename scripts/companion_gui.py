@@ -48,10 +48,10 @@ def parsear_revision(salida):
     """Primera fila de «Partida por partida» de revision.py: dict con las metas de la partida más reciente."""
     filas = [l for l in salida.split("## Partida por partida")[-1].splitlines() if l.startswith("| ") and not l.startswith("| Fecha")]
     if not filas: return None
-    _, camp, vd, oro, cs, m14, m25, cw = [c.strip() for c in filas[0].strip().strip("|").split("|")]
+    _, camp, vd, oro, cs, m14, m25, cw, *sc = [c.strip() for c in filas[0].strip().strip("|").split("|")]
     racha = salida.split("## Racha de oro bajo al 14")[1].split("## ")[0].strip().splitlines() if "## Racha de oro bajo al 14" in salida else []
     return dict(champ=camp.replace(" (fuera del pool)", ""), pool="fuera del pool" not in camp, win=vd == "V",
-                oro=oro, cs=cs, m14=m14, m25=m25, cw=cw, racha=[l.removeprefix("- ") for l in racha if l.strip()])
+                oro=oro, cs=cs, m14=m14, m25=m25, cw=cw, score=sc[0] if sc else "-", racha=[l.removeprefix("- ") for l in racha if l.strip()])
 
 
 def ultima_partida():
@@ -237,6 +237,7 @@ class App:
             self.tk.Label(f, text=val.replace("-", "−"), bg=BG, fg=color, font=(MONO, 10, "bold")).pack(side="right", padx=10)
         if r.get("racha"): self.reglas("Racha de oro bajo al 14", r["racha"], MAL, MAL)
         self.reglas("Detalle", [f"Muertes antes del 14: {r['m14']} · control wards: {r['cw']}.",
+                                f"Score {r.get('score', '-')} (50 = típico de tu rol en la partida; ver python scripts/score.py).",
                                 "Minuto a minuto: python scripts/partida.py --early"], ACENTO, ACENTO)
 
     def evento(self, e):
