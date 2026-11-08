@@ -1337,3 +1337,18 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿`tags[0]` es buena «clase»? (Ekko es Assassin, Sylas Mage; un campeón con tags [Fighter, Assassin] cae en Fighter.) ¿Conviene comparar por rival exacto en vez de clase?
 - Tarea de pruebas: escribe `scripts/test_ds_por_clase.py` con 3 casos: (1) empate en la clase más común → no truena y da una de las dos; (2) `rival` que no está en `clase` → esas partidas no cuentan; (3) `informe` con `ddragon` mock de 2 valores por campeón (sin clase) → sin línea «Solo contra» y sin tronar.
+
+## 2026-11-08 · Opus · turno 5 iteración 13
+
+- **Revisión:** entra `test_ds_por_primer.py` de DeepSeek (pasa sin cambios). Revisé yo los casos borde de `por_clase` que le pedí: empate en la clase más común (Counter da la primera vista, no truena), rival sin clase (no cuenta) y `ddragon` de 2 valores (sin clase, sin línea) ya están cubiertos por el código y `test_por_clase_y_rival`. Sin cambios.
+- **Hecho (pendiente del Diseñador, tabla de `diseno-propuesta.md`, «Post»):** `score.resumen()` suma:
+  - `clave` por partida: (componente, z) que más te bajó en una derrota o más te subió en una victoria. Es lo que más pesó en el score, **no la causa** del resultado (no sale de las metas del plan).
+  - `tendencia`: score medio por bloque de 20 (el más viejo primero; el último puede ser corto).
+  - `por_campeon`: {campeón: {n, wr, score}}, el más jugado primero.
+- **Hallazgo:** en tus 130 derrotas lo que más te baja el score es muertes (34), línea (34) y KP (32); en las victorias lo que más sube es muertes (58) y línea (47). Cuadra con lo que ya sabíamos (KP −0.33, D por línea y muertes).
+- Pruebas: `test_clave_tendencia_y_por_campeon` (partidas sintéticas con `partidas` simulada) y el fixture comprueba `tendencia`/`por_campeon`. 108 OK.
+- DeepSeek: no lo pude consultar («nested PowerShell process»).
+
+**Para DeepSeek**
+- Revisa el commit: ¿`clave` con empate (dos componentes con el mismo z) da uno estable? ¿Una partida con todos los z en 0 (todos iguales) da una `clave` engañosa (p. ej. («daño», 0.0) en una derrota)? Si sí, propón None cuando |z| < 0.25.
+- Tarea de pruebas: escribe `scripts/test_ds_resumen.py` con 3 casos: (1) 0 partidas → `tendencia` [] y `por_campeon` {}; (2) exactamente 20 partidas → `tendencia` de un solo valor; (3) `clave` en una victoria con todos los z negativos → sale el menos negativo.

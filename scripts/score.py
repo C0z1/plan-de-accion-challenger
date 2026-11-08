@@ -120,14 +120,25 @@ def partidas(raw=None):
 
 def resumen(n=10, raw=None):
     """Para la GUI (pedido del Diseñador): dict con tus últimas n partidas (la más reciente primero) y la tendencia.
-    {partidas: [{fecha, campeon, win, kda, score, puesto, puesto_eq, linea, comp}], media, ultimas20, anteriores, ref: 50}"""
+    {partidas: [{fecha, campeon, win, kda, score, puesto, puesto_eq, linea, comp, clave}], media, ultimas20, anteriores,
+     tendencia [score medio por bloque de 20, el más viejo primero], por_campeon {campeón: {n, wr, score}} (más jugado primero),
+     ref: 50}. clave = (componente, z) que más te bajó en una derrota o más te subió en una victoria: lo que más pesó
+    en el score, no la causa del resultado."""
     gs = partidas(raw)[0]
     m = lambda rs: round(st.mean(g["score"] for g in rs), 1) if rs else None
+    clave = lambda g: (min if not g["win"] else max)(((c, round(v, 2)) for c, v in g["comp"].items()), key=lambda x: x[1])
+    champs = defaultdict(list)
+    for g in gs: champs[g["champ"]].append(g)
     return dict(partidas=[dict(fecha=datetime.fromtimestamp(g["t"] / 1000).strftime("%m-%d %H:%M"), campeon=g["champ"],
                                win=g["win"], kda=g["kda"], score=round(g["score"], 1), puesto=g["puesto"],
-                               puesto_eq=g["puesto_eq"], linea=g["linea"], comp={c: round(v, 2) for c, v in g["comp"].items()})
+                               puesto_eq=g["puesto_eq"], linea=g["linea"], comp={c: round(v, 2) for c, v in g["comp"].items()},
+                               clave=clave(g))
                           for g in reversed(gs[-n:])],
-                media=m(gs), ultimas20=m(gs[-20:]), anteriores=m(gs[:-20]), ref=50)
+                media=m(gs), ultimas20=m(gs[-20:]), anteriores=m(gs[:-20]),
+                tendencia=[m(gs[i:i + 20]) for i in range(0, len(gs), 20)],
+                por_campeon={c: dict(n=len(v), wr=round(sum(g["win"] for g in v) / len(v), 2), score=m(v))
+                             for c, v in sorted(champs.items(), key=lambda x: -len(x[1]))},
+                ref=50)
 
 
 def main():

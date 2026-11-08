@@ -30,6 +30,19 @@ class Score(unittest.TestCase):
         self.assertEqual(set(p["comp"]), set(score.COMP))
         self.assertIn(p["linea"], (1, 2, None))
         self.assertEqual(r["media"], p["score"]); self.assertIsNone(r["anteriores"])
+        self.assertEqual(r["tendencia"], [p["score"]]); self.assertEqual(list(r["por_campeon"].values())[0]["n"], 1)
+
+    def test_clave_tendencia_y_por_campeon(self):
+        from unittest import mock
+        comp = lambda lo, hi: {c: (-1.0 if c == lo else 1.5 if c == hi else 0.0) for c in score.COMP}
+        gs = [dict(t=1, win=i % 2 == 0, champ="Ekko" if i < 30 else "Yone", kda="1/1/1", score=40 + i % 2 * 20, puesto=5,
+                   puesto_eq=3, linea=None, comp=comp("muertes", "oro")) for i in range(45)]
+        with mock.patch.object(score, "partidas", return_value=(gs, {}, "yo")):
+            r = score.resumen(2)
+        self.assertEqual([p["clave"] for p in r["partidas"]], [("oro", 1.5), ("muertes", -1.0)])  # V: lo que más subió; D: lo que más bajó
+        self.assertEqual(r["tendencia"], [50.0, 50.0, 48.0])  # bloques de 20, el último corto (5 partidas: 3 V)
+        self.assertEqual(list(r["por_campeon"]), ["Ekko", "Yone"])
+        self.assertEqual(r["por_campeon"]["Yone"], dict(n=15, wr=0.53, score=49.3))
 
     def test_remake_y_ajeno(self):
         self.assertEqual(score.z_partida(dict(mapId=11, gameDuration=200, participants=[])), [])
