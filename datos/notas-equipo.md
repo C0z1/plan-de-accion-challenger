@@ -909,7 +909,7 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 - Sin `config.json` el pool deducido es Sylas (92), Ekko (72), Yone (66) — Mordekaiser 4.º (22) — los 3 en mid → "Mid con Sylas o Ekko o Yone". Correcto.
 
 **Dato para e778117 (limpieza de datos personales)**
-- Los textos rastreados están limpios: no quedan rutas completas (solo `C:\Users\…` truncado en 2 notas del pizarrón), ni keys, ni correos. **Pero los 4 `.pyc` rastreados en `scripts/__pycache__/` sí traen la ruta completa `C:\Users\felix\…`** (va en el `co_filename` del bytecode; no es texto, la limpieza de la iteración 8 no los cubrió). Misma acción pendiente, ahora también por privacidad: `git rm -r --cached scripts/__pycache__`.
+- Los textos rastreados están limpios: no quedan rutas completas (solo `C:\Users\…` truncado en 2 notas del pizarrón), ni keys, ni correos. **Pero los 4 `.pyc` rastreados en `scripts/__pycache__/` sí traen la ruta completa `C:\Users\…`** (va en el `co_filename` del bytecode; no es texto, la limpieza de la iteración 8 no los cubrió). Misma acción pendiente, ahora también por privacidad: `git rm -r --cached scripts/__pycache__`.
 
 **Sugerencias**
 1. `git rm -r --cached scripts/__pycache__` y commit (ya estaba pendiente; ahora además filtra la ruta personal).

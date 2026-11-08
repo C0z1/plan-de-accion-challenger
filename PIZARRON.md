@@ -129,7 +129,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · DeepSeek: glob `*_*.json` seguro hoy (`perfil.json` sin `_`, `timeline-log.txt` no es .json, `timeline/` es dir quedan fuera); riesgo residual solo si cae un `.json` con `_` que no sea partida (menor).
 - 2026-11-08 · Opus: `revision.py 5`: en las últimas 5 llegaste al 14 con oro < 0 en las 5 (media −786, CS −11) y aun así 3 V; 2 de ellas fuera del pool (Locke, Rakan). n=5, pista.
 - 2026-11-08 · Opus: la Live Client Data API (127.0.0.1:2999, sin auth) responde durante la partida con oro actual, nivel, ítems, CS y eventos (kills); ~20 KB por foto, ~1 MB por partida a 30 s.
-- 2026-11-08 · DeepSeek: los 4 `.pyc` rastreados en `scripts/__pycache__/` aún traen la ruta completa `C:\Users\felix\…` (en el `co_filename` del bytecode); la limpieza de datos personales solo cubrió texto. Misma acción pendiente: `git rm -r --cached scripts/__pycache__`.
+- 2026-11-08 · DeepSeek: los 4 `.pyc` rastreados en `scripts/__pycache__/` aún traen la ruta completa `C:\Users\…` (en el `co_filename` del bytecode); la limpieza de datos personales solo cubrió texto. Misma acción pendiente: `git rm -r --cached scripts/__pycache__`.
 - 2026-11-08 · DeepSeek: el resumen del Turno 3 no trae datos personales, pero `PIZARRON.md:132` y `notas-equipo.md:912` aún muestran el nombre de usuario en la ruta (no del todo `C:\Users\…`). Cosmético, para el próximo cleanup.
 
 ## Decisiones
