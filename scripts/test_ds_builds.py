@@ -1,8 +1,9 @@
 """Pruebas de DeepSeek para builds.py (turno 5, iteración 2). Sin red: casos borde de build_de, resumir y mejores.
 
 Cubre los bordes que pidió Opus: dos ITEM_UNDO seguidos del mismo ítem, una partida sin ningún
-legendario (core vacío) y una región con la liga vacía. Además, documenta el ITEM_SOLD sin manejar."""
-import pathlib, sys, unittest
+legendario (core vacío), una región con la liga vacía, un legendario vendido (ITEM_SOLD, ya arreglado),
+botas vendidas y `guardado` sin la clave pedida."""
+import json, pathlib, sys, tempfile, unittest
 from unittest import mock
 
 AQUI = pathlib.Path(__file__).resolve().parent
@@ -11,6 +12,7 @@ import builds  # noqa: E402
 
 ITEMS = {"1055": dict(name="Espada de Doran", gold=dict(total=450), tags=[]),
          "1001": dict(name="Botas", gold=dict(total=300), tags=["Boots"]),
+         "3006": dict(name="Grebas del Berserker", gold=dict(total=1100), tags=["Boots"]),
          "3153": dict(name="Espada del Rey Arruinado", gold=dict(total=3200), tags=[]),
          "6673": dict(name="Arcoescudo Inmortal", gold=dict(total=3000), tags=[])}
 PERKS = dict(styles=[dict(style=8000, selections=[dict(perk=8008), dict(perk=9111), dict(perk=9104), dict(perk=8299)]),
@@ -73,10 +75,23 @@ class Borde(unittest.TestCase):
                          [("KR_M1", "Uno#KR1 (kr, 1000 LP)")])
 
     def test_item_sold_no_cuenta_en_core(self):
-        # bug: build_de ignora ITEM_SOLD; un legendario vendido se queda en `core`.
+        # un legendario vendido sale del core (arreglado en bb6b9b8; antes quedaba ["3153", "6673"])
         ev = [compra(3153), compra(6673), venta(3153)]
         b = builds.build_de(*mk(eventos=ev), "yo", ITEMS)
-        self.assertEqual(b["core"], ["6673"])  # FALLA hoy: devuelve ["3153", "6673"]
+        self.assertEqual(b["core"], ["6673"])
+
+    def test_botas_vendidas_siguen_contando(self):
+        # las botas tier 2 vendidas al final (por el 6.º ítem) no son legendarias: siguen como `botas`
+        ev = [compra(3006), venta(3006)]
+        b = builds.build_de(*mk(eventos=ev), "yo", ITEMS)
+        self.assertEqual(b["botas"], "3006")
+
+    def test_guardado_sin_la_clave_pedida(self):
+        r = builds.resumir([builds.build_de(*mk(eventos=[compra(3153)]), "yo", ITEMS)], ITEMS, {})
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(builds, "META", pathlib.Path(tmp)):
+            (builds.META / "builds.json").write_text(json.dumps({"Yone|MIDDLE|tu": r}), encoding="utf-8")
+            self.assertEqual(builds.guardado("Yone", "TOP"), [])          # solo existe Yone|MIDDLE|tu
+            self.assertEqual(len(builds.guardado("Yone", "MIDDLE")), 3)  # y MIDDLE sí la da (la tuya)
 
 
 if __name__ == "__main__":

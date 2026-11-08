@@ -5,6 +5,7 @@
 - Tu score: 49.6 (48.9–50.4, n=284); puesto medio 5.7 de 10 y 3.1 de 5 en tu equipo.
 - En victorias 51.1 (50.2–52.1, n=154); en derrotas 47.9 (46.8–49.0, n=130).
 - Derrotas en las que fuiste el mejor de tu equipo: 28 de 130; victorias en las que fuiste el peor: 40 de 154.
+- Duelo con tu rival de línea (tu score contra el suyo): lo superas en 124 de 284; en victorias 79 de 154, en derrotas 45 de 130, en las últimas 20 9 de 20.
 - Control (los 2,556 jugadores ajenos): ganadores 52.1 (51.8–52.5, n=1266), perdedores 47.9 (47.5–48.3, n=1290).
 
 ## Tendencia (bloques de 20, del más viejo al más nuevo)
@@ -56,15 +57,15 @@
 
 ## Últimas 10 (más reciente primero)
 
-| Fecha | Campeón | | KDA | Score | Puesto (10) | Puesto (equipo) | Lo que más bajó |
-|---|---|---|---|---|---|---|---|
-| 11-07 21:36 | Yone | D | 4/10/5 | 43 | 10 | 5 | kp (-1.2) |
-| 11-07 21:06 | Ekko | V | 4/0/6 | 49 | 5 | 3 | daño (-1.0) |
-| 10-30 02:22 | Locke | V | 1/3/11 | 44 | 8 | 5 | daño (-1.4) |
-| 10-30 01:39 | Rakan | V | 2/9/30 | 49 | 7 | 4 | daño (-0.6) |
-| 10-30 01:05 | Yone | D | 1/6/4 | 45 | 7 | 3 | oro (-0.6) |
-| 10-30 00:09 | Yone | V | 9/6/5 | 53 | 6 | 4 | kp (-0.7) |
-| 10-29 21:48 | Yone | D | 9/5/4 | 59 | 2 | 1 | visión (-0.1) |
-| 10-29 21:14 | Zeri | D | 8/9/11 | 53 | 3 | 1 | muertes (-1.1) |
-| 10-29 20:29 | Sylas | D | 13/6/8 | 55 | 3 | 1 | kp (-0.1) |
-| 10-28 00:51 | Locke | D | 6/12/3 | 38 | 10 | 5 | muertes (-1.4) |
+| Fecha | Campeón | | KDA | Score | Puesto (10) | Puesto (equipo) | Duelo | Lo que más bajó |
+|---|---|---|---|---|---|---|---|---|
+| 11-07 21:36 | Yone | D | 4/10/5 | 43 | 10 | 5 | pierdes | kp (-1.2) |
+| 11-07 21:06 | Ekko | V | 4/0/6 | 49 | 5 | 3 | pierdes | daño (-1.0) |
+| 10-30 02:22 | Locke | V | 1/3/11 | 44 | 8 | 5 | pierdes | daño (-1.4) |
+| 10-30 01:39 | Rakan | V | 2/9/30 | 49 | 7 | 4 | pierdes | daño (-0.6) |
+| 10-30 01:05 | Yone | D | 1/6/4 | 45 | 7 | 3 | pierdes | oro (-0.6) |
+| 10-30 00:09 | Yone | V | 9/6/5 | 53 | 6 | 4 | ganas | kp (-0.7) |
+| 10-29 21:48 | Yone | D | 9/5/4 | 59 | 2 | 1 | ganas | visión (-0.1) |
+| 10-29 21:14 | Zeri | D | 8/9/11 | 53 | 3 | 1 | ganas | muertes (-1.1) |
+| 10-29 20:29 | Sylas | D | 13/6/8 | 55 | 3 | 1 | ganas | kp (-0.1) |
+| 10-28 00:51 | Locke | D | 6/12/3 | 38 | 10 | 5 | pierdes | muertes (-1.4) |

@@ -20,6 +20,16 @@ class Score(unittest.TestCase):
                    totalMinionsKilled=0, neutralMinionsKilled=0) for i in range(10)]
         r = score.de(score.z_partida(dict(mapId=11, gameDuration=600, participants=ps)), "p3", {})
         self.assertEqual((r["score"], r["puesto"], r["puesto_eq"]), (50, 1, 1))  # todos iguales: nada divide entre 0
+        self.assertIsNone(r["linea"])  # sin teamPosition no hay rival de línea
+
+    def test_resumen_dict_con_fixtures(self):
+        r = score.resumen(5, AQUI / "fixtures" / "datos")
+        self.assertEqual(r["ref"], 50)
+        self.assertEqual(len(r["partidas"]), 1)  # el fixture tiene 1 partida
+        p = r["partidas"][0]
+        self.assertEqual(set(p["comp"]), set(score.COMP))
+        self.assertIn(p["linea"], (1, 2, None))
+        self.assertEqual(r["media"], p["score"]); self.assertIsNone(r["anteriores"])
 
     def test_remake_y_ajeno(self):
         self.assertEqual(score.z_partida(dict(mapId=11, gameDuration=200, participants=[])), [])

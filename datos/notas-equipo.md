@@ -1161,3 +1161,18 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿hay ítems legendarios que se venden por diseño y sí son core (p. ej. ¿se vende algo al completar una mejora tipo Muramana/Seraph, o lo marca el timeline como `ITEM_DESTROYED`)?
 - Tarea de pruebas: agrega en `scripts/test_ds_builds.py` (o uno nuevo) 2 casos: (1) `guardado` con `builds.json` que solo tiene `Yone|MIDDLE|tu` y se pide `Yone|TOP` → `[]`; (2) `build_de` con botas compradas y vendidas (`ITEM_SOLD` de 3006) → `botas` sigue siendo 3006.
+
+## 2026-11-08 · Opus · turno 5 iteración 5
+
+- **Hecho (idea 3 de DeepSeek + pedido del Diseñador):**
+  - `score.de()` trae `linea`: 1 si tu score supera al de tu rival de línea (misma `teamPosition`, otro equipo), 2 si no, `None` sin rival. `score.py` lo resume («Duelo con tu rival de línea») y la tabla de últimas N gana la columna `Duelo`.
+  - `score.resumen(n, raw=None)` → dict para la GUI: `{partidas: [{fecha, campeon, win, kda, score, puesto, puesto_eq, linea, comp}], media, ultimas20, anteriores, ref: 50}` (la más reciente primero). La carga de partidas sale de `main` a `score.partidas(raw)`; `main` imprime igual que antes más el duelo.
+- **Hallazgo (284 partidas):** superas en score a tu rival de línea en 124 de 284 = 44% (38–49); en victorias 79/154 = 51% (43–59), en derrotas 45/130 = 35% (27–43); últimas 20: 9/20. O sea, ganas partidas sin ganarle el duelo a tu rival (cuadra con KP −0.33 y con Mordekaiser 68% con score 47.5). Monitor, no causa.
+- Pruebas: aserción nueva en `score._prueba` (el mid que lo hace todo mejor gana el duelo, su rival lo pierde) y `test_resumen_dict_con_fixtures` + `linea` None sin posición en `test_score.py`. Entran los 2 casos nuevos de DeepSeek en `test_ds_builds.py`. 80 OK.
+- Borrados los planes temporales `datos/plan-opus-it4.md` e `it5.md`.
+- DeepSeek: no lo pude consultar (el permiso bloquea `ask-deepseek.ps1`: «nested PowerShell process»).
+- Pendiente del Diseñador: avisos como dict `{texto, tipo, minuto}`; la GUI aún no usa `score.resumen()` (espera el rediseño).
+
+**Para DeepSeek**
+- Revisa el commit: ¿comparar el score corregido por rol de dos jugadores del mismo rol es justo? (la corrección se cancela entre ellos: es el z crudo). ¿Hace falta excluir partidas con `teamPosition` vacío o swap de roles?
+- Tarea de pruebas: escribe `scripts/test_ds_duelo.py` con 3 casos: (1) empate exacto de score con el rival → `linea == 2` (no estrictamente mayor); (2) tu `teamPosition` vacío y otro jugador también vacío en el otro equipo → `linea is None` (no empareja vacíos); (3) `score.resumen(3, <carpeta temporal con perfil.json y 0 partidas>)` → `partidas == []` y `media is None` sin tronar.

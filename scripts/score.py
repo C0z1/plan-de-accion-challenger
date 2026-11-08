@@ -61,18 +61,21 @@ def medias_rol(partidas, yo):
 
 
 def de(zs, yo, med):
-    """Tu resultado en una partida: dict(score, puesto 1–10, puesto_eq 1–5, comp {componente: z corregido}) o None."""
+    """Tu resultado en una partida: dict(score, puesto 1–10, puesto_eq 1–5, linea 1/2 contra tu rival de línea
+    (None sin rival), comp {componente: z corregido}) o None."""
     if not zs: return None
     res = []
     for puuid, rol, eq, _, z in zs:
         m = med.get(rol, {})
         comp = {c: z[c] - m.get(c, 0.0) for c in COMP}
-        res.append((puuid, eq, 50 + 15 * st.mean(comp.values()), comp))
+        res.append((puuid, eq, 50 + 15 * st.mean(comp.values()), comp, rol))
     mio = next((r for r in res if r[0] == yo), None)
     if not mio: return None
     s = mio[2]
+    riv = next((r for r in res if mio[4] and r[4] == mio[4] and r[1] != mio[1]), None)
     return dict(score=s, puesto=1 + sum(r[2] > s for r in res),
-                puesto_eq=1 + sum(r[2] > s for r in res if r[1] == mio[1]), comp=mio[3])
+                puesto_eq=1 + sum(r[2] > s for r in res if r[1] == mio[1]),
+                linea=(1 if s > riv[2] else 2) if riv else None, comp=mio[3])
 
 
 def _ic(vs):  # media ± 1.96·error estándar
@@ -91,17 +94,17 @@ def _prueba():
     zs = z_partida(dict(mapId=11, gameDuration=1800, participants=ps))
     r = de(zs, "p0", {})
     assert r["puesto"] == 1 and r["puesto_eq"] == 1 and r["score"] > 60 and r["comp"]["línea"] > 0, r
+    assert r["linea"] == 1 and de(zs, "p5", {})["linea"] == 2  # p5 es el mid rival de p0
     assert abs(st.mean(de(zs, f"p{i}", {})["score"] for i in range(10)) - 50) < 1e-9
     assert z_partida(dict(mapId=12, gameDuration=1800, participants=ps)) == []  # ARAM fuera
     assert de(zs, "p0", {"MIDDLE": {c: 1.0 for c in COMP}})["score"] == r["score"] - 15  # corrección por rol
 _prueba()
 
 
-def main():
-    sys.stdout.reconfigure(encoding="utf-8")
-    raw = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
+def partidas(raw=None):
+    """(gs, med, yo): tus partidas de la Grieta en orden (dicts con t, win, champ, rol, kda, zs y lo de `de`)."""
+    raw = pathlib.Path(raw or os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
     yo = json.loads((raw / "perfil.json").read_text())["account"]["puuid"]
-    n_tabla = int(sys.argv[1]) if len(sys.argv) > 1 else 10
     gs = []
     for f in raw.glob("*_*.json"):
         info = json.loads(f.read_text())["info"]
@@ -110,9 +113,28 @@ def main():
         if zs and me: gs.append(dict(t=info["gameCreation"], win=me["win"], champ=me["championName"], rol=me["teamPosition"],
                                      kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", zs=zs))
     gs.sort(key=lambda g: g["t"])
-    assert gs, "sin partidas"
     med = medias_rol((g["zs"] for g in gs), yo)
     for g in gs: g.update(de(g["zs"], yo, med))
+    return gs, med, yo
+
+
+def resumen(n=10, raw=None):
+    """Para la GUI (pedido del Diseñador): dict con tus últimas n partidas (la más reciente primero) y la tendencia.
+    {partidas: [{fecha, campeon, win, kda, score, puesto, puesto_eq, linea, comp}], media, ultimas20, anteriores, ref: 50}"""
+    gs = partidas(raw)[0]
+    m = lambda rs: round(st.mean(g["score"] for g in rs), 1) if rs else None
+    return dict(partidas=[dict(fecha=datetime.fromtimestamp(g["t"] / 1000).strftime("%m-%d %H:%M"), campeon=g["champ"],
+                               win=g["win"], kda=g["kda"], score=round(g["score"], 1), puesto=g["puesto"],
+                               puesto_eq=g["puesto_eq"], linea=g["linea"], comp={c: round(v, 2) for c, v in g["comp"].items()})
+                          for g in reversed(gs[-n:])],
+                media=m(gs), ultimas20=m(gs[-20:]), anteriores=m(gs[:-20]), ref=50)
+
+
+def main():
+    sys.stdout.reconfigure(encoding="utf-8")
+    n_tabla = int(sys.argv[1]) if len(sys.argv) > 1 else 10
+    gs, med, yo = partidas()
+    assert gs, "sin partidas"
     V, D = [g for g in gs if g["win"]], [g for g in gs if not g["win"]]
     sc = lambda rs: [g["score"] for g in rs]
     # validación: entre los jugadores ajenos, ¿el score sube al ganar? (si no, la fórmula no mide nada)
@@ -128,6 +150,9 @@ def main():
     print(f"- En victorias {_ic(sc(V))}; en derrotas {_ic(sc(D))}.")
     print(f"- Derrotas en las que fuiste el mejor de tu equipo: {sum(g['puesto_eq'] == 1 for g in D)} de {len(D)}; "
           f"victorias en las que fuiste el peor: {sum(g['puesto_eq'] == 5 for g in V)} de {len(V)}.")
+    duelo = lambda rs: f"{sum(g['linea'] == 1 for g in rs)} de {sum(g['linea'] is not None for g in rs)}"
+    print(f"- Duelo con tu rival de línea (tu score contra el suyo): lo superas en {duelo(gs)}; "
+          f"en victorias {duelo(V)}, en derrotas {duelo(D)}, en las últimas 20 {duelo(gs[-20:])}.")
     ov, od = [s for w, s in otros if w], [s for w, s in otros if not w]
     print(f"- Control (los {len(otros):,} jugadores ajenos): ganadores {_ic(ov)}, perdedores {_ic(od)}.\n")
 
@@ -154,11 +179,12 @@ def main():
         print(f"| {c} | {len(rs)} | {st.mean(sc(rs)):.1f} | {st.mean(sc([g for g in rs if not g['win']]) or [float('nan')]):.1f} | "
               f"{sum(g['win'] for g in rs) / len(rs):.0%} |")
 
-    print(f"\n## Últimas {n_tabla} (más reciente primero)\n\n| Fecha | Campeón | | KDA | Score | Puesto (10) | Puesto (equipo) | Lo que más bajó |\n|---|---|---|---|---|---|---|---|")
+    print(f"\n## Últimas {n_tabla} (más reciente primero)\n\n| Fecha | Campeón | | KDA | Score | Puesto (10) | Puesto (equipo) | Duelo | Lo que más bajó |\n|---|---|---|---|---|---|---|---|---|")
     for g in reversed(gs[-n_tabla:]):
         peor = min(COMP, key=lambda c: g["comp"][c])
         print(f"| {fecha(g):%m-%d %H:%M} | {g['champ']} | {'V' if g['win'] else 'D'} | {g['kda']} | {g['score']:.0f} | "
-              f"{g['puesto']} | {g['puesto_eq']} | {peor} ({g['comp'][peor]:+.1f}) |")
+              f"{g['puesto']} | {g['puesto_eq']} | { {1: 'ganas', 2: 'pierdes'}.get(g['linea'], '-') } | "
+              f"{peor} ({g['comp'][peor]:+.1f}) |")
 
 
 if __name__ == "__main__":
