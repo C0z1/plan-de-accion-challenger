@@ -1,0 +1,11 @@
+{
+  "activePlayer": {"riotId": "Jugador#LAN", "summonerName": "Jugador#LAN", "level": 5, "currentGold": 412.5},
+  "allPlayers": [
+    {"championName": "Ekko", "level": 5, "position": "MIDDLE", "team": "ORDER", "riotId": "Jugador#LAN", "summonerName": "Jugador#LAN", "scores": {"kills": 0, "deaths": 0, "assists": 0, "creepScore": 38}},
+    {"championName": "Graves", "level": 6, "position": "JUNGLE", "team": "ORDER", "riotId": "Aliado1#LAN", "summonerName": "Aliado1#LAN", "scores": {"kills": 0, "deaths": 0, "assists": 0, "creepScore": 40}},
+    {"championName": "Zed", "level": 6, "position": "MIDDLE", "team": "CHAOS", "riotId": "Rival1#LAN", "summonerName": "Rival1#LAN", "scores": {"kills": 0, "deaths": 0, "assists": 0, "creepScore": 47}},
+    {"championName": "Lee Sin", "level": 4, "position": "JUNGLE", "team": "CHAOS", "riotId": "Rival2#LAN", "summonerName": "Rival2#LAN", "scores": {"kills": 0, "deaths": 0, "assists": 0, "creepScore": 30}}
+  ],
+  "events": {"Events": [{"EventID": 0, "EventName": "GameStart", "EventTime": 0.02}]},
+  "gameData": {"gameMode": "CLASSIC", "gameTime": 362.4, "mapNumber": 11}
+}

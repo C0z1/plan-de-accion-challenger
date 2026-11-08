@@ -4,7 +4,8 @@ Uso:
   python scripts/companion.py --fixture scripts/fixtures/champselect   una pasada con JSON de ejemplo
 - ChampSelect: identifica tu posición y a tu rival (o a todos los rivales ya elegidos si no se sabe su rol)
   y corre draft.py; imprime una vez por cada cambio de rivales.
-- InProgress: cada 30 s guarda una foto de la Live Client Data API (puerto 2999) en datos/vivo/<inicio>.jsonl.
+- InProgress: cada 30 s guarda una foto de la Live Client Data API (puerto 2999) en datos/vivo/<inicio>.jsonl
+  y, del minuto 5 al 7, avisa una vez si vas abajo de nivel contra tu rival de línea.
 - EndOfGame/PreEndOfGame: espera 60 s y corre descargar.py 5 y revision.py 1 (si la key caducó, lo avisa).
 Lockfile: C:\\Riot Games\\League of Legends\\lockfile (o la variable LOL_LOCKFILE)."""
 import argparse, base64, json, os, pathlib, ssl, subprocess, sys, time, urllib.request
@@ -36,12 +37,27 @@ def vivo():
     except (OSError, ValueError): return None
 
 
-def capturar(archivo):
-    """Agrega una foto en vivo a archivo (lo crea en VIVO al primer dato); devuelve el archivo."""
-    if (d := vivo()) is None: return archivo
+def capturar(archivo, d):
+    """Agrega la foto en vivo d a archivo (lo crea en VIVO al primer dato); devuelve el archivo."""
+    if d is None: return archivo
     if archivo is None: VIVO.mkdir(parents=True, exist_ok=True); archivo = VIVO / f"{time.strftime('%Y%m%d-%H%M%S')}.jsonl"
     with open(archivo, "a", encoding="utf-8") as f: f.write(json.dumps(d, ensure_ascii=False) + "\n")
     return archivo
+
+
+def aviso_nivel(d):
+    """Del minuto 5 al 7, si vas abajo de nivel contra tu rival de línea (misma position, otro equipo): el aviso; si no, None.
+    Sin position (normales, ARAM) no hay rival claro y no avisa. Abajo al 6 → 44% de WR en cozi (PLAN.md, nivel6.py/muertes6.py)."""
+    t = (d or {}).get("gameData", {}).get("gameTime", 0)
+    if not 300 <= t <= 420: return None
+    yo = d.get("activePlayer", {}); ids = {yo.get("riotId"), yo.get("summonerName")} - {None, ""}
+    ps = d.get("allPlayers", [])
+    me = next((p for p in ps if {p.get("riotId"), p.get("summonerName")} & ids), None)
+    if not me or not me.get("position"): return None
+    rival = next((p for p in ps if p.get("position") == me["position"] and p.get("team") != me.get("team")), None)
+    if not rival or (n := rival.get("level", 0) - me.get("level", 0)) < 1: return None
+    return (f"Min {int(t // 60)}: vas {n} nivel{'es' if n > 1 else ''} abajo de {rival.get('championName', 'tu rival')} "
+            f"({me.get('level', '?')} contra {rival.get('level', '?')}). No tradees hasta igualar; quédate en rango de XP de cada oleada.")
 
 
 def rivales(s):
@@ -87,7 +103,7 @@ def main(argv=None):
     if a.fixture:
         d = pathlib.Path(a.fixture)
         get = lambda path: json.loads((d / ("session.json" if "champ-select" in path else "gameflow-phase.json")).read_text())
-    m, visto, fase_ant, archivo, ult = None, None, None, None, 0
+    m, visto, fase_ant, archivo, ult, avisado = None, None, None, None, 0, False
     while True:
         fase = get("/lol-gameflow/v1/gameflow-phase")
         if fase is None and fase_ant != "cerrado": print("Cliente cerrado: espero…")
@@ -97,8 +113,10 @@ def main(argv=None):
             if ids and (pos, ids) != visto:
                 m = m or nombres(); recomendar(pos, ids, m); visto = (pos, ids)
         elif fase != "ChampSelect": visto = None
-        if fase == "InProgress" and get is lcu and time.time() - ult >= 30: archivo, ult = capturar(archivo), time.time()
-        elif fase != "InProgress": archivo = None  # partida nueva, archivo nuevo
+        if fase == "InProgress" and get is lcu and time.time() - ult >= 30:
+            d = vivo(); archivo, ult = capturar(archivo, d), time.time()
+            if not avisado and (txt := aviso_nivel(d)): print(f"\n*** {txt} ***\n"); avisado = True
+        elif fase != "InProgress": archivo, avisado = None, False  # partida nueva, archivo y aviso nuevos
         if fase in ("PreEndOfGame", "EndOfGame") and fase_ant not in ("PreEndOfGame", "EndOfGame") and get is lcu: post_partida()
         fase_ant = fase or "cerrado"
         if get is not lcu: return

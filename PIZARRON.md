@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 3 cerrado (iteración 11): resumen para el usuario al inicio de `RESUMEN-NOCHE.md`.
-- **Siguiente:** analizar `datos/vivo/` cuando haya varias partidas grabadas; champ select real del companion.
-- **Actualizado:** 2026-11-08 00:25 (turno 3, iteración 11, última)
+- **Estado:** turno 4, iteración 1: aviso en vivo de nivel del minuto 5 al 7 (`companion.aviso_nivel`, consola y banner en la GUI); 28 pruebas OK.
+- **Siguiente:** backlog 2 (racha de oro < 0 al 14 en `revision.py` y la vista post-partida).
+- **Actualizado:** 2026-11-08 02:40 (turno 4, iteración 1)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 3d9e4ae (cierre del turno 3: el resumen cuadra con 23af793…dc14b58; 19 pruebas OK).
@@ -58,6 +58,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/companion.py` | Lee el cliente de LoL (solo lectura): en champ select corre `draft.py` contra tu rival; al terminar, `descargar.py 5` + `revision.py 1`. `--fixture <carpeta>` para probar | Opus |
 | `datos/vivo/` | Fotos en vivo de la Live Client Data API que guarda `companion.py` (una línea JSON cada 30 s; en `.gitignore`) | Opus |
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
+| `scripts/fixtures/vivo/allgamedata.json` | Foto sintética de la Live Client Data API (min 6, Ekko 5 contra Zed 6; nombres inventados) | Opus |
 | `scripts/test_companion.py` | Pruebas sin red: `python -m unittest discover scripts` | Opus |
 | `scripts/test_draft.py` | Pruebas de `draft.py` (funciones y recomendación con partidas sintéticas) y humo de `revision.py 1` | Opus |
 | `scripts/fixtures/datos/` | Perfil y una partida mínima: `test_draft` los usa si no hay `datos/raw` (CI, clon nuevo) | Opus |
@@ -164,7 +165,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: `rol.py` compara tus 2 roles más jugados; el campeón aparte del 2.º rol es el de mejor WR con 3+ partidas (Mordekaiser para cozi, no Yone, que es el más jugado en top), y el pool sale de `config.json`.
 - 2026-11-08 · Opus: la captura en vivo solo guarda (no analiza todavía): primero hay que juntar partidas; el análisis (p. ej. oro contra el rival minuto a minuto con ítems) va después.
 - 2026-11-08 · Opus: el campeón aparte de `rol.py` se elige por WR encogido (M=10, como `draft.py`), no por WR crudo: con 3+ partidas un 3/3 ganaba solo. Sin respuesta de DeepSeek; decidí yo.
+- 2026-11-08 · Opus: el aviso de nivel usa la foto de cada 30 s (no un sondeo aparte), solo con `position` (en normales no avisa) y una vez por partida; `capturar(archivo, d)` recibe la foto.
 ## Para el usuario (cuando vuelva)
+- Nuevo: entre el minuto 5 y el 7, el companion te avisa si vas abajo de nivel contra tu rival de línea («no tradees hasta igualar»). Solo en ranked/draft (necesita la posición); reinicia el companion o recompila `Companion.exe` para tenerlo.
 - Nuevo: deja abierto `python scripts/companion.py` en una terminal mientras juegas. En champ select te recomienda el pick contra tu rival y, al terminar, baja la partida y la revisa (si la key caducó, te dice «renueva RIOT_KEY»).
 - Para revisar tus primeras muertes: `python scripts/partida.py <id> --early` (minuto a minuto del 1 al 12, con tu nivel contra el de tu rival).
 - Yone contra Ekko: las dos muertes 1v1 (2:52 y 5:10) fueron yendo 1 nivel abajo desde el 3. En tus datos el problema no es tradear temprano, es quedar abajo de nivel al 6 (44% de WR).

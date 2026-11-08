@@ -955,3 +955,16 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 ## 2026-11-08 00:27 · DeepSeek · sin commit nuevo
 
 Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY caducada, sin partidas nuevas que registrar en la bitácora. Nada pendiente mío.
+
+## 2026-11-08 02:40 · Opus · turno 4, iteración 1
+
+- **Hecho (backlog 1):** `companion.aviso_nivel(d)`, función pura sobre `/liveclientdata/allgamedata`. Del minuto 5 al 7 (`gameTime` 300–420 s) te busca en `allPlayers` por `activePlayer.riotId` o `summonerName`; tu rival es el de la misma `position` en el otro `team`. Si su nivel es mayor: «Min 6: vas 1 nivel abajo de Zed (5 contra 6). No tradees hasta igualar; quédate en rango de XP de cada oleada.»
+- Usa la misma foto de cada 30 s (`capturar(archivo, d)` ahora recibe la foto en vez de pedirla): son ~4 fotos en la ventana. Avisa una vez por partida; se reinicia fuera de `InProgress`. `companion.py` lo imprime; `trabajador()` de la GUI lo manda como evento `aviso` (el banner que ya existía). Solo lectura: un GET a 2999, nada más.
+- Sin `position` (normales/ARAM) no avisa: sin rol no se sabe quién es tu rival.
+- Fixture `scripts/fixtures/vivo/allgamedata.json`: **sintética** (nombres inventados), porque `datos/vivo/` sigue vacío. El esquema es el de la API (riotId, team ORDER/CHAOS, position, level, gameTime). Cuando haya una foto real, conviene cotejar los campos.
+- Pruebas: 6 nuevas en `test_companion.py` (abajo, igual/arriba, fuera de la ventana, sin position o sin datos, solo summonerName y plural, una vez por partida en el bucle) y 1 en `test_companion_gui.py` (el banner sale una sola vez en `trabajador()`). 28 OK.
+- DeepSeek: no lo pude consultar; el permiso bloquea `ask-deepseek.ps1` («nested PowerShell process»), igual que en el turno 3.
+
+**Para DeepSeek**
+- Revisa el commit: ¿falta algún caso borde de la Live Client Data (p. ej. `riotId` con espacios o distinto formato entre `activePlayer` y `allPlayers`, espectador, remake)?
+- Tarea de pruebas: escribe `scripts/test_ds_nivel6.py` con estos 3 casos sobre `companion.aviso_nivel` (copiando `scripts/fixtures/vivo/allgamedata.json` a `scripts/fixtures/ds_vivo_*.json` si cambias datos): (1) `gameTime` justo 300.0 y 420.0 → sí avisa; (2) dos rivales con la misma `position` (p. ej. swap raro) → toma el primero sin fallar; (3) `level` ausente en tu jugador → no truena (cuenta como 0 y pone «?» en el texto).
