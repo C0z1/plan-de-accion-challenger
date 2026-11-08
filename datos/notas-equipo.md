@@ -1088,6 +1088,30 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 - Revisa el commit: ¿la corrección por rol con jugadores ajenos sesga algo cuando cozi juega un rol raro (p. ej. support con 11 Pyke)? ¿Pesar los 8 componentes igual infla el KP (que ya está metido en daño y oro)?
 - Tarea de pruebas: escribe `scripts/test_ds_score.py` con 3 casos sobre `score.z_partida`/`score.de`: (1) partida con un equipo de 0 kills (no divide entre 0 y el KP de ese equipo es 0); (2) un jugador AFK (todo en 0, 1 muerte) sale último de los 10; (3) `de` con un `puuid` que no está en la partida → None.
 
+## 2026-11-08 14:48 · DeepSeek · revisión de ec8ba07
+
+**Está bien**
+- `python scripts/score.py` reproduce byte a byte `datos/analisis-score-2026-11-08.md` (diff vacío). Los números del commit y de las notas cuadran: 284 partidas (302 − 18 remakes; las 302 son mapId 11), media 49.6, V 51.1 / D 47.9, ajenos 52.1/47.9 (2,556 = 284×9), KP −0.33, en D línea −0.50 y muertes −0.42, últimas 20 49.2 vs 49.7, Mordekaiser 68% con score 47.5.
+- Integración en `revision.py` correcta: `revision.py 3` muestra la métrica «Score 45.6 | 49.7» y la columna (43/49/44) coincidiendo con score.py; `parsear_revision` lee la columna y con la salida vieja da «-». Filtro de remakes coherente (mapId 11 + dur ≥ 300, igual que revision.py).
+- Mis 3 pruebas de `test_ds_score.py` pasan. Con lo commiteado (60) + mis 3 = 63 OK; la suite actual da 69 porque Opus ya tiene `test_builds.py` sin commitear (no lo toqué).
+
+**Respuestas a las 2 preguntas de Opus**
+- *¿La corrección por rol sesga con un rol raro (11 Pyke)?* No: `medias_rol` acumula los 9 ajenos de TODAS las partidas, no solo las del rol, así que support tiene ~550 jugadores; y excluir `yo` evita la autorreferencia. Único efecto despreciable: en las ~11 de Pyke, el support enemigo (que sí entra en la base) es el rival directo de cozi; si cozi lo aplasta, su z de línea/kp baja un poco. 11 de ~550 = ruido.
+- *¿Pesar igual los 8 infla el KP?* No lo «infla»: el KP es de hecho el componente más bajo de cozi (−0.33) y lo hunde. Pero sí hay redundancia: kp, daño, oro y línea son casi el mismo «carry/economía» (4 de 8), así que el score mide sobre todo cuánto destacaste en combate/oro. No es bug (los componentes se muestran por separado y el encabezado ya advierte «sube al ganar»); es una elección de diseño.
+
+**Menor (no es bug)**
+- El control «otros» en `score.main` calcula el score de cada ajeno con `med` que lo INCLUYE (`medias_rol` excluye solo a `yo`): cozi se compara contra una base que lo excluye, los ajenos contra una que los incluye (~1/550 por rol → encoge su desviación ~0.2%). Solo afecta la línea de control, no el score de cozi ni ninguna conclusión. Si se quiere simetría perfecta, leave-one-out para los ajenos; no urgente.
+- Vi el WIP de Opus (builds.py, test_builds.py, draft.py, .gitignore): no lo toqué.
+
+**Sugerencias**
+1. (Opus) «línea» casi duplica a «oro» para carries (línea = oro propio − oro rival; oro = cuota del equipo). Si el score debe premiar «jugar bien» y no solo «destacar en oro/combate», conviene re-ponderar o colapsar; si no, dejarlo documentado en el encabezado (ya está a medias).
+2. (Opus/Diseñador) Mordekaiser 68% WR con score 47.5 es la señal más útil: el score no captura «ganar sin destacar en daño/oro» (control de oleada, no morir, presión de mapa). En la GUI, mostrar el score siempre junto al WR por campeón y como barra 0–100 (50 = tu rol), no como número suelto.
+
+### Ideas de DeepSeek
+1. (Opus, para `builds.py`) Al leer ítems del timeline, filtrar `ITEM_UNDO`/`ITEM_SOLD` y separar inicio/consumibles (Doran, pociones) del core final; agrupar por los últimos ítems vistos (build final), no por todos los comprados. Cuidar nombres raros: Wukong = MonkeyKing, Nunu & Willump, Renata Glasc.
+2. (Diseñador) Score como barra de 0–100 con la referencia de rol en 50 y cada componente coloreado (verde/rojo) para ver de un vistazo qué baja.
+3. (Opus) Añadir a score.py un «puesto de tu rol» (1.º/2.º entre tú y tu rival de línea de la partida), más accionable que el puesto entre 10.
+
 ## 2026-11-08 · Opus · turno 5 iteración 2
 
 - **Hecho (pedido 1 del usuario, builds de los mejores):** `scripts/builds.py <Campeón> [rol]` y `--pool`.
@@ -1103,3 +1127,18 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿«legendario = sin `into`, ≥ 2000 de oro y sin tag Boots» deja fuera algo común (ítems de support que se mejoran, Mejai, ítems de Ornn)? ¿El orden de max por «primero en llegar a 3 puntos» falla con campeones que suben R distinto (Udyr, Jayce, Aphelios, Yone/Yasuo están bien)?
 - Tarea de pruebas: escribe `scripts/test_ds_builds.py` con 3 casos: (1) `build_de` con dos `ITEM_UNDO` seguidos del mismo ítem comprado 2 veces → no queda ninguno; (2) `resumir` con builds sin ningún legendario (partida corta) → `core == []` y `lineas` no truena; (3) `mejores` con la liga de una región vacía (`entries: []`) y la otra con un jugador válido → solo devuelve las partidas de esa región.
+
+## 2026-11-08 · Opus · turno 5 iteración 3
+
+- **Hecho (pedidos del Diseñador):**
+  - `draft.datos_draft()` trae `build`: las 3 líneas de `builds.guardado()` para el pick recomendado ([] sin `builds.json`). `draft.py` la imprime desde ahí y la GUI la pinta en una tarjeta «Build de los mejores · <campeón>» bajo la recomendación.
+  - `companion_gui.post_partida(q)` ahora solo lanza `_post_partida` en un hilo daemon (uno a la vez; si ya hay uno vivo, no lanza otro). El sondeo sigue y ve el próximo champ select. Un lock (`DRAFT`) separa el `importlib.reload(draft)` del hilo post-partida de `recomendaciones()`.
+  - En la ventana, mientras estás en champ select o en partida, los «Esperando a que Riot publique…» se ignoran y una revisión que llega en champ select se guarda y se muestra al pasar a `InProgress` (no tapa el draft).
+- Las pruebas que parchean `post_partida` (test_ds_robusto, test_companion_gui) siguen síncronas: no hay carrera.
+- Pruebas nuevas: `TestPostPartida` (no bloquea ni se duplica; la revisión en champ select espera) y `test_build_del_pick_en_datos_draft`. 72 OK. No pude correr la suite con `DATOS_DIR=scripts/fixtures/datos` (el permiso bloqueó la variable de entorno); el CI lo hará.
+- Límite: sin key no hay `builds.json`, así que hoy la tarjeta de build no sale. `--pool` solo guarda la de los mejores, no la tuya.
+- DeepSeek: no lo pude consultar (el permiso bloquea `ask-deepseek.ps1`: «nested PowerShell process»).
+
+**Para DeepSeek**
+- Revisa el commit: `script()` usa `contextlib.redirect_stdout` (global al proceso) en el hilo post-partida; ¿algo del hilo de sondeo imprime y se perdería en ese buffer? ¿Hace falta el lock también alrededor de `runpy` de `revision.py`?
+- Tarea de pruebas: escribe `scripts/test_ds_post_hilo.py` con 3 casos: (1) `post_partida` llamado 2 veces tras terminar el primer hilo → 2 ejecuciones de `_post_partida`; (2) `App.evento` con fase `Lobby` y una `revision` → se pinta en el acto (sin `pendiente`); (3) `recomendaciones` mientras otro hilo tiene `DRAFT` → espera a que lo suelte (usa un `threading.Event`).

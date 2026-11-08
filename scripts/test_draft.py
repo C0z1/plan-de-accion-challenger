@@ -71,6 +71,17 @@ class Draft(unittest.TestCase):
         js = [g("Ekko", i < 6) for i in range(10)] + [g("Ekko", True, "Viktor") for _ in range(3)]
         self.assertNotIn("Aviso:", self.correr(js, "Viktor"))
 
+    def test_build_del_pick_en_datos_draft(self):
+        import builds, json, tempfile
+        r = dict(n=3, wr=.67, core=[["Rey Arruinado", 1.0, "3153"]], botas=["Grebas", 1.0], runa=["Ritmo Letal", 1.0],
+                 pagina=["Ritmo Letal", "a", "b", "c", "Brujería"], skills=["Q>E>W", 1.0])
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(builds, "META", pathlib.Path(tmp)), \
+                mock.patch.object(draft, "games", [g("Ekko", True) for _ in range(5)]), mock.patch.object(draft, "base", .5):
+            self.assertEqual(draft.datos_draft("Zed", "MIDDLE")["build"], [])  # sin builds.json
+            (pathlib.Path(tmp) / "builds.json").write_text(json.dumps({"Ekko|MIDDLE": r}), encoding="utf-8")
+            d = draft.datos_draft("Zed", "MIDDLE")
+        self.assertEqual(len(d["build"]), 3); self.assertIn("Rey Arruinado", d["build"][0])
+
     def test_rol_sin_partidas(self):
         self.assertIn("No tienes partidas en ese rol", self.correr([g("Ekko", True)], "Zed", "TOP"))
 

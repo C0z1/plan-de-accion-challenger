@@ -44,5 +44,30 @@ class TestTrabajador(unittest.TestCase):
         self.assertEqual(len(avisos), 1); self.assertIn("abajo de Zed", avisos[0])
 
 
+class TestPostPartida(unittest.TestCase):
+    def test_no_bloquea_ni_se_duplica(self):
+        import queue, threading
+        sigue, llamadas, orig = threading.Event(), [], g._post_partida
+        g._post_partida = lambda q: (llamadas.append(1), sigue.wait(5))
+        try:
+            q = queue.Queue()
+            g.post_partida(q); g.post_partida(q)  # la 2.ª llega con la 1.ª aún corriendo: no lanza otra
+            self.assertTrue(g.POST[0].is_alive())
+            sigue.set(); g.POST[0].join(5)
+            self.assertEqual(llamadas, [1])
+        finally: g._post_partida = orig
+
+    def test_revision_en_champ_select_espera_a_la_partida(self):
+        vistas = []
+        app = g.App.__new__(g.App)  # sin ventana: solo el enrutado de eventos
+        app.fase, app.pendiente = "ChampSelect", None
+        app.vista_revision, app.espera = vistas.append, lambda t: vistas.append("espera")
+        app.pill = app.sub = type("W", (), {"config": lambda self, **k: None})()
+        app.evento(("post_espera", "Esperando…")); app.evento(("revision", {"champ": "Ekko"}))
+        self.assertEqual(vistas, [])  # no tapa el draft
+        app.evento(("fase", "InProgress"))
+        self.assertEqual(vistas, [{"champ": "Ekko"}])
+
+
 if __name__ == "__main__":
     unittest.main()

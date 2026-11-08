@@ -123,7 +123,9 @@ def datos_draft(rival, pos):
         filas.append(dict(est=shrink(v, len(mv), p0), champ=c, wr_rol=wr(rs), vd=f"{v}-{len(mv) - v}", oro=gd(mv), n=len(rs),
                           counter=wilson(v, len(mv))[1] < base if mv else False))  # techo < base, el criterio de los bans
     filas.sort(key=lambda f: -f["est"])
-    return dict(nombre=nombre, conocido=bool(en), vs=vs, en=en, filas=filas, avisos=avisos(filas, nombre, pos))
+    import builds  # sin red: lo que dejó `builds.py --pool` en datos/meta/builds.json
+    return dict(nombre=nombre, conocido=bool(en), vs=vs, en=en, filas=filas, avisos=avisos(filas, nombre, pos),
+                build=builds.guardado(filas[0]["champ"], pos) if filas else [])
 
 
 def avisos(filas, nombre, pos):
@@ -156,8 +158,7 @@ def draft(rival, pos):
           f"que a su vez se mezcla con tu WR base.")
     if len(vs) < 5: print("Ojo: menos de 5 partidas contra este rival; la recomendación sale casi toda de tu WR general.")
     for a in d["avisos"]: print(f"Aviso: {a}")
-    import builds  # sin red: lo que dejó `builds.py --pool` en datos/meta/builds.json
-    for l in builds.guardado(best["champ"], pos): print(l)
+    for l in d["build"]: print(l)
 
 
 if __name__ == "__main__":  # companion.py lo importa

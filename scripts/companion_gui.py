@@ -86,10 +86,20 @@ def hay_key():
 def recomendaciones(pos, rivales):
     """[(rival, datos_draft | None)] usando draft.py (lo recarga si hay partidas nuevas)."""
     import draft
-    return [(r, draft.datos_draft(r, pos) if r else None) for r in rivales]
+    with DRAFT: return [(r, draft.datos_draft(r, pos) if r else None) for r in rivales]
+
+
+DRAFT = threading.Lock()  # el reload de draft (hilo post-partida) no debe pisar un datos_draft a medias
+POST = []  # el hilo post-partida vivo, si hay
 
 
 def post_partida(q):
+    """Lanza la descarga y revisión en otro hilo: tarda hasta ~7 min y el sondeo debe ver el próximo champ select."""
+    if POST and POST[0].is_alive(): return
+    POST[:] = [threading.Thread(target=_post_partida, args=(q,), daemon=True)]; POST[0].start()
+
+
+def _post_partida(q):
     q.put(("post_espera", "Esperando a que Riot publique la partida…")); time.sleep(60)
     for intento in range(4):
         code, _ = script("descargar.py", "5")
@@ -97,7 +107,8 @@ def post_partida(q):
         q.put(("post_espera", "Riot aún no publica la partida: reintento en 2 min…")); time.sleep(120)
     if code == 2: q.put(("aviso", "Key de Riot caducada: copia la nueva del portal (se abrió) y guárdala con setx RIOT_KEY <key>")); return
     if code: q.put(("aviso", f"No pude descargar la partida (código {code}); queda pendiente.")); return
-    if "draft" in sys.modules: importlib.reload(sys.modules["draft"])  # partidas nuevas para el próximo champ select
+    if "draft" in sys.modules:
+        with DRAFT: importlib.reload(sys.modules["draft"])  # partidas nuevas para el próximo champ select
     code, out = script("revision.py", "1")
     rev = parsear_revision(out)
     q.put(("revision", {**rev, **ultima_partida()}) if rev else ("aviso", "revision.py no devolvió la partida."))
@@ -137,7 +148,7 @@ F, MONO = "Segoe UI", "Consolas"
 class App:
     def __init__(self, root):
         import tkinter as tk
-        self.tk, self.root = tk, root
+        self.tk, self.root, self.fase, self.pendiente = tk, root, None, None
         root.title("Plan Challenger · Companion"); root.configure(bg=BG); root.geometry("420x760"); root.minsize(380, 560)
         cab = tk.Frame(root, bg=BG); cab.pack(fill="x", padx=16, pady=(14, 12))
         tk.Label(cab, text="PC", bg=ACENTO, fg=BG, font=(F, 10, "bold"), width=3, height=1).pack(side="left")
@@ -217,6 +228,7 @@ class App:
                       font=(F, 8), wraplength=340, justify="left").pack(anchor="w", pady=(10, 0))
         for a in d.get("avisos", []):
             self.tk.Label(t, text=a, bg=PANEL, fg=MAL, font=(F, 9, "bold"), wraplength=340, justify="left").pack(anchor="w", pady=(8, 0))
+        if d.get("build"): self.reglas(f"Build de los mejores · {mejor['champ']}", [l.strip() for l in d["build"]], ACENTO, ACENTO)
         self.reglas()
 
     def vista_revision(self, r):
@@ -247,10 +259,15 @@ class App:
                                           fg=BG if fase in ("ChampSelect", "InProgress") else TXT)
             if fase is None: self.espera("Cliente cerrado: espero a que lo abras.")
             elif fase == "ChampSelect": self.espera("Champ select: espero a que tu rival de línea elija.")
-            elif fase == "InProgress": self.espera("En partida: guardo una foto en vivo cada 30 s en datos/vivo/.")
+            elif fase == "InProgress":
+                if self.pendiente: self.vista_revision(self.pendiente); self.pendiente = None
+                else: self.espera("En partida: guardo una foto en vivo cada 30 s en datos/vivo/.")
             elif fase in ("Lobby", "Matchmaking", "ReadyCheck"): self.aviso.pack_forget(); self.sub.config(text=perfil())
+            self.fase = fase
         elif tipo == "draft": self.vista_draft(e[1], e[2])
+        elif self.fase in ("ChampSelect", "InProgress") and tipo == "post_espera": pass  # la post-partida va en otro hilo: no tapa el draft
         elif tipo == "post_espera": self.espera(e[1])
+        elif tipo == "revision" and self.fase == "ChampSelect": self.pendiente = e[1]  # se ve al empezar la partida
         elif tipo == "revision": self.vista_revision(e[1]); self.sub.config(text=perfil())
         elif tipo == "aviso": self.aviso.config(text=e[1]); self.aviso.pack(fill="x", after=self.sep)
 
