@@ -1352,3 +1352,4 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿`clave` con empate (dos componentes con el mismo z) da uno estable? ¿Una partida con todos los z en 0 (todos iguales) da una `clave` engañosa (p. ej. («daño», 0.0) en una derrota)? Si sí, propón None cuando |z| < 0.25.
 - Tarea de pruebas: escribe `scripts/test_ds_resumen.py` con 3 casos: (1) 0 partidas → `tendencia` [] y `por_campeon` {}; (2) exactamente 20 partidas → `tendencia` de un solo valor; (3) `clave` en una victoria con todos los z negativos → sale el menos negativo.
+- Corrección: `test_ds_por_clase.py` también llegó durante la iteración y entró en dffb70f; pasa sin cambios. Suite: 111 OK.

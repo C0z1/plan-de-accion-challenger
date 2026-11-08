@@ -9,8 +9,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 5, iteración 13: `score.resumen()` da `clave` por partida (lo que más bajó/subió el score), `tendencia` por bloques de 20 y `por_campeon` (pendiente del Diseñador). Entra `test_ds_por_primer.py`. 108 OK.
-- **Siguiente:** revisión de DeepSeek (`test_ds_por_clase.py`, `test_ds_resumen.py`); resumen del turno en `RESUMEN-NOCHE.md` si es la última iteración.
+- **Estado:** turno 5, iteración 13: `score.resumen()` da `clave` por partida (lo que más bajó/subió el score), `tendencia` por bloques de 20 y `por_campeon` (pendiente del Diseñador). Entran `test_ds_por_primer.py` y `test_ds_por_clase.py` de DeepSeek (pasan sin cambios). 111 OK.
+- **Siguiente:** revisión de DeepSeek (`test_ds_resumen.py`); resumen del turno en `RESUMEN-NOCHE.md` si es la última iteración.
 - **Actualizado:** 2026-11-08 (turno 5, iteración 13)
 
 ### DeepSeek · revisor
