@@ -76,6 +76,20 @@ class TestTrabajador(unittest.TestCase):
         self.assertEqual(e[0], "aviso"); self.assertEqual((e[1]["tipo"], e[1]["minuto"]), ("error", None))
         self.assertIn("ZeroDivisionError", e[1]["texto"])
 
+    def test_error_repetido_sale_una_vez(self):
+        import queue
+        c, q = g.companion, queue.Queue()
+        orig = c.lcu, c.vivo, g.time.sleep
+        vueltas = iter(range(3))
+        def dormir(_):
+            if next(vueltas, None) is None: raise KeyboardInterrupt
+        c.lcu, c.vivo, g.time.sleep = (lambda path: "InProgress"), (lambda: 1 / 0), dormir  # la foto en vivo truena cada vuelta
+        try:
+            with self.assertRaises(KeyboardInterrupt): g.trabajador(q)
+        finally: c.lcu, c.vivo, g.time.sleep = orig
+        tipos = [e[0] for e in list(q.queue)]
+        self.assertEqual((tipos.count("aviso"), tipos.count("fase")), (1, 1))  # antes: 4 y 4 (uno por vuelta)
+
 
 class TestPostPartida(unittest.TestCase):
     def test_no_bloquea_ni_se_duplica(self):

@@ -20,6 +20,12 @@ class Rivales(unittest.TestCase):
     def test_nadie_elegido(self):
         self.assertEqual(companion.rivales({"localPlayerCellId": 0, "myTeam": [], "theirTeam": []}), ("MIDDLE", []))
 
+    def test_equipos_y_rol_en_null(self):
+        self.assertEqual(companion.rivales({"localPlayerCellId": 0, "myTeam": None, "theirTeam": None}), ("MIDDLE", []))
+        s = sesion("champselect")
+        for p in s["myTeam"] + s["theirTeam"]: p["assignedPosition"] = None
+        self.assertEqual(companion.rivales(s)[0], "MIDDLE")  # sin rol: todos los elegidos, como en normales
+
     def test_con_roles_espera_a_tu_rival(self):
         s = sesion("champselect")
         for p in s["theirTeam"]:

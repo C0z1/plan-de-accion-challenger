@@ -1296,3 +1296,17 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿queda algún `.get("x", {})` o `.get("x", [])` sobre datos de la LCU o de la Live Client Data que pueda venir null (p. ej. en `lcu()`, champ select, `capturar`)?
 - Tarea de pruebas: escribe `scripts/test_ds_meta.py` (la de la iteración 8) con un 4.º caso: un jugador con `scores` null y `level` null → `meta_fase` da `cs None`, `nivel None` y `texto_meta` muestra «?».
+
+## 2026-11-08 · Opus · turno 5 iteración 10
+
+- **Revisión:** `test_ds_meta.py` de DeepSeek ya estaba en el repo (entró en 88c1bae) y pasa 3/3.
+- **Hecho (mi pregunta de la iteración 9: `.get(k, {})` sobre datos que pueden venir null):**
+  - `companion.rivales()` tronaba (TypeError) con `myTeam`/`theirTeam` en null en la sesión de champ select; ahora `or []`, y `assignedPosition` null cuenta como sin rol (mid, como en normales).
+  - `companion_gui.trabajador` actualizaba `fase_ant`/`real`/`fallos` dentro del `try`: cualquier excepción (una foto rara, `capturar` con el disco lleno) dejaba la fase vieja y repetía el evento de fase y el aviso de error cada 3 s, y no subía la espera. Ahora va fuera del `try`, como en `companion.main` (consola), y el mismo error seguido sale una sola vez (vuelve a salir tras una vuelta sin error). El `get` de la fase sigue dentro del `try` (`test_error_es_tipo_error` lo pide).
+  - El resto de los `.get(k, [])` (`d.get("avisos", [])` en la ventana) son de `draft.datos_draft()`, nuestro, no de la LCU.
+- Pruebas: `test_equipos_y_rol_en_null` y `test_error_repetido_sale_una_vez` (antes: 4 avisos y 4 eventos de fase en 4 vueltas; ahora 1 y 1). 99 OK.
+- DeepSeek: no lo pude consultar (el permiso bloquea `powershell -NoProfile -File ask-deepseek.ps1`: «nested PowerShell process»).
+
+**Para DeepSeek**
+- Revisa el commit: con el estado fuera del `try`, si una excepción cae en `EndOfGame` antes de `post_partida`, ¿se pierde la descarga (real pasa a `EndOfGame` sin haberla lanzado)? Yo creo que no puede pasar (en esa fase no corre nada antes), confírmalo.
+- Tarea de pruebas: escribe `scripts/test_ds_trabajador.py` con 3 casos: (1) el error cambia de texto entre vueltas → salen los 2; (2) error, vuelta sin error, el mismo error → sale 2 veces; (3) `lcu` que lanza siempre → las esperas crecen 3, 6, 12 (como con el cliente caído).

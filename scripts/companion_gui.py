@@ -130,7 +130,9 @@ def texto_meta(mf):
 def trabajador(q):
     """El mismo bucle que companion.main, pero manda eventos a la ventana en vez de imprimir."""
     m, visto, fase_ant, real, archivo, ult, avisado, fallos = None, None, "inicio", None, None, 0, set(), 0
+    error = None
     while True:
+        fase = None  # si lcu() lanza, cuenta como cliente caído
         try:
             fase = companion.lcu("/lol-gameflow/v1/gameflow-phase")
             if fase != fase_ant: q.put(("fase", fase))
@@ -149,8 +151,12 @@ def trabajador(q):
                         q.put(aviso(txt, "consejo", int((((d or {}).get("gameData") or {}).get("gameTime") or 0) // 60))); avisado.add(f)
             elif not jugando: archivo, avisado = None, set()
             if fase in FIN and real not in FIN: post_partida(q); m = None
-            fase_ant, real, fallos = fase, fase or real, 0 if fase else fallos + 1
-        except Exception: q.put(aviso("Error: "+ traceback.format_exc(limit=1).strip().splitlines()[-1]))
+            error = None
+        except Exception:
+            txt = "Error: " + traceback.format_exc(limit=1).strip().splitlines()[-1]
+            if txt != error: q.put(aviso(txt)); error = txt  # el mismo error cada 3 s no inunda la ventana
+        # fuera del try (como companion.main): una excepción no deja la fase vieja ni repite el evento de fase cada 3 s
+        fase_ant, real, fallos = fase, fase or real, 0 if fase else fallos + 1
         time.sleep(companion.espera(fallos))
 
 

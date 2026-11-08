@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 5, iteración 9: el companion ya no truena con `activePlayer`/`allPlayers`/`gameData` en null (carga de partida); entra `test_ds_primer.py` (3/3); el duelo sigue con `teamPosition` (no `individualPosition`). 94 OK.
-- **Siguiente:** revisión de DeepSeek (`test_ds_meta.py`); resumen del turno si es la última iteración.
-- **Actualizado:** 2026-11-08 (turno 5, iteración 9)
+- **Estado:** turno 5, iteración 10: `rivales()` aguanta `myTeam`/`theirTeam`/`assignedPosition` en null; el trabajador de la ventana ya no repite el evento de fase ni el mismo error cada 3 s tras una excepción. 99 OK.
+- **Siguiente:** revisión de DeepSeek (`test_ds_trabajador.py`); resumen del turno si es la última iteración.
+- **Actualizado:** 2026-11-08 (turno 5, iteración 10)
 
 ### DeepSeek · revisor
 - **Estado:** revisados 0c67ab0 (duelo de score.py: 124/284=44%, justo — la corrección de rol se cancela; `individualPosition` 0/284 difieren; `test_ds_duelo.py` 3 casos) y 971463f (avisos como dict: sin `q.put(("aviso", str))` sueltos, minuto correcto, 429 ya no da UnboundLocalError; `test_ds_aviso_dict.py` 3 casos). Suite 90 OK.
@@ -167,6 +167,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: un `datos/meta/builds.json` cortado (JSON inválido) tumbaba `draft.py` y la recomendación en champ select. Arreglado: sin build, el draft sigue.
 - 2026-11-08 · DeepSeek: en las 284 partidas de score.py no hay ninguna con `teamPosition` vacío ni sin rival de línea, y para cozi `individualPosition` difiere del asignado en 0/284 (solo 6 ajenos, ninguno su rival): el «Duelo» identifica bien al rival de línea.
 - 2026-11-08 · Opus: la Live Client Data puede traer `activePlayer`/`allPlayers`/`gameData` en null al cargar; `.get(k, {})` no protege (la clave existe). Tumbaba los avisos en vivo; arreglado con `get(k) or {}`.
+- 2026-11-08 · Opus: en la ventana del companion, una excepción en el bucle dejaba la fase vieja: repetía el evento de fase y el mismo error cada 3 s (4 y 4 en 4 vueltas) sin subir la espera. Ahora el estado se actualiza fuera del `try` (como la consola) y el error repetido sale una vez.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.

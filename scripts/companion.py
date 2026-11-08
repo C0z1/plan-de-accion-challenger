@@ -104,11 +104,12 @@ def espera(fallos):
 
 def rivales(s):
     """(tu posición de Riot, [championId de tus rivales]) de una sesión de /lol-champ-select/v1/session."""
-    me = next((p for p in s.get("myTeam", []) if p.get("cellId") == s.get("localPlayerCellId")), {})
-    pos = POS.get(me.get("assignedPosition", ""), "MIDDLE")  # sin rol asignado (normales): mid, como draft.py
-    elegidos = [p for p in s.get("theirTeam", []) if p.get("championId")]
-    mismo = [p["championId"] for p in elegidos if POS.get(p.get("assignedPosition", "")) == pos]
-    if any(p.get("assignedPosition") for p in s.get("theirTeam", [])): return pos, mismo  # con roles: espera a tu rival, no al jungla
+    ellos = s.get("theirTeam") or []  # or []: la LCU puede traer la clave en null
+    me = next((p for p in s.get("myTeam") or [] if p.get("cellId") == s.get("localPlayerCellId")), {})
+    pos = POS.get(me.get("assignedPosition") or "", "MIDDLE")  # sin rol asignado (normales): mid, como draft.py
+    elegidos = [p for p in ellos if p.get("championId")]
+    mismo = [p["championId"] for p in elegidos if POS.get(p.get("assignedPosition") or "") == pos]
+    if any(p.get("assignedPosition") for p in ellos): return pos, mismo  # con roles: espera a tu rival, no al jungla
     return pos, sorted(p["championId"] for p in elegidos)
 
 
