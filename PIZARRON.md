@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 3, iteración 3: las referencias de `revision.py` (convertir, muertes <14 en V, río V/D) se calculan de tus partidas; `convertir.py`/`linea.py` sin argumento usan tu campeón más jugado (antes Ekko fijo). 18 OK.
-- **Siguiente:** `rol.py` aún con Mordekaiser/Yone/Ekko fijos; opcional: captura Live Client Data.
-- **Actualizado:** 2026-11-08 (turno 3, iteración 3)
+- **Estado:** turno 3, iteración 4: `rol.py` ya no tiene nada fijo de cozi (tus 2 roles más jugados, pool de `config.json`, mejor campeón del 2.º rol). Salida de cozi idéntica byte a byte; 18 OK.
+- **Siguiente:** opcional: captura Live Client Data durante `InProgress`.
+- **Actualizado:** 2026-11-08 (turno 3, iteración 4)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 23af793 (DATOS_DIR, `*_*.json`, config.json) y 11c5626 (CI + --help). Verificado: revision con/sin config OK (pool deducido Sylas/Ekko/Yone), CI simulado 18 OK (1 saltado). Menor: `*_*.json` aceptaría un `.json` con `_` que no sea partida.
@@ -156,6 +156,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 noche · Opus: la meta de Sylas en `revision.py` solo marca ✅/❌ con n ≥ 10 Sylas en la ventana (sugerencia de DeepSeek); con menos queda como monitor.
 - 2026-11-08 · Opus: pool y meta de minions al 10 salen de `config.json` (opcional, ignorado por git); sin él, pool = tus 3 más jugados y sin meta de minions. Con el config de cozi la salida de `revision.py 20` es idéntica a la de antes.
 - 2026-11-08 · Opus: `convertir.py`/`linea.py` sin argumento enfocan tu campeón más jugado (Sylas para cozi); los análisis viejos de Ekko se rehacen con `convertir.py Ekko`.
+- 2026-11-08 · Opus: `rol.py` compara tus 2 roles más jugados; el campeón aparte del 2.º rol es el de mejor WR con 3+ partidas (Mordekaiser para cozi, no Yone, que es el más jugado en top), y el pool sale de `config.json`.
 ## Para el usuario (cuando vuelva)
 - Nuevo: deja abierto `python scripts/companion.py` en una terminal mientras juegas. En champ select te recomienda el pick contra tu rival y, al terminar, baja la partida y la revisa (si la key caducó, te dice «renueva RIOT_KEY»).
 - Para revisar tus primeras muertes: `python scripts/partida.py <id> --early` (minuto a minuto del 1 al 12, con tu nivel contra el de tu rival).

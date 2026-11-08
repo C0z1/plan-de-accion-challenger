@@ -8,6 +8,8 @@ sys.stdout.reconfigure(encoding="utf-8")
 RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 NOMBRE = {"MIDDLE": "mid", "TOP": "top", "UTILITY": "support", "JUNGLE": "jungla", "BOTTOM": "adc"}
+CFG_F = pathlib.Path(__file__).resolve().parent.parent / "config.json"  # opcional, como en revision.py
+CFG = json.loads(CFG_F.read_text(encoding="utf-8")) if CFG_F.exists() else {}
 
 
 def wilson(k, n, z=1.96):
@@ -57,9 +59,12 @@ assert games, "sin partidas"
 games.sort(key=lambda g: g["t"])
 por_rol = defaultdict(list)
 for g in games: por_rol[g["rol"]].append(g)
+# tus dos roles más jugados (para cozi: mid y top); con uno solo, el segundo queda vacío
+R1, R2 = ([r for r, _ in Counter(g["rol"] for g in games).most_common(2)] + ["-"])[:2]
+POOL = CFG.get("pool") or [c for c, _ in Counter(g["champ"] for g in games).most_common(3)]
 
 avg = lambda rs, k: st.mean([r[k] for r in rs if r[k] is not None] or [0])
-print(f"# Mid contra top ({len(games)} partidas sin remakes)\n")
+print(f"# {R1.capitalize()} contra {R2} ({len(games)} partidas sin remakes)\n")
 print("Intervalos Wilson 95%. Oro @14 = tu oro menos el de tu rival de línea. Convertir = WR cuando llegas al 14 con oro >= 0.\n")
 print("## Por rol\n\n| Rol | Partidas | WR | Oro @14 | Oro >= 0 al 14 | Convertir | Muertes <14 | Muertes 14–25 |\n|---|---|---|---|---|---|---|---|")
 for rol, rs in sorted(por_rol.items(), key=lambda kv: -len(kv[1])):
@@ -67,29 +72,34 @@ for rol, rs in sorted(por_rol.items(), key=lambda kv: -len(kv[1])):
     print(f"| {rol} | {len(rs)} | {wr(rs)} | {avg(tl, 'gd14'):+.0f} | {len(ok) / max(1, len(tl)):.0%} | {wr(ok)} | "
           f"{avg(tl, 'd14'):.2f} | {avg(tl, 'd1425'):.2f} |")
 
-mid, top = [g["win"] for g in por_rol["mid"]], [g["win"] for g in por_rol["top"]]
-p = perm_p(mid, top)
-print(f"\n**Diferencia top − mid:** {st.mean(top) - st.mean(mid):+.1%}. Test de permutación (5000 barajadas): p = {p:.2f}.")
-# n por grupo para detectar la diferencia observada con 80% de potencia y alfa 0.05 (aprox. normal)
-p1, p2 = st.mean(mid), st.mean(top); pb = (p1 + p2) / 2
-n_nec = math.ceil(((1.96 * math.sqrt(2 * pb * (1 - pb)) + 0.84 * math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))) / (p2 - p1)) ** 2) if p1 != p2 else None
-print(f"Para confirmar una diferencia de ese tamaño harían falta ~{n_nec} partidas por rol (hoy top tiene {len(top)}).\n")
+mid, top = [g["win"] for g in por_rol[R1]], [g["win"] for g in por_rol[R2]]
+if mid and top:
+    p = perm_p(mid, top)
+    print(f"\n**Diferencia {R2} − {R1}:** {st.mean(top) - st.mean(mid):+.1%}. Test de permutación (5000 barajadas): p = {p:.2f}.")
+    # n por grupo para detectar la diferencia observada con 80% de potencia y alfa 0.05 (aprox. normal)
+    p1, p2 = st.mean(mid), st.mean(top); pb = (p1 + p2) / 2
+    n_nec = math.ceil(((1.96 * math.sqrt(2 * pb * (1 - pb)) + 0.84 * math.sqrt(p1 * (1 - p1) + p2 * (1 - p2))) / (p2 - p1)) ** 2) if p1 != p2 else None
+    print(f"Para confirmar una diferencia de ese tamaño harían falta ~{n_nec} partidas por rol (hoy {R2} tiene {len(top)}).\n")
 
 print("## Campeones por rol (3+ partidas)\n\n| Rol | Campeón | WR | Oro @14 |\n|---|---|---|---|")
-for rol in ("mid", "top"):
+for rol in (R1, R2):
     c = Counter(g["champ"] for g in por_rol[rol])
     for ch, n in c.most_common():
         if n < 3: break
         rs = [g for g in por_rol[rol] if g["champ"] == ch]
         print(f"| {rol} | {ch} | {wr(rs)} | {avg([r for r in rs if r['gd14'] is not None], 'gd14'):+.0f} |")
 
-print("\n## Top sin Mordekaiser y mid solo con el pool (Yone, Ekko)\n\n| Grupo | WR |\n|---|---|")
-print(f"| Top con Mordekaiser | {wr([g for g in por_rol['top'] if g['champ'] == 'Mordekaiser'])} |")
-print(f"| Top sin Mordekaiser | {wr([g for g in por_rol['top'] if g['champ'] != 'Mordekaiser'])} |")
-print(f"| Mid con Yone o Ekko | {wr([g for g in por_rol['mid'] if g['champ'] in ('Yone', 'Ekko')])} |")
-print(f"| Mid con otros | {wr([g for g in por_rol['mid'] if g['champ'] not in ('Yone', 'Ekko')])} |")
+# el campeón de mejor WR (3+ partidas) en tu 2.º rol: ¿ese rol rinde por él o por el rol? (cozi: Mordekaiser top)
+c2 = [ch for ch, n in Counter(g["champ"] for g in por_rol[R2]).items() if n >= 3]
+MEJOR = max(c2, key=lambda ch: st.mean(g["win"] for g in por_rol[R2] if g["champ"] == ch), default=None)
+EN_POOL = [c for c in POOL if any(g["champ"] == c for g in por_rol[R1])]
+print(f"\n## {R2.capitalize()} sin {MEJOR} y {R1} solo con el pool ({', '.join(EN_POOL)})\n\n| Grupo | WR |\n|---|---|")
+print(f"| {R2.capitalize()} con {MEJOR} | {wr([g for g in por_rol[R2] if g['champ'] == MEJOR])} |")
+print(f"| {R2.capitalize()} sin {MEJOR} | {wr([g for g in por_rol[R2] if g['champ'] != MEJOR])} |")
+print(f"| {R1.capitalize()} con {' o '.join(EN_POOL)} | {wr([g for g in por_rol[R1] if g['champ'] in EN_POOL])} |")
+print(f"| {R1.capitalize()} con otros | {wr([g for g in por_rol[R1] if g['champ'] not in EN_POOL])} |")
 
 print("\n## Tendencia: últimas N partidas de cada rol\n\n| Rol | Últimas 20 | Últimas 40 | Todas |\n|---|---|---|---|")
-for rol in ("mid", "top"):
+for rol in (R1, R2):
     rs = por_rol[rol]
     print(f"| {rol} | {wr(rs[-20:])} | {wr(rs[-40:])} | {wr(rs)} |")
