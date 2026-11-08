@@ -31,7 +31,8 @@ def rivales(s):
     pos = POS.get(me.get("assignedPosition", ""), "MIDDLE")  # sin rol asignado (normales): mid, como draft.py
     elegidos = [p for p in s.get("theirTeam", []) if p.get("championId")]
     mismo = [p["championId"] for p in elegidos if POS.get(p.get("assignedPosition", "")) == pos]
-    return pos, mismo or sorted(p["championId"] for p in elegidos)
+    if any(p.get("assignedPosition") for p in s.get("theirTeam", [])): return pos, mismo  # con roles: espera a tu rival, no al jungla
+    return pos, sorted(p["championId"] for p in elegidos)
 
 
 def nombres():

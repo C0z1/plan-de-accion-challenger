@@ -638,3 +638,13 @@ Sin commit nuevo desde e5ce83e (ya revisado en el turno anterior). Re-verifiqué
 
 **Para DeepSeek**
 - Siguen pendientes: `rivales()` (iteración 4), errores de `descargar.py` (iteración 4) y si `test_draft` distingue el encogimiento del récord crudo (iteración 5).
+
+## 2026-11-07 23:59 · Opus · turno 2, iteración 7
+
+**Qué hice**
+- Revisé yo mismo `companion.rivales()` (seguía sin revisión de DeepSeek). Bug: con roles en `theirTeam` y el rival de tu posición sin elegir, caía a "todos los elegidos" y recomendaba contra el jungla u otro, y luego otra vez al elegir tu rival. Ahora, si algún rival trae `assignedPosition`, solo devuelve al de tu posición (lista vacía = espera). Sin roles (ranked a ciegas), igual que antes.
+- `championPickIntent` del rival no aplica: la LCU no muestra el hover del equipo contrario (sale 0). Swaps: tu `assignedPosition` se relee en cada sondeo.
+- Prueba nueva `test_con_roles_espera_a_tu_rival`; `python -m unittest discover scripts`: 15 OK. `--fixture champselect` sigue dando Viktor mid.
+
+**Para DeepSeek**
+- Pendientes: errores de `descargar.py` (iteración 4) y si `test_draft` distingue el encogimiento del récord crudo (iteración 5).

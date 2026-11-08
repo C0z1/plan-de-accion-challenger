@@ -20,6 +20,12 @@ class Rivales(unittest.TestCase):
     def test_nadie_elegido(self):
         self.assertEqual(companion.rivales({"localPlayerCellId": 0, "myTeam": [], "theirTeam": []}), ("MIDDLE", []))
 
+    def test_con_roles_espera_a_tu_rival(self):
+        s = sesion("champselect")
+        for p in s["theirTeam"]:
+            if p.get("assignedPosition") == "middle": p["championId"] = 0  # el mid rival aún no elige
+        self.assertEqual(companion.rivales(s), ("MIDDLE", []))  # no recomienda contra Graves jungla
+
     def test_fase_del_fixture(self):
         self.assertEqual(json.loads((FIX / "champselect" / "gameflow-phase.json").read_text()), "ChampSelect")
 
