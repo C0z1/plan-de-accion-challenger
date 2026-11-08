@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 2, iteración 2 terminada. `partida.py <id> --early` narra 0–12 con nivel contra tu rival; `revision.py` mide la meta de Sylas (69+ minions al 10).
-- **Siguiente:** backlog 3 (control wards: ¿la regla tiene respaldo?) y las preguntas de la iteración 1 para DeepSeek.
-- **Actualizado:** 2026-11-07 noche (turno 2, iteración 2, cierre)
+- **Estado:** turno 2, iteración 3 terminada. `scripts/wards.py`: la regla de control wards no tiene respaldo; bajó a hábito en PLAN, TARJETA y `revision.py` (monitor sin meta).
+- **Siguiente:** leer la revisión de DeepSeek de 485ecba/d0b503b y sus respuestas a las 3 preguntas de la iteración 1.
+- **Actualizado:** 2026-11-07 noche (turno 2, iteración 3, cierre)
 
 ### DeepSeek · revisor
 - **Estado:** revisando el commit 485ecba (`scripts/muertes6.py`).
@@ -53,6 +53,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-objetivos-*.md` | Salida de `objetivos.py` | Opus |
 | `scripts/muertes6.py` | Muertes antes del 6: tipo (1v1/gank), nivel al 3 y al 6, WR y oro @14, por campeón y rival, últimas 10 | Opus |
 | `datos/analisis-muertes6-*.md` | Salida de `muertes6.py` | Opus |
+| `scripts/wards.py` | Control wards: tú y los 1,431 jugadores de línea ajenos (gank <14 y WR, a igual oro y por rol) | Opus |
+| `datos/analisis-wards-*.md` | Salida de `wards.py` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
@@ -105,6 +107,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 noche · Opus: nivel al 3 no separa (55/54/56%); abajo al 6 → 44% (30–60), arriba 69% (51–82); 86% de las partidas abajo al 6 tuvieron muerte <6. Pista.
 - 2026-11-07 noche · Opus: el % de partidas con muerte <6 sí varía por rival (permutación p = 0.04): Sylas 9/10, Fizz 5/6, Syndra 5/6, Ekko 4/5. n chica.
 - 2026-11-07 noche · Opus: Sylas con 69+ minions al 10: 47% de las partidas antes de las últimas 20 (n=88) y 2 de 4 en las últimas 20. Ahora lo mide `revision.py`.
+- 2026-11-07 noche · Opus: control ward antes del 14 no baja los ganks (0.85 contra 0.92 muertes por gank <14) ni sube el WR (49/49%) en 1,431 jugadores de línea ajenos; a igual oro tampoco. Tú: 8 de 261 partidas con alguno.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -128,10 +131,12 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · DeepSeek: el corte de Sylas (>68 min@10 → 74% vs 32%) es gradiente estable (64→61%, 72→77%), no umbral afortunado; top son 11/90 (ruido) y contra Qiyana farmea menos (56, n=5). El "en tu lado mueres menos" (×0.75) cruza 1 (bootstrap 0.49–1.06): es "no mueres más".
 - 2026-11-07 noche · Opus: no se agrega regla "no tradear desde nivel 1" (los datos no la respaldan); entra al PLAN como pista: no salir del 6 con un nivel abajo.
 - 2026-11-07 noche · Opus: la meta de Sylas (> 50% de sus partidas con 69+ minions al 10) entra a `revision.py`.
+- 2026-11-07 noche · Opus: "control ward en cada regreso" deja de ser regla (sin respaldo); queda como hábito barato y monitor sin meta. Sale de las metas de la semana 1.
 
 ## Para el usuario (cuando vuelva)
 - Para revisar tus primeras muertes: `python scripts/partida.py <id> --early` (minuto a minuto del 1 al 12, con tu nivel contra el de tu rival).
 - Yone contra Ekko: las dos muertes 1v1 (2:52 y 5:10) fueron yendo 1 nivel abajo desde el 3. En tus datos el problema no es tradear temprano, es quedar abajo de nivel al 6 (44% de WR).
+- Control wards: no te obsesiones; en tus datos (y en los de los demás jugadores de tus partidas) no bajan los ganks. La regla 2 de la tarjeta ya no es prioridad.
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).
 - Al terminar cada sesión: `python scripts/descargar.py` y luego `python scripts/revision.py` (o `revision.py 10`).
 - Opus no puede llamar a `ask-deepseek.ps1` (el permiso bloquea PowerShell anidado). Si quieres que lo use, permite ese comando.

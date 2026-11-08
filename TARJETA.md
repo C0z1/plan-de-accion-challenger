@@ -11,7 +11,7 @@
 
 ## Early (0–14) · meta: oro ≥ 0 contra tu rival al 14
 1. **Ganks:** en el minuto 3 y del 8 al 13 (el pico es el **minuto 10**), y cada vez que el jungla rival desaparezca, no pases de la mitad de la línea sin ver el río.
-2. **Control ward en cada regreso a base** (río o arbusto lateral).
+2. Control ward al regresar: hábito barato, **sin respaldo en los datos** (no baja los ganks ni sube el WR). No es prioridad.
 3. **¿Vas un nivel arriba?** Asume que viene el gank. Tradea hasta la mitad de la línea y no persigas pasado el río sin ver al jungla. *(Pesa sobre todo en top.)*
 4. **No sigas al rival a su jungla** antes del 14 si no sabes dónde está su jungla.
 5. **Sylas:** no tradees ni roamees a costa de oleadas antes del 10. Meta: **69+ minions al 10**.

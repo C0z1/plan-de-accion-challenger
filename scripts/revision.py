@@ -97,9 +97,8 @@ METRICAS = [
     ("Sylas: partidas con 69+ minions de línea al 10",
      lambda rs: prop(rs, lambda r: None if r["lm10"] is None else r["lm10"] > 68),
      "> 50% (con 69+ ganas 74%, con ≤ 68, 32%)", lambda v: v > .5),
-    ("Partidas con ≥ 1 control ward", lambda rs: prop(rs, lambda r: r["cw"] >= 1), "100% (1 por regreso a base)",
-     lambda v: v >= .9),
-    ("Control wards por partida", lambda rs: media(rs, "cw"), "≥ 1", lambda v: v >= 1),
+    ("Partidas con ≥ 1 control ward", lambda rs: prop(rs, lambda r: r["cw"] >= 1),
+     "monitor sin meta: no baja los ganks ni sube el WR (wards.py)", None),
     ("Partidas con el pool (Yone, Ekko, Mordekaiser)", lambda rs: prop(rs, lambda r: r["champ"] in POOL), "> 80%",
      lambda v: v > .8),
 ]
