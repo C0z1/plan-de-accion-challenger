@@ -6,7 +6,7 @@ Uso:
   y corre draft.py; imprime una vez por cada cambio de rivales.
 - EndOfGame/PreEndOfGame: espera 60 s y corre descargar.py 5 y revision.py 1 (si la key caducó, lo avisa).
 Lockfile: C:\\Riot Games\\League of Legends\\lockfile (o la variable LOL_LOCKFILE)."""
-import base64, json, os, pathlib, ssl, subprocess, sys, time, urllib.request
+import argparse, base64, json, os, pathlib, ssl, subprocess, sys, time, urllib.request
 
 sys.stdout.reconfigure(encoding="utf-8")
 DIR = pathlib.Path(__file__).resolve().parent
@@ -60,10 +60,13 @@ def post_partida():
     subprocess.run([sys.executable, str(DIR / "revision.py"), "1"])
 
 
-def main():
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--fixture", metavar="CARPETA", help="una pasada con gameflow-phase.json y session.json de esa carpeta (sin cliente)")
+    a = ap.parse_args(argv)
     get = lcu
-    if "--fixture" in sys.argv:  # carpeta con gameflow-phase.json y session.json
-        d = pathlib.Path(sys.argv[sys.argv.index("--fixture") + 1])
+    if a.fixture:
+        d = pathlib.Path(a.fixture)
         get = lambda path: json.loads((d / ("session.json" if "champ-select" in path else "gameflow-phase.json")).read_text())
     m, visto, fase_ant = None, None, None
     while True:

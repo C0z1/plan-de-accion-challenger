@@ -1,9 +1,12 @@
 """python -m unittest discover scripts  (sin red ni key; draft.py lee datos/raw/perfil.json al importarse)"""
-import contextlib, io, pathlib, subprocess, sys, unittest
+import contextlib, io, os, pathlib, subprocess, sys, unittest
 from unittest import mock
 
 AQUI = pathlib.Path(__file__).parent
 sys.path.insert(0, str(AQUI))
+HAY_DATOS = (pathlib.Path(os.environ.get("DATOS_DIR") or AQUI.parent / "datos" / "raw") / "perfil.json").exists()
+if not HAY_DATOS:
+    os.environ["DATOS_DIR"] = str(AQUI / "fixtures" / "datos")  # CI o clon nuevo: una partida mínima para que draft.py importe
 import draft
 
 
@@ -53,7 +56,7 @@ class Draft(unittest.TestCase):
         self.assertIn("No tienes partidas en ese rol", self.correr([g("Ekko", True)], "Zed", "TOP"))
 
 
-@unittest.skipUnless((AQUI.parent / "datos" / "raw" / "perfil.json").exists(), "sin datos/raw")
+@unittest.skipUnless(HAY_DATOS, "sin datos/raw")
 class Revision(unittest.TestCase):  # revision.py corre al importarse: se prueba como proceso sobre datos/raw
     def test_revision_1_corre(self):
         r = subprocess.run([sys.executable, str(AQUI / "revision.py"), "1"], capture_output=True, text=True, encoding="utf-8")

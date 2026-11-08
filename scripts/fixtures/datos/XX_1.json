@@ -1,0 +1,4 @@
+{"info": {"gameDuration": 1800, "gameCreation": 0, "participants": [
+  {"puuid": "yo", "participantId": 1, "teamId": 100, "teamPosition": "MIDDLE", "championName": "Ekko", "championId": 245, "win": true},
+  {"puuid": "rival", "participantId": 6, "teamId": 200, "teamPosition": "MIDDLE", "championName": "Zed", "championId": 238, "win": false}
+]}}

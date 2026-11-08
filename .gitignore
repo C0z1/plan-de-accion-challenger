@@ -1,3 +1,4 @@
 datos/raw/
 .env
 config.json
+__pycache__/

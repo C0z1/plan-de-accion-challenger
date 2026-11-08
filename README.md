@@ -45,9 +45,23 @@ Opcional:
 - **Tu pool y tus metas:** copia `config.ejemplo.json` a `config.json` (no se sube a git) y pon tus campeones. Sin `config.json`, `revision.py` toma como pool tus 3 campeones más jugados; la meta de minions al 10 (`minions10`) solo aparece si la defines.
 - **Otra carpeta de datos:** `DATOS_DIR=<carpeta>` hace que todos los scripts lean y escriban ahí en vez de `datos/raw` (útil para analizar otra cuenta sin mezclar).
 
-`companion.py` lee el cliente de League of Legends en modo **solo lectura**:
-- En champ select detecta a tu rival de línea y ejecuta `draft.py`.
-- Al terminar la partida espera 60 s y ejecuta `descargar.py` + `revision.py`.
+### 🎮 Companion
+
+`companion.py` lee el cliente de League of Legends en modo **solo lectura** (nunca elige, banea ni acepta por ti):
+
+| Momento | Qué hace |
+|---|---|
+| Champ select | Cuando tu rival de línea elige, corre `draft.py <rival> <tu rol>` y te muestra qué pickear. Sin roles asignados (normales), lo corre contra cada rival ya elegido. |
+| Fin de partida | Espera 60 s, baja tus 5 últimas (`descargar.py 5`) y revisa la nueva (`revision.py 1`). |
+| Key caducada o partida sin publicar | Te dice qué correr a mano después. |
+
+```bash
+python scripts/companion.py --help                              # uso
+python scripts/companion.py                                     # déjalo abierto mientras juegas (Ctrl+C para salir)
+python scripts/companion.py --fixture scripts/fixtures/champselect   # prueba sin cliente, con JSON de ejemplo
+```
+
+Busca el cliente en `C:\Riot Games\League of Legends\lockfile`; si lo instalaste en otro lado, pon la ruta en `LOL_LOCKFILE`.
 
 ---
 
@@ -95,7 +109,7 @@ flowchart LR
 
 - `PLAN.md`: el plan con las reglas que salen de los datos. `TARJETA.md`: esas reglas en una página para tener a mano mientras juegas. `BITACORA.md`: el seguimiento.
 - Con [Claude Code](https://claude.com/claude-code), el agente `.claude/agents/coach-challenger.md` hace el diagnóstico y el plan: *"Usa el agente coach-challenger para hacer el diagnóstico inicial."*
-- El pool (`POOL` en `revision.py`), las metas de `revision.py` y estos documentos son los del caso de estudio: ajústalos a tu cuenta.
+- Tu pool y la meta de minions van en `config.json`; las demás metas de `revision.py` y estos documentos son los del caso de estudio: ajústalos a tu cuenta.
 
 ---
 
@@ -146,7 +160,7 @@ Hallazgos reales obtenidos de los datos:
 python -m unittest discover scripts
 ```
 
-Las pruebas no requieren red ni `RIOT_KEY`.
+Las pruebas no requieren red, `RIOT_KEY` ni partidas descargadas (sin `datos/raw` usan `scripts/fixtures/datos`). GitHub Actions las corre en Ubuntu y Windows en cada push (`.github/workflows/pruebas.yml`).
 
 ---
 

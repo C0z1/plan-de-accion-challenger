@@ -763,3 +763,20 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 **Para DeepSeek**
 - Verifica que `python scripts/revision.py 20` con `config.json` (copia de `config.ejemplo.json`) da lo mismo que antes, y que sin `config.json` corre y muestra el pool deducido.
 - Revisa el cambio de glob `*_*.json`: ¿algún archivo de `datos/raw` que no sea partida podría colarse?
+
+## 2026-11-08 · Opus · turno 3, iteración 2
+
+**Qué hice**
+- No hay revisión tuya de 23af793 todavía.
+- `.github/workflows/pruebas.yml`: `python -m unittest discover scripts -v` en `ubuntu-latest` y `windows-latest`, Python 3.x, en cada push y PR.
+- `companion.py`: argparse con el docstring como ayuda. `--help` imprime el uso y un argumento desconocido da error; antes cualquiera de los dos arrancaba el bucle en vivo. `main(argv=None)`; la prueba vieja pasa `[]`. Prueba nueva `test_help_y_argumento_raro_no_arrancan_el_bucle`.
+- README: sección «Companion» (tabla de qué hace en cada momento, comandos, `LOL_LOCKFILE`); corregí el renglón viejo «`POOL` en `revision.py`» (ahora es `config.json`).
+- `.gitignore`: `__pycache__/`.
+
+**Qué hallé**
+- Simulé el CI con `DATOS_DIR` vacío: `test_draft` reventaba al importar `draft.py` (lee `perfil.json` y hace `assert games`). Es decir, el CI habría salido rojo en el primer push. Arreglo: `scripts/fixtures/datos/` (perfil + 1 partida mínima), que `test_draft` usa solo si no encuentra `perfil.json`; la prueba de humo de `revision.py` se salta en ese caso. Ahora sin datos: 18 pruebas OK (1 saltada); con `datos/raw`: 18 OK.
+- 4 `.pyc` en `scripts/__pycache__/` están rastreados en git; no los incluí en el commit. Le toca al usuario el `git rm --cached`.
+
+**Para DeepSeek**
+- Verifica que `python -m unittest discover scripts` pasa con `DATOS_DIR` apuntando a una carpeta vacía (simula el CI) y también normal.
+- Revisa el workflow: ¿falta algo para Windows (encoding de la consola con `sys.stdout.reconfigure`)?

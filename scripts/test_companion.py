@@ -1,5 +1,5 @@
 """python -m unittest discover scripts  (sin red ni key)"""
-import json, pathlib, sys, unittest
+import contextlib, io, json, pathlib, sys, unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import companion
@@ -30,6 +30,13 @@ class Rivales(unittest.TestCase):
         self.assertEqual(json.loads((FIX / "champselect" / "gameflow-phase.json").read_text()), "ChampSelect")
 
 
+class Argumentos(unittest.TestCase):
+    def test_help_y_argumento_raro_no_arrancan_el_bucle(self):
+        for args in (["--help"], ["--algo"]):
+            with self.assertRaises(SystemExit), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                companion.main(args)  # antes, cualquier argumento entraba al modo en vivo
+
+
 class PostPartida(unittest.TestCase):
     def setUp(self):
         self.orig = companion.lcu, companion.post_partida, companion.time.sleep, companion.subprocess.run
@@ -43,7 +50,7 @@ class PostPartida(unittest.TestCase):
         companion.lcu = lambda path: next(fases)  # al acabarse las fases, StopIteration corta el bucle
         companion.post_partida = lambda: llamadas.append(1)
         companion.time.sleep = lambda _: None
-        with self.assertRaises(StopIteration): companion.main()
+        with self.assertRaises(StopIteration): companion.main([])
         self.assertEqual(llamadas, [1])  # PreEndOfGame → EndOfGame no repite la descarga
 
     def corre(self, codigos):

@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 3, iteración 1: `DATOS_DIR` en todos los scripts, partidas de cualquier región, pool y meta de minions desde `config.json` (opcional); probado de punta a punta con JUGKING#1345.
-- **Siguiente:** textos de metas aún de cozi en `revision.py` («tu temporada: 62%», «2.12 en victorias») y default Ekko en convertir/linea; CI (`.github/workflows/pruebas.yml`); `companion.py --help`.
-- **Actualizado:** 2026-11-08 (turno 3, iteración 1)
+- **Estado:** turno 3, iteración 2: CI (`.github/workflows/pruebas.yml`, Ubuntu + Windows), `companion.py --help` (argparse; un argumento raro ya no arranca el bucle), README del companion; las pruebas corren sin `datos/raw` (fixture mínima). 18 OK.
+- **Siguiente:** textos de metas aún de cozi en `revision.py` («tu temporada: 62%», «2.12 en victorias») y default Ekko en convertir/linea; opcional: captura Live Client Data.
+- **Actualizado:** 2026-11-08 (turno 3, iteración 2)
 
 ### DeepSeek · revisor
 - **Estado:** revisado fbb8e08 (cierre del turno 2, sin código). El RESUMEN-NOCHE está respaldado (muertes6 50/59% y 44%; wards 1,431 y 0.92/0.87/0.81). No pude bajar la partida nueva: RIOT_KEY caducó (401).
@@ -59,6 +59,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
 | `scripts/test_companion.py` | Pruebas sin red: `python -m unittest discover scripts` | Opus |
 | `scripts/test_draft.py` | Pruebas de `draft.py` (funciones y recomendación con partidas sintéticas) y humo de `revision.py 1` | Opus |
+| `scripts/fixtures/datos/` | Perfil y una partida mínima: `test_draft` los usa si no hay `datos/raw` (CI, clon nuevo) | Opus |
+| `.github/workflows/pruebas.yml` | CI: `python -m unittest discover scripts` en Ubuntu y Windows | Opus |
 | `config.ejemplo.json` | Ejemplo (cozi) de `config.json`: pool y meta `minions10` para `revision.py`; `config.json` va en `.gitignore` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
@@ -120,6 +122,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 noche · Opus: `companion.py` verificado en vivo y en solo lectura contra el cliente abierto (el lockfile existe; la fase era `InProgress`). El champ select solo se probó con fixtures.
 - 2026-11-07 · DeepSeek: RIOT_KEY caducó (401 en `descargar.py 5`): la partida nueva sigue sin poder bajarse; hay que renovarla (`setx RIOT_KEY`).
 - 2026-11-08 · Opus: todos los scripts buscaban `LA1_*.json`: con una cuenta de otra región no veían ninguna partida. Ahora `*_*.json`.
+- 2026-11-08 · Opus: en un clon nuevo (sin `datos/raw`) las pruebas fallaban: `draft.py` lee `perfil.json` al importarse. El CI habría salido rojo desde el primer push; ahora usa `scripts/fixtures/datos`.
 - 2026-11-08 · Opus: punta a punta con JUGKING#1345 (Challenger LAN, 20 partidas, `DATOS_DIR` aparte, sin config): descargar, analizar, draft y revision salen 0; `datos/raw` intacto; datos de prueba borrados.
 
 ## Decisiones
@@ -159,4 +162,6 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - Al terminar cada sesión: `python scripts/descargar.py` y luego `python scripts/revision.py` (o `revision.py 10`).
 - Si la key caducó, `descargar.py` abre el portal de Riot: copia la key, `setx RIOT_KEY <key>` y córrelo otra vez (ya no hace falta reabrir la terminal).
 - Tu `config.json` (copia de `config.ejemplo.json`, con tu pool y la meta de Sylas) ya está en la carpeta y no se sube a git.
+- Hay 4 `.pyc` de `scripts/__pycache__/` rastreados en git (ya están en `.gitignore`, pero Opus no tiene `git rm`): corre `git rm -r --cached scripts/__pycache__` y haz commit antes del push.
+- El CI (`.github/workflows/pruebas.yml`) arranca solo al hacer push.
 - Opus no puede llamar a `ask-deepseek.ps1` (el permiso bloquea PowerShell anidado). Si quieres que lo use, permite ese comando.
