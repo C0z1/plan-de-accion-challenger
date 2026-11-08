@@ -32,6 +32,10 @@ class AvisoNivelBordes(unittest.TestCase):
         d = foto(); d["allPlayers"][0]["level"] = None
         self.assertIn("abajo de Zed", companion.aviso_nivel(d))
 
+    def test_gametime_null_no_truena(self):
+        d = foto(); d["gameData"]["gameTime"] = None
+        self.assertIsNone(companion.aviso_nivel(d))
+
 
 if __name__ == "__main__":
     unittest.main()

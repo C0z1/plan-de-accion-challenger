@@ -8,12 +8,13 @@ Uso:
   y, del minuto 5 al 7, avisa una vez si vas abajo de nivel contra tu rival de línea.
 - EndOfGame/PreEndOfGame: espera 60 s y corre descargar.py 5 y revision.py 1 (si la key caducó, lo avisa).
 Lockfile: C:\\Riot Games\\League of Legends\\lockfile (o la variable LOL_LOCKFILE)."""
-import argparse, base64, json, os, pathlib, ssl, subprocess, sys, time, urllib.request
+import argparse, base64, http.client, json, os, pathlib, ssl, subprocess, sys, time, urllib.request
 
 sys.stdout.reconfigure(encoding="utf-8")
 DIR = pathlib.Path(__file__).resolve().parent
 LOCK = pathlib.Path(os.environ.get("LOL_LOCKFILE", r"C:\Riot Games\League of Legends\lockfile"))
 POS = {"top": "TOP", "jungle": "JUNGLE", "middle": "MIDDLE", "bottom": "BOTTOM", "utility": "UTILITY"}
+FALLAS = (OSError, ValueError, http.client.HTTPException)  # HTTPException: respuesta cortada (IncompleteRead) si el cliente se cae
 SSL = ssl.create_default_context(); SSL.check_hostname = False; SSL.verify_mode = ssl.CERT_NONE  # cert propio del cliente, solo 127.0.0.1
 
 
@@ -24,7 +25,7 @@ def lcu(path):
         auth = base64.b64encode(f"riot:{pw}".encode()).decode()
         req = urllib.request.Request(f"{proto}://127.0.0.1:{port}{path}", headers={"Authorization": f"Basic {auth}"})
         with urllib.request.urlopen(req, context=SSL, timeout=5) as r: return json.load(r)
-    except (OSError, ValueError): return None  # sin lockfile, cliente cerrándose o 404 fuera de champ select
+    except FALLAS: return None  # sin lockfile o a medias, cliente cerrándose, timeout, 404 fuera de champ select
 
 
 VIVO = DIR.parent / "datos" / "vivo"
@@ -34,7 +35,7 @@ def vivo():
     """Foto de /liveclientdata/allgamedata (sin auth, solo durante la partida); None si no responde."""
     try:
         with urllib.request.urlopen("https://127.0.0.1:2999/liveclientdata/allgamedata", context=SSL, timeout=5) as r: return json.load(r)
-    except (OSError, ValueError): return None
+    except FALLAS: return None
 
 
 def capturar(archivo, d):
@@ -48,7 +49,7 @@ def capturar(archivo, d):
 def aviso_nivel(d):
     """Del minuto 5 al 7, si vas abajo de nivel contra tu rival de línea (misma position, otro equipo): el aviso; si no, None.
     Sin position (normales, ARAM) no hay rival claro y no avisa. Abajo al 6 → 44% de WR en cozi (PLAN.md, nivel6.py/muertes6.py)."""
-    t = (d or {}).get("gameData", {}).get("gameTime", 0)
+    t = (d or {}).get("gameData", {}).get("gameTime") or 0  # null mientras carga la partida
     if not 300 <= t <= 420: return None
     yo = d.get("activePlayer", {}); ids = {yo.get("riotId"), yo.get("summonerName")} - {None, ""}
     ps = d.get("allPlayers", [])
@@ -58,6 +59,11 @@ def aviso_nivel(d):
     if not rival or (n := (rival.get("level") or 0) - (me.get("level") or 0)) < 1: return None  # level puede venir null
     return (f"Min {int(t // 60)}: vas {n} nivel{'es' if n > 1 else ''} abajo de {rival.get('championName', 'tu rival')} "
             f"({me.get('level') or '?'} contra {rival.get('level') or '?'}). No tradees hasta igualar; quédate en rango de XP de cada oleada.")
+
+
+def espera(fallos):
+    """Segundos hasta el próximo sondeo: 3 con el cliente arriba; con fallos seguidos, 6, 12, 24 y tope 30."""
+    return min(3 * 2 ** fallos, 30)
 
 
 def rivales(s):
@@ -86,6 +92,9 @@ def recomendar(pos, ids, m):
         print(f"\n=== {m[i]} ({pos}) ==="); draft.draft(m[i], pos)
 
 
+FIN = ("PreEndOfGame", "EndOfGame")
+
+
 def post_partida():
     print("Partida terminada: espero 60 s a que Riot la publique…"); time.sleep(60)
     r = subprocess.run([sys.executable, str(DIR / "descargar.py"), "5"])
@@ -103,24 +112,27 @@ def main(argv=None):
     if a.fixture:
         d = pathlib.Path(a.fixture)
         get = lambda path: json.loads((d / ("session.json" if "champ-select" in path else "gameflow-phase.json")).read_text())
-    m, visto, fase_ant, archivo, ult, avisado = None, None, None, None, 0, False
+    m, visto, fase_ant, real, archivo, ult, avisado, fallos = None, None, None, None, None, 0, False, 0
     while True:
         fase = get("/lol-gameflow/v1/gameflow-phase")
         if fase is None and fase_ant != "cerrado": print("Cliente cerrado: espero…")
         elif fase != fase_ant: print(f"Fase: {fase}")
-        if fase == "ChampSelect" and (s := get("/lol-champ-select/v1/session")):
-            pos, ids = rivales(s)
-            if ids and (pos, ids) != visto:
-                m = m or nombres(); recomendar(pos, ids, m); visto = (pos, ids)
-        elif fase != "ChampSelect": visto = None
-        if fase == "InProgress" and get is lcu and time.time() - ult >= 30:
-            d = vivo(); archivo, ult = capturar(archivo, d), time.time()
-            if not avisado and (txt := aviso_nivel(d)): print(f"\n*** {txt} ***\n"); avisado = True
-        elif fase != "InProgress": archivo, avisado = None, False  # partida nueva, archivo y aviso nuevos
-        if fase in ("PreEndOfGame", "EndOfGame") and fase_ant not in ("PreEndOfGame", "EndOfGame") and get is lcu: post_partida()
-        fase_ant = fase or "cerrado"
+        jugando = (fase or real) == "InProgress"  # si el cliente se reinicia a media partida, la partida (y el puerto 2999) sigue
+        try:
+            if fase == "ChampSelect" and (s := get("/lol-champ-select/v1/session")):
+                pos, ids = rivales(s)
+                if ids and (pos, ids) != visto:
+                    m = m or nombres(); recomendar(pos, ids, m); visto = (pos, ids)
+            elif fase != "ChampSelect": visto = None
+            if jugando and get is lcu and time.time() - ult >= 30:
+                d = vivo(); archivo, ult = capturar(archivo, d), time.time()
+                if not avisado and (txt := aviso_nivel(d)): print(f"\n*** {txt} ***\n"); avisado = True
+            elif not jugando: archivo, avisado = None, False  # partida nueva, archivo y aviso nuevos
+            if fase in FIN and real not in FIN and get is lcu: post_partida()  # real: un reinicio en EndOfGame no repite la descarga
+        except Exception as e: print(f"Error (sigo): {e!r}")  # un JSON raro no tumba el companion
+        fase_ant, real, fallos = fase or "cerrado", fase or real, 0 if fase else fallos + 1
         if get is not lcu: return
-        time.sleep(3)
+        time.sleep(espera(fallos))
 
 
 if __name__ == "__main__":

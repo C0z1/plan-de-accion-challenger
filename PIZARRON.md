@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 4, iteración 2: racha de oro < 0 al 14 (3+ de las últimas 5) en `revision.py` y en la vista post-partida, con 2 sugerencias medibles (XP @14 y nivel al 6); arreglo de `aviso_nivel` con `level: null` (lo halló `test_ds_nivel6.py`); 34 pruebas OK.
-- **Siguiente:** backlog 3 (companion robusto: reinicio del cliente, lockfile nuevo, timeouts de 2999, JSON a medias) o 4 (smoke test del flujo completo).
-- **Actualizado:** 2026-11-08 02:45 (turno 4, iteración 2)
+- **Estado:** turno 4, iteración 3: companion robusto (respuesta cortada ya no lo tumba, reinicio del cliente a media partida sigue la misma grabación sin repetir aviso ni descarga, espera creciente 3→30 s, try/except en consola) en `companion.py` y la GUI; arreglo de `gameTime: null` (lo halló DeepSeek); 41 pruebas OK.
+- **Siguiente:** backlog 4 (smoke test del flujo completo sin cliente, en el CI) o 5 (aviso de draft con pocas partidas o counter duro).
+- **Actualizado:** 2026-11-08 03:10 (turno 4, iteración 3)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 3d9e4ae (cierre del turno 3: el resumen cuadra con 23af793…dc14b58; 19 pruebas OK).
@@ -59,7 +59,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/vivo/` | Fotos en vivo de la Live Client Data API que guarda `companion.py` (una línea JSON cada 30 s; en `.gitignore`) | Opus |
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
 | `scripts/fixtures/vivo/allgamedata.json` | Foto sintética de la Live Client Data API (min 6, Ekko 5 contra Zed 6; nombres inventados) | Opus |
-| `scripts/test_companion.py` | Pruebas sin red: `python -m unittest discover scripts` | Opus |
+| `scripts/test_companion.py` | Pruebas sin red: `python -m unittest discover scripts` (incluye `Robusto`: lockfile, timeouts, JSON cortado, reinicio a media partida) | Opus |
+| `scripts/test_ds_*.py` | Pruebas de casos borde que escribe DeepSeek | DeepSeek |
 | `scripts/test_draft.py` | Pruebas de `draft.py` (funciones y recomendación con partidas sintéticas) y humo de `revision.py 1` | Opus |
 | `scripts/fixtures/datos/` | Perfil y una partida mínima: `test_draft` los usa si no hay `datos/raw` (CI, clon nuevo) | Opus |
 | `.github/workflows/pruebas.yml` | CI: `python -m unittest discover scripts` en Ubuntu y Windows | Opus |
@@ -137,6 +138,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: tus últimas 5 llegan al 14 con oro < 0 (las 5), pero con XP −586 (mejor que la mediana) y nivel parejo al 6: el oro se va por otro lado (CS −11).
 
 - 2026-11-08 · DeepSeek (vía `test_ds_nivel6.py`): `aviso_nivel` tronaba con `"level": null` (TypeError). Arreglado: cuenta como 0 y muestra «?».
+- 2026-11-08 · Opus: una respuesta cortada del cliente (`http.client.IncompleteRead`) no es `OSError` ni `ValueError`: tumbaba `companion.py`. Y un reinicio del cliente a media partida partía la grabación y repetía el aviso. Arreglados.
+- 2026-11-08 · DeepSeek (vía `test_ds_nivel6.py`): `aviso_nivel` también tronaba con `gameTime: null`. Arreglado.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -173,7 +176,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: el aviso de nivel usa la foto de cada 30 s (no un sondeo aparte), solo con `position` (en normales no avisa) y una vez por partida; `capturar(archivo, d)` recibe la foto.
 - 2026-11-08 · Opus: la racha de oro bajo usa siempre las últimas 5 partidas (aunque corras `revision.py 1`), mide el nivel con la foto del minuto 6 (como el aviso en vivo) y marca «pista» sola si los intervalos de Wilson se cruzan.
 
+- 2026-11-08 · Opus: tras un reinicio del cliente, el companion sigue la última fase real (no `None`): si era `InProgress`, sigue grabando del puerto 2999 en el mismo archivo.
+
 ## Para el usuario (cuando vuelva)
+- Nuevo: si el cliente de LoL se reinicia a media partida, el companion sigue grabando la misma partida y no repite avisos; con el cliente cerrado sondea cada vez menos (hasta cada 30 s). Recompila `Companion.exe` para tenerlo.
 - Nuevo: si 3 o más de tus últimas 5 partidas llegan al 14 con oro < 0, `revision.py` y la ventana post-partida del companion lo marcan con 2 metas: XP al 14 a −746 o mejor contra tu rival y llegar al 6 sin nivel abajo.
 - Nuevo: entre el minuto 5 y el 7, el companion te avisa si vas abajo de nivel contra tu rival de línea («no tradees hasta igualar»). Solo en ranked/draft (necesita la posición); reinicia el companion o recompila `Companion.exe` para tenerlo.
 - Nuevo: deja abierto `python scripts/companion.py` en una terminal mientras juegas. En champ select te recomienda el pick contra tu rival y, al terminar, baja la partida y la revisa (si la key caducó, te dice «renueva RIOT_KEY»).

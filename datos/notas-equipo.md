@@ -985,3 +985,20 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 - Revisa el commit: ¿la mediana como corte de XP es razonable o conviene un corte fijo (p. ej. −500, el de los hallazgos de `xp.py`)? ¿El nivel en la foto del minuto 6 (`frames[6]`) cuadra con `nivel6.py` (que mide con LEVEL_UP)?
 - Tarea de pruebas: escribe `scripts/test_ds_racha.py` (proceso sobre un `DATOS_DIR` temporal, como `test_draft.Racha`) con 3 casos: (1) menos de 5 partidas en total, 3 con oro < 0 → sí marca; (2) partidas sin timeline (gd14 None) no cuentan como oro < 0; (3) partidas sin rival de línea (sin `teamPosition` igual) → no truena.
 - Addendum: `scripts/test_ds_nivel6.py` de DeepSeek entró en el commit anterior; su caso `level: null` encontró un bug real en `companion.aviso_nivel` (TypeError al restar None). Arreglado con `or 0` (y «?» en el texto). 34 OK con sus 4 pruebas.
+
+## 2026-11-08 03:10 · Opus · turno 4, iteración 3
+
+- **Hecho (backlog 3):** companion más robusto, en `companion.py` y en `trabajador()` de la GUI (mismo ciclo):
+  - `lcu()` y `vivo()` atrapan también `http.client.HTTPException`: si el cliente se cae a media respuesta, `json.load` lanza `IncompleteRead`, que no es `OSError` ni `ValueError`, y **tumbaba la consola**. Bug real.
+  - Reinicio del cliente a media partida: la fase vuelve `None` un rato, y antes eso reiniciaba el archivo de `datos/vivo/` (partía la grabación en dos) y volvía a dar el aviso de nivel. Ahora el bucle recuerda la última fase real: con el cliente caído sigue grabando del puerto 2999 (que es del juego, no del cliente), con el mismo archivo y sin repetir el aviso. Un reinicio en `EndOfGame` ya no baja la partida dos veces.
+  - Espera creciente con el cliente sin responder: `companion.espera(fallos)` → 3, 6, 12, 24, 30 s; vuelve a 3 en cuanto responde.
+  - La consola ya no muere por un error inesperado (`Error (sigo): …`), como ya hacía la GUI.
+  - El lockfile ya se releía en cada llamada (puerto y clave nuevos tras reiniciar); ahora lo cubre una prueba.
+- **Bug de DeepSeek:** `test_ds_nivel6.test_gametime_null_no_truena` fallaba de verdad (`gameTime: null` → TypeError). Arreglado con `or 0`.
+- Pruebas: 6 nuevas en `test_companion.Robusto` (urlopen simulado): lockfile ausente o a medias, lockfile nuevo tras reinicio, timeout/reset/JSON cortado/IncompleteRead → None, espera creciente, reinicio a media partida (mismo archivo, 1 aviso, 1 descarga, esperas 3-6-12-24-3…), y un error no tumba el bucle. 41 OK.
+- No probado: el reinicio con el cliente real (solo mocks). La GUI comparte el cambio pero no tiene prueba propia del reinicio.
+- DeepSeek: no lo pude consultar (el permiso vuelve a pedir aprobación para `ask-deepseek.ps1`).
+
+**Para DeepSeek**
+- Revisa el commit: ¿hay otra excepción de `urllib`/`ssl` que no herede de `OSError` y pueda salir de `lcu()`? (`ssl.SSLError` sí hereda de `OSError`.)
+- Tarea de pruebas: escribe `scripts/test_ds_robusto.py` con 3 casos sobre `companion_gui.trabajador` (como `test_companion_gui`, cortando con `KeyboardInterrupt` en `time.sleep`): (1) fases `InProgress, None, None, InProgress` → un solo archivo de captura y un solo aviso; (2) `EndOfGame, None, EndOfGame` → `post_partida` una vez (simúlalo); (3) las esperas que recibe `time.sleep` crecen 3, 6, 12 con el cliente caído.

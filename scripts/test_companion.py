@@ -130,4 +130,76 @@ class PostPartida(unittest.TestCase):
         self.assertEqual(self.corre([0, 0]), ["descargar.py", "revision.py"])
 
 
+class Robusto(unittest.TestCase):
+    """Cliente que se reinicia, lockfile nuevo o a medias, timeouts y JSON cortado (urlopen simulado, sin red)."""
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.TemporaryDirectory(); self.lock = pathlib.Path(self.tmp.name) / "lockfile"
+        self.orig = companion.LOCK, companion.urllib.request.urlopen
+        companion.LOCK = self.lock; self.urls = []
+
+    def tearDown(self):
+        companion.LOCK, companion.urllib.request.urlopen = self.orig; self.tmp.cleanup()
+
+    def responde(self, cuerpo=None, error=None):
+        def urlopen(req, **kw):
+            self.urls.append(getattr(req, "full_url", req))
+            if error: raise error
+            return io.BytesIO(cuerpo)
+        companion.urllib.request.urlopen = urlopen
+
+    def test_lockfile_ausente_o_a_medias(self):
+        self.responde(b'"Lobby"')
+        self.assertIsNone(companion.lcu("/x"))  # sin lockfile
+        self.lock.write_text("LeagueClient:1234")  # el cliente aún lo está escribiendo
+        self.assertIsNone(companion.lcu("/x")); self.assertEqual(self.urls, [])
+
+    def test_lockfile_nuevo_tras_reinicio(self):
+        self.responde(b'"Lobby"')
+        self.lock.write_text("LeagueClient:1:50001:pw1:https"); self.assertEqual(companion.lcu("/x"), "Lobby")
+        self.lock.write_text("LeagueClient:2:50002:pw2:https"); self.assertEqual(companion.lcu("/x"), "Lobby")
+        self.assertEqual([u.split("/")[2] for u in self.urls], ["127.0.0.1:50001", "127.0.0.1:50002"])
+
+    def test_timeout_y_json_cortado_dan_none(self):
+        import http.client
+        self.lock.write_text("LeagueClient:1:50001:pw:https")
+        for kw in ({"error": TimeoutError()}, {"error": ConnectionResetError()}, {"cuerpo": b'{"gameData": {"gameTi'}):
+            self.responde(**kw); self.assertIsNone(companion.lcu("/x")); self.assertIsNone(companion.vivo())
+        class Roto(io.BytesIO):
+            def read(self, *a): raise http.client.IncompleteRead(b"{")  # el cliente se cae a media respuesta
+        companion.urllib.request.urlopen = lambda req, **kw: Roto()
+        self.assertIsNone(companion.lcu("/x")); self.assertIsNone(companion.vivo())  # antes tumbaba el companion
+
+    def test_espera_creciente(self):
+        self.assertEqual([companion.espera(f) for f in range(6)], [3, 6, 12, 24, 30, 30])
+
+    def bucle(self, fases):
+        orig = companion.lcu, companion.vivo, companion.capturar, companion.post_partida, companion.time.sleep, companion.time.time
+        fases, reloj, self.esperas, self.archivos, self.posts = iter(fases), iter(range(100, 10_000, 100)), [], [], []
+        companion.lcu = lambda path: next(fases)
+        companion.vivo = foto
+        companion.capturar = lambda a, d: self.archivos.append(a or f"archivo{len(self.archivos)}") or self.archivos[-1]
+        companion.post_partida = lambda: self.posts.append(1)
+        companion.time.sleep = self.esperas.append; companion.time.time = lambda: next(reloj)
+        out = io.StringIO()
+        try:
+            with self.assertRaises(StopIteration), contextlib.redirect_stdout(out): companion.main([])
+        finally: companion.lcu, companion.vivo, companion.capturar, companion.post_partida, companion.time.sleep, companion.time.time = orig
+        return out.getvalue()
+
+    def test_reinicio_a_media_partida_sigue_la_misma(self):
+        out = self.bucle(["InProgress", None, None, None, "InProgress", "EndOfGame", None, "EndOfGame", "Lobby"])
+        self.assertEqual(set(self.archivos[:5]), {"archivo0"})  # sigue grabando en el mismo archivo con el cliente caído
+        self.assertEqual(out.count("No tradees"), 1)  # el aviso no se repite tras el reinicio
+        self.assertEqual(self.posts, [1])  # reinicio en EndOfGame: no baja la partida dos veces
+        self.assertEqual(self.esperas, [3, 6, 12, 24, 3, 3, 6, 3, 3])
+
+    def test_un_error_no_tumba_el_bucle(self):
+        orig = companion.aviso_nivel
+        companion.aviso_nivel = lambda d: 1 / 0
+        try: out = self.bucle(["InProgress", "InProgress"])
+        finally: companion.aviso_nivel = orig
+        self.assertEqual(out.count("Error (sigo)"), 2)
+
+
 if __name__ == "__main__": unittest.main()
