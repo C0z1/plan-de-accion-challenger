@@ -22,7 +22,7 @@ RUTA = {"na1": "americas", "br1": "americas", "la1": "americas", "la2": "america
 CUENTA = "asia" if RUTA == "sea" else RUTA  # account-v1 no existe en sea
 if not NAME or not TAG: sys.exit('RIOT_ID debe ser "Nombre#TAG"')
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 100
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 RAW.mkdir(parents=True, exist_ok=True)
 
 

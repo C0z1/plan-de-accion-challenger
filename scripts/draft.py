@@ -3,11 +3,11 @@ Uso:
   python scripts/draft.py > datos/analisis-matchups-AAAA-MM-DD.md   guía completa (bans, rivales de línea, pool por rol)
   python scripts/draft.py Viktor [mid]                             champ select: qué pickear contra ese rival
 Rol: top, jungla, mid, bot, support (por defecto mid)."""
-import json, math, pathlib, random, statistics as st, sys
+import json, os, math, pathlib, random, statistics as st, sys
 from collections import defaultdict
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 ROLES = {"top": "TOP", "jungla": "JUNGLE", "jungle": "JUNGLE", "mid": "MIDDLE", "bot": "BOTTOM", "adc": "BOTTOM",
          "support": "UTILITY", "sup": "UTILITY"}
@@ -39,7 +39,7 @@ def gd(rs):
 
 
 games = []
-for f in RAW.glob("LA1_*.json"):
+for f in RAW.glob("*_*.json"):
     m = json.loads(f.read_text())["info"]
     if m["gameDuration"] < 300: continue  # remakes
     ps = m["participants"]

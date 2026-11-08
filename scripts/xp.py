@@ -2,11 +2,11 @@
 minuto (2 a 14) según dónde estabas tú (muerto, en base, fuera de tu línea, en tu línea) y dónde tu rival.
 Las posiciones del timeline son una foto por minuto: es una aproximación, no un rastreo continuo.
 Uso: python scripts/xp.py > datos/analisis-xp-AAAA-MM-DD.md"""
-import json, math, pathlib, statistics as st, sys
+import json, os, math, pathlib, statistics as st, sys
 from collections import Counter, defaultdict
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 LINEA = {"MIDDLE": "mid", "TOP": "top", "BOTTOM": "bot", "UTILITY": "bot"}
 ESTADOS = ["muerto", "muere él", "base", "fuera", "línea"]
@@ -53,7 +53,7 @@ assert estado([_f(7000, 7000), _f(4000, 9000)], 1, 1, 100, "mid", [30000]) == "m
 assert estado([_f(7000, 7000), _f(1000, 9000)], 1, 1, 100, "mid", []) == "fuera"
 
 games = []
-for tf in (RAW / "timeline").glob("LA1_*.json"):
+for tf in (RAW / "timeline").glob("*_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]

@@ -3,11 +3,11 @@ Clasifica cada muerte de tu rival (tú solo, tú + jungla, tú + otro, sin ti), 
 te costó morir en los 20 s siguientes; reparte la XP de "muere él" de xp.py entre tuya y ajena, y prueba la
 sensibilidad de "muerto" contando también el minuto siguiente a tu muerte (preguntas de DeepSeek, iteración 9).
 Uso: python scripts/castigo.py > datos/analisis-castigo-AAAA-MM-DD.md"""
-import json, math, pathlib, statistics as st, sys
+import json, os, math, pathlib, statistics as st, sys
 from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 LINEA = {"MIDDLE": "mid", "TOP": "top", "BOTTOM": "bot", "UTILITY": "bot"}
 TIPOS = ["tú solo", "tú + jungla", "tú + otro", "sin ti"]
@@ -51,7 +51,7 @@ assert tipo({"killerId": 4, "assistingParticipantIds": [3]}, 3, 2) == "tú + otr
 assert tipo({"killerId": 2}, 3, 2) == "sin ti"
 
 games = []
-for tf in (RAW / "timeline").glob("LA1_*.json"):
+for tf in (RAW / "timeline").glob("*_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]

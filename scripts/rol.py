@@ -1,11 +1,11 @@
 """¿Mid o top como rol principal? Compara por rol: WR, línea al 14, conversión, muertes, campeones
 y tendencia reciente; con intervalos Wilson y un test de permutación de la diferencia mid vs top.
 Uso: python scripts/rol.py > datos/analisis-rol-AAAA-MM-DD.md"""
-import json, math, pathlib, random, statistics as st, sys
+import json, os, math, pathlib, random, statistics as st, sys
 from collections import Counter, defaultdict
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 NOMBRE = {"MIDDLE": "mid", "TOP": "top", "UTILITY": "support", "JUNGLE": "jungla", "BOTTOM": "adc"}
 
@@ -35,7 +35,7 @@ assert perm_p([1] * 30, [0] * 30) < 0.01 and perm_p([1, 0] * 20, [0, 1] * 20) > 
 
 
 games = []
-for mf in RAW.glob("LA1_*.json"):
+for mf in RAW.glob("*_*.json"):
     m = json.loads(mf.read_text())["info"]
     if m["gameDuration"] < 300: continue  # remakes
     ps = m["participants"]

@@ -1,10 +1,10 @@
 """Análisis con timeline + challenges: diferencias a 10/14/20, muertes (fase, zona, quién), objetivos.
 Uso: python scripts/timeline.py > datos/analisis-timeline-AAAA-MM-DD.md"""
-import json, math, pathlib, statistics as st, sys
+import json, os, math, pathlib, statistics as st, sys
 from collections import Counter, defaultdict
 
 sys.stdout.reconfigure(encoding="utf-8")  # Windows usa cp1252 y no tiene ≤ ni –
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 
 
@@ -34,7 +34,7 @@ def zone(x, y, team):
 
 
 games, deaths = [], []
-for tf in (RAW / "timeline").glob("LA1_*.json"):
+for tf in (RAW / "timeline").glob("*_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]

@@ -1,14 +1,14 @@
 """Resume datos/raw/*.json en estadísticas agregadas. Uso: python scripts/analizar.py > datos/analisis-AAAA-MM-DD.md"""
-import json, pathlib, statistics as st
+import json, os, pathlib, statistics as st
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 MX = timezone(timedelta(hours=-6))  # hora del centro de México
 
 rows = []
-for f in RAW.glob("LA1_*.json"):
+for f in RAW.glob("*_*.json"):
     m = json.loads(f.read_text())["info"]
     if m["gameDuration"] < 300 or m.get("gameEndedInEarlySurrender"):  # remakes fuera
         continue

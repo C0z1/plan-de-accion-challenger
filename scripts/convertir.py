@@ -2,11 +2,11 @@
 compara por campeón (y V contra D del campeón elegido): cómo crece tu ventaja del 14 al 20, el oro del equipo,
 muertes y takedowns del 14 al 25, torres, objetivos y dónde estás en el mapa del 15 al 24.
 Uso: python scripts/convertir.py [Campeón] > datos/analisis-convertir-AAAA-MM-DD.md   (por defecto Ekko)"""
-import json, math, pathlib, statistics as st, sys
+import json, os, math, pathlib, statistics as st, sys
 from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 FOCO = sys.argv[1] if len(sys.argv) > 1 else "Ekko"
 
@@ -38,7 +38,7 @@ assert zone(7400, 7400, 100) == "mid (lado rival)" and zone(1000, 1000, 100) == 
 
 
 games = []
-for tf in (RAW / "timeline").glob("LA1_*.json"):
+for tf in (RAW / "timeline").glob("*_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]

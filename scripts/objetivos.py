@@ -3,11 +3,11 @@
 2. Ganks tempranos: ¿a qué minuto te matan con el jungla rival antes del 14?
 3. Late: muertes del 25 en adelante a igual oro del equipo al 25.
 Uso: python scripts/objetivos.py > datos/analisis-objetivos-AAAA-MM-DD.md"""
-import json, math, pathlib, sys
+import json, os, math, pathlib, sys
 from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 CERCA = 4000  # unidades: dentro de la pelea por el objetivo
 
@@ -36,7 +36,7 @@ assert posicion(_f, 30000, 1) == (50, 0)
 
 
 games = []
-for tf in (RAW / "timeline").glob("LA1_*.json"):
+for tf in (RAW / "timeline").glob("*_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]

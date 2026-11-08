@@ -3,10 +3,10 @@ Tú tienes muy pocas partidas con control ward, así que también se mide en los
 sin jungla ni support) de tus mismas partidas: control ward antes del 14 contra muertes por gank antes del 14 y WR,
 a igual oro @14 contra su rival de línea.
 Uso: python scripts/wards.py > datos/analisis-wards-AAAA-MM-DD.md"""
-import json, math, pathlib, sys
+import json, os, math, pathlib, sys
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 LINEA = {"MIDDLE", "TOP", "BOTTOM"}
 C14 = 14 * 60000
@@ -39,7 +39,7 @@ assert ganks([{"type": "CHAMPION_KILL", "timestamp": 1, "victimId": 1, "killerId
 
 
 yo, otros = [], []
-for tf in (RAW / "timeline").glob("LA1_*.json"):
+for tf in (RAW / "timeline").glob("*_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]

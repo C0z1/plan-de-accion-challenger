@@ -2,11 +2,11 @@
 Compara victorias y derrotas de ese grupo: oro del equipo, muertes del 14 al 25 (zona, enemigos,
 pick-off o pelea, shutdown entregado, objetivo perdido después).
 Uso: python scripts/midgame.py > datos/analisis-midgame-AAAA-MM-DD.md"""
-import json, math, pathlib, statistics as st, sys
+import json, os, math, pathlib, statistics as st, sys
 from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 VENTANA_PELEA, RADIO_PELEA, VENTANA_OBJ = 15_000, 3000, 90_000  # ms, unidades del mapa, ms
 
@@ -48,7 +48,7 @@ assert not es_pickoff(_k[0], _k) and es_pickoff(_k[2], _k)
 
 
 games, deaths = [], []
-for tf in (RAW / "timeline").glob("LA1_*.json"):
+for tf in (RAW / "timeline").glob("*_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]

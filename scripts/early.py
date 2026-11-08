@@ -3,11 +3,11 @@ primeros 10–14 min y timeline al 14). Por campeón (12+ partidas): media en V 
 p de permutación dentro del campeón y q de Benjamini-Hochberg (son muchas pruebas). Para la mejor métrica de cada
 campeón, WR partiendo por la mediana con Wilson.
 Uso: python scripts/early.py > datos/analisis-early-AAAA-MM-DD.md"""
-import json, math, pathlib, random, statistics as st, sys
+import json, os, math, pathlib, random, statistics as st, sys
 from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 
 
@@ -36,7 +36,7 @@ TL = [("gd14", "Oro vs rival @14"), ("cs14", "CS vs rival @14"), ("xp14", "XP vs
 MET = CH + TL
 
 games = []
-for tf in (RAW / "timeline").glob("LA1_*.json"):
+for tf in (RAW / "timeline").glob("*_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]

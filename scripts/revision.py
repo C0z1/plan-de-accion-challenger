@@ -1,12 +1,15 @@
 """Revisión: tus últimas N partidas contra las metas del PLAN (para los domingos y al terminar cada sesión).
 Uso: python scripts/revision.py [N]   (por defecto 20; antes corre scripts/descargar.py para bajar las nuevas)"""
-import json, math, pathlib, statistics as st, sys
+import json, os, math, pathlib, statistics as st, sys
+from collections import Counter
 from datetime import datetime
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
-POOL = {"Yone", "Ekko", "Mordekaiser"}  # PLAN, prioridad 2
+CFG_F = pathlib.Path(__file__).resolve().parent.parent / "config.json"  # opcional; ejemplo: config.ejemplo.json
+CFG = json.loads(CFG_F.read_text(encoding="utf-8")) if CFG_F.exists() else {}
+M10 = CFG.get("minions10")  # p. ej. {"campeon": "Sylas", "minimo": 69}; sin él no hay esa meta
 NOMBRE = {"MIDDLE": "mid", "TOP": "top", "BOTTOM": "bot", "UTILITY": "bot"}  # misma tabla que scripts/nivel6.py
 
 
@@ -37,7 +40,7 @@ assert [round(v, 3) for v in wilson(5, 10)] == [0.237, 0.763]
 
 
 games = []
-for f in RAW.glob("LA1_*.json"):
+for f in RAW.glob("*_*.json"):
     m = json.loads(f.read_text())["info"]
     if m["gameDuration"] < 300 or m.get("gameEndedInEarlySurrender"): continue
     ps = m["participants"]
@@ -45,7 +48,7 @@ for f in RAW.glob("LA1_*.json"):
     opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
     g = dict(win=me["win"], champ=me["championName"], t=m["gameCreation"], cw=me.get("visionWardsBoughtInGame", 0),
              gd14=None, cd14=None, d14=None, d25=None, rio14=None,
-             lm10=me.get("challenges", {}).get("laneMinionsFirst10Minutes") if me["championName"] == "Sylas" else None)
+             lm10=me.get("challenges", {}).get("laneMinionsFirst10Minutes") if M10 and me["championName"] == M10["campeon"] else None)
     tf = RAW / "timeline" / f.name
     if tf.exists():
         fr = json.loads(tf.read_text())["info"]["frames"]; pid = me["participantId"]
@@ -62,6 +65,8 @@ for f in RAW.glob("LA1_*.json"):
     games.append(g)
 games.sort(key=lambda g: g["t"])
 assert games, "sin partidas"
+# sin config: el pool son tus 3 campeones más jugados
+POOL = (CFG.get("pool") or [c for c, _ in Counter(g["champ"] for g in games).most_common(3)])
 
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 20
 rec, ant = games[-N:], games[:-N]
@@ -94,14 +99,16 @@ METRICAS = [
     ("Muertes antes del 14 pasado el río (río, mitad rival de tu línea o jungla rival)", lambda rs: media(rs, "rio14"),
      "monitor de la regla de prioridad 1; no separa V/D (1.10 contra 1.05)", None),
     ("Muertes del 14 al 25", lambda rs: media(rs, "d25"), "≤ 2", lambda v: v <= 2),
-    ("Sylas: partidas con 69+ minions de línea al 10",
-     # con ~4 Sylas por cada 20 partidas la marca es ruido: solo se marca con n ≥ 10 (revisión de DeepSeek)
+] + ([] if not M10 else [
+    (f"{M10['campeon']}: partidas con {M10['minimo']}+ minions de línea al 10",
+     # con ~4 por cada 20 partidas la marca es ruido: solo se marca con n ≥ 10 (revisión de DeepSeek)
      lambda rs: (lambda t: t if sum(r["lm10"] is not None for r in rs) >= 10 else (t[0], None))(
-         prop(rs, lambda r: None if r["lm10"] is None else r["lm10"] > 68)),
-     "> 50%, marca solo con n ≥ 10 (con 69+ ganas 74%, con ≤ 68, 32%)", lambda v: v > .5),
+         prop(rs, lambda r: None if r["lm10"] is None else r["lm10"] >= M10["minimo"])),
+     "> 50%, marca solo con n ≥ 10" + (f" ({M10['nota']})" if M10.get("nota") else ""), lambda v: v > .5),
+]) + [
     ("Partidas con ≥ 1 control ward", lambda rs: prop(rs, lambda r: r["cw"] >= 1),
      "monitor sin meta: no baja los ganks ni sube el WR (wards.py)", None),
-    ("Partidas con el pool (Yone, Ekko, Mordekaiser)", lambda rs: prop(rs, lambda r: r["champ"] in POOL), "> 80%",
+    (f"Partidas con el pool ({', '.join(POOL)})", lambda rs: prop(rs, lambda r: r["champ"] in POOL), "> 80%",
      lambda v: v > .8),
 ]
 

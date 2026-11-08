@@ -5,10 +5,10 @@ Uso:
   python scripts/partida.py --ultimas 8     narra las últimas 8 derrotas con la línea ganada
   python scripts/partida.py LA1_1761169033 --early   narra el early (1–12): nivel contra tu rival y primeras muertes
 Las posiciones de los demás jugadores son por minuto (foto del frame), no del instante exacto."""
-import json, math, pathlib, sys
+import json, os, math, pathlib, sys
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 DESDE, HASTA, CERCA = 12, 26, 2500  # minutos, unidades del mapa
 CONTROL = 2055  # itemId del control ward
@@ -41,7 +41,7 @@ def cargar(mid):
 
 def candidatas():
     out = []
-    for tf in (RAW / "timeline").glob("LA1_*.json"):
+    for tf in (RAW / "timeline").glob("*_*.json"):
         if not (RAW / tf.name).exists(): continue
         m, fr, ps, me, opp = cargar(tf.stem)
         if m["gameDuration"] < 1200 or not opp or me["win"] or len(fr) <= 14: continue

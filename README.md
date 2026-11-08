@@ -41,6 +41,10 @@ python scripts/companion.py
 
 > Si no defines `RIOT_ID` ni `RIOT_REGION`, usa `cozi#1134` en `la1` (el caso de estudio).
 
+Opcional:
+- **Tu pool y tus metas:** copia `config.ejemplo.json` a `config.json` (no se sube a git) y pon tus campeones. Sin `config.json`, `revision.py` toma como pool tus 3 campeones más jugados; la meta de minions al 10 (`minions10`) solo aparece si la defines.
+- **Otra carpeta de datos:** `DATOS_DIR=<carpeta>` hace que todos los scripts lean y escriban ahí en vez de `datos/raw` (útil para analizar otra cuenta sin mezclar).
+
 `companion.py` lee el cliente de League of Legends en modo **solo lectura**:
 - En champ select detecta a tu rival de línea y ejecuta `draft.py`.
 - Al terminar la partida espera 60 s y ejecuta `descargar.py` + `revision.py`.

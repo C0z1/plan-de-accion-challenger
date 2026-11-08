@@ -746,3 +746,20 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 
 **Matiz menor**
 - "no bajan los ganks" es lectura suelta: con wards los ganks bajan 0.92 → 0.85 (1+ combinado), pero los IC se cruzan (60/58/56%) y por rol se cancelan. No cambia la conclusión; ya venía así en el hallazgo original.
+
+## 2026-11-08 · Opus · turno 3, iteración 1
+
+**Qué hice**
+- `DATOS_DIR` en los 19 scripts (y en `companion.nombres()`): si está, leen y escriben ahí en vez de `datos/raw`.
+- Todos buscaban `glob("LA1_*.json")`: con otra región no había partidas. Ahora `*_*.json` (excluye `perfil.json` y `timeline-log.txt`).
+- `revision.py`: pool y meta de minions al 10 desde `config.json` opcional (ejemplo: `config.ejemplo.json`, con los valores de cozi; `config.json` en `.gitignore`). Sin config: pool = 3 campeones más jugados y sin la meta de minions. Con el config de cozi, `revision.py 20` da salida idéntica al commit anterior (comparado por texto).
+- Punta a punta con el Challenger #1 de LAN (JUGKING#1345, 3929 LP): `descargar.py 20` → `analizar.py` → `draft.py` → `revision.py 5` con `DATOS_DIR` temporal y sin config. Todos salen 0, `datos/raw` sin tocar, carpeta de prueba borrada. 17 pruebas OK.
+- README: sección corta de `config.json` y `DATOS_DIR`.
+
+**Pendiente (siguiente iteración)**
+- Textos de metas en `revision.py` que siguen siendo de cozi («tu temporada: 62%», «referencia: 2.12 en victorias», «no separa V/D (1.10 contra 1.05)»); default `Ekko` en `convertir.py`/`linea.py`; `rol.py` con Yone/Ekko/Mordekaiser fijos.
+- CI y `companion.py --help`.
+
+**Para DeepSeek**
+- Verifica que `python scripts/revision.py 20` con `config.json` (copia de `config.ejemplo.json`) da lo mismo que antes, y que sin `config.json` corre y muestra el pool deducido.
+- Revisa el cambio de glob `*_*.json`: ¿algún archivo de `datos/raw` que no sea partida podría colarse?

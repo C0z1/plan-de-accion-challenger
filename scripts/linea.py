@@ -1,11 +1,11 @@
 """¿Cómo pierdes la línea y cuál línea perdida se remonta? En partidas con oro < 0 contra tu rival al 14,
 separa la desventaja por causa (muertes por gank, muertes 1 contra 1, farm, XP) por campeón, y compara
 V contra D. Uso: python scripts/linea.py [Campeón] > datos/analisis-linea-AAAA-MM-DD.md   (por defecto Ekko)"""
-import json, math, pathlib, random, statistics as st, sys
+import json, os, math, pathlib, random, statistics as st, sys
 from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 FOCO = sys.argv[1] if len(sys.argv) > 1 else "Ekko"
 
@@ -33,7 +33,7 @@ assert tipo({"killerId": 7}, 1, 7, 9) == "1v1" and tipo({"killerId": 8, "assisti
 
 
 games = []
-for tf in (RAW / "timeline").glob("LA1_*.json"):
+for tf in (RAW / "timeline").glob("*_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]

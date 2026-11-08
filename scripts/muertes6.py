@@ -1,11 +1,11 @@
 """Muertes antes del minuto 6: cuántas, de qué tipo (1 contra 1 con tu rival de línea, gank, otra), por campeón y por rival,
 diferencia de nivel al 3 y al 6, y cuánto cambian el WR y el oro al 14 cuando mueres antes del 6.
 Uso: python scripts/muertes6.py > datos/analisis-muertes6-AAAA-MM-DD.md"""
-import json, math, pathlib, sys
+import json, os, math, pathlib, sys
 from collections import defaultdict
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 LINEA = {"MIDDLE", "TOP", "BOTTOM", "UTILITY"}
 SEIS = 6 * 60000
@@ -44,7 +44,7 @@ assert tipo({"killerId": 7}, 7, 8) == "1v1" and tipo({"killerId": 7, "assistingP
     and tipo({"killerId": 9}, 7, 8) == "otra"
 
 games = []
-for tf in (RAW / "timeline").glob("LA1_*.json"):
+for tf in (RAW / "timeline").glob("*_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]

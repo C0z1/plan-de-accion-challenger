@@ -1,11 +1,11 @@
 """Nivel contra tu rival de línea antes del 14: ¿cuánto mueres (y matas) según vayas un nivel abajo, igual o arriba,
 y qué pasa en la carrera al nivel 2 y al 6? Sale de los eventos LEVEL_UP del timeline (exactos al ms).
 Uso: python scripts/nivel6.py > datos/analisis-nivel-AAAA-MM-DD.md"""
-import json, math, pathlib, sys
+import json, os, math, pathlib, sys
 from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 LINEA = {"MIDDLE", "TOP", "BOTTOM", "UTILITY"}
 FIN = 14 * 60000
@@ -70,7 +70,7 @@ def donde(z, linea):
 assert donde("mid (lado rival)", "mid") == ZONAS[1] and donde("jungla (lado propio)", "mid") == ZONAS[3] and donde("top (lado propio)", "mid") == ZONAS[5]
 
 games = []
-for tf in (RAW / "timeline").glob("LA1_*.json"):
+for tf in (RAW / "timeline").glob("*_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]

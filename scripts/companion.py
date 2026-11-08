@@ -38,7 +38,7 @@ def rivales(s):
 def nombres():
     """championId -> championName sacado de tus partidas en datos/raw (sin red)."""
     m = {}
-    for f in (DIR.parent / "datos" / "raw").glob("LA1_*.json"):
+    for f in (pathlib.Path(os.environ.get("DATOS_DIR") or DIR.parent / "datos" / "raw")).glob("*_*.json"):
         for p in json.loads(f.read_text())["info"]["participants"]: m[p["championId"]] = p["championName"]
     return m
 

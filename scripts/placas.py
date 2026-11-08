@@ -2,11 +2,11 @@
 En este parche las placas siguen cayendo después del 14 y hay hasta 15 por línea y equipo (3 torres × 5);
 killerId 0 = súbditos; teamId = dueño de la torre. Como las placas dan oro, se controla a igual oro al 14.
 Uso: python scripts/placas.py > datos/analisis-placas-AAAA-MM-DD.md"""
-import json, math, pathlib, statistics as st, sys
+import json, os, math, pathlib, statistics as st, sys
 from collections import Counter
 
 sys.stdout.reconfigure(encoding="utf-8")
-RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
 LANE = {"MIDDLE": "MID_LANE", "TOP": "TOP_LANE", "BOTTOM": "BOT_LANE", "UTILITY": "BOT_LANE"}
 
@@ -59,7 +59,7 @@ assert zone(7400, 7400, 100) == "mid (lado rival)" and zone(1000, 1000, 100) == 
 LINEA = {"MIDDLE": "mid", "TOP": "top", "BOTTOM": "bot", "UTILITY": "bot"}
 
 games, total_ev = [], Counter()
-for tf in (RAW / "timeline").glob("LA1_*.json"):
+for tf in (RAW / "timeline").glob("*_*.json"):
     mf = RAW / tf.name
     if not mf.exists(): continue
     m = json.loads(mf.read_text())["info"]

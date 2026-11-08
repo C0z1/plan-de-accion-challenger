@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 2 terminado (iteración 12, la última). Resumen para el usuario al inicio de `RESUMEN-NOCHE.md`.
-- **Siguiente:** probar companion en un champ select real; bajar la partida del último `EndOfGame` cuando Riot la publique.
-- **Actualizado:** 2026-11-07 23:30 (turno 2, cierre; horas de iteraciones 10–11 decían 11-08 por error)
+- **Estado:** turno 3, iteración 1: `DATOS_DIR` en todos los scripts, partidas de cualquier región, pool y meta de minions desde `config.json` (opcional); probado de punta a punta con JUGKING#1345.
+- **Siguiente:** textos de metas aún de cozi en `revision.py` («tu temporada: 62%», «2.12 en victorias») y default Ekko en convertir/linea; CI (`.github/workflows/pruebas.yml`); `companion.py --help`.
+- **Actualizado:** 2026-11-08 (turno 3, iteración 1)
 
 ### DeepSeek · revisor
 - **Estado:** revisado fbb8e08 (cierre del turno 2, sin código). El RESUMEN-NOCHE está respaldado (muertes6 50/59% y 44%; wards 1,431 y 0.92/0.87/0.81). No pude bajar la partida nueva: RIOT_KEY caducó (401).
@@ -59,6 +59,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
 | `scripts/test_companion.py` | Pruebas sin red: `python -m unittest discover scripts` | Opus |
 | `scripts/test_draft.py` | Pruebas de `draft.py` (funciones y recomendación con partidas sintéticas) y humo de `revision.py 1` | Opus |
+| `config.ejemplo.json` | Ejemplo (cozi) de `config.json`: pool y meta `minions10` para `revision.py`; `config.json` va en `.gitignore` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
@@ -118,6 +119,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · DeepSeek: el 74/32 de Sylas aguanta el filtro de `revision.py` (92 vs 90 Sylas: entran una partida de 12:49 y una jungle; >68 sigue 74%, ≤68 pasa 32→33%).
 - 2026-11-07 noche · Opus: `companion.py` verificado en vivo y en solo lectura contra el cliente abierto (el lockfile existe; la fase era `InProgress`). El champ select solo se probó con fixtures.
 - 2026-11-07 · DeepSeek: RIOT_KEY caducó (401 en `descargar.py 5`): la partida nueva sigue sin poder bajarse; hay que renovarla (`setx RIOT_KEY`).
+- 2026-11-08 · Opus: todos los scripts buscaban `LA1_*.json`: con una cuenta de otra región no veían ninguna partida. Ahora `*_*.json`.
+- 2026-11-08 · Opus: punta a punta con JUGKING#1345 (Challenger LAN, 20 partidas, `DATOS_DIR` aparte, sin config): descargar, analizar, draft y revision salen 0; `datos/raw` intacto; datos de prueba borrados.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -146,6 +149,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 noche · Opus: `revision.py` corre al importarse, así que se prueba como proceso (humo sobre `datos/raw`) en vez de reescribirlo; la prueba se salta si no hay datos.
 
 - 2026-11-07 noche · Opus: la meta de Sylas en `revision.py` solo marca ✅/❌ con n ≥ 10 Sylas en la ventana (sugerencia de DeepSeek); con menos queda como monitor.
+- 2026-11-08 · Opus: pool y meta de minions al 10 salen de `config.json` (opcional, ignorado por git); sin él, pool = tus 3 más jugados y sin meta de minions. Con el config de cozi la salida de `revision.py 20` es idéntica a la de antes.
 ## Para el usuario (cuando vuelva)
 - Nuevo: deja abierto `python scripts/companion.py` en una terminal mientras juegas. En champ select te recomienda el pick contra tu rival y, al terminar, baja la partida y la revisa (si la key caducó, te dice «renueva RIOT_KEY»).
 - Para revisar tus primeras muertes: `python scripts/partida.py <id> --early` (minuto a minuto del 1 al 12, con tu nivel contra el de tu rival).
@@ -154,4 +158,5 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).
 - Al terminar cada sesión: `python scripts/descargar.py` y luego `python scripts/revision.py` (o `revision.py 10`).
 - Si la key caducó, `descargar.py` abre el portal de Riot: copia la key, `setx RIOT_KEY <key>` y córrelo otra vez (ya no hace falta reabrir la terminal).
+- Tu `config.json` (copia de `config.ejemplo.json`, con tu pool y la meta de Sylas) ya está en la carpeta y no se sube a git.
 - Opus no puede llamar a `ask-deepseek.ps1` (el permiso bloquea PowerShell anidado). Si quieres que lo use, permite ese comando.
