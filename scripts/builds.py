@@ -13,7 +13,8 @@ Fuentes:
 Qué es la build: los 3 primeros ítems legendarios en el orden en que se compraron (ITEM_PURCHASED del timeline,
 quitando los ITEM_UNDO), las primeras botas de tier 2, la runa principal con su página más común y el orden en que
 se maximizan Q/W/E (el que llega antes a 3 puntos va primero). Cada posición se resume con el ítem más común.
-`--pool` además guarda datos/meta/builds.json, que draft.py lee (sin red) para mostrar la build en champ select."""
+`--pool` además guarda datos/meta/builds.json, que draft.py lee (sin red) para mostrar la build en champ select
+(la de los mejores; si no hay, por ejemplo con la key caducada, la tuya)."""
 import json, math, os, pathlib, re, sys, time, urllib.error, urllib.request
 from collections import Counter
 from datetime import datetime
@@ -92,6 +93,9 @@ def build_de(match, timeline, puuid, items):
             if e["type"] == "ITEM_PURCHASED": compras.append(str(e["itemId"]))
             elif e["type"] == "ITEM_UNDO" and str(e.get("beforeId")) in compras:
                 del compras[len(compras) - 1 - compras[::-1].index(str(e["beforeId"]))]
+            # un legendario vendido no es core (compra equivocada); las botas vendidas al final sí cuentan
+            elif e["type"] == "ITEM_SOLD" and legendario(items.get(str(e.get("itemId")))) and str(e["itemId"]) in compras:
+                del compras[len(compras) - 1 - compras[::-1].index(str(e["itemId"]))]
             elif e["type"] == "SKILL_LEVEL_UP" and e.get("levelUpType", "NORMAL") == "NORMAL": ups.append(e["skillSlot"])
     core = []
     for i in compras:
@@ -196,9 +200,9 @@ def wr(bs):
 
 
 def informe(campeon, pos=None):
-    """(texto markdown, resumen de los mejores o None)."""
+    """(texto markdown, resumen de los mejores o None, el tuyo o None)."""
     items, runas, champs = ddragon()
-    if norm(campeon) not in champs: return f"Campeón desconocido: {campeon}", None
+    if norm(campeon) not in champs: return f"Campeón desconocido: {campeon}", None, None
     nombre, cid = champs[norm(campeon)]
     rol = f" {pos}" if pos else ""
     txt = [f"## {nombre}{rol}\n"]
@@ -219,7 +223,7 @@ def informe(campeon, pos=None):
         si = [b for b in mias if b["core"][:1] == [uno]]; no = [b for b in mias if b["core"][:1] != [uno]]
         txt += ["", f"Tu WR con {rt['core'][0][0]} de primer ítem (como los mejores): {wr(si)}; con otro: {wr(no)}. "
                     "Si los intervalos se cruzan, es pista, no hecho (y aun sin cruzarse, no prueba que el ítem cause la victoria)."]
-    return "\n".join(txt) + "\n", rt
+    return "\n".join(txt) + "\n", rt, tu
 
 
 def pool(minimo=10):
@@ -235,11 +239,13 @@ def pool(minimo=10):
 
 
 def guardado(campeon, pos):
-    """Las 3 líneas de la build de los mejores que dejó `--pool` (sin red), o []."""
+    """Las 3 líneas de la build que dejó `--pool` (sin red): la de los mejores; sin ella (key caducada), la tuya; o []."""
     f = META / "builds.json"
     if not f.exists(): return []
-    r = json.loads(f.read_text(encoding="utf-8")).get(f"{campeon}|{pos}")
-    return lineas(r, "Build de los mejores") if r else []
+    d = json.loads(f.read_text(encoding="utf-8"))
+    if d.get(f"{campeon}|{pos}"): return lineas(d[f"{campeon}|{pos}"], "Los mejores")
+    if d.get(f"{campeon}|{pos}|tu"): return lineas(d[f"{campeon}|{pos}|tu"], "Tu build (aún sin la de los mejores)")
+    return []
 
 
 if __name__ == "__main__":
@@ -247,8 +253,9 @@ if __name__ == "__main__":
     if sys.argv[1] == "--pool":
         partes, guarda = [f"# Builds de los mejores contra la tuya ({datetime.now():%Y-%m-%d})\n"], {}
         for ch, pos in pool():
-            t, rt = informe(ch, pos); partes.append(t)
+            t, rt, tu = informe(ch, pos); partes.append(t)
             if rt: guarda[f"{ch}|{pos}"] = rt
+            if tu: guarda[f"{ch}|{pos}|tu"] = tu
         if guarda:
             META.mkdir(parents=True, exist_ok=True)
             (META / "builds.json").write_text(json.dumps(guarda, ensure_ascii=False), encoding="utf-8")

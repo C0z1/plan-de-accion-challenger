@@ -1142,3 +1142,22 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: `script()` usa `contextlib.redirect_stdout` (global al proceso) en el hilo post-partida; ¿algo del hilo de sondeo imprime y se perdería en ese buffer? ¿Hace falta el lock también alrededor de `runpy` de `revision.py`?
 - Tarea de pruebas: escribe `scripts/test_ds_post_hilo.py` con 3 casos: (1) `post_partida` llamado 2 veces tras terminar el primer hilo → 2 ejecuciones de `_post_partida`; (2) `App.evento` con fase `Lobby` y una `revision` → se pinta en el acto (sin `pendiente`); (3) `recomendaciones` mientras otro hilo tiene `DRAFT` → espera a que lo suelte (usa un `threading.Event`).
+
+## 2026-11-08 · Diseñador · iteración 2
+
+- **Hecho:** `datos/diseno-propuesta.md` (principios, modo compacto/completo, 4 pantallas, tipografía, paleta propuesta con cian en vez de ámbar, tabla de datos por pantalla, 10 preguntas para el usuario). Incorpora la idea de DeepSeek de barra 0–100 con componentes coloreados y WR + score juntos por campeón.
+- **DeepSeek:** no pude consultarlo; el permiso bloquea `ask-deepseek.ps1` («nested PowerShell process»). Sin aporte esta iteración. Pendiente: 3 riesgos del modo compacto topmost y un layout alternativo del champ select.
+- **Para Opus (sección 8 de la propuesta):** avisos como `{texto, tipo, minuto, cambia_decision}`; `builds.guardado()` con el dict estructurado; dict de score por partida (`score, puesto, componentes_z, tendencia`); meta de fase de la foto en vivo como números.
+- **Siguiente:** `datos/diseno/mockup.html`.
+
+## 2026-11-08 · Opus · turno 5 iteración 4
+
+- **Hecho:** `builds.py --pool` guarda también tu build en `datos/meta/builds.json` (clave `Campeón|ROL|tu`). `builds.guardado()` da la de los mejores si está; si no (hoy, key caducada), la tuya como «Tu build (aún sin la de los mejores)». Así la tarjeta de build ya sale en `draft.py` y en la ventana del companion sin key. El título de la tarjeta pasa a «Build · <campeón>» (la primera línea dice de quién es). `informe()` devuelve ahora `(texto, mejores, tuya)`.
+- **Revisión de DeepSeek (`test_ds_builds.py`, 4 casos):** 3 pasaban; `test_item_sold_no_cuenta_en_core` fallaba (bug real: un legendario vendido seguía en el core). Arreglado: `ITEM_SOLD` borra la compra **solo si es legendario**; las botas vendidas al final (por el 6.º ítem) siguen contando como tus botas. Con tus datos ninguna build cambió (Yone: Rey Arruinado → Arcoescudo → Filo, igual).
+- Verificado: `draft.py Viktor mid` → Yone y debajo tu build en 3 líneas. 77 OK.
+- DeepSeek: no lo pude consultar (el permiso bloquea `ask-deepseek.ps1`: «nested PowerShell process»). Quedó un `datos/plan-opus-it4.md` (el plan que le iba a mandar) que no pude borrar: fuera del commit; bórralo si quieres.
+- Pedidos del Diseñador (sección 8 de su propuesta) pendientes: avisos como dict, score por partida como dict.
+
+**Para DeepSeek**
+- Revisa el commit: ¿hay ítems legendarios que se venden por diseño y sí son core (p. ej. ¿se vende algo al completar una mejora tipo Muramana/Seraph, o lo marca el timeline como `ITEM_DESTROYED`)?
+- Tarea de pruebas: agrega en `scripts/test_ds_builds.py` (o uno nuevo) 2 casos: (1) `guardado` con `builds.json` que solo tiene `Yone|MIDDLE|tu` y se pide `Yone|TOP` → `[]`; (2) `build_de` con botas compradas y vendidas (`ITEM_SOLD` de 3006) → `botas` sigue siendo 3006.

@@ -104,6 +104,15 @@ class Riot(unittest.TestCase):
         self.assertEqual(len(builds.guardado("Yone", "MIDDLE")), 3)
         self.assertEqual(builds.guardado("Yone", "TOP"), [])
 
+    def test_guardado_sin_los_mejores_da_la_tuya(self):
+        r = builds.resumir([builds.build_de(*partida(), "yo", ITEMS)], ITEMS, {})
+        f = pathlib.Path(self.tmp.name) / "builds.json"
+        f.write_text(json.dumps({"Yone|MIDDLE|tu": r}), encoding="utf-8")
+        ls = builds.guardado("Yone", "MIDDLE")
+        self.assertEqual(len(ls), 3); self.assertTrue(ls[0].startswith("Tu build"))
+        f.write_text(json.dumps({"Yone|MIDDLE": r, "Yone|MIDDLE|tu": r}), encoding="utf-8")
+        self.assertTrue(builds.guardado("Yone", "MIDDLE")[0].startswith("Los mejores"))  # la de los mejores manda
+
 
 if __name__ == "__main__":
     unittest.main()

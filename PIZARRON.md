@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 5, iteración 3: la build de los mejores sale en la ventana (`datos_draft()["build"]`) y la post-partida corre en un hilo aparte (no tapa el champ select siguiente). 72 OK.
-- **Siguiente:** guardar también tu build en `builds.json` (hoy, sin key, la ventana no muestra nada) o el «puesto de tu rol» en score.py (idea de DeepSeek).
-- **Actualizado:** 2026-11-08 (turno 5, iteración 3)
+- **Estado:** turno 5, iteración 4: `builds.json` guarda también tu build; sin key, draft y la ventana muestran la tuya. `ITEM_SOLD` de un legendario lo saca del core (bug de `test_ds_builds.py`). 77 OK.
+- **Siguiente:** pedidos del Diseñador (avisos y score como dict) o el «puesto de tu rol» en score.py (idea de DeepSeek).
+- **Actualizado:** 2026-11-08 (turno 5, iteración 4)
 
 ### DeepSeek · revisor
 - **Estado:** revisado ec8ba07 (turno 5, iteración 1): score.py y su integración en revision.py/GUI; números reproducidos (diff idéntico), 3 pruebas nuevas en `test_ds_score.py`.
@@ -19,9 +19,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Actualizado:** 2026-11-08 14:48
 
 ### Diseñador
-- **Estado:** iteración 1: `datos/diseno-auditoria.md` (20 problemas; críticos: ventana no visible in-game, avisos de 9 pt sin caducidad).
-- **Siguiente:** `datos/diseno-propuesta.md` con preguntas para el usuario.
-- **Actualizado:** 2026-11-08 (turno 5, iteración 1)
+- **Estado:** iteración 2: `datos/diseno-propuesta.md` lista (10 preguntas para el usuario). DeepSeek bloqueado por permisos.
+- **Siguiente:** `datos/diseno/mockup.html`.
+- **Actualizado:** 2026-11-08 (turno 5, iteración 2)
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -160,6 +160,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: Mordekaiser es tu mejor WR (68%) con el score más bajo (47.5): gana sin destacar en las stats (pista, n=22).
 - 2026-11-08 · Opus: tu build con Yone mid (40): Rey Arruinado → Arcoescudo → Filo, Grebas, Cadencia Letal, Q>E>W. Con Mordekaiser top (22): Agrietador → Rylai → Apariencia Espiritual, Conquistador. Falta la de los top (key caducada).
 - 2026-11-08 · DeepSeek: score.py reproduce el análisis (284 = 302 − 18 remakes, todas mapId 11); la corrección por rol no sesga con un rol raro (support sale de ~550 ajenos de todas las partidas). Menor: el control «otros» incluye a cada ajeno en su propia base (~0.2% de encogimiento), solo en la línea de control.
+- 2026-11-08 · DeepSeek (vía `test_ds_builds.py`): un legendario vendido seguía contando en el core de la build. Arreglado (solo legendarios; las botas vendidas siguen contando). Tus builds no cambian.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -204,8 +205,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: el score se normaliza contra los 10 de la partida y luego se le resta la media de su rol (sacada de los jugadores ajenos), para que un support o un jungla no salgan mal por CS o bien por objetivos. Es monitor sin meta: sube al ganar.
 - 2026-11-08 · Opus: la post-partida de la ventana va en un hilo (uno a la vez); el reload de `draft` y `datos_draft` comparten un lock; si la revisión llega en champ select, se guarda y se muestra al empezar la partida.
 - 2026-11-08 · Opus: «los mejores con un campeón» = los 2 primeros por LP de Challenger/GM en la1 y kr con maestría jugada hace < 14 días (no un ranking de onetricks, que no es accesible). La build es la moda por posición, no la de un solo jugador.
+- 2026-11-08 · Opus: sin la build de los mejores (key caducada), champ select muestra la tuya con esa etiqueta; en cuanto `--pool` corra con key, manda la de los mejores.
 
 ## Para el usuario (cuando vuelva)
+- Nuevo: aun sin key, `builds.py --pool` deja tu build por campeón y champ select (draft.py y la ventana) te la muestra bajo el pick («Tu build (aún sin la de los mejores)»). Con una key nueva, corre `--pool` otra vez y sale la de los mejores. Borra `datos/plan-opus-it4.md` (temporal, no lo pude borrar).
 - Nuevo: en la ventana del companion, bajo la recomendación sale la build de los mejores de ese campeón (cuando corras `builds.py --pool` con una key vigente), y si pones cola enseguida tras una partida el champ select ya no espera a que termine la descarga. Recompila `Companion.exe` para tenerlo.
 - Nuevo: `python scripts/builds.py Yone mid` te da la build de los mejores de Yone (Challenger/GM de LAN y Corea) junto a la tuya; `builds.py --pool` hace lo mismo con todo tu pool y deja la build lista para que `draft.py`/el companion te la muestren al recomendarte un pick. Necesita una `RIOT_KEY` vigente la primera vez (unos minutos; luego queda en caché).
 - Nuevo: `python scripts/score.py` te da un score por partida contra tu equipo y la partida (50 = típico de tu rol; cada 15 puntos, una desviación), tu puesto entre los 10 y en tu equipo, la tendencia y qué componente te baja. También sale en `revision.py` y en la ventana post-partida.

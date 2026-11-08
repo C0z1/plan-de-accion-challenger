@@ -228,7 +228,7 @@ class App:
                       font=(F, 8), wraplength=340, justify="left").pack(anchor="w", pady=(10, 0))
         for a in d.get("avisos", []):
             self.tk.Label(t, text=a, bg=PANEL, fg=MAL, font=(F, 9, "bold"), wraplength=340, justify="left").pack(anchor="w", pady=(8, 0))
-        if d.get("build"): self.reglas(f"Build de los mejores · {mejor['champ']}", [l.strip() for l in d["build"]], ACENTO, ACENTO)
+        if d.get("build"): self.reglas(f"Build · {mejor['champ']}", [l.strip() for l in d["build"]], ACENTO, ACENTO)
         self.reglas()
 
     def vista_revision(self, r):
