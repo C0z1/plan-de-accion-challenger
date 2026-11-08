@@ -119,6 +119,14 @@ def _post_partida(q):
     q.put(("revision", {**rev, **ultima_partida()}) if rev else aviso("revision.py no devolvió la partida."))
 
 
+def texto_meta(mf):
+    """«Min 7 · Nv 6 contra 7 (Zed) · CS 52 (meta 69 al 10)» desde companion.meta_fase()."""
+    t = [f"Min {mf['minuto']}", f"Nv {mf['nivel'] or '?'}"]
+    if mf["rival"]: t[-1] += f" contra {mf['nivel_rival'] or '?'} ({mf['rival']})"
+    t.append(f"CS {mf['cs'] if mf['cs'] is not None else '?'}" + (f" (meta {mf['cs_meta']} al 10)" if mf["cs_meta"] and mf["minuto"] < 11 else ""))
+    return " · ".join(t)
+
+
 def trabajador(q):
     """El mismo bucle que companion.main, pero manda eventos a la ventana en vez de imprimir."""
     m, visto, fase_ant, real, archivo, ult, avisado, fallos = None, None, "inicio", None, None, 0, set(), 0
@@ -135,6 +143,7 @@ def trabajador(q):
             elif fase != "ChampSelect": visto = None
             if jugando and time.time() - ult >= 30:
                 d = companion.vivo(); archivo, ult = companion.capturar(archivo, d), time.time()
+                if mf := companion.meta_fase(d): q.put(("meta", mf))
                 for f in (companion.aviso_nivel, companion.aviso_minions):
                     if f not in avisado and (txt := f(d)):
                         q.put(aviso(txt, "consejo", int(((d or {}).get("gameData", {}).get("gameTime") or 0) // 60))); avisado.add(f)
@@ -168,7 +177,7 @@ class App:
         tk.Frame(pie, bg=BORDE, height=1).pack(fill="x")
         fila = tk.Frame(pie, bg=BG); fila.pack(fill="x", padx=16, pady=8)
         tk.Label(fila, text="Solo lectura · nunca actúa en el cliente", bg=BG, fg=MUTED, font=(F, 8)).pack(side="left")
-        tk.Label(fila, text="key ok" if hay_key() else "falta RIOT_KEY", bg=BG, fg=MUTED if hay_key() else MAL, font=(MONO, 8)).pack(side="right")
+        self.key = tk.Label(fila, bg=BG, font=(MONO, 8)); self.key.pack(side="right"); self.ver_key()
         self.cuerpo = tk.Frame(root, bg=BG); self.cuerpo.pack(fill="both", expand=True, padx=16, pady=12)
         self.espera("Abre el cliente de LoL: aquí verás tu pick en champ select y la revisión al terminar.")
 
@@ -258,10 +267,14 @@ class App:
                                 f"Score {r.get('score', '-')} (50 = típico de tu rol en la partida; ver python scripts/score.py).",
                                 "Minuto a minuto: python scripts/partida.py --early"], ACENTO, ACENTO)
 
+    def ver_key(self):
+        k = hay_key(); self.key.config(text="key ok" if k else "falta RIOT_KEY", fg=MUTED if k else MAL)
+
     def evento(self, e):
         tipo = e[0]
         if tipo == "fase":
-            fase = e[1]; self.pill.config(text=FASES.get(fase, fase or "Cliente cerrado"), bg=ACENTO if fase in ("ChampSelect", "InProgress") else BORDE,
+            fase = e[1]; self.ver_key()  # la key se pudo renovar con setx sin reabrir la ventana
+            self.pill.config(text=FASES.get(fase, fase or "Cliente cerrado"), bg=ACENTO if fase in ("ChampSelect", "InProgress") else BORDE,
                                           fg=BG if fase in ("ChampSelect", "InProgress") else TXT)
             if fase is None: self.espera("Cliente cerrado: espero a que lo abras.")
             elif fase == "ChampSelect": self.espera("Champ select: espero a que tu rival de línea elija.")
@@ -270,6 +283,7 @@ class App:
                 else: self.espera("En partida: guardo una foto en vivo cada 30 s en datos/vivo/.")
             elif fase in ("Lobby", "Matchmaking", "ReadyCheck"): self.aviso.pack_forget(); self.sub.config(text=perfil())
             self.fase = fase
+        elif tipo == "meta": self.sub.config(text=texto_meta(e[1]))  # Lobby la devuelve a perfil()
         elif tipo == "draft": self.vista_draft(e[1], e[2])
         elif self.fase in ("ChampSelect", "InProgress") and tipo == "post_espera": pass  # la post-partida va en otro hilo: no tapa el draft
         elif tipo == "post_espera": self.espera(e[1])

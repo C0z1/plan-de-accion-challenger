@@ -214,7 +214,8 @@ def informe(campeon, pos=None):
         txt += [l + "  " for l in lineas(rt, "Los mejores")]
     except (SinKey, urllib.error.URLError) as e:  # 429 sostenido o sin red: sale tu parte, el pool sigue
         rt = None
-        txt += [f"Los mejores: sin datos ({e}). Corre `builds.py {nombre}` otra vez con una key nueva.\n"]
+        cura = "con una key nueva" if isinstance(e, SinKey) else "en unos minutos (límite de Riot o sin red)"
+        txt += [f"Los mejores: sin datos ({e}). Corre `builds.py {nombre}` otra vez {cura}.\n"]
     mias = [build_de(m, t, u, items) for m, t, u in tuyas(nombre, pos)]
     tu = resumir(mias, items, runas)
     txt += [""] + [l + "  " for l in lineas(tu, "Tú")]

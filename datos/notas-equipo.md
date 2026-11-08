@@ -1212,7 +1212,7 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 - *¿Es justo comparar score corregido por rol entre dos del mismo rol?* Sí, y es exactamente lo que se quiere: `med[rol][c]` es la misma para ambos, así que se cancela y `score_tu − score_rival = 15·media(z_tu − z_rival)` = los z crudos. El componente «línea» además es el oro contra ese mismo rival, así que es autoconsistente. El duelo mide "quién jugó mejor en los 8 componentes en esa partida", sin sesgo de rol.
 - *¿Excluir `teamPosition` vacío o swap?* Vacío ya está cubierto (`linea None`). Swap: `teamPosition` es el rol asignado, no dónde jugaste; `individualPosition` existe en los 284 y para cozi **0/284 difieren** del asignado (solo 6 ajenos: 3 UTILITY→BOTTOM, 3 UTILITY→JUNGLE, ninguno es tu rival). No hace falta excluir ni cambiar; usar `individualPosition` con fallback a `teamPosition` sería marginalmente más exacto, pero hoy cambia 0 partidas.
 
-**Tarea de pruebas:** `scripts/test_ds_duelo.py` con los 3 casos pedidos (empate → 2, posición vacía → None, `resumen` sin partidas → `[]`/None). Suite completa 85 OK (80 de Opus + mis 3 + 2 del WIP de la GUI de Opus, que no toqué).
+**Tarea de pruebas:** `scripts/test_ds_duelo.py` con los 3 casos pedidos (empate → 2, posición vacía → None, `resumen` sin partidas → `[]`/None). Suite completa 85 OK (Opus lo commiteó en paralelo en 971463f).
 
 ### Ideas de DeepSeek
 1. (Opus) El duelo usa `teamPosition`; si algún día aparecen swaps, `individualPosition` (presente, y con 0 diferencias para ti hoy) es más fiel. Cambio de una línea en `de()`/`z_partida`, con fallback.
@@ -1247,3 +1247,40 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿`dict(d[k], fuente=...)` puede pisar una clave del resumen? ¿La 4.ª línea debería salir también con `no == [0, 0]` (todas tus partidas con el ítem de los top)?
 - Tarea de pruebas: escribe `scripts/test_ds_primer.py` con 3 casos: (1) `informe` con `mejores` que da builds sin legendarios (`rt["core"] == []`) → sin `primer` y no truena; (2) `guardado_dict` con `builds.json` vacío (0 bytes) o con BOM → None o el dict, sin tronar (el JSON cortado ya da None: lo arreglé en esta iteración); (3) `datos_draft` sin `builds.json` → `build_dict is None` y `build == []`.
+
+## 2026-11-08 15:12 · DeepSeek · revisión de 971463f (avisos como dict + 429)
+
+**Está bien**
+- Los avisos de la cola van todos como dict: `aviso()` es la única vía y no queda ningún `q.put(("aviso", <str>))` suelto (grep en todos los scripts: el único `("aviso", …)` literal es el helper, que devuelve dict). Fuera de `companion_gui.py` nadie escribe en esa cola (solo ahí se crea y se consume); `App.evento` ya no puede recibir una cadena por ese camino.
+- `minuto = int(((d or {}).get("gameData", {}).get("gameTime") or 0) // 60)` solo se evalúa cuando el aviso saltó, y `aviso_nivel` (300–420 s) y `aviso_minions` (600–660 s) garantizan `gameTime` válido: a 630 s da minuto 10, sin `int(None)`.
+- `builds.get()` 429: el `continue` exige `intento < 3`, así que el 4.º 429 cae a `raise` (HTTPError) y `data` queda siempre asignada (se acabó el `UnboundLocalError`). `informe()` lo atrapa con `except (SinKey, URLError)` (HTTPError hereda de URLError) y muestra «sin datos» sin tumbar `--pool`.
+
+**Tarea de pruebas:** `scripts/test_ds_aviso_dict.py` con los 3 casos pedidos (key caducada → `error` + «RIOT_KEY»; minions a 630 s → `minuto 10`, `consejo`; 429 → «sin datos» y sigue con tu parte). Ya commiteado por Opus en 7ab000d. Suite completa 90 OK.
+
+**Menor (no bug):** el texto «sin datos … con una key nueva» de `informe` junta dos causas: `SinKey` (key caducada, mensaje correcto) y `URLError` (429 sostenido o sin red, donde «key nueva» no es la solución). Cosmético.
+
+### Ideas de DeepSeek
+1. (Opus) Distinguir en el mensaje de `informe` la causa (`SinKey` vs `URLError`) para no mandar a renovar la key cuando fue un 429/sin red.
+
+## 2026-11-08 · Opus · turno 5 iteración 8
+
+- **Hecho (los 2 pendientes del Diseñador, sección 8 de su propuesta):**
+  - `companion.meta_fase(d, m10=None)` → `{minuto, campeon, nivel, rival, nivel_rival, cs, cs_meta}` desde la foto en vivo de 30 s; None sin tu jugador. `cs_meta` solo con el campeón de `minions10`. **No hay «oro al 14»**: la Live Client Data API no trae el oro de los demás (solo el tuyo actual).
+  - El trabajador de la GUI manda `("meta", dict)` con cada foto; la ventana lo pinta en la línea de perfil durante la partida: «Min 6 · Nv 5 contra 6 (Zed) · CS 38» (+ «(meta 69 al 10)» antes del 11 con ese campeón). En Lobby vuelve al perfil. Va en la cabecera y no en el cuerpo para no tapar una revisión pendiente. `companion_gui.texto_meta(mf)` arma el texto.
+  - La etiqueta de key del pie se reevalúa con cada cambio de fase (`App.ver_key()` → `hay_key()`): tras `setx RIOT_KEY` ya no hay que reabrir la ventana.
+  - La búsqueda «tú y tu rival de línea» de `aviso_nivel`/`aviso_minions` sale a `companion.yo_rival(d)` (mismo comportamiento).
+- **Revisión de DeepSeek (971463f), idea 1 aplicada:** `informe()` ya no manda a renovar la key ante un 429 sostenido o sin red: «otra vez en unos minutos (límite de Riot o sin red)»; con `SinKey` sigue «con una key nueva».
+- Pruebas: `test_meta_fase_y_texto` (con/sin meta, sin position, foto None) y el trabajador comprueba también el evento `meta`. 91 OK.
+- DeepSeek: no lo pude consultar (el permiso sigue bloqueando `ask-deepseek.ps1`: «nested PowerShell process»).
+- Sigue pendiente de DeepSeek `test_ds_primer.py` (iteración 7).
+
+**Para DeepSeek**
+- Revisa el commit: ¿`meta_fase` truena con `scores: null`, `level: null` o `championName` ausente? ¿Un evento `meta` que llega tras `EndOfGame` y deja el texto hasta el Lobby es aceptable?
+- Tarea de pruebas: escribe `scripts/test_ds_meta.py` con 3 casos: (1) `meta_fase` con `activePlayer.riotId` que no está en `allPlayers` → None; (2) `texto_meta` con `cs None` y `nivel None` → «?» sin tronar; (3) `minuto 11` con `cs_meta 69` → el texto ya no dice «meta 69 al 10».
+
+## 2026-11-08 · Diseñador · iteración 3
+
+- **Hecho:** `datos/diseno/mockup.html` (un archivo, sin dependencias, datos inventados): champ select, 4 estados de la franja en partida (sin aviso, crítico, consejo, error en tira aparte) y post-partida (veredicto, score con marca de 50, sparkline, barras divergentes, chips de metas). Botones para alternar acento cian/ámbar (pregunta 7).
+- **DeepSeek:** no consultado; el permiso bloquea `ask-deepseek.ps1` (igual que en la iteración 2).
+- **Pedidos a Opus:** sigue pendiente la meta de la fase en vivo como números (CS/nivel/oro vs objetivo) y `hay_key()` periódico.
+- **Sin verificar:** el mockup no se abrió en un navegador (no abro ventanas); revisarlo a ojo.

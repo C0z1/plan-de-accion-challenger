@@ -43,6 +43,21 @@ class TestTrabajador(unittest.TestCase):
         avisos = [e[1] for e in list(q.queue) if e[0] == "aviso"]
         self.assertEqual(len(avisos), 1); self.assertIn("abajo de Zed", avisos[0]["texto"])
         self.assertEqual((avisos[0]["tipo"], avisos[0]["minuto"]), ("consejo", int(d["gameData"]["gameTime"] // 60)))
+        metas = [e[1] for e in list(q.queue) if e[0] == "meta"]
+        self.assertTrue(metas); self.assertEqual((metas[0]["nivel"], metas[0]["nivel_rival"], metas[0]["rival"]), (5, 6, "Zed"))
+
+    def test_meta_fase_y_texto(self):
+        import json, copy
+        c = g.companion
+        d = json.loads((AQUI / "fixtures" / "vivo" / "allgamedata.json").read_text(encoding="utf-8"))
+        mf = c.meta_fase(d, m10={"campeon": "Ekko", "minimo": 69})
+        self.assertEqual((mf["minuto"], mf["campeon"], mf["cs_meta"]), (int(d["gameData"]["gameTime"] // 60), "Ekko", 69))
+        self.assertIn("contra 6 (Zed)", g.texto_meta(mf)); self.assertIn("meta 69 al 10", g.texto_meta(mf))
+        self.assertIsNone(c.meta_fase(d, m10={"campeon": "Sylas", "minimo": 69})["cs_meta"])
+        sin = copy.deepcopy(d)  # normales: sin position no hay rival, pero sí tus números
+        for p in sin["allPlayers"]: p["position"] = ""
+        mf = c.meta_fase(sin, m10={}); self.assertIsNone(mf["rival"]); self.assertNotIn("contra", g.texto_meta(mf))
+        self.assertIsNone(c.meta_fase(None)); self.assertIsNone(c.meta_fase({"gameData": {"gameTime": None}}))
 
     def test_error_es_tipo_error(self):
         import queue
@@ -76,7 +91,7 @@ class TestPostPartida(unittest.TestCase):
         app = g.App.__new__(g.App)  # sin ventana: solo el enrutado de eventos
         app.fase, app.pendiente = "ChampSelect", None
         app.vista_revision, app.espera = vistas.append, lambda t: vistas.append("espera")
-        app.pill = app.sub = type("W", (), {"config": lambda self, **k: None})()
+        app.pill = app.sub = app.key = type("W", (), {"config": lambda self, **k: None})()
         app.evento(("post_espera", "Esperando…")); app.evento(("revision", {"champ": "Ekko"}))
         self.assertEqual(vistas, [])  # no tapa el draft
         app.evento(("fase", "InProgress"))
