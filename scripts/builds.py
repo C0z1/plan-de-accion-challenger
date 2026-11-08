@@ -221,6 +221,7 @@ def informe(campeon, pos=None):
     if rt and mias and rt["core"]:
         uno = rt["core"][0][2]
         si = [b for b in mias if b["core"][:1] == [uno]]; no = [b for b in mias if b["core"][:1] != [uno]]
+        rt["primer"] = dict(item=rt["core"][0][0], si=[sum(b["win"] for b in si), len(si)], no=[sum(b["win"] for b in no), len(no)])
         txt += ["", f"Tu WR con {rt['core'][0][0]} de primer ítem (como los mejores): {wr(si)}; con otro: {wr(no)}. "
                     "Si los intervalos se cruzan, es pista, no hecho (y aun sin cruzarse, no prueba que el ítem cause la victoria)."]
     return "\n".join(txt) + "\n", rt, tu
@@ -238,14 +239,27 @@ def pool(minimo=10):
     return [(ch, max((r for (x, r) in c if x == ch), key=lambda r: c[(ch, r)])) for ch, v in tot.most_common() if v >= minimo]
 
 
-def guardado(campeon, pos):
-    """Las 3 líneas de la build que dejó `--pool` (sin red): la de los mejores; sin ella (key caducada), la tuya; o []."""
+def guardado_dict(campeon, pos):
+    """La build que dejó `--pool` (sin red) como dict para la GUI: el resumen de `resumir` más `fuente` ("mejores" o "tu")
+    y, en la de los mejores, `primer` = {item, si: [V, n], no: [V, n]} (tu récord con su primer ítem y con otro); o None."""
     f = META / "builds.json"
-    if not f.exists(): return []
-    d = json.loads(f.read_text(encoding="utf-8"))
-    if d.get(f"{campeon}|{pos}"): return lineas(d[f"{campeon}|{pos}"], "Los mejores")
-    if d.get(f"{campeon}|{pos}|tu"): return lineas(d[f"{campeon}|{pos}|tu"], "Tu build (aún sin la de los mejores)")
-    return []
+    try: d = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError): return None  # sin archivo o cortado: champ select sigue sin build
+    for k, fuente in ((f"{campeon}|{pos}", "mejores"), (f"{campeon}|{pos}|tu", "tu")):
+        if d.get(k): return dict(d[k], fuente=fuente)
+    return None
+
+
+def guardado(campeon, pos):
+    """Las 3 líneas de esa build (la de los mejores; sin ella, la tuya), más una con tu WR con su primer ítem si la hay; o []."""
+    r = guardado_dict(campeon, pos)
+    if not r: return []
+    ls = lineas(r, "Los mejores" if r["fuente"] == "mejores" else "Tu build (aún sin la de los mejores)")
+    p = r.get("primer")
+    if p and p["si"][1] and p["no"][1]:
+        rec = lambda k, n: f"{k}/{n} = {k / n:.0%} ({wilson(k, n)[0]:.0%}–{wilson(k, n)[1]:.0%})"
+        ls.append(f"  Tú con {p['item']} primero: {rec(*p['si'])}; con otro: {rec(*p['no'])} (pista, no causa)")
+    return ls
 
 
 if __name__ == "__main__":

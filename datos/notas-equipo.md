@@ -1201,6 +1201,24 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 2. (Opus/Diseñador) Con key caducada `guardado()` ya devuelve la build de cozi; en la GUI conviene distinguirla de la de los mejores con un color o etiqueta (la primera línea ya lo dice, pero es fácil de leer como «la mejor build»).
 3. (Opus) El dato accionable es «tu WR con el primer ítem de los top contra otro»; cuando haya key, mostrarlo junto a la build (hoy solo sale en `--pool`/informe), siempre con el matiz de que no es causa.
 
+## 2026-11-08 15:02 · DeepSeek · revisión de 0c67ab0 (duelo de score.py)
+
+**Está bien**
+- `score.py` reproduce byte a byte `datos/analisis-score-2026-11-08.md` (diff vacío). El duelo cuadra: 124/284 = 44%, V 79/154 = 51%, D 45/130 = 35%, últimas 20 9/20. En tus 284 partidas no hay ninguna con `linea is None` ni `teamPosition` vacío (0/284): siempre hay rival de la misma posición.
+- `de()` correcto: `linea = 1` solo si `score > rival` (estricto), así que el empate lo pierdes, como ya quedó en Decisiones. Sin rival (rol vacío) → `None`, no empareja vacíos.
+- `score.resumen()` con cero partidas no truena: `partidas []`, `media/ultimas20/anteriores None`, `ref 50` (lo cubre mi prueba).
+
+**Respuestas a las 2 preguntas de Opus**
+- *¿Es justo comparar score corregido por rol entre dos del mismo rol?* Sí, y es exactamente lo que se quiere: `med[rol][c]` es la misma para ambos, así que se cancela y `score_tu − score_rival = 15·media(z_tu − z_rival)` = los z crudos. El componente «línea» además es el oro contra ese mismo rival, así que es autoconsistente. El duelo mide "quién jugó mejor en los 8 componentes en esa partida", sin sesgo de rol.
+- *¿Excluir `teamPosition` vacío o swap?* Vacío ya está cubierto (`linea None`). Swap: `teamPosition` es el rol asignado, no dónde jugaste; `individualPosition` existe en los 284 y para cozi **0/284 difieren** del asignado (solo 6 ajenos: 3 UTILITY→BOTTOM, 3 UTILITY→JUNGLE, ninguno es tu rival). No hace falta excluir ni cambiar; usar `individualPosition` con fallback a `teamPosition` sería marginalmente más exacto, pero hoy cambia 0 partidas.
+
+**Tarea de pruebas:** `scripts/test_ds_duelo.py` con los 3 casos pedidos (empate → 2, posición vacía → None, `resumen` sin partidas → `[]`/None). Suite completa 85 OK (80 de Opus + mis 3 + 2 del WIP de la GUI de Opus, que no toqué).
+
+### Ideas de DeepSeek
+1. (Opus) El duelo usa `teamPosition`; si algún día aparecen swaps, `individualPosition` (presente, y con 0 diferencias para ti hoy) es más fiel. Cambio de una línea en `de()`/`z_partida`, con fallback.
+2. (Diseñador) En la GUI, mostrar el duelo como «ganas el duelo en 51% de tus victorias / 35% de tus derrotas» junto al score, para reforzar el matiz "ganas sin ganar la línea" (Mordekaiser 68% WR con score 47.5).
+3. (Opus) El score está dominado por 4 componentes de economía/combate (daño, oro, kp, línea); si se quiere premiar "ganar sin destacar" (control, no morir, presión), habría que re-ponderar, pero el encabezado ya lo advierte: dejarlo documentado y no tocarlo ahora es lo más barato.
+
 ## 2026-11-08 · Opus · turno 5 iteración 6
 
 - **Hecho (pedido del Diseñador):** los avisos de la ventana del companion van en la cola como dict `{texto, tipo, minuto}` con `companion_gui.aviso(texto, tipo="error", minuto=None)`. Los avisos en partida (nivel abajo, minions al 10) salen `tipo: "consejo"` con el minuto del `gameTime`; key caducada, descarga fallida, revisión vacía y excepciones salen `tipo: "error"` sin minuto. La ventana pinta el consejo en azul (`BIEN`) y el error en naranja (`MAL`): antes los dos se veían iguales. `aviso_nivel`/`aviso_minions` siguen devolviendo texto (las pruebas de DeepSeek lo piden).
@@ -1213,3 +1231,19 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿queda algún `q.put(("aviso", <str>))` suelto que ahora rompería `App.evento` (espera un dict)? ¿Algo fuera de `companion_gui.py` mete eventos en esa cola?
 - Tarea de pruebas: escribe `scripts/test_ds_aviso_dict.py` con 3 casos: (1) `_post_partida` con `script` simulado que da código 2 → un evento `aviso` con `tipo == "error"` y la palabra «RIOT_KEY»; (2) `aviso_minions` disparado en el trabajador a 630 s → `minuto == 10`, `tipo == "consejo"`; (3) `builds.informe` con `mejores` que lanza `urllib.error.HTTPError` 429 → el texto trae «sin datos» y no truena.
+
+## 2026-11-08 · Opus · turno 5 iteración 7
+
+- **Revisión del duelo:** `test_ds_duelo.py` de DeepSeek (empate → lo pierdes, posición vacía no empareja, `resumen` sin partidas) pasa 3/3 sin cambios: el duelo de la iteración 5 ya cubría esos bordes.
+- **Hecho (pedido del Diseñador + idea 3 de DeepSeek):**
+  - `builds.guardado_dict(campeon, pos)` → el dict de `resumir` (`n, wr, core [(nombre, %, id)], botas, runa, pagina, skills`) más `fuente` («mejores» o «tu») y, si es la de los mejores, `primer = {item, si: [V, n], no: [V, n]}`; None sin `builds.json`. `guardado()` ahora sale de ahí.
+  - `informe()` guarda `primer` en la build de los mejores (y `--pool` lo deja en `builds.json`). Así champ select (draft.py y la ventana) muestra una 4.ª línea: «Tú con <ítem> primero: 7/10 = 70% (40–89%); con otro: … (pista, no causa)». Solo si hay partidas en los dos lados; con la key caducada no sale (no hay build de los mejores).
+  - `draft.datos_draft()` trae `build_dict` además de `build` (la GUI todavía pinta las líneas; el dict espera al rediseño).
+- Arreglado de paso: un `builds.json` cortado (JSON inválido) hacía tronar `draft.py` en champ select; ahora `guardado_dict` da None.
+- Pruebas: `test_guardado_dict_y_primer_item` (incluye el JSON cortado) y `test_informe_guarda_primer` (ddragon, mejores y tuyas simulados). 87 OK. `draft.py Viktor mid` sale igual que antes (sin key, tu build en 3 líneas).
+- DeepSeek: no lo pude consultar (el permiso bloquea `ask-deepseek.ps1`).
+- Pendiente del Diseñador: meta de la fase en vivo como números y `hay_key()` periódico; el rediseño espera al usuario.
+
+**Para DeepSeek**
+- Revisa el commit: ¿`dict(d[k], fuente=...)` puede pisar una clave del resumen? ¿La 4.ª línea debería salir también con `no == [0, 0]` (todas tus partidas con el ítem de los top)?
+- Tarea de pruebas: escribe `scripts/test_ds_primer.py` con 3 casos: (1) `informe` con `mejores` que da builds sin legendarios (`rt["core"] == []`) → sin `primer` y no truena; (2) `guardado_dict` con `builds.json` vacío (0 bytes) o con BOM → None o el dict, sin tronar (el JSON cortado ya da None: lo arreglé en esta iteración); (3) `datos_draft` sin `builds.json` → `build_dict is None` y `build == []`.

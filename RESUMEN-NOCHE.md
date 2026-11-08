@@ -1,3 +1,36 @@
+# Turno 5 · 2026-11-08 (tarde)
+
+## Qué se construyó
+- **Build de los mejores (`scripts/builds.py`)**: toma a los 2 primeros por LP de Challenger/GM de LAN y de Corea que jugaron ese campeón en los últimos 14 días, baja sus últimas ranked con él y saca lo más común: 3 ítems core en orden, botas, runas y orden de habilidades, con fuente y tamaño de muestra. Al lado pone **tu** build (de `datos/raw`) y tu WR cuando abres con el primer ítem de los mejores contra cuando abres con otro (Wilson; pista, no causa). Fuente: la Riot API oficial. onetricks.gg y dpm.lol bloquean bots, y lolalytics prohíbe a Claude en su robots.txt: no se usaron.
+- **En champ select**: `builds.py --pool` deja la build de cada campeón de tu pool en `datos/meta/builds.json`; `draft.py` y la ventana del companion la muestran bajo el pick recomendado (3 líneas, más una con tu WR por primer ítem cuando hay la de los mejores).
+- **Score por partida (`scripts/score.py`)**: tu partida contra los otros 9 en 8 componentes (cuota de daño y de oro, KP, visión, CS/min, oro contra tu rival de línea, muertes, objetivos), cada uno en desviaciones contra los 10 y corregido por rol. **50 = lo típico de tu rol; cada 15 puntos, una desviación.** Da tu puesto entre los 10 y en tu equipo, si le ganaste el duelo a tu rival de línea, la tendencia (últimas 20 contra antes), V contra D, por campeón y qué componente te baja. También sale en `revision.py` y en la ventana post-partida.
+- **Ventana del companion**: consejos en partida en azul y errores en naranja; la post-partida ya no tapa el champ select siguiente.
+- 87 pruebas sin red.
+
+## Qué se descubrió
+- Tu score medio es 49.6 (típico de tu rol): 51.1 en victorias y 47.9 en derrotas. Sin tendencia (últimas 20: 49.2).
+- Lo que más te baja es el **KP** (−0.33 desviaciones contra tu rol, también en victorias). En derrotas caen la línea y las muertes.
+- Le ganas el duelo a tu rival de línea en 44% de las partidas (35% en derrotas): ganas partidas sin ganar tu línea.
+- Mordekaiser: tu mejor WR (68%) con el score más bajo (47.5). Gana sin destacar en las stats (n=22, pista).
+- Tu build con Yone mid (40 partidas, 57%): Rey Arruinado → Arcoescudo → Filo, Grebas, Cadencia Letal, Q>E>W.
+
+## Cómo pedir la build de Yone
+1. Pon una `RIOT_KEY` nueva (`setx RIOT_KEY <key>`; la de ahora caducó).
+2. `python scripts/builds.py Yone mid` (la primera vez tarda unos minutos; luego queda en caché).
+3. `python scripts/builds.py --pool` para todo tu pool: desde ahí champ select te la muestra sola.
+
+## Qué espera la key de Riot
+- La build de los mejores y la comparación de tu primer ítem. Sin key, champ select muestra tu build con la etiqueta «Tu build (aún sin la de los mejores)».
+- `descargar.py` para bajar tus partidas nuevas.
+
+## Qué propone el Diseñador (`datos/diseno-propuesta.md`)
+- Dos modos de la ventana: completo en champ select y post-partida, y una franja compacta siempre encima en partida.
+- Una sola cosa grande por pantalla y nunca un número suelto (score en barra 0–100 con la marca en 50).
+- Tiene 10 preguntas para ti (ventana sin bordes o pantalla completa, sonido, cuánto detalle de build, colores…). Habla con él antes del rediseño; Opus ya dejó los datos en dict (avisos, score, build).
+
+## Antes del push (sigue pendiente)
+- `git rm -r --cached scripts/__pycache__` y commit (los `.pyc` traen tu ruta). Recompila `Companion.exe` para tener la ventana nueva.
+
 # Turno 3 · 2026-11-08 00:25
 
 ## Qué se construyó

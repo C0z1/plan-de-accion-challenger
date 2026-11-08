@@ -120,6 +120,31 @@ class Riot(unittest.TestCase):
         f.write_text(json.dumps({"Yone|MIDDLE": r, "Yone|MIDDLE|tu": r}), encoding="utf-8")
         self.assertTrue(builds.guardado("Yone", "MIDDLE")[0].startswith("Los mejores"))  # la de los mejores manda
 
+    def test_guardado_dict_y_primer_item(self):
+        self.assertIsNone(builds.guardado_dict("Yone", "MIDDLE"))
+        r = builds.resumir([builds.build_de(*partida(), "yo", ITEMS)], ITEMS, {})
+        f = pathlib.Path(self.tmp.name) / "builds.json"
+        f.write_text(json.dumps({"Yone|MIDDLE|tu": r}), encoding="utf-8")
+        d = builds.guardado_dict("Yone", "MIDDLE")
+        self.assertEqual((d["fuente"], d["core"][0][0]), ("tu", "Rey Arruinado"))
+        top = dict(r, primer=dict(item="Rey Arruinado", si=[7, 10], no=[2, 6]))
+        f.write_text(json.dumps({"Yone|MIDDLE": top}), encoding="utf-8")
+        self.assertEqual(builds.guardado_dict("Yone", "MIDDLE")["fuente"], "mejores")
+        ls = builds.guardado("Yone", "MIDDLE")
+        self.assertEqual(len(ls), 4); self.assertIn("7/10 = 70%", ls[3]); self.assertIn("2/6 = 33%", ls[3])
+        f.write_text(json.dumps({"Yone|MIDDLE": dict(r, primer=dict(item="X", si=[3, 3], no=[0, 0]))}), encoding="utf-8")
+        self.assertEqual(len(builds.guardado("Yone", "MIDDLE")), 3)  # sin partidas con otro ítem no hay comparación
+        f.write_text('{"Yone|MIDDLE": {"n"', encoding="utf-8")  # cortado a media escritura
+        self.assertEqual(builds.guardado("Yone", "MIDDLE"), [])
+
+    def test_informe_guarda_primer(self):
+        mt, tl = partida("top1")
+        with mock.patch.object(builds, "ddragon", return_value=(ITEMS, {}, {"yone": ("Yone", 777)})), \
+                mock.patch.object(builds, "mejores", return_value=[(mt, tl, "top1", "Uno#KR1")]), \
+                mock.patch.object(builds, "tuyas", return_value=[(*partida(win=True), "yo"), (*partida(win=False, compras=("6673", "3153")), "yo")]):
+            _, rt, _ = builds.informe("Yone", "MIDDLE")
+        self.assertEqual(rt["primer"], dict(item="Rey Arruinado", si=[1, 1], no=[0, 1]))
+
 
 if __name__ == "__main__":
     unittest.main()

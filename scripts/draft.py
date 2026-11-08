@@ -125,7 +125,8 @@ def datos_draft(rival, pos):
     filas.sort(key=lambda f: -f["est"])
     import builds  # sin red: lo que dejó `builds.py --pool` en datos/meta/builds.json
     return dict(nombre=nombre, conocido=bool(en), vs=vs, en=en, filas=filas, avisos=avisos(filas, nombre, pos),
-                build=builds.guardado(filas[0]["champ"], pos) if filas else [])
+                build=builds.guardado(filas[0]["champ"], pos) if filas else [],
+                build_dict=builds.guardado_dict(filas[0]["champ"], pos) if filas else None)
 
 
 def avisos(filas, nombre, pos):
