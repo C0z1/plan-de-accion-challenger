@@ -12,7 +12,7 @@
 | Muertes antes del 14 | 2.00 | 2.21 | referencia: 2.12 en victorias | ✅ |
 | Muertes antes del 14 pasado el río (río, mitad rival de tu línea o jungla rival) | 1.21 | 1.06 | monitor de la regla de prioridad 1; no separa V/D (1.10 contra 1.05) |  |
 | Muertes del 14 al 25 | 3.00 | 2.62 | ≤ 2 | ❌ |
-| Sylas: partidas con 69+ minions de línea al 10 | 50% (15%–85%, n=4) | 47% (37%–57%, n=88) | > 50% (con 69+ ganas 74%, con ≤ 68, 32%) | ❌ |
+| Sylas: partidas con 69+ minions de línea al 10 | 50% (15%–85%, n=4) | 47% (37%–57%, n=88) | > 50%, marca solo con n ≥ 10 (con 69+ ganas 74%, con ≤ 68, 32%) |  |
 | Partidas con ≥ 1 control ward | 10% (3%–30%, n=20) | 7% (4%–11%, n=264) | monitor sin meta: no baja los ganks ni sube el WR (wards.py) |  |
 | Partidas con el pool (Yone, Ekko, Mordekaiser) | 45% (26%–66%, n=20) | 57% (51%–63%, n=264) | > 80% | ❌ |
 

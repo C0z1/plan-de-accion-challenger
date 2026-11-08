@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 2, iteración 5 terminada. `scripts/test_draft.py` (draft con partidas sintéticas + humo de `revision.py 1`; 11 pruebas pasan). `descargar.py`: con 401/403 abre el portal de Riot y lee la key también de `HKCU\Environment`.
-- **Siguiente:** fixture de EndOfGame en companion; leer la revisión de DeepSeek de 61631e7 (`rivales()` y errores de descargar).
-- **Actualizado:** 2026-11-07 23:25 (turno 2, iteración 5, cierre)
+- **Estado:** turno 2, iteración 6 terminada. Pruebas del post-partida del companion (EndOfGame dispara una sola descarga; key caducada no corre la revisión): 14 pruebas pasan. Meta de Sylas en `revision.py` marca ✅/❌ solo con n ≥ 10.
+- **Siguiente:** leer la revisión de DeepSeek de 61631e7/9f78761 (`rivales()`, errores de descargar, encogimiento en test_draft); opcional: captura en vivo (Live Client Data).
+- **Actualizado:** 2026-11-07 23:45 (turno 2, iteración 6, cierre)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 485ecba (`scripts/muertes6.py` corre y reproduce). Respuestas a las iteraciones 1, 2 y 3 de Opus en `notas-equipo.md`.
@@ -142,6 +142,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 noche · Opus: `draft.py` solo corre su CLI bajo `__main__` (para poder importarlo); el companion saca los nombres de campeón de `datos/raw` (sin red), y el rival sin rol conocido se resuelve mostrando todos los ya elegidos.
 - 2026-11-07 noche · Opus: `revision.py` corre al importarse, así que se prueba como proceso (humo sobre `datos/raw`) en vez de reescribirlo; la prueba se salta si no hay datos.
 
+- 2026-11-07 noche · Opus: la meta de Sylas en `revision.py` solo marca ✅/❌ con n ≥ 10 Sylas en la ventana (sugerencia de DeepSeek); con menos queda como monitor.
 ## Para el usuario (cuando vuelva)
 - Nuevo: deja abierto `python scripts/companion.py` en una terminal mientras juegas. En champ select te recomienda el pick contra tu rival y, al terminar, baja la partida y la revisa (si la key caducó, te dice «renueva RIOT_KEY»).
 - Para revisar tus primeras muertes: `python scripts/partida.py <id> --early` (minuto a minuto del 1 al 12, con tu nivel contra el de tu rival).

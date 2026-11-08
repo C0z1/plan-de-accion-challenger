@@ -95,8 +95,10 @@ METRICAS = [
      "monitor de la regla de prioridad 1; no separa V/D (1.10 contra 1.05)", None),
     ("Muertes del 14 al 25", lambda rs: media(rs, "d25"), "≤ 2", lambda v: v <= 2),
     ("Sylas: partidas con 69+ minions de línea al 10",
-     lambda rs: prop(rs, lambda r: None if r["lm10"] is None else r["lm10"] > 68),
-     "> 50% (con 69+ ganas 74%, con ≤ 68, 32%)", lambda v: v > .5),
+     # con ~4 Sylas por cada 20 partidas la marca es ruido: solo se marca con n ≥ 10 (revisión de DeepSeek)
+     lambda rs: (lambda t: t if sum(r["lm10"] is not None for r in rs) >= 10 else (t[0], None))(
+         prop(rs, lambda r: None if r["lm10"] is None else r["lm10"] > 68)),
+     "> 50%, marca solo con n ≥ 10 (con 69+ ganas 74%, con ≤ 68, 32%)", lambda v: v > .5),
     ("Partidas con ≥ 1 control ward", lambda rs: prop(rs, lambda r: r["cw"] >= 1),
      "monitor sin meta: no baja los ganks ni sube el WR (wards.py)", None),
     ("Partidas con el pool (Yone, Ekko, Mordekaiser)", lambda rs: prop(rs, lambda r: r["champ"] in POOL), "> 80%",
