@@ -66,6 +66,26 @@ Busca el cliente en `C:\Riot Games\League of Legends\lockfile`; si lo instalaste
 
 ---
 
+## 🖥️ Companion con ventana
+
+`scripts/companion_gui.py` es el companion con interfaz: una ventana lateral oscura que en champ select muestra a tu rival de línea, tu récord contra él y el pick recomendado (con barras por campeón), y al terminar la partida descarga y marca las metas del plan (oro y CS al 14, muertes del 14 al 25, pool). Igual que el companion de consola: **solo lectura**.
+
+```bash
+python scripts/companion_gui.py           # con el cliente abierto
+python scripts/companion_gui.py --demo    # vista de ejemplo, sin cliente
+```
+
+**Ejecutable para Windows** (no lo sube git; se compila en un paso):
+
+```bash
+pip install pyinstaller
+python -m PyInstaller --onefile --windowed --name Companion --distpath . scripts/companion_gui.py
+```
+
+Deja `Companion.exe` en la raíz del repo y ábrelo con doble clic. El `.exe` solo trae Python: lee los scripts y tus datos de la carpeta del repo, así que los cambios en `scripts/` no necesitan recompilar. La key se lee de `RIOT_KEY` (`setx RIOT_KEY <key>`).
+
+---
+
 ## 🔄 Flujo de trabajo
 
 ```mermaid
@@ -85,6 +105,7 @@ flowchart LR
 | Grupo | Script | Qué hace |
 |---|---|---|
 | Recolección | `descargar.py` | Descarga partidas de Solo/Duo desde la Riot API a `datos/raw/`. |
+| Recolección | `companion_gui.py` | El companion con ventana (y `Companion.exe`). |
 | Recolección | `companion.py` | Acompañante local del cliente: champ select sin POST/PATCH y descarga/revisión post-partida. |
 | Recolección | `analizar.py` | Resume `datos/raw/*.json` en estadísticas agregadas. |
 | Antes de la partida | `draft.py` | Matchups y draft con tus datos. |

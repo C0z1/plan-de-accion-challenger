@@ -1,0 +1,268 @@
+"""Companion con ventana (tkinter): lo mismo que companion.py (solo lectura del cliente) pero dibujado.
+Uso:
+  python scripts/companion_gui.py           sondea el cliente cada 3 s
+  python scripts/companion_gui.py --demo    pinta champ select y post-partida con datos de ejemplo (sin cliente)
+  Companion.exe                             lo mismo, empaquetado (va en la raíz del repo; ver README)"""
+import contextlib, importlib, io, json, os, pathlib, queue, runpy, sys, threading, time, traceback
+# PyInstaller solo empaqueta lo que ve importado: estos los usan los scripts que el .exe carga del disco
+import argparse, base64, collections, datetime, math, random, ssl, statistics, subprocess, webbrowser  # noqa: F401
+import urllib.error, urllib.parse, urllib.request  # noqa: F401
+try: import winreg  # noqa: F401
+except ImportError: winreg = None
+
+if getattr(sys, "frozen", False):  # el .exe trae solo Python: carga los scripts del repo junto a él (se actualizan sin recompilar)
+    REPO = pathlib.Path(sys.executable).resolve().parent
+    sys.path.insert(0, str(REPO / "scripts"))
+else:
+    REPO = pathlib.Path(__file__).resolve().parent.parent
+for _s in ("stdout", "stderr"):  # el .exe no tiene consola: los scripts hacen sys.stdout.reconfigure
+    if getattr(sys, _s) is None: setattr(sys, _s, io.TextIOWrapper(io.BytesIO(), encoding="utf-8"))
+
+import companion  # noqa: E402
+
+RAW = pathlib.Path(os.environ.get("DATOS_DIR") or REPO / "datos" / "raw")
+FIN = ("PreEndOfGame", "EndOfGame")
+FASES = {None: "Cliente cerrado", "None": "Sin actividad", "Lobby": "En lobby", "Matchmaking": "Buscando partida",
+         "ReadyCheck": "Partida encontrada", "ChampSelect": "Champ select", "InProgress": "En partida",
+         "PreEndOfGame": "Fin de partida", "EndOfGame": "Fin de partida"}
+REGLAS = ["Oro ≥ 0 contra tu rival al minuto 14.", "Ganks: minuto 3 y del 8 al 13 (pico en el 10).",
+          "Con poca vida y su flash + ignite arriba: base."]  # TARJETA.md, las 3 que más pesan en línea
+
+
+# ---------- lógica (sin tkinter) ----------
+
+def script(nombre, *args):
+    """Corre scripts/<nombre> en este proceso (el .exe no tiene python.exe para un subproceso): (código, salida)."""
+    buf, argv = io.TextIOWrapper(io.BytesIO(), encoding="utf-8"), sys.argv
+    sys.argv = [nombre, *args]
+    try:
+        with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+            runpy.run_path(str(REPO / "scripts" / nombre), run_name="__main__"); code = 0
+    except SystemExit as e: code = e.code if isinstance(e.code, int) else (0 if e.code is None else 1)
+    except Exception: code = 1; buf.write(traceback.format_exc())
+    finally: sys.argv = argv
+    buf.flush(); return code, buf.buffer.getvalue().decode("utf-8", "replace")
+
+
+def parsear_revision(salida):
+    """Primera fila de «Partida por partida» de revision.py: dict con las metas de la partida más reciente."""
+    filas = [l for l in salida.split("## Partida por partida")[-1].splitlines() if l.startswith("| ") and not l.startswith("| Fecha")]
+    if not filas: return None
+    _, camp, vd, oro, cs, m14, m25, cw = [c.strip() for c in filas[0].strip().strip("|").split("|")]
+    return dict(champ=camp.replace(" (fuera del pool)", ""), pool="fuera del pool" not in camp, win=vd == "V",
+                oro=oro, cs=cs, m14=m14, m25=m25, cw=cw)
+
+
+def ultima_partida():
+    """KDA, rival y duración de la partida más nueva en datos/raw (los id de partida crecen con el tiempo)."""
+    try:
+        puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
+        f = max(RAW.glob("*_*.json"), key=lambda p: int(p.stem.split("_")[1]))
+        info = json.loads(f.read_text())["info"]; ps = info["participants"]
+        me = next(p for p in ps if p["puuid"] == puuid)
+        opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
+        return dict(kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", min=info["gameDuration"] // 60,
+                    rival=opp["championName"] if opp else None)
+    except (OSError, ValueError, KeyError, StopIteration): return {}
+
+
+def perfil():
+    try:
+        d = json.loads((RAW / "perfil.json").read_text()); a = d["account"]
+        solo = next((e for e in d["league"] if e["queueType"] == "RANKED_SOLO_5x5"), None)
+        rango = f"{solo['tier'].title()} {solo.get('rank', '') if solo['tier'] not in ('MASTER', 'GRANDMASTER', 'CHALLENGER') else ''} {solo['leaguePoints']} LP".replace("  ", " ") if solo else "sin rango"
+        return f"{a['gameName']}#{a['tagLine']} · {rango}"
+    except (OSError, ValueError, KeyError): return "sin datos: corre descargar.py"
+
+
+def hay_key():
+    if os.environ.get("RIOT_KEY"): return True
+    try:
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Environment") as k: return bool(winreg.QueryValueEx(k, "RIOT_KEY")[0])
+    except (AttributeError, OSError): return False
+
+
+def recomendaciones(pos, rivales):
+    """[(rival, datos_draft | None)] usando draft.py (lo recarga si hay partidas nuevas)."""
+    import draft
+    return [(r, draft.datos_draft(r, pos) if r else None) for r in rivales]
+
+
+def post_partida(q):
+    q.put(("post_espera", "Esperando a que Riot publique la partida…")); time.sleep(60)
+    for intento in range(4):
+        code, _ = script("descargar.py", "5")
+        if code != 3: break
+        q.put(("post_espera", "Riot aún no publica la partida: reintento en 2 min…")); time.sleep(120)
+    if code == 2: q.put(("aviso", "Key de Riot caducada: copia la nueva del portal (se abrió) y guárdala con setx RIOT_KEY <key>")); return
+    if code: q.put(("aviso", f"No pude descargar la partida (código {code}); queda pendiente.")); return
+    if "draft" in sys.modules: importlib.reload(sys.modules["draft"])  # partidas nuevas para el próximo champ select
+    code, out = script("revision.py", "1")
+    rev = parsear_revision(out)
+    q.put(("revision", {**rev, **ultima_partida()}) if rev else ("aviso", "revision.py no devolvió la partida."))
+
+
+def trabajador(q):
+    """El mismo bucle que companion.main, pero manda eventos a la ventana en vez de imprimir."""
+    m, visto, fase_ant, archivo, ult = None, None, "inicio", None, 0
+    while True:
+        try:
+            fase = companion.lcu("/lol-gameflow/v1/gameflow-phase")
+            if fase != fase_ant: q.put(("fase", fase))
+            if fase == "ChampSelect" and (s := companion.lcu("/lol-champ-select/v1/session")):
+                pos, ids = companion.rivales(s)
+                if ids and (pos, ids) != visto:
+                    m = m or companion.nombres(); visto = (pos, ids)
+                    q.put(("draft", pos, recomendaciones(pos, [m.get(i) for i in ids])))
+            elif fase != "ChampSelect": visto = None
+            if fase == "InProgress" and time.time() - ult >= 30: archivo, ult = companion.capturar(archivo), time.time()
+            elif fase != "InProgress": archivo = None
+            if fase in FIN and fase_ant not in FIN: post_partida(q); m = None
+            fase_ant = fase
+        except Exception: q.put(("aviso", "Error: " + traceback.format_exc(limit=1).strip().splitlines()[-1]))
+        time.sleep(3)
+
+
+# ---------- ventana ----------
+
+BG, PANEL, BORDE, TXT, MUTED, ACENTO, BIEN, MAL, BARRA = "#0E1015", "#171A21", "#232833", "#E8EAF0", "#9AA3B2", "#F2B33D", "#7DB8FF", "#F59E5B", "#5B6475"
+F, MONO = "Segoe UI", "Consolas"
+
+
+class App:
+    def __init__(self, root):
+        import tkinter as tk
+        self.tk, self.root = tk, root
+        root.title("Plan Challenger · Companion"); root.configure(bg=BG); root.geometry("420x760"); root.minsize(380, 560)
+        cab = tk.Frame(root, bg=BG); cab.pack(fill="x", padx=16, pady=(14, 12))
+        tk.Label(cab, text="PC", bg=ACENTO, fg=BG, font=(F, 10, "bold"), width=3, height=1).pack(side="left")
+        tt = tk.Frame(cab, bg=BG); tt.pack(side="left", padx=10)
+        tk.Label(tt, text="Plan Challenger", bg=BG, fg=TXT, font=(F, 11, "bold")).pack(anchor="w")
+        self.sub = tk.Label(tt, text=perfil(), bg=BG, fg=MUTED, font=(F, 8)); self.sub.pack(anchor="w")
+        self.pill = tk.Label(cab, text="Iniciando…", bg=BORDE, fg=TXT, font=(F, 9, "bold"), padx=10, pady=3); self.pill.pack(side="right")
+        self.sep = tk.Frame(root, bg=BORDE, height=1); self.sep.pack(fill="x")
+        self.aviso = tk.Label(root, bg=MAL, fg=BG, font=(F, 9, "bold"), wraplength=380, justify="left", padx=12, pady=8)
+        pie = tk.Frame(root, bg=BG); pie.pack(side="bottom", fill="x")
+        tk.Frame(pie, bg=BORDE, height=1).pack(fill="x")
+        fila = tk.Frame(pie, bg=BG); fila.pack(fill="x", padx=16, pady=8)
+        tk.Label(fila, text="Solo lectura · nunca actúa en el cliente", bg=BG, fg=MUTED, font=(F, 8)).pack(side="left")
+        tk.Label(fila, text="key ok" if hay_key() else "falta RIOT_KEY", bg=BG, fg=MUTED if hay_key() else MAL, font=(MONO, 8)).pack(side="right")
+        self.cuerpo = tk.Frame(root, bg=BG); self.cuerpo.pack(fill="both", expand=True, padx=16, pady=12)
+        self.espera("Abre el cliente de LoL: aquí verás tu pick en champ select y la revisión al terminar.")
+
+    # piezas
+    def limpiar(self):
+        for w in self.cuerpo.winfo_children(): w.destroy()
+
+    def tarjeta(self, borde=BORDE):
+        c = self.tk.Frame(self.cuerpo, bg=PANEL, highlightbackground=borde, highlightcolor=borde, highlightthickness=1)
+        c.pack(fill="x", pady=(0, 12)); i = self.tk.Frame(c, bg=PANEL); i.pack(fill="x", padx=14, pady=12); return i
+
+    def etiqueta(self, p, texto, color=MUTED):
+        self.tk.Label(p, text=texto.upper(), bg=PANEL, fg=color, font=(F, 8, "bold")).pack(anchor="w")
+
+    def par(self, p, izq, der, fi=(F, 20, "bold"), fd=(MONO, 12), cd=MUTED):
+        f = self.tk.Frame(p, bg=PANEL); f.pack(fill="x", pady=(6, 0))
+        self.tk.Label(f, text=izq, bg=PANEL, fg=TXT, font=fi).pack(side="left")
+        self.tk.Label(f, text=der, bg=PANEL, fg=cd, font=fd).pack(side="right")
+
+    def reglas(self, titulo="Reglas para esta partida", lineas=REGLAS, borde=BORDE, color=MUTED):
+        t = self.tarjeta(borde); self.etiqueta(t, titulo, color)
+        for l in lineas: self.tk.Label(t, text="•  " + l, bg=PANEL, fg=TXT, font=(F, 10), wraplength=340, justify="left").pack(anchor="w", pady=(6, 0))
+
+    # vistas
+    def espera(self, texto):
+        self.limpiar(); t = self.tarjeta()
+        self.tk.Label(t, text=texto, bg=PANEL, fg=TXT, font=(F, 10), wraplength=340, justify="left").pack(anchor="w")
+        self.reglas()
+
+    def vista_draft(self, pos, recs):
+        self.limpiar()
+        if len(recs) > 1:  # sin rol de los rivales: una fila por rival
+            t = self.tarjeta(); self.etiqueta(t, f"Rivales elegidos · {pos} (rol desconocido)")
+            for r, d in recs:
+                mejor = f"{d['filas'][0]['champ']} {d['filas'][0]['est']:.0%}" if d and d["filas"] else "sin datos"
+                self.par(t, r or "?", mejor, fi=(F, 12, "bold"), fd=(MONO, 11), cd=ACENTO)
+            self.reglas(); return
+        r, d = recs[0]
+        t = self.tarjeta(); self.etiqueta(t, f"Tu rival de línea · {pos}")
+        if not d or not d["conocido"]:
+            self.par(t, r or "?", "sin partidas"); self.tk.Label(t, text="No aparece en tus partidas: va tu WR por campeón.", bg=PANEL, fg=MUTED, font=(F, 9)).pack(anchor="w", pady=(6, 0))
+        else:
+            import draft
+            vs = d["vs"]; k = sum(g["win"] for g in vs)
+            self.par(t, d["nombre"], f"{len(vs)} partidas")
+            g = self.tk.Frame(t, bg=PANEL); g.pack(fill="x", pady=(8, 0)); g.columnconfigure((0, 1), weight=1, uniform="c")
+            for col, (lab, val, color) in enumerate([("Tu WR contra él", f"{k / len(vs):.0%}" if vs else "-", BIEN),
+                                                     ("Oro al 14 (media)", draft.gd(vs), MAL if draft.gd(vs).startswith("-") else BIEN)]):
+                b = self.tk.Frame(g, bg=BG); b.grid(row=0, column=col, sticky="ew", padx=(0, 4) if col == 0 else (4, 0))
+                self.tk.Label(b, text=lab, bg=BG, fg=MUTED, font=(F, 8)).pack(anchor="w", padx=10, pady=(8, 0))
+                self.tk.Label(b, text=val.replace("-", "−"), bg=BG, fg=color, font=(MONO, 16, "bold")).pack(anchor="w", padx=10, pady=(0, 8))
+        if not d or not d["filas"]: self.reglas(); return
+        t = self.tarjeta(ACENTO); self.etiqueta(t, "Recomendación", ACENTO)
+        mejor = d["filas"][0]; self.par(t, mejor["champ"], f"{mejor['est']:.0%}", fi=(F, 22, "bold"), fd=(MONO, 22, "bold"), cd=ACENTO)
+        for i, f in enumerate(d["filas"][:4]):
+            fila = self.tk.Frame(t, bg=PANEL); fila.pack(fill="x", pady=(10, 0))
+            self.tk.Label(fila, text=f["champ"], bg=PANEL, fg=TXT, font=(F, 10, "bold")).pack(side="left")
+            self.tk.Label(fila, text=f"{f['vd']} · {f['est']:.0%}", bg=PANEL, fg=MUTED, font=(MONO, 10)).pack(side="right")
+            c = self.tk.Canvas(t, height=6, bg=BG, highlightthickness=0); c.pack(fill="x", pady=(4, 0))
+            c.bind("<Configure>", lambda e, c=c, est=f["est"], col=ACENTO if i == 0 else BARRA:
+                   (c.delete("all"), c.create_rectangle(0, 0, e.width * est, 6, fill=col, width=0)))
+        self.tk.Label(t, text="Tu récord contra el rival, mezclado con tu WR del campeón en el rol.", bg=PANEL, fg=MUTED,
+                      font=(F, 8), wraplength=340, justify="left").pack(anchor="w", pady=(10, 0))
+        self.reglas()
+
+    def vista_revision(self, r):
+        self.limpiar(); t = self.tarjeta()
+        self.etiqueta(t, f"{'Victoria' if r['win'] else 'Derrota'}" + (f" · {r['min']} min" if r.get("min") else ""), BIEN if r["win"] else MAL)
+        self.par(t, r["champ"] + (f"  vs {r['rival']}" if r.get("rival") else ""), r.get("kda", ""), fi=(F, 15, "bold"), fd=(MONO, 15, "bold"), cd=TXT)
+        t = self.tarjeta(); self.etiqueta(t, "Metas del plan")
+        num = lambda s: int(s) if s.lstrip("+-").isdigit() else None
+        metas = [("Oro contra tu rival al 14", r["oro"], (num(r["oro"]) or 0) >= 0 if num(r["oro"]) is not None else None),
+                 ("CS contra tu rival al 14", r["cs"], (num(r["cs"]) or 0) >= 0 if num(r["cs"]) is not None else None),
+                 ("Muertes del 14 al 25 (≤ 2)", r["m25"], num(r["m25"]) <= 2 if num(r["m25"]) is not None else None),
+                 ("Campeón de tu pool", "sí" if r["pool"] else "no", r["pool"])]
+        for lab, val, ok in metas:
+            f = self.tk.Frame(t, bg=BG); f.pack(fill="x", pady=(8, 0))
+            color = MUTED if ok is None else BIEN if ok else MAL
+            self.tk.Label(f, text="–" if ok is None else "✓" if ok else "✕", bg=color, fg=BG, font=(F, 9, "bold"), width=2).pack(side="left", padx=(8, 8), pady=6)
+            self.tk.Label(f, text=lab, bg=BG, fg=TXT, font=(F, 10)).pack(side="left")
+            self.tk.Label(f, text=val.replace("-", "−"), bg=BG, fg=color, font=(MONO, 10, "bold")).pack(side="right", padx=10)
+        self.reglas("Detalle", [f"Muertes antes del 14: {r['m14']} · control wards: {r['cw']}.",
+                                "Minuto a minuto: python scripts/partida.py --early"], ACENTO, ACENTO)
+
+    def evento(self, e):
+        tipo = e[0]
+        if tipo == "fase":
+            fase = e[1]; self.pill.config(text=FASES.get(fase, fase or "Cliente cerrado"), bg=ACENTO if fase in ("ChampSelect", "InProgress") else BORDE,
+                                          fg=BG if fase in ("ChampSelect", "InProgress") else TXT)
+            if fase is None: self.espera("Cliente cerrado: espero a que lo abras.")
+            elif fase == "ChampSelect": self.espera("Champ select: espero a que tu rival de línea elija.")
+            elif fase == "InProgress": self.espera("En partida: guardo una foto en vivo cada 30 s en datos/vivo/.")
+            elif fase in ("Lobby", "Matchmaking", "ReadyCheck"): self.aviso.pack_forget(); self.sub.config(text=perfil())
+        elif tipo == "draft": self.vista_draft(e[1], e[2])
+        elif tipo == "post_espera": self.espera(e[1])
+        elif tipo == "revision": self.vista_revision(e[1]); self.sub.config(text=perfil())
+        elif tipo == "aviso": self.aviso.config(text=e[1]); self.aviso.pack(fill="x", after=self.sep)
+
+
+def main():
+    import tkinter as tk
+    root = tk.Tk(); app = App(root); q = queue.Queue()
+    if "--demo" in sys.argv:
+        fx = REPO / "scripts" / "fixtures" / "champselect" / "session.json"
+        pos, ids = companion.rivales(json.loads(fx.read_text())) if fx.exists() else ("MIDDLE", [])
+        m = companion.nombres(); rivales = [m.get(i) for i in ids] or ["Zed"]
+        q.put(("fase", "ChampSelect")); q.put(("draft", pos, recomendaciones(pos, rivales[:1])))
+        code, out = script("revision.py", "1"); rev = parsear_revision(out)
+        if rev: root.after(6000, lambda: (q.put(("fase", "EndOfGame")), q.put(("revision", {**rev, **ultima_partida()}))))
+    else: threading.Thread(target=trabajador, args=(q,), daemon=True).start()
+
+    def bombear():
+        while not q.empty(): app.evento(q.get_nowait())
+        root.after(200, bombear)
+    bombear(); root.mainloop()
+
+
+if __name__ == "__main__":
+    main()

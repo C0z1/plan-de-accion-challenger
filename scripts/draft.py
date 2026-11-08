@@ -108,27 +108,34 @@ def guia():
             print(f"| {pos} | {c} | {len(rs)} | {wr(rs)} | {gd(rs)} |")
 
 
-def draft(rival, pos):
+def datos_draft(rival, pos):
+    """Los números de draft() sin imprimir (companion_gui.py los dibuja). filas: mejor estimado primero; [] sin partidas en el rol."""
     k = key(rival)
     vs = [g for g in games if key(g["opp"]) == k and g["pos"] == pos]
     en = [g for g in games if k in {key(e) for e in g["enemies"]}]
     nombre = next((e for g in en for e in g["enemies"] if key(e) == k), rival)
-    if not en: print(f"Aviso: {rival} no aparece en ninguna de tus partidas (¿nombre mal escrito?). Va solo tu WR por campeón.\n")
-    print(f"Contra {nombre} en {pos}: {len(vs)} partidas, WR {wr(vs)}, oro @14 {gd(vs)}")
-    print(f"Con {nombre} en el equipo rival (cualquier rol): {len(en)} partidas, WR {wr(en)}  (tu base: {base:.0%})\n")
     p = pool(pos) or pool(pos, 1)
-    if not p: print("No tienes partidas en ese rol."); return
     filas = []
     for c, rs in p.items():
         p0 = shrink(sum(r["win"] for r in rs), len(rs), base)  # el prior del campeón también se encoge hacia tu base
         mv = [r for r in vs if r["champ"] == c]
-        filas.append((shrink(sum(r["win"] for r in mv), len(mv), p0), c, rs, mv))
-    print(f"| Tu campeón | WR en {pos} | vs {nombre} (V-D) | Oro @14 vs {nombre} | Estimado |\n|---|---|---|---|---|")
-    for est, c, rs, mv in sorted(filas, key=lambda x: -x[0]):
         v = sum(r["win"] for r in mv)
-        print(f"| {c} | {wr(rs)} | {v}-{len(mv) - v} | {gd(mv)} | {est:.0%} |")
-    best = max(filas, key=lambda x: x[0])
-    print(f"\nRecomendación: {best[1]} (estimado {best[0]:.0%}). "
+        filas.append(dict(est=shrink(v, len(mv), p0), champ=c, wr_rol=wr(rs), vd=f"{v}-{len(mv) - v}", oro=gd(mv)))
+    filas.sort(key=lambda f: -f["est"])
+    return dict(nombre=nombre, conocido=bool(en), vs=vs, en=en, filas=filas)
+
+
+def draft(rival, pos):
+    d = datos_draft(rival, pos); nombre, vs, en = d["nombre"], d["vs"], d["en"]
+    if not d["conocido"]: print(f"Aviso: {rival} no aparece en ninguna de tus partidas (¿nombre mal escrito?). Va solo tu WR por campeón.\n")
+    print(f"Contra {nombre} en {pos}: {len(vs)} partidas, WR {wr(vs)}, oro @14 {gd(vs)}")
+    print(f"Con {nombre} en el equipo rival (cualquier rol): {len(en)} partidas, WR {wr(en)}  (tu base: {base:.0%})\n")
+    if not d["filas"]: print("No tienes partidas en ese rol."); return
+    print(f"| Tu campeón | WR en {pos} | vs {nombre} (V-D) | Oro @14 vs {nombre} | Estimado |\n|---|---|---|---|---|")
+    for f in d["filas"]:
+        print(f"| {f['champ']} | {f['wr_rol']} | {f['vd']} | {f['oro']} | {f['est']:.0%} |")
+    best = d["filas"][0]
+    print(f"\nRecomendación: {best['champ']} (estimado {best['est']:.0%}). "
           f"Estimado = tu récord contra {nombre} mezclado con tu WR del campeón en el rol (pesa como {M} partidas), "
           f"que a su vez se mezcla con tu WR base.")
     if len(vs) < 5: print("Ojo: menos de 5 partidas contra este rival; la recomendación sale casi toda de tu WR general.")
