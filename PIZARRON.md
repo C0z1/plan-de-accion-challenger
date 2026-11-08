@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 5, iteración 8: `companion.meta_fase()` da la meta de la fase en vivo como números (nivel contra tu rival, CS y meta al 10) y la ventana la pinta en la línea de perfil durante la partida; la etiqueta de key se reevalúa con cada cambio de fase. Ya no quedan pedidos de datos del Diseñador. 91 OK.
-- **Siguiente:** revisión de DeepSeek (`test_ds_primer.py`, `test_ds_meta.py`); idea 1 del duelo (`individualPosition` con fallback).
-- **Actualizado:** 2026-11-08 (turno 5, iteración 8)
+- **Estado:** turno 5, iteración 9: el companion ya no truena con `activePlayer`/`allPlayers`/`gameData` en null (carga de partida); entra `test_ds_primer.py` (3/3); el duelo sigue con `teamPosition` (no `individualPosition`). 94 OK.
+- **Siguiente:** revisión de DeepSeek (`test_ds_meta.py`); resumen del turno si es la última iteración.
+- **Actualizado:** 2026-11-08 (turno 5, iteración 9)
 
 ### DeepSeek · revisor
 - **Estado:** revisados 0c67ab0 (duelo de score.py: 124/284=44%, justo — la corrección de rol se cancela; `individualPosition` 0/284 difieren; `test_ds_duelo.py` 3 casos) y 971463f (avisos como dict: sin `q.put(("aviso", str))` sueltos, minuto correcto, 429 ya no da UnboundLocalError; `test_ds_aviso_dict.py` 3 casos). Suite 90 OK.
@@ -166,6 +166,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: arreglado ese 429: el último se propaga sin guardarse en caché, e `informe()` lo toma como «sin datos» de los mejores (el pool no se corta).
 - 2026-11-08 · Opus: un `datos/meta/builds.json` cortado (JSON inválido) tumbaba `draft.py` y la recomendación en champ select. Arreglado: sin build, el draft sigue.
 - 2026-11-08 · DeepSeek: en las 284 partidas de score.py no hay ninguna con `teamPosition` vacío ni sin rival de línea, y para cozi `individualPosition` difiere del asignado en 0/284 (solo 6 ajenos, ninguno su rival): el «Duelo» identifica bien al rival de línea.
+- 2026-11-08 · Opus: la Live Client Data puede traer `activePlayer`/`allPlayers`/`gameData` en null al cargar; `.get(k, {})` no protege (la clave existe). Tumbaba los avisos en vivo; arreglado con `get(k) or {}`.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -215,6 +216,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: el duelo de línea compara tu score con el de tu rival de la misma posición (empate = lo pierdes); sin posición no hay duelo.
 - 2026-11-08 · Opus: tu WR con el primer ítem de los mejores sale en champ select (4.ª línea de la build) solo si tienes partidas con ese ítem y sin él; siempre con «pista, no causa».
 - 2026-11-08 · Opus: la meta de la fase en vivo no trae «oro al 14» (la Live Client Data API no da el oro del rival); solo nivel contra tu rival y CS. Va en la línea de perfil, no en el cuerpo, para no tapar una revisión pendiente.
+- 2026-11-08 · Opus: el duelo de `score.py` sigue con `teamPosition` (rol asignado), no `individualPosition`: cambiaría 0/284 partidas y Riot a veces trae «Invalid».
 
 ## Para el usuario (cuando vuelva)
 - Nuevo: en partida, la ventana del companion muestra arriba tu nivel contra el de tu rival y tu CS (con la meta al 10 si juegas Sylas), cada 30 s. Y la etiqueta «key ok / falta RIOT_KEY» se actualiza sola tras `setx`. Recompila `Companion.exe` para tenerlo.

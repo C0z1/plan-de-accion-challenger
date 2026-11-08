@@ -58,6 +58,10 @@ class TestTrabajador(unittest.TestCase):
         for p in sin["allPlayers"]: p["position"] = ""
         mf = c.meta_fase(sin, m10={}); self.assertIsNone(mf["rival"]); self.assertNotIn("contra", g.texto_meta(mf))
         self.assertIsNone(c.meta_fase(None)); self.assertIsNone(c.meta_fase({"gameData": {"gameTime": None}}))
+        nulos = {"activePlayer": None, "allPlayers": None, "gameData": None}  # la API los trae null mientras carga
+        self.assertIsNone(c.meta_fase(nulos)); self.assertIsNone(c.aviso_nivel(nulos)); self.assertIsNone(c.aviso_minions(nulos, {"campeon": "Ekko", "minimo": 69}))
+        sin_gd = dict(copy.deepcopy(d), gameData=None)  # tu jugador está pero gameData null → minuto 0, sin meta mal formada
+        self.assertEqual(c.meta_fase(sin_gd, m10={"campeon": "Ekko"})["minuto"], 0)
 
     def test_error_es_tipo_error(self):
         import queue

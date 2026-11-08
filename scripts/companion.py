@@ -49,8 +49,8 @@ def capturar(archivo, d):
 
 def yo_rival(d):
     """(tu jugador, tu rival de línea) en allPlayers de la foto en vivo; rival None sin position (normales, ARAM)."""
-    yo = (d or {}).get("activePlayer", {}); ids = {yo.get("riotId"), yo.get("summonerName")} - {None, ""}
-    ps = (d or {}).get("allPlayers", [])
+    yo = (d or {}).get("activePlayer") or {}; ids = {yo.get("riotId"), yo.get("summonerName")} - {None, ""}  # null al cargar
+    ps = (d or {}).get("allPlayers") or []
     me = next((p for p in ps if {p.get("riotId"), p.get("summonerName")} & ids), None)
     if not me or not me.get("position"): return me, None
     return me, next((p for p in ps if p.get("position") == me["position"] and p.get("team") != me.get("team")), None)
@@ -62,16 +62,16 @@ def meta_fase(d, m10=None):
     me, rival = yo_rival(d)
     if not me: return None
     if m10 is None: m10 = (json.loads(CFG.read_text(encoding="utf-8")) if CFG.exists() else {}).get("minions10")
-    return {"minuto": int((d.get("gameData", {}).get("gameTime") or 0) // 60), "campeon": me.get("championName"),
+    return {"minuto": int(((d.get("gameData") or {}).get("gameTime") or 0) // 60), "campeon": me.get("championName"),
             "nivel": me.get("level"), "rival": (rival or {}).get("championName"), "nivel_rival": (rival or {}).get("level"),
             "cs": (me.get("scores") or {}).get("creepScore"),
-            "cs_meta": m10["minimo"] if m10 and me.get("championName") == m10.get("campeon") else None}
+            "cs_meta": m10.get("minimo") if m10 and me.get("championName") == m10.get("campeon") else None}
 
 
 def aviso_nivel(d):
     """Del minuto 5 al 7, si vas abajo de nivel contra tu rival de línea (misma position, otro equipo): el aviso; si no, None.
     Sin position (normales, ARAM) no hay rival claro y no avisa. Abajo al 6 → 44% de WR en cozi (PLAN.md, nivel6.py/muertes6.py)."""
-    t = (d or {}).get("gameData", {}).get("gameTime") or 0  # null mientras carga la partida
+    t = ((d or {}).get("gameData") or {}).get("gameTime") or 0  # null mientras carga la partida
     if not 300 <= t <= 420: return None
     me, rival = yo_rival(d)
     if not rival or (n := (rival.get("level") or 0) - (me.get("level") or 0)) < 1: return None  # level puede venir null
@@ -86,7 +86,7 @@ def aviso_minions(d, m10=None):
     """Del minuto 10 al 11, si juegas el campeón de la meta minions10 de config.json y vas bajo el mínimo: el aviso; si no, None.
     Sylas con 69+ minions de línea al 10 → 74%, con ≤ 68 → 32% (early.py). creepScore en vivo incluye monstruos (en mid, pocos)."""
     if m10 is None: m10 = (json.loads(CFG.read_text(encoding="utf-8")) if CFG.exists() else {}).get("minions10")
-    t = (d or {}).get("gameData", {}).get("gameTime") or 0
+    t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
     if not m10 or not 600 <= t <= 660: return None  # 60 s de ventana: la foto de cada 30 s siempre cae dentro
     me, _ = yo_rival(d)
     if not me or me.get("championName") != m10["campeon"]: return None

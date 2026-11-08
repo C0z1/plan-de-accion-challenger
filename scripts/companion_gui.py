@@ -146,7 +146,7 @@ def trabajador(q):
                 if mf := companion.meta_fase(d): q.put(("meta", mf))
                 for f in (companion.aviso_nivel, companion.aviso_minions):
                     if f not in avisado and (txt := f(d)):
-                        q.put(aviso(txt, "consejo", int(((d or {}).get("gameData", {}).get("gameTime") or 0) // 60))); avisado.add(f)
+                        q.put(aviso(txt, "consejo", int((((d or {}).get("gameData") or {}).get("gameTime") or 0) // 60))); avisado.add(f)
             elif not jugando: archivo, avisado = None, set()
             if fase in FIN and real not in FIN: post_partida(q); m = None
             fase_ant, real, fallos = fase, fase or real, 0 if fase else fallos + 1
