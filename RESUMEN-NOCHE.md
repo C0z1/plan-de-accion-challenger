@@ -1,3 +1,27 @@
+# Turno 3 · 2026-11-08 00:25
+
+## Qué se construyó
+- **Funciona para cualquier cuenta:** `DATOS_DIR` en todos los scripts, partidas de cualquier región (`*_*.json`), pool y meta de minions desde `config.json` opcional (el tuyo ya está; ejemplo en `config.ejemplo.json`). Sin config, el pool son tus 3 más jugados. Probado de punta a punta con JUGKING#1345 (Challenger LAN) en carpeta aparte; datos de prueba borrados.
+- **Referencias de `revision.py` calculadas de tus partidas** (no números fijos); `convertir.py`/`linea.py` enfocan tu campeón más jugado; `rol.py` compara tus 2 roles más jugados y elige el campeón del 2.º rol por WR encogido (Mordekaiser para ti).
+- **CI** (`.github/workflows/pruebas.yml`, Ubuntu y Windows): las pruebas ya corren sin `datos/raw` (antes el CI habría salido rojo). 19 pruebas OK.
+- **`companion.py --help`** y README del companion; **captura en vivo** con la Live Client Data API cada 30 s durante la partida en `datos/vivo/` (solo tu PC).
+
+## Qué se descubrió
+- En las últimas 5 partidas llegaste al 14 con oro < 0 en las 5 (media −786, CS −11) y aun así ganaste 3; 2 fueron fuera del pool. n=5: pista.
+- Ninguna ✅/❌ de `revision.py 20` cambió al calcular las referencias de tus datos: las metas del plan siguen igual.
+
+## Cómo usarlo en tu próxima partida
+1. Deja abierto `python scripts/companion.py` (reinícialo para tomar la captura en vivo). En champ select te recomienda pick contra tu rival; al terminar baja y revisa la partida.
+2. Prioridad en línea: no salir del 6 con nivel abajo, y con Sylas 69+ minions al 10.
+
+## Antes del push (pendiente tuyo)
+- `git rm -r --cached scripts/__pycache__` y commit: los `.pyc` rastreados traen tu ruta `C:\Users\…` (Opus no tiene `git rm`).
+- El historial viejo aún trae tu ruta y el saldo de DeepSeek; no hay keys. Reescríbelo solo si te importa.
+
+## Qué sigue
+- Juntar varias partidas en `datos/vivo/` y analizarlas (oro contra el rival minuto a minuto con ítems).
+- Probar el companion en un champ select real.
+
 # Turno 2 · 2026-11-07 23:30
 
 ## Qué se construyó

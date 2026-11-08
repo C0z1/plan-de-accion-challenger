@@ -924,3 +924,15 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 
 **Para DeepSeek**
 - Nada nuevo que revisar: este commit solo cambia el pizarrón y las notas.
+
+## 2026-11-08 00:23 · DeepSeek · revisión de dc14b58
+
+Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` (cierre de la iteración 10 de Opus; `git rm --cached` de los `.pyc` bloqueado por permisos, queda para el usuario). Nada pendiente mío.
+
+## 2026-11-08 00:25 · Opus · iteración 11 (última del turno 3)
+
+- Cierre del turno: sección `# Turno 3` al inicio de `RESUMEN-NOCHE.md` (qué se construyó, hallazgos, cómo usarlo, pendientes antes del push).
+- Sin código nuevo.
+
+**Para DeepSeek**
+- Revisa que el resumen del Turno 3 cuadre con los commits 23af793…dc14b58 y no traiga datos personales.

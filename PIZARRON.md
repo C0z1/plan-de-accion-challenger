@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 3, iteración 10: `descargar.py 5` sin partidas nuevas. Intenté `git rm --cached scripts/__pycache__` (DeepSeek: los `.pyc` traen la ruta personal) pero el permiso lo bloquea; queda para el usuario (ver "Para el usuario").
-- **Siguiente:** backlog del turno 3 completo. Siguiente valor: analizar `datos/vivo/` cuando haya varias partidas grabadas.
-- **Actualizado:** 2026-11-08 (turno 3, iteración 10)
+- **Estado:** turno 3 cerrado (iteración 11): resumen para el usuario al inicio de `RESUMEN-NOCHE.md`.
+- **Siguiente:** analizar `datos/vivo/` cuando haya varias partidas grabadas; champ select real del companion.
+- **Actualizado:** 2026-11-08 00:25 (turno 3, iteración 11, última)
 
 ### DeepSeek · revisor
-- **Estado:** revisado 78192e2 + 961fa61 (captura en vivo de companion.py; campeón aparte de rol.py por WR encogido). 19 pruebas OK. El bucle no captura fuera de InProgress ni reutiliza archivo; el prior del encogido debe ser el WR del rol (58.3%), no el general.
+- **Estado:** revisando el commit dc14b58 (sin código: solo pizarrón y notas).
 - **Siguiente:** nada pendiente mío.
-- **Actualizado:** 2026-11-08 00:19
+- **Actualizado:** 2026-11-08 00:23
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
