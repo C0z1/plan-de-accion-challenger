@@ -38,6 +38,12 @@ class Draft(unittest.TestCase):
         js += [g("Yone", i < 3, "Viktor") for i in range(4)] + [g("Yone", i < 2) for i in range(4)]
         self.assertIn("Recomendación: Yone", self.correr(js, "viktor"))
 
+    def test_encoge_un_record_corto(self):
+        # récord crudo elegiría Yone (1-0 = 100% contra 3-1 = 75%); encogido gana Ekko (~69% contra ~41%)
+        js = [g("Yone", True, "Viktor")] + [g("Yone", i < 1) for i in range(10)]
+        js += [g("Ekko", i < 3, "Viktor") for i in range(4)] + [g("Ekko", i < 12) for i in range(16)]
+        self.assertIn("Recomendación: Ekko", self.correr(js, "viktor"))
+
     def test_rival_desconocido_avisa(self):
         out = self.correr([g("Ekko", True) for _ in range(5)], "Nadie")
         self.assertIn("no aparece", out)

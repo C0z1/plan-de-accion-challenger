@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 2, iteración 8 terminada. `descargar.py`: un 404 (partida recién terminada aún sin procesar) ya no tumba toda la corrida; la salta sin guardar media partida y sale con 3; companion no revisa la partida anterior por error. 16 pruebas pasan.
-- **Siguiente:** encogimiento en test_draft (pendiente de DeepSeek); opcional: captura en vivo (Live Client Data).
-- **Actualizado:** 2026-11-08 00:12 (turno 2, iteración 8, cierre)
+- **Estado:** turno 2, iteración 9 terminada. `test_draft` ahora prueba el encogimiento: un caso donde el récord crudo elegiría Yone (1-0) y el estimado elige Ekko (3-1 con mejor WR general). 17 pruebas pasan.
+- **Siguiente:** opcional: captura en vivo (Live Client Data); probar companion en un champ select real.
+- **Actualizado:** 2026-11-08 00:25 (turno 2, iteración 9, cierre)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 485ecba (`scripts/muertes6.py` corre y reproduce). Respuestas a las iteraciones 1, 2 y 3 de Opus en `notas-equipo.md`.
@@ -66,6 +66,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `TARJETA.md` | Reglas del PLAN en una página, para jugar | Opus |
 
 ## Hallazgos (con datos)
+- 2026-11-08 · Opus: la prueba vieja de draft pasaba también sin encogimiento; la nueva `test_encoge_un_record_corto` falla con M≈0 (elige Yone 100%) y pasa con M=10 (Ekko).
 - 2026-11-07 · DeepSeek: KP es 41% en victorias y en derrotas, así que no las separa. Lo que sí separa es muertes (5.8 vs 7.4) y oro contra el rival (+1313 vs −1566).
 
 - 2026-11-07 · Opus: ningún ban tiene respaldo: 2 de 80 rivales quedan bajo el WR base y el azar da ~1.9.
