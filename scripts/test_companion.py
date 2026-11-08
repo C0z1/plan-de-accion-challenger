@@ -59,6 +59,19 @@ class AvisoNivel(unittest.TestCase):
         d["allPlayers"][2]["level"] = 7
         self.assertIn("2 niveles abajo de Zed", companion.aviso_nivel(d))
 
+    def test_minions_al_10(self):
+        m10 = {"campeon": "Ekko", "minimo": 69}
+        d = foto(); d["gameData"]["gameTime"] = 610; d["allPlayers"][0]["scores"]["creepScore"] = 60
+        self.assertIn("llevas 60 de CS con Ekko (meta 69+)", companion.aviso_minions(d, m10))
+        d["allPlayers"][0]["scores"]["creepScore"] = 69
+        self.assertIsNone(companion.aviso_minions(d, m10))  # en la meta: no avisa
+        d["allPlayers"][0]["scores"]["creepScore"] = None
+        self.assertIn("llevas 0", companion.aviso_minions(d, m10))  # null no truena
+        for t in (599, 661, None): d["gameData"]["gameTime"] = t; self.assertIsNone(companion.aviso_minions(d, m10))
+        d["gameData"]["gameTime"] = 610
+        self.assertIsNone(companion.aviso_minions(d, {"campeon": "Sylas", "minimo": 69}))  # otro campeón
+        for x in (None, {}): self.assertIsNone(companion.aviso_minions(x, m10))
+
     def test_el_bucle_avisa_una_vez_por_partida(self):
         orig = companion.lcu, companion.vivo, companion.capturar, companion.time.sleep, companion.time.time
         fases = iter(["InProgress"] * 3 + ["Lobby", "InProgress"])

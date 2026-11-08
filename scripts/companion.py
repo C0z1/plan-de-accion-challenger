@@ -5,7 +5,8 @@ Uso:
 - ChampSelect: identifica tu posición y a tu rival (o a todos los rivales ya elegidos si no se sabe su rol)
   y corre draft.py; imprime una vez por cada cambio de rivales.
 - InProgress: cada 30 s guarda una foto de la Live Client Data API (puerto 2999) en datos/vivo/<inicio>.jsonl
-  y, del minuto 5 al 7, avisa una vez si vas abajo de nivel contra tu rival de línea.
+  y avisa una vez: del minuto 5 al 7 si vas abajo de nivel contra tu rival de línea; del 10 al 11 si vas bajo
+  la meta minions10 de config.json (p. ej. Sylas 69+).
 - EndOfGame/PreEndOfGame: espera 60 s y corre descargar.py 5 y revision.py 1 (si la key caducó, lo avisa).
 Lockfile: C:\\Riot Games\\League of Legends\\lockfile (o la variable LOL_LOCKFILE)."""
 import argparse, base64, http.client, json, os, pathlib, ssl, subprocess, sys, time, urllib.request
@@ -61,6 +62,25 @@ def aviso_nivel(d):
             f"({me.get('level') or '?'} contra {rival.get('level') or '?'}). No tradees hasta igualar; quédate en rango de XP de cada oleada.")
 
 
+CFG = DIR.parent / "config.json"  # opcional, como en revision.py
+
+
+def aviso_minions(d, m10=None):
+    """Del minuto 10 al 11, si juegas el campeón de la meta minions10 de config.json y vas bajo el mínimo: el aviso; si no, None.
+    Sylas con 69+ minions de línea al 10 → 74%, con ≤ 68 → 32% (early.py). creepScore en vivo incluye monstruos (en mid, pocos)."""
+    if m10 is None: m10 = (json.loads(CFG.read_text(encoding="utf-8")) if CFG.exists() else {}).get("minions10")
+    t = (d or {}).get("gameData", {}).get("gameTime") or 0
+    if not m10 or not 600 <= t <= 660: return None  # 60 s de ventana: la foto de cada 30 s siempre cae dentro
+    yo = d.get("activePlayer", {}); ids = {yo.get("riotId"), yo.get("summonerName")} - {None, ""}
+    me = next((p for p in d.get("allPlayers", []) if {p.get("riotId"), p.get("summonerName")} & ids), None)
+    if not me or me.get("championName") != m10["campeon"]: return None
+    cs = (me.get("scores") or {}).get("creepScore") or 0
+    if cs >= m10["minimo"]: return None
+    return (f"Min 10: llevas {cs} de CS con {m10['campeon']} (meta {m10['minimo']}+). "
+            "No roamees ni tradees a costa de oleadas hasta el 14.")
+
+
+
 def espera(fallos):
     """Segundos hasta el próximo sondeo: 3 con el cliente arriba; con fallos seguidos, 6, 12, 24 y tope 30."""
     return min(3 * 2 ** fallos, 30)
@@ -112,9 +132,9 @@ def main(argv=None):
     if a.fixture:
         d = pathlib.Path(a.fixture)
         get = lambda path: json.loads((d / ("session.json" if "champ-select" in path else "gameflow-phase.json")).read_text())
-    m, visto, fase_ant, real, archivo, ult, avisado, fallos = None, None, None, None, None, 0, False, 0
+    m, visto, fase_ant, real, archivo, ult, avisado, fallos = None, None, None, None, None, 0, set(), 0
     while True:
-        fase = get("/lol-gameflow/v1/gameflow-phase")
+        fase = get("/lol-gameflow/v1/gameflow-phase")  # fuera del try: lcu() ya atrapa todo, y las pruebas cortan el bucle desde aquí
         if fase is None and fase_ant != "cerrado": print("Cliente cerrado: espero…")
         elif fase != fase_ant: print(f"Fase: {fase}")
         jugando = (fase or real) == "InProgress"  # si el cliente se reinicia a media partida, la partida (y el puerto 2999) sigue

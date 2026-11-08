@@ -105,7 +105,7 @@ def post_partida(q):
 
 def trabajador(q):
     """El mismo bucle que companion.main, pero manda eventos a la ventana en vez de imprimir."""
-    m, visto, fase_ant, real, archivo, ult, avisado, fallos = None, None, "inicio", None, None, 0, False, 0
+    m, visto, fase_ant, real, archivo, ult, avisado, fallos = None, None, "inicio", None, None, 0, set(), 0
     while True:
         try:
             fase = companion.lcu("/lol-gameflow/v1/gameflow-phase")
@@ -119,8 +119,9 @@ def trabajador(q):
             elif fase != "ChampSelect": visto = None
             if jugando and time.time() - ult >= 30:
                 d = companion.vivo(); archivo, ult = companion.capturar(archivo, d), time.time()
-                if not avisado and (txt := companion.aviso_nivel(d)): q.put(("aviso", txt)); avisado = True
-            elif not jugando: archivo, avisado = None, False
+                for f in (companion.aviso_nivel, companion.aviso_minions):
+                    if f not in avisado and (txt := f(d)): q.put(("aviso", txt)); avisado.add(f)
+            elif not jugando: archivo, avisado = None, set()
             if fase in FIN and real not in FIN: post_partida(q); m = None
             fase_ant, real, fallos = fase, fase or real, 0 if fase else fallos + 1
         except Exception: q.put(("aviso", "Error: " + traceback.format_exc(limit=1).strip().splitlines()[-1]))
