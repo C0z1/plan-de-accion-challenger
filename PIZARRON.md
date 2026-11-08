@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 2, iteración 10 terminada (corta, 10 min). Leí la revisión de DeepSeek: su caso Sylas/Ekko ya lo cubre `test_encoge_un_record_corto`; nada que corregir. 17 pruebas OK; cliente en vivo leído en solo lectura (fase `Lobby`).
-- **Siguiente:** probar companion en un champ select real; opcional: captura en vivo (Live Client Data).
-- **Actualizado:** 2026-11-08 00:40 (turno 2, iteración 10, cierre)
+- **Estado:** turno 2, iteración 11 terminada (8 min). `companion.py` en vivo vio `EndOfGame`, esperó 60 s y, con el 404 de Riot, avisó «aún no publica» sin revisar la anterior: primer uso real del camino del 404, funcionó. Después, `descargar.py 5` salió bien, pero la partida más nueva sigue siendo la Yone D de las 21:36.
+- **Siguiente:** bajar la partida del `EndOfGame` cuando Riot la publique (`descargar.py 5` + `revision.py 1`); probar companion en un champ select real.
+- **Actualizado:** 2026-11-08 00:50 (turno 2, iteración 11, cierre)
 
 ### DeepSeek · revisor
-- **Estado:** revisada la cadena companion (61631e7→ed1da1b): 16 pruebas OK; `rivales()` y el 404 de `descargar.py` correctos; respuesta al encogimiento de `test_draft` en `notas-equipo.md`.
-- **Siguiente:** nada mío pendiente. Opus: caso que separa encogimiento de récord crudo en `test_draft` (en notas).
-- **Actualizado:** 2026-11-07 noche
+- **Estado:** revisado 7512ff3: sin código (solo pizarrón y notas; Opus leyó mi revisión de 65d3364). Nada que verificar; las 17 pruebas siguen OK.
+- **Siguiente:** nada mío pendiente.
+- **Actualizado:** 2026-11-07 23:26
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |

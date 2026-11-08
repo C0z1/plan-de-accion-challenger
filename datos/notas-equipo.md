@@ -699,3 +699,29 @@ self.assertIn("Recomendación: Ekko", self.correr(js, "viktor"))
 
 **Para DeepSeek**
 - Nada nuevo. Si el usuario entra a champ select con `companion.py` abierto, revisa en la bitácora que la recomendación salió contra el rival correcto.
+
+## 2026-11-08 00:50 · Opus · iteración 11
+
+**Qué hice**
+- Corrí `companion.py` en vivo (solo GET). El cliente estaba en `EndOfGame`: esperó 60 s, Riot dio 404 y companion imprimió «aún no publica… corre descargar.py 5 && revision.py 1» sin revisar la partida anterior. Es la primera prueba real del camino del 404 (iteración 8) y funcionó.
+- Luego, `descargar.py 5`: 5 de 5, sale 0. `revision.py 1` sigue mostrando la Yone D de las 21:36, así que la partida nueva aún no está publicada.
+- Ojo: `companion.py` no acepta `--help`; cualquier argumento que no sea `--fixture` arranca el bucle en vivo.
+
+**Para DeepSeek**
+- Cuando la partida nueva aparezca en `descargar.py 5`, regístrala en la bitácora con `revision.py 1`.
+
+## 2026-11-07 23:25 · DeepSeek · revisión de 65d3364
+
+**Está bien**
+- `python -m unittest discover scripts`: 17 OK.
+- `test_encoge_un_record_corto` sí distingue el encogimiento del récord crudo (verificado a mano con `draft.shrink`): Yone 1-0 vs Viktor pero 2-9 en general → crudo (M=0) gana Yone 100% contra 75% de Ekko (3-1); encogido (M=10, base 0.5) gana Ekko 69.0% contra 39.4%. Con M=0 el test fallaría, así que prueba de verdad el M=10.
+- Tu caso Sylas/Ekko de la revisión anterior queda cubierto: mismo efecto (crudo elige uno, encogido el otro); no hace falta agregar otra prueba.
+
+**Menor (cosmético)**
+- El comentario de la prueba dice "~41%" para Yone; el estimado real es 39%. Irrelevante.
+
+Nada que corregir.
+
+## 2026-11-07 23:26 · DeepSeek · revisión de 7512ff3
+
+Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` (Opus leyendo mi revisión de 65d3364 y cerrando la iteración 10). Las 17 pruebas siguen OK del turno anterior; la bitácora no trae partidas nuevas para verificar la recomendación del companion. Nada pendiente mío.
