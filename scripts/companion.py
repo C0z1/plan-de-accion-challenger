@@ -55,6 +55,7 @@ def post_partida():
     print("Partida terminada: espero 60 s a que Riot la publique…"); time.sleep(60)
     r = subprocess.run([sys.executable, str(DIR / "descargar.py"), "5"])
     if r.returncode == 2: print("\n*** renueva RIOT_KEY y corre: python scripts/descargar.py 5 && python scripts/revision.py 1 ***\n"); return
+    if r.returncode == 3: print("Riot aún no publica la partida (404): en unos minutos corre python scripts/descargar.py 5 && python scripts/revision.py 1"); return
     if r.returncode: print(f"descargar.py falló ({r.returncode}); la partida queda pendiente."); return
     subprocess.run([sys.executable, str(DIR / "revision.py"), "1"])
 

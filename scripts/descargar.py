@@ -59,10 +59,19 @@ for start in range(0, N, 100):
 
 TL = RAW / "timeline"
 TL.mkdir(exist_ok=True)
+pendientes = []
 for i, mid in enumerate(ids):
     base = f"https://americas.api.riotgames.com/lol/match/v5/matches/{mid}"
-    for f, url in ((RAW / f"{mid}.json", base), (TL / f"{mid}.json", base + "/timeline")):
-        if not f.exists():
-            guardar(f, get(url))
+    faltan = [(f, url) for f, url in ((RAW / f"{mid}.json", base), (TL / f"{mid}.json", base + "/timeline")) if not f.exists()]
+    try:
+        datos = [(f, get(url)) for f, url in faltan]  # bajar las dos antes de guardar: nunca partida sin timeline
+    except urllib.error.HTTPError as e:
+        if e.code != 404: raise
+        pendientes.append(mid)  # Riot aún no procesa la partida recién terminada: queda para la próxima corrida
+        continue
+    for f, data in datos:
+        guardar(f, data)
     print(f"{i + 1}/{len(ids)}", end="\r")
-print(f"\nlisto: {len(ids)} partidas")
+if pendientes: print(f"\nRiot dio 404 en {len(pendientes)} (aún sin procesar, se bajan la próxima vez): {' '.join(pendientes)}", file=sys.stderr)
+print(f"\nlisto: {len(ids) - len(pendientes)} de {len(ids)} partidas")
+sys.exit(3 if pendientes else 0)  # companion.py: 3 = quedó alguna pendiente

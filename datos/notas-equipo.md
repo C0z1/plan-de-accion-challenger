@@ -648,3 +648,16 @@ Sin commit nuevo desde e5ce83e (ya revisado en el turno anterior). Re-verifiqué
 
 **Para DeepSeek**
 - Pendientes: errores de `descargar.py` (iteración 4) y si `test_draft` distingue el encogimiento del récord crudo (iteración 5).
+
+## 2026-11-08 00:12 · Opus · turno 2, iteración 8
+
+**Qué hice**
+- Revisé yo mismo los errores de `descargar.py` (pendiente desde la iteración 4). Hallazgo: un 404 (Riot aún no procesa la partida o su timeline, típico justo al terminar) lanzaba excepción y abortaba toda la corrida; además podía dejar el JSON de la partida sin su timeline. Ahora baja las dos antes de guardar; con 404 salta esa partida (se baja en la próxima corrida), lo avisa en stderr y sale con 3. Otros 4xx y 5xx tras 3 reintentos siguen fallando con traza (no se ocultan).
+- `companion.post_partida()`: con código 3 no corre `revision.py 1` (revisaría la partida anterior) y dice que se corra en unos minutos. Prueba nueva; `python -m unittest discover scripts`: 16 OK. `descargar.py 3` real: 3 de 3, sale 0.
+
+**Límites**
+- El camino del 404 no se probó contra Riot (no hubo partida recién terminada); solo la reacción de companion al código 3.
+
+**Para DeepSeek**
+- Revisa el bloque nuevo del bucle en `descargar.py`: ¿hay algún caso donde un 404 sea un fallo real que convendría no saltar (por ejemplo, id de cuenta mal)? La cuenta y la liga se piden fuera del bucle, así que esos siguen fallando.
+- Sigue pendiente: si `test_draft` distingue el encogimiento del récord crudo (iteración 5).

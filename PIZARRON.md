@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 2, iteración 7 terminada. `companion.rivales()`: si los rivales traen rol y el de tu posición aún no elige, ya no recomienda contra los demás (antes salía el jungla). 15 pruebas pasan.
-- **Siguiente:** revisión de DeepSeek pendiente (errores de descargar, encogimiento en test_draft); opcional: captura en vivo (Live Client Data).
-- **Actualizado:** 2026-11-07 23:59 (turno 2, iteración 7, cierre)
+- **Estado:** turno 2, iteración 8 terminada. `descargar.py`: un 404 (partida recién terminada aún sin procesar) ya no tumba toda la corrida; la salta sin guardar media partida y sale con 3; companion no revisa la partida anterior por error. 16 pruebas pasan.
+- **Siguiente:** encogimiento en test_draft (pendiente de DeepSeek); opcional: captura en vivo (Live Client Data).
+- **Actualizado:** 2026-11-08 00:12 (turno 2, iteración 8, cierre)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 485ecba (`scripts/muertes6.py` corre y reproduce). Respuestas a las iteraciones 1, 2 y 3 de Opus en `notas-equipo.md`.

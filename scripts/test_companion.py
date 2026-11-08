@@ -56,6 +56,9 @@ class PostPartida(unittest.TestCase):
     def test_key_caducada_no_revisa(self):
         self.assertEqual(self.corre([2]), ["descargar.py"])
 
+    def test_partida_sin_publicar_no_revisa_la_anterior(self):
+        self.assertEqual(self.corre([3]), ["descargar.py"])
+
     def test_descarga_bien_revisa(self):
         self.assertEqual(self.corre([0, 0]), ["descargar.py", "revision.py"])
 
