@@ -97,6 +97,13 @@ class Riot(unittest.TestCase):
             builds.mejores(777, "Yone")
         self.assertFalse(list(pathlib.Path(self.tmp.name).rglob("*.json")))  # un 401 no queda en caché
 
+    def test_429_sostenido_no_cachea(self):  # antes: UnboundLocalError al escribir la caché (revisión de DeepSeek)
+        def urlopen(req, timeout=None): raise urllib.error.HTTPError(req.full_url, 429, "lento", {"Retry-After": "1"}, None)
+        with mock.patch.dict(os.environ, RIOT_KEY="falsa"), mock.patch.object(builds.urllib.request, "urlopen", urlopen), \
+                self.assertRaises(urllib.error.HTTPError):
+            builds.get("https://la1.api.riotgames.com/x", riot=True)
+        self.assertFalse(list(pathlib.Path(self.tmp.name).rglob("*.json")))
+
     def test_guardado_para_draft(self):
         self.assertEqual(builds.guardado("Yone", "MIDDLE"), [])
         r = builds.resumir([builds.build_de(*partida(), "yo", ITEMS)], ITEMS, {})

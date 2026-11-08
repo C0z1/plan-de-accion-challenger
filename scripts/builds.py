@@ -50,7 +50,7 @@ def get(url, ttl=None, riot=False):
         except urllib.error.HTTPError as e:
             if e.code == 404: data = None; break
             if e.code in (401, 403): raise SinKey(f"Riot respondió {e.code}: renueva RIOT_KEY")
-            if e.code == 429: time.sleep(int(e.headers.get("Retry-After", 10))); continue
+            if e.code == 429 and intento < 3: time.sleep(int(e.headers.get("Retry-After", 10))); continue
             if e.code < 500 or intento == 3: raise
             time.sleep(5)
     if riot: time.sleep(1.2)  # dev key: 100 llamadas cada 2 min
@@ -212,7 +212,7 @@ def informe(campeon, pos=None):
         rt = resumir([build_de(m, t, u, items) for m, t, u, _ in top], items, runas)
         txt += ["Fuente: Riot API (match-v5 y timeline), " + (", ".join(jug) or "ningún Challenger/GM lo jugó en 14 días") + "\n"]
         txt += [l + "  " for l in lineas(rt, "Los mejores")]
-    except SinKey as e:
+    except (SinKey, urllib.error.URLError) as e:  # 429 sostenido o sin red: sale tu parte, el pool sigue
         rt = None
         txt += [f"Los mejores: sin datos ({e}). Corre `builds.py {nombre}` otra vez con una key nueva.\n"]
     mias = [build_de(m, t, u, items) for m, t, u in tuyas(nombre, pos)]

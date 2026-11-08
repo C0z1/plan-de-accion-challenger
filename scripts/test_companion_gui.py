@@ -41,7 +41,21 @@ class TestTrabajador(unittest.TestCase):
             with self.assertRaises(KeyboardInterrupt): g.trabajador(q)
         finally: c.lcu, c.vivo, c.capturar, g.time.sleep, g.time.time = orig
         avisos = [e[1] for e in list(q.queue) if e[0] == "aviso"]
-        self.assertEqual(len(avisos), 1); self.assertIn("abajo de Zed", avisos[0])
+        self.assertEqual(len(avisos), 1); self.assertIn("abajo de Zed", avisos[0]["texto"])
+        self.assertEqual((avisos[0]["tipo"], avisos[0]["minuto"]), ("consejo", int(d["gameData"]["gameTime"] // 60)))
+
+    def test_error_es_tipo_error(self):
+        import queue
+        c, q = g.companion, queue.Queue()
+        orig = c.lcu, g.time.sleep
+        def dormir(_): raise KeyboardInterrupt
+        c.lcu, g.time.sleep = (lambda path: 1 / 0), dormir
+        try:
+            with self.assertRaises(KeyboardInterrupt): g.trabajador(q)
+        finally: c.lcu, g.time.sleep = orig
+        e = q.get_nowait()
+        self.assertEqual(e[0], "aviso"); self.assertEqual((e[1]["tipo"], e[1]["minuto"]), ("error", None))
+        self.assertIn("ZeroDivisionError", e[1]["texto"])
 
 
 class TestPostPartida(unittest.TestCase):

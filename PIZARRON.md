@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 5, iteración 5: `score.py` mide el duelo con tu rival de línea (`linea` 1/2) y `score.resumen()` da el score como dict para la GUI. 80 OK.
-- **Siguiente:** avisos del companion como dict `{texto, tipo, minuto}` (pedido del Diseñador).
-- **Actualizado:** 2026-11-08 (turno 5, iteración 5)
+- **Estado:** turno 5, iteración 6: los avisos de la ventana son dict `{texto, tipo: consejo|error, minuto}` (consejo en azul, error en naranja); `builds.get()` ya no truena con 429 sostenido y `--pool` sigue con los demás campeones. 82 OK.
+- **Siguiente:** aplicar la revisión del duelo (`test_ds_duelo.py`) cuando llegue; si no, resumen del turno 5 en `RESUMEN-NOCHE.md`.
+- **Actualizado:** 2026-11-08 (turno 5, iteración 6)
 
 ### DeepSeek · revisor
-- **Estado:** revisado ec8ba07 (turno 5, iteración 1): score.py y su integración en revision.py/GUI; números reproducidos (diff idéntico), 3 pruebas nuevas en `test_ds_score.py`.
-- **Siguiente:** revisar el commit de builds.py (turno 5, iteración 2).
-- **Actualizado:** 2026-11-08 14:48
+- **Estado:** revisado d03b6f4 (builds.py): «Tú» reproducido byte a byte; hallé el bug de ITEM_SOLD (dejado fallando en `test_ds_builds.py`) y Opus ya lo corrigió en bb6b9b8; respondidas Mejai/support/Ornn, Manamune/Seraph (ITEM_DESTROYED, no ITEM_SOLD) y orden de max; 2 casos más en `test_ds_builds.py` (6 total).
+- **Siguiente:** revisar el «duelo» de score.py (turno 5, iteración 5) → `test_ds_duelo.py`.
+- **Actualizado:** 2026-11-08 14:57
 
 ### Diseñador
 - **Estado:** iteración 2: `datos/diseno-propuesta.md` lista (10 preguntas para el usuario). DeepSeek bloqueado por permisos.
@@ -162,6 +162,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · DeepSeek: score.py reproduce el análisis (284 = 302 − 18 remakes, todas mapId 11); la corrección por rol no sesga con un rol raro (support sale de ~550 ajenos de todas las partidas). Menor: el control «otros» incluye a cada ajeno en su propia base (~0.2% de encogimiento), solo en la línea de control.
 - 2026-11-08 · DeepSeek (vía `test_ds_builds.py`): un legendario vendido seguía contando en el core de la build. Arreglado (solo legendarios; las botas vendidas siguen contando). Tus builds no cambian.
 - 2026-11-08 · Opus: superas en score a tu rival de línea en 44% de las partidas (38–49, n=284): 51% (43–59) en V y 35% (27–43) en D. Ganas sin ganar el duelo (cuadra con KP −0.33). Monitor.
+- 2026-11-08 · DeepSeek: el upgrade Manamune→Muramaná / Báculo→Serafín es ITEM_DESTROYED (44 y 40 en los timelines), no ITEM_SOLD, y las formas evolucionadas nunca se compran: el core muestra la forma base (cosmético). Menor sin arreglar: `get()` con 4×429 seguidos deja `data` sin asignar (UnboundLocalError).
+- 2026-11-08 · Opus: arreglado ese 429: el último se propaga sin guardarse en caché, e `informe()` lo toma como «sin datos» de los mejores (el pool no se corta).
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -207,9 +209,11 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: la post-partida de la ventana va en un hilo (uno a la vez); el reload de `draft` y `datos_draft` comparten un lock; si la revisión llega en champ select, se guarda y se muestra al empezar la partida.
 - 2026-11-08 · Opus: «los mejores con un campeón» = los 2 primeros por LP de Challenger/GM en la1 y kr con maestría jugada hace < 14 días (no un ranking de onetricks, que no es accesible). La build es la moda por posición, no la de un solo jugador.
 - 2026-11-08 · Opus: sin la build de los mejores (key caducada), champ select muestra la tuya con esa etiqueta; en cuanto `--pool` corra con key, manda la de los mejores.
+- 2026-11-08 · Opus: los avisos de la GUI son dict `{texto, tipo, minuto}` solo en la cola; `aviso_nivel`/`aviso_minions` siguen devolviendo texto (la consola y las pruebas los usan así). Los avisos del draft siguen como texto dentro de su tarjeta.
 - 2026-11-08 · Opus: el duelo de línea compara tu score con el de tu rival de la misma posición (empate = lo pierdes); sin posición no hay duelo.
 
 ## Para el usuario (cuando vuelva)
+- Nuevo: en la ventana del companion, los consejos en partida (nivel abajo, CS al 10) salen en azul y los errores (key caducada, descarga) en naranja. Recompila `Companion.exe` para tenerlo.
 - Nuevo: `score.py` ahora dice si le ganaste el duelo a tu rival de línea (columna «Duelo»): hoy lo superas en 44% de tus partidas, 35% en las derrotas.
 - Nuevo: aun sin key, `builds.py --pool` deja tu build por campeón y champ select (draft.py y la ventana) te la muestra bajo el pick («Tu build (aún sin la de los mejores)»). Con una key nueva, corre `--pool` otra vez y sale la de los mejores.
 - Nuevo: en la ventana del companion, bajo la recomendación sale la build de los mejores de ese campeón (cuando corras `builds.py --pool` con una key vigente), y si pones cola enseguida tras una partida el champ select ya no espera a que termine la descarga. Recompila `Companion.exe` para tenerlo.

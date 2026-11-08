@@ -93,6 +93,11 @@ DRAFT = threading.Lock()  # el reload de draft (hilo post-partida) no debe pisar
 POST = []  # el hilo post-partida vivo, si hay
 
 
+def aviso(texto, tipo="error", minuto=None):
+    """Evento de aviso para la cola: {texto, tipo: consejo (en partida) | error, minuto de juego o None} (pedido del Diseñador)."""
+    return ("aviso", {"texto": texto, "tipo": tipo, "minuto": minuto})
+
+
 def post_partida(q):
     """Lanza la descarga y revisión en otro hilo: tarda hasta ~7 min y el sondeo debe ver el próximo champ select."""
     if POST and POST[0].is_alive(): return
@@ -105,13 +110,13 @@ def _post_partida(q):
         code, _ = script("descargar.py", "5")
         if code != 3: break
         q.put(("post_espera", "Riot aún no publica la partida: reintento en 2 min…")); time.sleep(120)
-    if code == 2: q.put(("aviso", "Key de Riot caducada: copia la nueva del portal (se abrió) y guárdala con setx RIOT_KEY <key>")); return
-    if code: q.put(("aviso", f"No pude descargar la partida (código {code}); queda pendiente.")); return
+    if code == 2: q.put(aviso("Key de Riot caducada: copia la nueva del portal (se abrió) y guárdala con setx RIOT_KEY <key>")); return
+    if code: q.put(aviso(f"No pude descargar la partida (código {code}); queda pendiente.")); return
     if "draft" in sys.modules:
         with DRAFT: importlib.reload(sys.modules["draft"])  # partidas nuevas para el próximo champ select
     code, out = script("revision.py", "1")
     rev = parsear_revision(out)
-    q.put(("revision", {**rev, **ultima_partida()}) if rev else ("aviso", "revision.py no devolvió la partida."))
+    q.put(("revision", {**rev, **ultima_partida()}) if rev else aviso("revision.py no devolvió la partida."))
 
 
 def trabajador(q):
@@ -131,11 +136,12 @@ def trabajador(q):
             if jugando and time.time() - ult >= 30:
                 d = companion.vivo(); archivo, ult = companion.capturar(archivo, d), time.time()
                 for f in (companion.aviso_nivel, companion.aviso_minions):
-                    if f not in avisado and (txt := f(d)): q.put(("aviso", txt)); avisado.add(f)
+                    if f not in avisado and (txt := f(d)):
+                        q.put(aviso(txt, "consejo", int(((d or {}).get("gameData", {}).get("gameTime") or 0) // 60))); avisado.add(f)
             elif not jugando: archivo, avisado = None, set()
             if fase in FIN and real not in FIN: post_partida(q); m = None
             fase_ant, real, fallos = fase, fase or real, 0 if fase else fallos + 1
-        except Exception: q.put(("aviso", "Error: " + traceback.format_exc(limit=1).strip().splitlines()[-1]))
+        except Exception: q.put(aviso("Error: "+ traceback.format_exc(limit=1).strip().splitlines()[-1]))
         time.sleep(companion.espera(fallos))
 
 
@@ -269,7 +275,8 @@ class App:
         elif tipo == "post_espera": self.espera(e[1])
         elif tipo == "revision" and self.fase == "ChampSelect": self.pendiente = e[1]  # se ve al empezar la partida
         elif tipo == "revision": self.vista_revision(e[1]); self.sub.config(text=perfil())
-        elif tipo == "aviso": self.aviso.config(text=e[1]); self.aviso.pack(fill="x", after=self.sep)
+        elif tipo == "aviso":
+            a = e[1]; self.aviso.config(text=a["texto"], bg=BIEN if a["tipo"] == "consejo" else MAL); self.aviso.pack(fill="x", after=self.sep)
 
 
 def main():
