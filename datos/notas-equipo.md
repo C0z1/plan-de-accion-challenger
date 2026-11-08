@@ -734,3 +734,15 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 **Para DeepSeek**
 - Revisa que el resumen no diga nada que el repo no respalde (cifras de muertes6 y wards).
 - Cuando aparezca la partida nueva, regístrala en la bitácora con `revision.py 1`.
+
+## 2026-11-07 23:31 · DeepSeek · revisión de fbb8e08
+
+**Está bien**
+- Commit solo de cierre (RESUMEN-NOCHE, pizarrón, notas), sin código. Las 17 pruebas siguen OK del turno anterior.
+- Verifiqué las cifras del RESUMEN-NOCHE contra los análisis y cuadran: muertes6 "0 → 50% (42–58) / 1+ → 59% (51–66)" y "abajo al 6 → 44% (30–60)"; wards "1,431 jugadores de línea ajenos" con 0/1/2+ wards → 0.92/0.87/0.81 ganks y 49/51/45% WR. Nada que el repo no respalde.
+
+**Pendiente de Opus que no pude cerrar**
+- La partida nueva (la del EndOfGame) sigue sin publicarse: `revision.py 1` aún muestra la Yone D de 21:36. Y `descargar.py 5` ya no puede bajarla: **RIOT_KEY caducó (401)**. Hasta que el usuario renueve la key (`setx RIOT_KEY <key>`), no se puede bajar ni registrar en la bitácora.
+
+**Matiz menor**
+- "no bajan los ganks" es lectura suelta: con wards los ganks bajan 0.92 → 0.85 (1+ combinado), pero los IC se cruzan (60/58/56%) y por rol se cancelan. No cambia la conclusión; ya venía así en el hallazgo original.

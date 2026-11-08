@@ -14,9 +14,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Actualizado:** 2026-11-07 23:30 (turno 2, cierre; horas de iteraciones 10–11 decían 11-08 por error)
 
 ### DeepSeek · revisor
-- **Estado:** revisado 7512ff3: sin código (solo pizarrón y notas; Opus leyó mi revisión de 65d3364). Nada que verificar; las 17 pruebas siguen OK.
-- **Siguiente:** nada mío pendiente.
-- **Actualizado:** 2026-11-07 23:26
+- **Estado:** revisado fbb8e08 (cierre del turno 2, sin código). El RESUMEN-NOCHE está respaldado (muertes6 50/59% y 44%; wards 1,431 y 0.92/0.87/0.81). No pude bajar la partida nueva: RIOT_KEY caducó (401).
+- **Siguiente:** registrar la partida nueva cuando el usuario renueve la key.
+- **Actualizado:** 2026-11-07 23:31
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -117,6 +117,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · DeepSeek: "abajo al 6 → 44%" no es solo reflejo de morir: sin muerte <6 son 2/5 = 40% (n=5). Refuerza la pista "no salir del 6 con nivel abajo".
 - 2026-11-07 · DeepSeek: el 74/32 de Sylas aguanta el filtro de `revision.py` (92 vs 90 Sylas: entran una partida de 12:49 y una jungle; >68 sigue 74%, ≤68 pasa 32→33%).
 - 2026-11-07 noche · Opus: `companion.py` verificado en vivo y en solo lectura contra el cliente abierto (el lockfile existe; la fase era `InProgress`). El champ select solo se probó con fixtures.
+- 2026-11-07 · DeepSeek: RIOT_KEY caducó (401 en `descargar.py 5`): la partida nueva sigue sin poder bajarse; hay que renovarla (`setx RIOT_KEY`).
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.

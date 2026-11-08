@@ -1,5 +1,7 @@
-"""Descarga partidas de Solo/Duo de Riot API a datos/raw/. Uso: RIOT_KEY=... python scripts/descargar.py [N]"""
-import json, os, sys, time, urllib.request, urllib.error, pathlib, webbrowser
+"""Descarga partidas de Solo/Duo de Riot API a datos/raw/.
+Uso: RIOT_KEY=... [RIOT_ID="Nombre#TAG"] [RIOT_REGION=la1] python scripts/descargar.py [N]
+(por defecto cozi#1134 en la1; RIOT_REGION es la plataforma: na1, la1, la2, br1, euw1, eun1, tr1, ru, me1, kr, jp1, oc1, sg2, tw2, vn2)"""
+import json, os, sys, time, urllib.request, urllib.error, urllib.parse, pathlib, webbrowser
 
 
 def key_de_usuario():  # variable de usuario de Windows (setx), por si la terminal se abrió antes de cambiarla
@@ -12,7 +14,13 @@ def key_de_usuario():  # variable de usuario de Windows (setx), por si la termin
 
 
 KEY = os.environ.get("RIOT_KEY") or key_de_usuario() or sys.exit("Falta RIOT_KEY en el entorno")  # nunca commitear la key
-NAME, TAG = "cozi", "1134"
+NAME, _, TAG = os.environ.get("RIOT_ID", "cozi#1134").rpartition("#")
+PLATAFORMA = os.environ.get("RIOT_REGION", "la1").lower()
+RUTA = {"na1": "americas", "br1": "americas", "la1": "americas", "la2": "americas", "euw1": "europe", "eun1": "europe",
+        "tr1": "europe", "ru": "europe", "me1": "europe", "kr": "asia", "jp1": "asia", "oc1": "sea", "sg2": "sea",
+        "tw2": "sea", "vn2": "sea"}.get(PLATAFORMA) or sys.exit(f"RIOT_REGION desconocida: {PLATAFORMA}")
+CUENTA = "asia" if RUTA == "sea" else RUTA  # account-v1 no existe en sea
+if not NAME or not TAG: sys.exit('RIOT_ID debe ser "Nombre#TAG"')
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 100
 RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
 RAW.mkdir(parents=True, exist_ok=True)
@@ -47,21 +55,21 @@ def guardar(f, data):  # a .tmp y luego renombrar: un corte no deja JSON a media
     tmp.replace(f)
 
 
-acc = get(f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{NAME}/{TAG}")
+acc = get(f"https://{CUENTA}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{urllib.parse.quote(NAME)}/{urllib.parse.quote(TAG)}")
 puuid = acc["puuid"]
-league = get(f"https://la1.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}")
+league = get(f"https://{PLATAFORMA}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}")
 (RAW / "perfil.json").write_text(json.dumps({"account": acc, "league": league}, indent=1))
 
 ids = []
 for start in range(0, N, 100):
-    ids += get(f"https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
+    ids += get(f"https://{RUTA}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
                f"?queue=420&start={start}&count={min(100, N - start)}")
 
 TL = RAW / "timeline"
 TL.mkdir(exist_ok=True)
 pendientes = []
 for i, mid in enumerate(ids):
-    base = f"https://americas.api.riotgames.com/lol/match/v5/matches/{mid}"
+    base = f"https://{RUTA}.api.riotgames.com/lol/match/v5/matches/{mid}"
     faltan = [(f, url) for f, url in ((RAW / f"{mid}.json", base), (TL / f"{mid}.json", base + "/timeline")) if not f.exists()]
     try:
         datos = [(f, get(url)) for f, url in faltan]  # bajar las dos antes de guardar: nunca partida sin timeline

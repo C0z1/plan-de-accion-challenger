@@ -1,44 +1,151 @@
-# Plan de acción para llegar a Challenger
+# 🎯 Plan Challenger
 
-**Meta:** llegar a Challenger en LAN Solo/Duo lo antes posible y con el mejor win rate posible.
+<div align="center">
 
-**Cuenta:** `cozi#1134` (LAN) · [OP.GG](https://www.op.gg/summoners/lan/cozi-1134) · [League of Graphs](https://www.leagueofgraphs.com/summoner/lan/cozi-1134)
+![Python 3 stdlib](https://img.shields.io/badge/Python-3.x%20stdlib-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Sin dependencias](https://img.shields.io/badge/dependencias-0-forestgreen?style=for-the-badge)
+![Licencia MIT](https://img.shields.io/badge/licencia-MIT-yellow?style=for-the-badge)
+![Riot API](https://img.shields.io/badge/Riot%20API-LCU%20%2B%20REST-D32936?style=for-the-badge&logo=riotgames&logoColor=white)
 
-## Punto de partida (2026-11-07)
+</div>
+
+Herramienta local de código abierto que descarga tus partidas de Solo/Duo, ejecuta análisis sobre tus propios datos y convierte hallazgos en reglas accionables. Todo en Python estándar, sin dependencias.
+
+## 🚀 Inicio rápido
+
+```bash
+# 1) Clona el repositorio
+git clone https://github.com/C0z1/plan-de-accion-challenger.git
+cd plan-de-accion-challenger
+
+# 2) Configura tus variables de entorno
+# Windows (persistente; reabre la terminal después de setx)
+setx RIOT_KEY "tu_riot_api_key"
+setx RIOT_ID "tu_riot_id#tag"       # ejemplo: cozi#1134
+setx RIOT_REGION "la1"              # plataforma: la1, na1, euw1, kr, br1, jp1, etc.
+
+# macOS / Linux
+export RIOT_KEY="tu_riot_api_key"
+export RIOT_ID="tu_riot_id#tag"
+export RIOT_REGION="la1"
+
+# 3) Descarga tus últimas partidas
+python scripts/descargar.py 300
+
+# 4) Genera estadísticas agregadas
+python scripts/analizar.py
+
+# 5) Deja correr al companion mientras juegas
+python scripts/companion.py
+```
+
+> Si no defines `RIOT_ID` ni `RIOT_REGION`, usa `cozi#1134` en `la1` (el caso de estudio).
+
+`companion.py` lee el cliente de League of Legends en modo **solo lectura**:
+- En champ select detecta a tu rival de línea y ejecuta `draft.py`.
+- Al terminar la partida espera 60 s y ejecuta `descargar.py` + `revision.py`.
+
+---
+
+## 🔄 Flujo de trabajo
+
+```mermaid
+flowchart LR
+    A[Champ select] -->|companion.py lee la LCU| B[Draft / matchup]
+    B --> C[Partida]
+    C -->|EndOfGame| D[companion.py espera 60 s]
+    D --> E[descargar.py 5]
+    E --> F[revision.py 1]
+    F --> G[Análisis y PLAN actualizado]
+```
+
+---
+
+## 📦 Scripts
+
+| Grupo | Script | Qué hace |
+|---|---|---|
+| Recolección | `descargar.py` | Descarga partidas de Solo/Duo desde la Riot API a `datos/raw/`. |
+| Recolección | `companion.py` | Acompañante local del cliente: champ select sin POST/PATCH y descarga/revisión post-partida. |
+| Recolección | `analizar.py` | Resume `datos/raw/*.json` en estadísticas agregadas. |
+| Antes de la partida | `draft.py` | Matchups y draft con tus datos. |
+| Después de la partida | `revision.py` | Revisa tus últimas N partidas contra las metas del PLAN. |
+| Después de la partida | `partida.py` | Replay en datos minuto a minuto; usa `--early` para narrar 0–12. |
+| Análisis profundo | `early.py` | ¿Qué separa victorias de derrotas en el early por campeón? |
+| Análisis profundo | `timeline.py` | Diferencias a 10/14/20, muertes por fase y objetivos. |
+| Análisis profundo | `midgame.py` | Por qué pierdes partidas tras llegar al 14 con ventaja de oro. |
+| Análisis profundo | `linea.py` | Cómo pierdes la línea y cuál línea perdida se remonta. |
+| Análisis profundo | `convertir.py` | Por qué no conviertes una línea ganada. |
+| Análisis profundo | `xp.py` | De dónde sale la XP perdida contra tu rival de línea. |
+| Análisis profundo | `nivel6.py` | Nivel contra tu rival antes del 14 y desenlace. |
+| Análisis profundo | `muertes6.py` | Muertes antes del minuto 6 por tipo y campeón. |
+| Análisis profundo | `wards.py` | Control wards y win rate. |
+| Análisis profundo | `objetivos.py` | Objetivos, ganks y late. |
+| Análisis profundo | `placas.py` | Placas reales del timeline contra win rate. |
+| Análisis profundo | `castigo.py` | Cómo castigas una línea perdida. |
+| Análisis profundo | `rol.py` | Compara mid vs top como rol principal. |
+
+---
+
+## 🧭 Tu plan personal
+
+- `PLAN.md`: el plan con las reglas que salen de los datos. `TARJETA.md`: esas reglas en una página para tener a mano mientras juegas. `BITACORA.md`: el seguimiento.
+- Con [Claude Code](https://claude.com/claude-code), el agente `.claude/agents/coach-challenger.md` hace el diagnóstico y el plan: *"Usa el agente coach-challenger para hacer el diagnóstico inicial."*
+- El pool (`POOL` en `revision.py`), las metas de `revision.py` y estos documentos son los del caso de estudio: ajústalos a tu cuenta.
+
+---
+
+## 📈 Caso de estudio: cozi#1134 (LAN, Master → Challenger)
+
+Punto de partida público:
 
 | Dato | Valor |
 |---|---|
 | Rango actual | Master 15 LP |
 | Pico | Master 346 LP |
 | Temporada S2026 | 185W 156L (341 partidas, 54% WR) |
-| Últimas 20 partidas | 40% WR (bajó 14 puntos) |
+| Últimas 20 partidas | 40% WR |
 | Ladder | #8,907 (top 1.12%) |
 | Temporada anterior | Gold 3 (S2025) |
 | Clases | Mago 60%, Tirador 24%, Luchador 11% |
-| Campeones (maestría) | Ekko, Sylas, Yasuo, Yone |
+| Campeones principales | Ekko, Sylas, Yasuo, Yone |
 | KDA / KP promedio | 2.35 / 46% |
 
-Fuente: OP.GG. Los datos de cada partida y el WR por campeón están pendientes.
+Actualmente hay **284 partidas analizadas**.
 
-## Cómo se usa
+Hallazgos reales obtenidos de los datos:
 
-El agente `coach-challenger` (`.claude/agents/coach-challenger.md`) se encarga de planear todo: diagnóstico, plan semanal y seguimiento. Abre Claude Code en esta carpeta y pídele algo como:
+- **Oro al 14:** pasar de −1 000 a +1 000 de ventaja contra el rival de línea sube el win rate de **41% a 72%**.
+- **Detrás en línea:** a igualdad de oro, la XP pesa más que el CS: **65% vs 27%** de win rate.
+- **Sylas:** más de **68 minions al 10** → **74% WR**; 68 o menos → **32% WR**.
+- **Mid game:** **0–2 muertes** del minuto 14 al 25 → **74% WR**; **3+ muertes** → ~50%.
+- **Top/bot con ventaja de nivel:** cruzar el río sin ver al jungla multiplica por **1.89** las muertes.
+- **Morir antes del minuto 6** no afecta el WR por sí solo (**59% vs 50%**); ir por debajo de nivel al 6 apunta a **44% WR**.
+- **Control wards antes del 14:** no redujeron ganks ni subieron el win rate en una muestra de **1,431 jugadores de línea**.
+- **Pool resultante:** mid **Yone** (principal) y **Ekko**; top **Mordekaiser**; Sylas solo con matchup claro.
 
-> Usa el agente coach-challenger para hacer el diagnóstico inicial.
+---
 
-## Companion (champ select y post-partida automáticos)
+## 🔒 Privacidad y uso de la API
 
-Déjalo abierto en una terminal mientras juegas (con `RIOT_KEY` en el entorno):
+- Cada persona usa **su propia** `RIOT_KEY` de desarrollador o personal.
+- El cliente local se consulta **solo en lectura** vía LCU: `companion.py` nunca ejecuta POST/PATCH ni automatiza acciones.
+- No se almacenan datos de otros jugadores fuera de tu máquina.
+- `datos/raw/` está en `.gitignore`: las partidas crudas no se comparten al hacer push.
+- Pensado para cumplir las políticas de Riot para desarrolladores: uso personal y de bajo volumen.
 
-    python scripts/companion.py
+---
 
-- Lee el `lockfile` del cliente (`C:\Riot Games\League of Legends\lockfile`, o la variable `LOL_LOCKFILE`) y consulta la API local cada 3 s. **Solo lectura:** no hace nada en el cliente.
-- En champ select toma tu posición asignada y a tu rival de línea (si no se conoce el rol de los rivales, todos los ya elegidos) y corre `draft.py`. Imprime una vez por cada cambio.
-- Al terminar la partida espera 60 s y corre `descargar.py 5` y `revision.py 1`. Si la key caducó, imprime «renueva RIOT_KEY» y abre https://developer.riotgames.com; copia la key nueva (`setx RIOT_KEY <key>`: `descargar.py` también la lee de la variable de usuario de Windows, sin reabrir la terminal) y córrelo otra vez.
-- Prueba sin cliente: `python scripts/companion.py --fixture scripts/fixtures/champselect`. Pruebas: `python -m unittest discover scripts`.
+## ✅ Pruebas
 
-## Estructura
+```bash
+python -m unittest discover scripts
+```
 
-- `datos/`: snapshots del perfil y notas de partidas
-- `PLAN.md`: plan de acción vigente (lo escribe el agente)
-- `BITACORA.md`: registro de sesiones, LP y lecciones
+Las pruebas no requieren red ni `RIOT_KEY`.
+
+---
+
+## ⚖️ Aviso legal
+
+> Plan Challenger isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.
