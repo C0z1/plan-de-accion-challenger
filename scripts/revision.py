@@ -44,7 +44,8 @@ for f in RAW.glob("LA1_*.json"):
     me = next(p for p in ps if p["puuid"] == puuid)
     opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
     g = dict(win=me["win"], champ=me["championName"], t=m["gameCreation"], cw=me.get("visionWardsBoughtInGame", 0),
-             gd14=None, cd14=None, d14=None, d25=None, rio14=None)
+             gd14=None, cd14=None, d14=None, d25=None, rio14=None,
+             lm10=me.get("challenges", {}).get("laneMinionsFirst10Minutes") if me["championName"] == "Sylas" else None)
     tf = RAW / "timeline" / f.name
     if tf.exists():
         fr = json.loads(tf.read_text())["info"]["frames"]; pid = me["participantId"]
@@ -93,6 +94,9 @@ METRICAS = [
     ("Muertes antes del 14 pasado el río (río, mitad rival de tu línea o jungla rival)", lambda rs: media(rs, "rio14"),
      "monitor de la regla de prioridad 1; no separa V/D (1.10 contra 1.05)", None),
     ("Muertes del 14 al 25", lambda rs: media(rs, "d25"), "≤ 2", lambda v: v <= 2),
+    ("Sylas: partidas con 69+ minions de línea al 10",
+     lambda rs: prop(rs, lambda r: None if r["lm10"] is None else r["lm10"] > 68),
+     "> 50% (con 69+ ganas 74%, con ≤ 68, 32%)", lambda v: v > .5),
     ("Partidas con ≥ 1 control ward", lambda rs: prop(rs, lambda r: r["cw"] >= 1), "100% (1 por regreso a base)",
      lambda v: v >= .9),
     ("Control wards por partida", lambda rs: media(rs, "cw"), "≥ 1", lambda v: v >= 1),

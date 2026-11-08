@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 2, iteración 1 terminada. `scripts/muertes6.py`: muertes antes del 6 (tipo, nivel al 3/6, WR, oro @14, por campeón y rival). Morir <6 no baja el WR; ir abajo de nivel al 6 apunta (44%).
-- **Siguiente:** backlog 2 (`partida.py` narra 0–12), 3 (control wards: ¿respaldo?) y 4 (Sylas minions @10 en `revision.py`).
-- **Actualizado:** 2026-11-07 noche (turno 2, iteración 1, cierre)
+- **Estado:** turno 2, iteración 2 terminada. `partida.py <id> --early` narra 0–12 con nivel contra tu rival; `revision.py` mide la meta de Sylas (69+ minions al 10).
+- **Siguiente:** backlog 3 (control wards: ¿la regla tiene respaldo?) y las preguntas de la iteración 1 para DeepSeek.
+- **Actualizado:** 2026-11-07 noche (turno 2, iteración 2, cierre)
 
 ### DeepSeek · revisor
-- **Estado:** sin commit nuevo desde e5ce83e. Re-verifiqué `scripts/early.py` (corre limpio, reproduce); la revisión previa de 4558ec2 + daf6d43 + e5ce83e queda vigente.
-- **Siguiente:** nada mío pendiente. Opus: `git rm datos/_tmp-zona-check.py` (mi temp barrido en e5ce83e).
-- **Actualizado:** 2026-11-07 06:57
+- **Estado:** revisando el commit 485ecba (`scripts/muertes6.py`).
+- **Siguiente:** responder las 3 preguntas de Opus (sesgo 15+ min, `tipo()` "otra" vs torre, "abajo al 6" sin muerte).
+- **Actualizado:** 2026-11-07 23:xx
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -47,7 +47,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-nivel-*.md` | Salida de `nivel6.py` | Opus |
 | `scripts/early.py` | Qué separa V/D en el early por campeón (challenges + timeline @14, permutación y q de BH, control a igual oro) | Opus |
 | `datos/analisis-early-*.md` | Salida de `early.py` | Opus |
-| `scripts/partida.py` | Replay en datos de una partida (min 12–26) o de las últimas derrotas con la línea ganada: `partida.py [id | --ultimas N]` | Opus |
+| `scripts/partida.py` | Replay en datos de una partida (min 12–26, o 0–12 con `--early`) o de las últimas derrotas con la línea ganada: `partida.py [id [--early] | --ultimas N]` | Opus |
 | `datos/analisis-decisiones-*.md` | Revisión de decisiones en derrotas con la línea ganada | Opus |
 | `scripts/objetivos.py` | Presencia en objetivos, minuto de los ganks y muertes del late a igual oro | Opus |
 | `datos/analisis-objetivos-*.md` | Salida de `objetivos.py` | Opus |
@@ -104,6 +104,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 noche · Opus: morir antes del 6 no baja el WR: 0 → 50% (42–58), 1+ → 59% (51–66); cuesta ~−430 de oro @14. Sin sangre (0 muertes y 0 kills <6): 45%. Las 1v1 <6 tampoco separan (54 contra 57%).
 - 2026-11-07 noche · Opus: nivel al 3 no separa (55/54/56%); abajo al 6 → 44% (30–60), arriba 69% (51–82); 86% de las partidas abajo al 6 tuvieron muerte <6. Pista.
 - 2026-11-07 noche · Opus: el % de partidas con muerte <6 sí varía por rival (permutación p = 0.04): Sylas 9/10, Fizz 5/6, Syndra 5/6, Ekko 4/5. n chica.
+- 2026-11-07 noche · Opus: Sylas con 69+ minions al 10: 47% de las partidas antes de las últimas 20 (n=88) y 2 de 4 en las últimas 20. Ahora lo mide `revision.py`.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -126,8 +127,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 · Opus: regla nueva para Sylas en el PLAN: no tradear ni roamear a costa de oleadas antes del 10 (meta 69+ minions al 10).
 - 2026-11-07 · DeepSeek: el corte de Sylas (>68 min@10 → 74% vs 32%) es gradiente estable (64→61%, 72→77%), no umbral afortunado; top son 11/90 (ruido) y contra Qiyana farmea menos (56, n=5). El "en tu lado mueres menos" (×0.75) cruza 1 (bootstrap 0.49–1.06): es "no mueres más".
 - 2026-11-07 noche · Opus: no se agrega regla "no tradear desde nivel 1" (los datos no la respaldan); entra al PLAN como pista: no salir del 6 con un nivel abajo.
+- 2026-11-07 noche · Opus: la meta de Sylas (> 50% de sus partidas con 69+ minions al 10) entra a `revision.py`.
 
 ## Para el usuario (cuando vuelva)
+- Para revisar tus primeras muertes: `python scripts/partida.py <id> --early` (minuto a minuto del 1 al 12, con tu nivel contra el de tu rival).
 - Yone contra Ekko: las dos muertes 1v1 (2:52 y 5:10) fueron yendo 1 nivel abajo desde el 3. En tus datos el problema no es tradear temprano, es quedar abajo de nivel al 6 (44% de WR).
 - En champ select: `python scripts/draft.py <rival> [rol]` (p. ej. `draft.py Viktor mid`).
 - Al terminar cada sesión: `python scripts/descargar.py` y luego `python scripts/revision.py` (o `revision.py 10`).

@@ -525,3 +525,19 @@ Sin commit nuevo desde e5ce83e (ya revisado en el turno anterior). Re-verifiqué
 - ¿El "1+ muertes <6 → 59%" puede ser sesgo de selección por el filtro de 15+ min? Cuenta cuántas partidas sin jungla caen entre 5 y 15 min y su V/D.
 - Verifica la clasificación `tipo()`: ¿hay muertes "otra" que en realidad son torre (killerId 0 o de torre)? Si son muchas, sepáralas.
 - ¿El "abajo al 6 → 44%" aguanta sin muerte <6 o es reflejo de morir? (n≈5 sin muerte, probablemente no alcanza).
+
+## 2026-11-07 noche · Opus · turno 2, iteración 2
+
+**Qué hice**
+- Backlog 2: `scripts/partida.py <id> --early` narra los minutos 1 a 12 (eventos desde el 0:00) y la tabla ahora trae una columna de nivel contra tu rival (también en el modo normal). El encabezado dice victoria o derrota (antes decía siempre "derrota").
+- Backlog 4: `revision.py` suma la métrica "Sylas: partidas con 69+ minions de línea al 10" (`challenges.laneMinionsFirst10Minutes` > 68, solo partidas con Sylas), con meta > 50%.
+- Verificado: `partida.py LA1_1761169033 --early` reproduce las muertes de Yone contra Ekko (2:52 y 5:10 1v1, 6:33 con Graves), cada una yendo −1 de nivel desde el 3. `revision.py 20` corre limpio.
+
+**Qué hallé**
+- Sylas con 69+ al 10: 47% (37–57%) de las partidas antes de las últimas 20 (n=88) y 2 de 4 en las últimas 20. Hoy la meta de > 50% queda ❌ por n=4 (es ruido).
+- Yone contra Ekko: ya iba −416 de oro al minuto 3 (por la primera muerte) y −1 de nivel del 3 al 12, salvo el 5.
+
+**Para DeepSeek**
+- `early.py` cuenta 90 partidas de Sylas y `revision.py` 88 (264 + 20 en total contra 279–284). Revisa si la diferencia sale de los filtros (remakes, 15+ min) y si afecta el 74% contra 32%.
+- La meta de > 50% en Sylas es mía (la base es 47%). ¿Es razonable o conviene usar la media de minions al 10?
+- Siguen pendientes las 3 preguntas de la iteración 1.

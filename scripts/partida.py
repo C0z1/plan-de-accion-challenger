@@ -1,8 +1,9 @@
-"""Replay en datos de una partida: minuto a minuto del 12 al 26 (oro, zona, eventos) para revisar decisiones.
+"""Replay en datos de una partida: minuto a minuto del 12 al 26 (o del 1 al 12 con --early) para revisar decisiones.
 Uso:
   python scripts/partida.py                 lista tus últimas 15 derrotas con la línea ganada al 14 (oro >= 0)
   python scripts/partida.py LA1_1759165331  narra esa partida
   python scripts/partida.py --ultimas 8     narra las últimas 8 derrotas con la línea ganada
+  python scripts/partida.py LA1_1761169033 --early   narra el early (1–12): nivel contra tu rival y primeras muertes
 Las posiciones de los demás jugadores son por minuto (foto del frame), no del instante exacto."""
 import json, math, pathlib, sys
 
@@ -50,7 +51,7 @@ def candidatas():
     return sorted(out, reverse=True)
 
 
-def narrar(mid):
+def narrar(mid, desde=DESDE, hasta=HASTA):
     m, fr, ps, me, opp = cargar(mid)
     pid, team = me["participantId"], me["teamId"]
     nom = {p["participantId"]: ("tú" if p is me else ("aliado " if p["teamId"] == team else "rival ") + p["championName"])
@@ -59,21 +60,23 @@ def narrar(mid):
     pf = lambda mn, i: fr[min(mn, len(fr) - 1)]["participantFrames"][str(i)]
     pos = lambda mn, i: (pf(mn, i)["position"]["x"], pf(mn, i)["position"]["y"])
     eq = lambda mn: sum(pf(mn, p["participantId"])["totalGold"] * (1 if p["teamId"] == team else -1) for p in ps)
-    print(f"\n## {mid} · {me['championName']} {me['teamPosition']} contra {opp['championName']} · derrota "
+    print(f"\n## {mid} · {me['championName']} {me['teamPosition']} contra {opp['championName']} · {'victoria' if me['win'] else 'derrota'} "
           f"en {m['gameDuration'] // 60} min · KDA {me['kills']}/{me['deaths']}/{me['assists']}\n")
-    print("| min | tu zona | oro vs rival | oro equipo | CS | aliados a < 2500 | rivales a < 2500 |\n|---|---|---|---|---|---|---|")
-    for mn in range(DESDE, min(HASTA, len(fr) - 1) + 1):
+    print("| min | tu zona | nivel (vs rival) | oro vs rival | oro equipo | CS | aliados a < 2500 | rivales a < 2500 |\n"
+          "|---|---|---|---|---|---|---|---|")
+    for mn in range(max(desde, 1), min(hasta, len(fr) - 1) + 1):
         x, y = pos(mn, pid)
         cerca = lambda grupo: sum(math.dist((x, y), pos(mn, i)) < CERCA for i in grupo if i != pid)
         rivales = set(nom) - aliados
         cs = pf(mn, pid)["minionsKilled"] + pf(mn, pid)["jungleMinionsKilled"]
-        print(f"| {mn} | {zone(x, y, team)} | {pf(mn, pid)['totalGold'] - pf(mn, opp['participantId'])['totalGold']:+} "
+        lv, lvo = pf(mn, pid)["level"], pf(mn, opp["participantId"])["level"]
+        print(f"| {mn} | {zone(x, y, team)} | {lv} ({lv - lvo:+}) | {pf(mn, pid)['totalGold'] - pf(mn, opp['participantId'])['totalGold']:+} "
               f"| {eq(mn):+} | {cs} | {cerca(aliados)} | {cerca(rivales)} |")
     print("\n**Eventos**")
     for f in fr:
         for e in f["events"]:
             t = e["timestamp"]
-            if not DESDE * 60000 <= t <= HASTA * 60000: continue
+            if not desde * 60000 <= t <= hasta * 60000: continue
             if e["type"] == "CHAMPION_KILL":
                 p = e["position"]; ayuda = [nom[i] for i in e.get("assistingParticipantIds", [])]
                 yo = pid in (e["victimId"], e["killerId"], *e.get("assistingParticipantIds", []))
@@ -104,4 +107,4 @@ if __name__ == "__main__":
     elif a[0] == "--ultimas":
         for _, mid, *_ in candidatas()[:int(a[1]) if len(a) > 1 else 8]: narrar(mid)
     else:
-        narrar(a[0])
+        narrar(a[0], *((0, DESDE) if "--early" in a else ()))
