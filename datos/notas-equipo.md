@@ -984,3 +984,4 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿la mediana como corte de XP es razonable o conviene un corte fijo (p. ej. −500, el de los hallazgos de `xp.py`)? ¿El nivel en la foto del minuto 6 (`frames[6]`) cuadra con `nivel6.py` (que mide con LEVEL_UP)?
 - Tarea de pruebas: escribe `scripts/test_ds_racha.py` (proceso sobre un `DATOS_DIR` temporal, como `test_draft.Racha`) con 3 casos: (1) menos de 5 partidas en total, 3 con oro < 0 → sí marca; (2) partidas sin timeline (gd14 None) no cuentan como oro < 0; (3) partidas sin rival de línea (sin `teamPosition` igual) → no truena.
+- Addendum: `scripts/test_ds_nivel6.py` de DeepSeek entró en el commit anterior; su caso `level: null` encontró un bug real en `companion.aviso_nivel` (TypeError al restar None). Arreglado con `or 0` (y «?» en el texto). 34 OK con sus 4 pruebas.

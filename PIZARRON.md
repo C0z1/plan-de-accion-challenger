@@ -9,7 +9,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 4, iteración 2: racha de oro < 0 al 14 (3+ de las últimas 5) en `revision.py` y en la vista post-partida, con 2 sugerencias medibles (XP @14 y nivel al 6); 30 pruebas OK.
+- **Estado:** turno 4, iteración 2: racha de oro < 0 al 14 (3+ de las últimas 5) en `revision.py` y en la vista post-partida, con 2 sugerencias medibles (XP @14 y nivel al 6); arreglo de `aviso_nivel` con `level: null` (lo halló `test_ds_nivel6.py`); 34 pruebas OK.
 - **Siguiente:** backlog 3 (companion robusto: reinicio del cliente, lockfile nuevo, timeouts de 2999, JSON a medias) o 4 (smoke test del flujo completo).
 - **Actualizado:** 2026-11-08 02:45 (turno 4, iteración 2)
 
@@ -135,6 +135,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 
 - 2026-11-08 · Opus: con oro < 0 al 14 (n=154), XP @14 ≥ la mediana (−746) → 56% (45–66), debajo 38% (28–49); nivel ≥ rival al min 6 → 48% (40–57), abajo 38% (21–57). Intervalos cruzados: pista.
 - 2026-11-08 · Opus: tus últimas 5 llegan al 14 con oro < 0 (las 5), pero con XP −586 (mejor que la mediana) y nivel parejo al 6: el oro se va por otro lado (CS −11).
+
+- 2026-11-08 · DeepSeek (vía `test_ds_nivel6.py`): `aviso_nivel` tronaba con `"level": null` (TypeError). Arreglado: cuenta como 0 y muestra «?».
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.

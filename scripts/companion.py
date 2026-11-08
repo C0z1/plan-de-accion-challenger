@@ -55,9 +55,9 @@ def aviso_nivel(d):
     me = next((p for p in ps if {p.get("riotId"), p.get("summonerName")} & ids), None)
     if not me or not me.get("position"): return None
     rival = next((p for p in ps if p.get("position") == me["position"] and p.get("team") != me.get("team")), None)
-    if not rival or (n := rival.get("level", 0) - me.get("level", 0)) < 1: return None
+    if not rival or (n := (rival.get("level") or 0) - (me.get("level") or 0)) < 1: return None  # level puede venir null
     return (f"Min {int(t // 60)}: vas {n} nivel{'es' if n > 1 else ''} abajo de {rival.get('championName', 'tu rival')} "
-            f"({me.get('level', '?')} contra {rival.get('level', '?')}). No tradees hasta igualar; quédate en rango de XP de cada oleada.")
+            f"({me.get('level') or '?'} contra {rival.get('level') or '?'}). No tradees hasta igualar; quédate en rango de XP de cada oleada.")
 
 
 def rivales(s):
