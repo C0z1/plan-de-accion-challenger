@@ -89,9 +89,13 @@ for rol in (R1, R2):
         rs = [g for g in por_rol[rol] if g["champ"] == ch]
         print(f"| {rol} | {ch} | {wr(rs)} | {avg([r for r in rs if r['gd14'] is not None], 'gd14'):+.0f} |")
 
-# el campeón de mejor WR (3+ partidas) en tu 2.º rol: ¿ese rol rinde por él o por el rol? (cozi: Mordekaiser top)
+# el campeón de mejor WR en tu 2.º rol, encogido M=10 hacia el WR del rol como draft.py (un 3/3 no gana solo): ¿el rol rinde por él? (cozi: Mordekaiser top)
 c2 = [ch for ch, n in Counter(g["champ"] for g in por_rol[R2]).items() if n >= 3]
-MEJOR = max(c2, key=lambda ch: st.mean(g["win"] for g in por_rol[R2] if g["champ"] == ch), default=None)
+P_R2 = st.mean(g["win"] for g in por_rol[R2]) if por_rol[R2] else 0
+def encogido(ch):
+    ws = [g["win"] for g in por_rol[R2] if g["champ"] == ch]
+    return (sum(ws) + 10 * P_R2) / (len(ws) + 10)
+MEJOR = max(c2, key=encogido, default=None)
 EN_POOL = [c for c in POOL if any(g["champ"] == c for g in por_rol[R1])]
 print(f"\n## {R2.capitalize()} sin {MEJOR} y {R1} solo con el pool ({', '.join(EN_POOL)})\n\n| Grupo | WR |\n|---|---|")
 print(f"| {R2.capitalize()} con {MEJOR} | {wr([g for g in por_rol[R2] if g['champ'] == MEJOR])} |")
