@@ -3,7 +3,8 @@
 > Versión corta de `PLAN.md` (2026-11-07). Si algo cambia allá, cambia aquí.
 
 ## Champ select
-- `python scripts/draft.py <rival> [rol]`
+- Lo más fácil: deja abierto `python scripts/companion.py`; recomienda el pick en champ select y revisa la partida al terminar.
+- A mano: `python scripts/draft.py <rival> [rol]`
 - **Mid:** Yone (principal) o Ekko. ¿Crees que pierdes la línea? **Yone.**
 - **Top:** Mordekaiser (o Yone). Nunca Sylas top.
 - **Sylas:** solo con matchup claramente bueno.
@@ -29,4 +30,4 @@
 13. **¿Vas parejo o abajo?** Llega a los objetivos con tu equipo (si no llegas, cédelo sin morir). **¿Vas +2000?** No hace falta forzar: empuja una línea lateral. *(Pista.)*
 
 ## Después de cada sesión
-- `python scripts/descargar.py` y luego `python scripts/revision.py`
+- `python scripts/descargar.py` y luego `python scripts/revision.py` (si usas `companion.py`, ya lo hace él)

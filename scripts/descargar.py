@@ -1,7 +1,7 @@
 """Descarga partidas de Solo/Duo de Riot API a datos/raw/. Uso: RIOT_KEY=... python scripts/descargar.py [N]"""
 import json, os, sys, time, urllib.request, urllib.error, pathlib
 
-KEY = os.environ["RIOT_KEY"]  # nunca commitear la key
+KEY = os.environ.get("RIOT_KEY") or sys.exit("Falta RIOT_KEY en el entorno")  # nunca commitear la key
 NAME, TAG = "cozi", "1134"
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 100
 RAW = pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw"
@@ -9,16 +9,30 @@ RAW.mkdir(parents=True, exist_ok=True)
 
 
 def get(url):
+    fallos = 0
     while True:
         req = urllib.request.Request(url, headers={"X-Riot-Token": KEY, "User-Agent": "plan-challenger"})  # Riot 403 al UA de urllib
         try:
-            with urllib.request.urlopen(req) as r:
+            with urllib.request.urlopen(req, timeout=30) as r:
                 return json.load(r)
         except urllib.error.HTTPError as e:
             if e.code == 429:  # rate limit de dev key: esperar lo que pida Riot
                 time.sleep(int(e.headers.get("Retry-After", 10)))
                 continue
-            raise
+            if e.code in (401, 403):  # companion.py lee el código 2
+                print(f"\nRiot respondió {e.code}: renueva RIOT_KEY (la dev key caduca en ~24 h)", file=sys.stderr)
+                sys.exit(2)
+            if e.code < 500 or fallos >= 3: raise
+        except (urllib.error.URLError, TimeoutError):
+            if fallos >= 3: raise
+        fallos += 1
+        time.sleep(5 * fallos)  # 5xx o red: reintentar
+
+
+def guardar(f, data):  # a .tmp y luego renombrar: un corte no deja JSON a medias
+    tmp = f.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data))
+    tmp.replace(f)
 
 
 acc = get(f"https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{NAME}/{TAG}")
@@ -37,6 +51,6 @@ for i, mid in enumerate(ids):
     base = f"https://americas.api.riotgames.com/lol/match/v5/matches/{mid}"
     for f, url in ((RAW / f"{mid}.json", base), (TL / f"{mid}.json", base + "/timeline")):
         if not f.exists():
-            f.write_text(json.dumps(get(url)))
+            guardar(f, get(url))
     print(f"{i + 1}/{len(ids)}", end="\r")
 print(f"\nlisto: {len(ids)} partidas")

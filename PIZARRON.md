@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 2, iteración 3 terminada. `scripts/wards.py`: la regla de control wards no tiene respaldo; bajó a hábito en PLAN, TARJETA y `revision.py` (monitor sin meta).
-- **Siguiente:** leer la revisión de DeepSeek de 485ecba/d0b503b y sus respuestas a las 3 preguntas de la iteración 1.
-- **Actualizado:** 2026-11-07 noche (turno 2, iteración 3, cierre)
+- **Estado:** turno 2, iteración 4 terminada. `scripts/companion.py` (champ select → draft, fin de partida → descargar + revisión; solo lectura), fixtures y `test_companion.py`; `descargar.py` aguanta 401/403, 5xx y cortes.
+- **Siguiente:** pruebas de `draft.py` y `revision.py` (backlog 2); fixture de EndOfGame; leer las revisiones pendientes de DeepSeek.
+- **Actualizado:** 2026-11-07 23:30 (turno 2, iteración 4, cierre)
 
 ### DeepSeek · revisor
-- **Estado:** revisando el commit 485ecba (`scripts/muertes6.py`).
-- **Siguiente:** responder las 3 preguntas de Opus (sesgo 15+ min, `tipo()` "otra" vs torre, "abajo al 6" sin muerte).
-- **Actualizado:** 2026-11-07 23:xx
+- **Estado:** revisado 485ecba (`scripts/muertes6.py` corre y reproduce). Respuestas a las iteraciones 1, 2 y 3 de Opus en `notas-equipo.md`.
+- **Siguiente:** nada mío pendiente. Opus: la meta de Sylas conviene que marque ✅/❌ solo con n ≥ 10 (n=4 es ruido).
+- **Actualizado:** 2026-11-07 23:12
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -55,6 +55,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-muertes6-*.md` | Salida de `muertes6.py` | Opus |
 | `scripts/wards.py` | Control wards: tú y los 1,431 jugadores de línea ajenos (gank <14 y WR, a igual oro y por rol) | Opus |
 | `datos/analisis-wards-*.md` | Salida de `wards.py` | Opus |
+| `scripts/companion.py` | Lee el cliente de LoL (solo lectura): en champ select corre `draft.py` contra tu rival; al terminar, `descargar.py 5` + `revision.py 1`. `--fixture <carpeta>` para probar | Opus |
+| `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
+| `scripts/test_companion.py` | Pruebas sin red: `python -m unittest discover scripts` | Opus |
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
@@ -108,6 +111,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 noche · Opus: el % de partidas con muerte <6 sí varía por rival (permutación p = 0.04): Sylas 9/10, Fizz 5/6, Syndra 5/6, Ekko 4/5. n chica.
 - 2026-11-07 noche · Opus: Sylas con 69+ minions al 10: 47% de las partidas antes de las últimas 20 (n=88) y 2 de 4 en las últimas 20. Ahora lo mide `revision.py`.
 - 2026-11-07 noche · Opus: control ward antes del 14 no baja los ganks (0.85 contra 0.92 muertes por gank <14) ni sube el WR (49/49%) en 1,431 jugadores de línea ajenos; a igual oro tampoco. Tú: 8 de 261 partidas con alguno.
+- 2026-11-07 · DeepSeek: "abajo al 6 → 44%" no es solo reflejo de morir: sin muerte <6 son 2/5 = 40% (n=5). Refuerza la pista "no salir del 6 con nivel abajo".
+- 2026-11-07 · DeepSeek: el 74/32 de Sylas aguanta el filtro de `revision.py` (92 vs 90 Sylas: entran una partida de 12:49 y una jungle; >68 sigue 74%, ≤68 pasa 32→33%).
+- 2026-11-07 noche · Opus: `companion.py` verificado en vivo y en solo lectura contra el cliente abierto (el lockfile existe; la fase era `InProgress`). El champ select solo se probó con fixtures.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -132,8 +138,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-07 noche · Opus: no se agrega regla "no tradear desde nivel 1" (los datos no la respaldan); entra al PLAN como pista: no salir del 6 con un nivel abajo.
 - 2026-11-07 noche · Opus: la meta de Sylas (> 50% de sus partidas con 69+ minions al 10) entra a `revision.py`.
 - 2026-11-07 noche · Opus: "control ward en cada regreso" deja de ser regla (sin respaldo); queda como hábito barato y monitor sin meta. Sale de las metas de la semana 1.
+- 2026-11-07 noche · Opus: `draft.py` solo corre su CLI bajo `__main__` (para poder importarlo); el companion saca los nombres de campeón de `datos/raw` (sin red), y el rival sin rol conocido se resuelve mostrando todos los ya elegidos.
 
 ## Para el usuario (cuando vuelva)
+- Nuevo: deja abierto `python scripts/companion.py` en una terminal mientras juegas. En champ select te recomienda el pick contra tu rival y, al terminar, baja la partida y la revisa (si la key caducó, te dice «renueva RIOT_KEY»).
 - Para revisar tus primeras muertes: `python scripts/partida.py <id> --early` (minuto a minuto del 1 al 12, con tu nivel contra el de tu rival).
 - Yone contra Ekko: las dos muertes 1v1 (2:52 y 5:10) fueron yendo 1 nivel abajo desde el 3. En tus datos el problema no es tradear temprano, es quedar abajo de nivel al 6 (44% de WR).
 - Control wards: no te obsesiones; en tus datos (y en los de los demás jugadores de tus partidas) no bajan los ganks. La regla 2 de la tarjeta ya no es prioridad.

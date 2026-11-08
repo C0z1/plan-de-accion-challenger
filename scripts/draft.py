@@ -134,9 +134,10 @@ def draft(rival, pos):
     if len(vs) < 5: print("Ojo: menos de 5 partidas contra este rival; la recomendación sale casi toda de tu WR general.")
 
 
-if len(sys.argv) > 1:
-    rol = sys.argv[2].lower() if len(sys.argv) > 2 else "mid"
-    if rol not in ROLES: sys.exit(f"Rol desconocido: {rol}. Usa: {', '.join(ROLES)}")
-    draft(sys.argv[1], ROLES[rol])
-else:
-    guia()
+if __name__ == "__main__":  # companion.py lo importa
+    if len(sys.argv) > 1:
+        rol = sys.argv[2].lower() if len(sys.argv) > 2 else "mid"
+        if rol not in ROLES: sys.exit(f"Rol desconocido: {rol}. Usa: {', '.join(ROLES)}")
+        draft(sys.argv[1], ROLES[rol])
+    else:
+        guia()
