@@ -19,7 +19,7 @@ def wilson(k, n, z=1.96):
     if not n: return (0, 0)
     p = k / n; d = 1 + z * z / n
     c = (p + z * z / (2 * n)) / d; h = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
-    return (c - h, c + h)
+    return (max(0, c - h), min(1, c + h))  # sin el recorte, 0 de n salía «-0%» por redondeo
 
 
 def shrink(k, n, p0): return (k + M * p0) / (n + M)
@@ -120,9 +120,25 @@ def datos_draft(rival, pos):
         p0 = shrink(sum(r["win"] for r in rs), len(rs), base)  # el prior del campeón también se encoge hacia tu base
         mv = [r for r in vs if r["champ"] == c]
         v = sum(r["win"] for r in mv)
-        filas.append(dict(est=shrink(v, len(mv), p0), champ=c, wr_rol=wr(rs), vd=f"{v}-{len(mv) - v}", oro=gd(mv)))
+        filas.append(dict(est=shrink(v, len(mv), p0), champ=c, wr_rol=wr(rs), vd=f"{v}-{len(mv) - v}", oro=gd(mv), n=len(rs),
+                          counter=wilson(v, len(mv))[1] < base if mv else False))  # techo < base, el criterio de los bans
     filas.sort(key=lambda f: -f["est"])
-    return dict(nombre=nombre, conocido=bool(en), vs=vs, en=en, filas=filas)
+    return dict(nombre=nombre, conocido=bool(en), vs=vs, en=en, filas=filas, avisos=avisos(filas, nombre, pos))
+
+
+def avisos(filas, nombre, pos):
+    """Avisos sobre el pick recomendado (filas[0]), cada uno con una alternativa si la hay."""
+    if not filas: return []
+    b, out = filas[0], []
+    if b["n"] < 5:
+        alt = max(filas, key=lambda f: f["n"])
+        out.append(f"{b['champ']} tiene solo {b['n']} partidas en {pos}: el estimado es casi puro azar. "
+                   + (f"Alternativa: {alt['champ']} ({alt['n']} partidas, {alt['est']:.0%})." if alt is not b else "No tienes otro con más partidas en el rol."))
+    if b["counter"]:
+        alt = next((f for f in filas[1:] if not f["counter"]), None)
+        out.append(f"{b['champ']} va {b['vd']} contra {nombre}: aun en el mejor caso queda bajo tu WR base (counter duro). "
+                   + (f"Alternativa: {alt['champ']} ({alt['est']:.0%})." if alt else "Ningún otro de tu pool lo evita."))
+    return out
 
 
 def draft(rival, pos):
@@ -139,6 +155,7 @@ def draft(rival, pos):
           f"Estimado = tu récord contra {nombre} mezclado con tu WR del campeón en el rol (pesa como {M} partidas), "
           f"que a su vez se mezcla con tu WR base.")
     if len(vs) < 5: print("Ojo: menos de 5 partidas contra este rival; la recomendación sale casi toda de tu WR general.")
+    for a in d["avisos"]: print(f"Aviso: {a}")
 
 
 if __name__ == "__main__":  # companion.py lo importa

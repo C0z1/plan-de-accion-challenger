@@ -214,6 +214,8 @@ class App:
                    (c.delete("all"), c.create_rectangle(0, 0, e.width * est, 6, fill=col, width=0)))
         self.tk.Label(t, text="Tu récord contra el rival, mezclado con tu WR del campeón en el rol.", bg=PANEL, fg=MUTED,
                       font=(F, 8), wraplength=340, justify="left").pack(anchor="w", pady=(10, 0))
+        for a in d.get("avisos", []):
+            self.tk.Label(t, text=a, bg=PANEL, fg=MAL, font=(F, 9, "bold"), wraplength=340, justify="left").pack(anchor="w", pady=(8, 0))
         self.reglas()
 
     def vista_revision(self, r):

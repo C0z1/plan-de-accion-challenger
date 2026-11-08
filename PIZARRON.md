@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 4, iteración 3: companion robusto (respuesta cortada ya no lo tumba, reinicio del cliente a media partida sigue la misma grabación sin repetir aviso ni descarga, espera creciente 3→30 s, try/except en consola) en `companion.py` y la GUI; arreglo de `gameTime: null` (lo halló DeepSeek); 41 pruebas OK.
-- **Siguiente:** backlog 4 (smoke test del flujo completo sin cliente, en el CI) o 5 (aviso de draft con pocas partidas o counter duro).
-- **Actualizado:** 2026-11-08 03:10 (turno 4, iteración 3)
+- **Estado:** turno 4, iteración 4: `draft.datos_draft()` trae `avisos` (pick con < 5 partidas en el rol, o counter duro: techo Wilson contra el rival < tu base) con alternativa; consola y GUI los muestran. Wilson recortado a [0, 1]. 47 pruebas OK (incluye `test_ds_racha.py`).
+- **Siguiente:** backlog 4 (smoke test del flujo completo del companion sin cliente, en el CI).
+- **Actualizado:** 2026-11-08 03:40 (turno 4, iteración 4)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 3d9e4ae (cierre del turno 3: el resumen cuadra con 23af793…dc14b58; 19 pruebas OK).
@@ -140,6 +140,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · DeepSeek (vía `test_ds_nivel6.py`): `aviso_nivel` tronaba con `"level": null` (TypeError). Arreglado: cuenta como 0 y muestra «?».
 - 2026-11-08 · Opus: una respuesta cortada del cliente (`http.client.IncompleteRead`) no es `OSError` ni `ValueError`: tumbaba `companion.py`. Y un reinicio del cliente a media partida partía la grabación y repetía el aviso. Arreglados.
 - 2026-11-08 · DeepSeek (vía `test_ds_nivel6.py`): `aviso_nivel` también tronaba con `gameTime: null`. Arreglado.
+- 2026-11-08 · Opus: el aviso de draft no salta con ninguno de tus 99 rivales de mid/top: el único counter duro de tu pool (Ekko 0-4 contra Viktor) ya no sale recomendado por el encogido M=10.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -177,8 +178,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: la racha de oro bajo usa siempre las últimas 5 partidas (aunque corras `revision.py 1`), mide el nivel con la foto del minuto 6 (como el aviso en vivo) y marca «pista» sola si los intervalos de Wilson se cruzan.
 
 - 2026-11-08 · Opus: tras un reinicio del cliente, el companion sigue la última fase real (no `None`): si era `InProgress`, sigue grabando del puerto 2999 en el mismo archivo.
+- 2026-11-08 · Opus: «counter duro» en draft = techo Wilson del récord del pick contra el rival < tu WR base (el criterio de los bans); la alternativa es el siguiente por estimado que no lo sea. El aviso no cambia la recomendación, solo la anota.
 
 ## Para el usuario (cuando vuelva)
+- Nuevo: en champ select, si el pick recomendado tiene menos de 5 partidas en el rol o es un counter duro del rival (incluso en el mejor caso queda bajo tu WR base), `draft.py` y la ventana lo avisan en rojo y te dan una alternativa.
 - Nuevo: si el cliente de LoL se reinicia a media partida, el companion sigue grabando la misma partida y no repite avisos; con el cliente cerrado sondea cada vez menos (hasta cada 30 s). Recompila `Companion.exe` para tenerlo.
 - Nuevo: si 3 o más de tus últimas 5 partidas llegan al 14 con oro < 0, `revision.py` y la ventana post-partida del companion lo marcan con 2 metas: XP al 14 a −746 o mejor contra tu rival y llegar al 6 sin nivel abajo.
 - Nuevo: entre el minuto 5 y el 7, el companion te avisa si vas abajo de nivel contra tu rival de línea («no tradees hasta igualar»). Solo en ranked/draft (necesita la posición); reinicia el companion o recompila `Companion.exe` para tenerlo.

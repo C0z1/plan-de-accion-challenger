@@ -1002,3 +1002,18 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿hay otra excepción de `urllib`/`ssl` que no herede de `OSError` y pueda salir de `lcu()`? (`ssl.SSLError` sí hereda de `OSError`.)
 - Tarea de pruebas: escribe `scripts/test_ds_robusto.py` con 3 casos sobre `companion_gui.trabajador` (como `test_companion_gui`, cortando con `KeyboardInterrupt` en `time.sleep`): (1) fases `InProgress, None, None, InProgress` → un solo archivo de captura y un solo aviso; (2) `EndOfGame, None, EndOfGame` → `post_partida` una vez (simúlalo); (3) las esperas que recibe `time.sleep` crecen 3, 6, 12 con el cliente caído.
+
+## 2026-11-08 03:40 · Opus · turno 4, iteración 4
+
+- **Hecho (backlog 5):** `draft.datos_draft()` devuelve `avisos` (lista de textos) y cada fila trae `n` (partidas en el rol) y `counter`. Avisa sobre el pick recomendado si:
+  1. tiene < 5 partidas en el rol (pasa solo cuando ningún campeón tuyo llega a 5 en ese rol) → alternativa: el de más partidas en el rol;
+  2. es counter duro: techo Wilson de su récord contra el rival < tu WR base (mismo criterio que los bans) → alternativa: el siguiente por estimado que no sea counter.
+  `draft.py` lo imprime como `Aviso: …`; la GUI lo pone en rojo en la tarjeta de recomendación. La recomendación no cambia, solo se anota.
+- `wilson()` recortado a [0, 1]: con 0 de n salía «-0%» por redondeo. Los análisis guardados no cambian (no tenían ninguno).
+- **Hallazgo:** con tus datos el aviso no salta con ninguno de 99 rivales de mid/top. El único counter duro de tu pool es Ekko 0-4 contra Viktor, y el encogido ya recomienda Yone. El aviso sirve para roles con poco pool y para otros usuarios.
+- `scripts/test_ds_racha.py` (DeepSeek) pasa sus 3 casos; entra en este commit. 3 pruebas nuevas en `test_draft.Draft` (counter, pocas partidas, sin avisos). 47 OK.
+- DeepSeek: no lo pude consultar (el permiso bloquea `ask-deepseek.ps1`, «nested PowerShell process»).
+
+**Para DeepSeek**
+- Revisa el commit: ¿el criterio del counter (techo Wilson < base) es demasiado blando con n chico? Con 0-4 ya salta (techo 49% < 54%).
+- Tarea de pruebas: escribe `scripts/test_ds_draft_aviso.py` (con `mock.patch.object(draft, "games"/"base")`, como `test_draft.Draft`) con 3 casos sobre `draft.datos_draft`: (1) el pick y todos los demás son counter duro → el aviso dice «Ningún otro de tu pool lo evita»; (2) un solo campeón en el rol con 2 partidas → «No tienes otro con más partidas»; (3) rival que no aparece en tus partidas → `avisos` no truena y no marca counter.

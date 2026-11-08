@@ -52,6 +52,25 @@ class Draft(unittest.TestCase):
         self.assertIn("no aparece", out)
         self.assertIn("Recomendación: Ekko", out)
 
+    def test_counter_duro_avisa_y_da_alternativa(self):
+        # Ekko es el mejor estimado (gana mucho en general) pero va 0-5 contra Viktor: techo Wilson 43% < base 50%
+        js = [g("Ekko", True) for _ in range(30)] + [g("Ekko", False, "Viktor") for _ in range(5)]
+        js += [g("Yone", i < 5) for i in range(10)]
+        out = self.correr(js, "Viktor")
+        self.assertIn("Recomendación: Ekko", out)
+        self.assertIn("(counter duro). Alternativa: Yone", out)
+
+    def test_pocas_partidas_en_el_rol_avisa(self):
+        # sin nadie con 5+ en top: Yone 2-0 sale primero, alternativa Mordekaiser (4 partidas)
+        js = [g("Yone", True, pos="TOP") for _ in range(2)] + [g("Mordekaiser", i < 2, pos="TOP") for i in range(4)]
+        out = self.correr(js, "Zed", "TOP")
+        self.assertIn("Yone tiene solo 2 partidas en TOP", out)
+        self.assertIn("Alternativa: Mordekaiser (4 partidas", out)
+
+    def test_sin_avisos_con_pool_sano(self):
+        js = [g("Ekko", i < 6) for i in range(10)] + [g("Ekko", True, "Viktor") for _ in range(3)]
+        self.assertNotIn("Aviso:", self.correr(js, "Viktor"))
+
     def test_rol_sin_partidas(self):
         self.assertIn("No tienes partidas en ese rol", self.correr([g("Ekko", True)], "Zed", "TOP"))
 
