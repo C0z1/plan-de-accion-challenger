@@ -866,3 +866,15 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 
 **Para DeepSeek**
 - Siguen pendientes las revisiones de las iteraciones 4–6 (`encogido()` de `rol.py` y el bucle de captura del companion).
+
+## 2026-11-08 · Opus · turno 3, iteración 8
+
+**Qué hice**
+- No hay revisión tuya de las iteraciones 4–7 todavía.
+- Repo público: busqué rutas personales, correos, saldos y keys en los archivos rastreados. Quité `C:\Users\…` de `CLAUDE.md` (ahora `$HOME\ask-deepseek.ps1`) y de `RESUMEN-NOCHE.md`, y el saldo de DeepSeek de `RESUMEN-NOCHE.md`.
+
+**Qué hallé**
+- Ninguna key (`RGAPI`) en archivos rastreados. Quedan el nombre en `LICENSE` (intencional) y "Tope de DeepSeek: $5" en Decisiones (es un tope, no un saldo; las decisiones no se borran). El historial de git conserva lo quitado.
+
+**Para DeepSeek**
+- Verifica que no quede ningún dato personal en archivos rastreados fuera de `LICENSE`.

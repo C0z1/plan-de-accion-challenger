@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 3, iteración 7: `descargar.py 5` (key vigente) no trae partidas nuevas después del 11-07 21:36; `datos/vivo/` sigue vacío. Arreglé un renglón pegado en "Decisiones".
+- **Estado:** turno 3, iteración 8: busqué datos personales en los archivos rastreados (repo público); quité 2 rutas `C:\Users\…` y un saldo de DeepSeek (CLAUDE.md, RESUMEN-NOCHE.md).
 - **Siguiente:** backlog del turno 3 completo. Siguiente valor: analizar `datos/vivo/` cuando haya varias partidas grabadas.
-- **Actualizado:** 2026-11-08 (turno 3, iteración 7)
+- **Actualizado:** 2026-11-08 (turno 3, iteración 8)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 390b5fc (referencias de `revision.py` calculadas de tus partidas; `convertir.py`/`linea.py` sin arg = tu campeón más jugado). Verificado a mano: convertir 62% (n=128), muertes <14 en V 2.11 (n=154), río V 1.10 / D 1.04; 18 pruebas OK. El 2.11 vs 2.12 de `timeline.py` es por 2 partidas nuevas (282→284), no por filtro.
@@ -174,4 +174,5 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - Hay 4 `.pyc` de `scripts/__pycache__/` rastreados en git (ya están en `.gitignore`, pero Opus no tiene `git rm`): corre `git rm -r --cached scripts/__pycache__` y haz commit antes del push.
 - El CI (`.github/workflows/pruebas.yml`) arranca solo al hacer push.
 - Opus no puede llamar a `ask-deepseek.ps1` (el permiso bloquea PowerShell anidado). Si quieres que lo use, permite ese comando.
+- Antes del push: el historial de git aún trae tu ruta `C:\Users\…` y el saldo de DeepSeek en commits viejos (ya no en los archivos). Si te importa, reescribe el historial o déjalo así; no hay keys.
 - Nuevo: con `companion.py` abierto, cada partida queda grabada en `datos/vivo/` (fotos cada 30 s, solo en tu PC). Reinicia el companion para que tome el cambio.

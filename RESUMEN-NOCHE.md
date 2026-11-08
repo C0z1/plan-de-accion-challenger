@@ -26,9 +26,9 @@
 
 ## Cómo fue
 - **Opus (constructor):** 17 iteraciones completas; la 18 se cortó por el límite del plan (06:47). Costo equivalente ≈ $16.5.
-- **DeepSeek (revisor):** 6 revisiones de commits. Saldo $9.83 → $8.90 (**$0.93**; tope era $5).
+- **DeepSeek (revisor):** 6 revisiones de commits.
 - **Commits:** 17, de `59e6e88` (timeline) a `e5ce83e` (early por campeón), más este de cierre.
-- Registro completo: `C:\Users\felix\noche-challenger\estado.log`. Detalle por turno: `datos/notas-equipo.md`.
+- Registro completo: `estado.log` del turno nocturno (fuera del repo). Detalle por turno: `datos/notas-equipo.md`.
 
 ## Lo que cambió en el PLAN (para jugar)
 1. **Oro al 14 es la palanca:** de −1000 a +1000 pasas de 41% a 72% de WR.
