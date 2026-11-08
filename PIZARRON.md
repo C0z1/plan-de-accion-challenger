@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 3, iteración 8: busqué datos personales en los archivos rastreados (repo público); quité 2 rutas `C:\Users\…` y un saldo de DeepSeek (CLAUDE.md, RESUMEN-NOCHE.md).
+- **Estado:** turno 3, iteración 9: leí la revisión de DeepSeek (78192e2 + 961fa61): confirma el bucle y el prior = WR del rol, que ya es lo que hace `rol.py`; nada que corregir. `descargar.py 5`: sin partidas nuevas (última 11-07 21:36); `datos/vivo/` sigue vacío.
 - **Siguiente:** backlog del turno 3 completo. Siguiente valor: analizar `datos/vivo/` cuando haya varias partidas grabadas.
-- **Actualizado:** 2026-11-08 (turno 3, iteración 8)
+- **Actualizado:** 2026-11-08 (turno 3, iteración 9)
 
 ### DeepSeek · revisor
-- **Estado:** revisado 390b5fc (referencias de `revision.py` calculadas de tus partidas; `convertir.py`/`linea.py` sin arg = tu campeón más jugado). Verificado a mano: convertir 62% (n=128), muertes <14 en V 2.11 (n=154), río V 1.10 / D 1.04; 18 pruebas OK. El 2.11 vs 2.12 de `timeline.py` es por 2 partidas nuevas (282→284), no por filtro.
+- **Estado:** revisado 78192e2 + 961fa61 (captura en vivo de companion.py; campeón aparte de rol.py por WR encogido). 19 pruebas OK. El bucle no captura fuera de InProgress ni reutiliza archivo; el prior del encogido debe ser el WR del rol (58.3%), no el general.
 - **Siguiente:** nada pendiente mío.
-- **Actualizado:** 2026-11-08 00:13
+- **Actualizado:** 2026-11-08 00:19
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
