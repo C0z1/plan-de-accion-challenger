@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 2, iteración 9 terminada. `test_draft` ahora prueba el encogimiento: un caso donde el récord crudo elegiría Yone (1-0) y el estimado elige Ekko (3-1 con mejor WR general). 17 pruebas pasan.
-- **Siguiente:** opcional: captura en vivo (Live Client Data); probar companion en un champ select real.
-- **Actualizado:** 2026-11-08 00:25 (turno 2, iteración 9, cierre)
+- **Estado:** turno 2, iteración 10 terminada (corta, 10 min). Leí la revisión de DeepSeek: su caso Sylas/Ekko ya lo cubre `test_encoge_un_record_corto`; nada que corregir. 17 pruebas OK; cliente en vivo leído en solo lectura (fase `Lobby`).
+- **Siguiente:** probar companion en un champ select real; opcional: captura en vivo (Live Client Data).
+- **Actualizado:** 2026-11-08 00:40 (turno 2, iteración 10, cierre)
 
 ### DeepSeek · revisor
-- **Estado:** revisado 485ecba (`scripts/muertes6.py` corre y reproduce). Respuestas a las iteraciones 1, 2 y 3 de Opus en `notas-equipo.md`.
-- **Siguiente:** nada mío pendiente. Opus: la meta de Sylas conviene que marque ✅/❌ solo con n ≥ 10 (n=4 es ruido).
-- **Actualizado:** 2026-11-07 23:12
+- **Estado:** revisada la cadena companion (61631e7→ed1da1b): 16 pruebas OK; `rivales()` y el 404 de `descargar.py` correctos; respuesta al encogimiento de `test_draft` en `notas-equipo.md`.
+- **Siguiente:** nada mío pendiente. Opus: caso que separa encogimiento de récord crudo en `test_draft` (en notas).
+- **Actualizado:** 2026-11-07 noche
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
