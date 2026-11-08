@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 4, iteración 4: `draft.datos_draft()` trae `avisos` (pick con < 5 partidas en el rol, o counter duro: techo Wilson contra el rival < tu base) con alternativa; consola y GUI los muestran. Wilson recortado a [0, 1]. 47 pruebas OK (incluye `test_ds_racha.py`).
-- **Siguiente:** backlog 4 (smoke test del flujo completo del companion sin cliente, en el CI).
-- **Actualizado:** 2026-11-08 03:40 (turno 4, iteración 4)
+- **Estado:** turno 4, iteración 5: `scripts/test_flujo.py`, humo del companion de punta a punta sin cliente (Lobby → ChampSelect → InProgress → EndOfGame) con urlopen simulado y fixtures; draft y `revision.py 1` corren de verdad; entra en el CI solo. Backlog del turno 4 completo. 51 OK (también con `DATOS_DIR` de fixtures, como el CI).
+- **Siguiente:** backlog vacío; si hay partidas en `datos/vivo/`, cotejar la fixture sintética con una foto real.
+- **Actualizado:** 2026-11-08 04:05 (turno 4, iteración 5)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 3d9e4ae (cierre del turno 3: el resumen cuadra con 23af793…dc14b58; 19 pruebas OK).
@@ -61,6 +61,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/fixtures/vivo/allgamedata.json` | Foto sintética de la Live Client Data API (min 6, Ekko 5 contra Zed 6; nombres inventados) | Opus |
 | `scripts/test_companion.py` | Pruebas sin red: `python -m unittest discover scripts` (incluye `Robusto`: lockfile, timeouts, JSON cortado, reinicio a media partida) | Opus |
 | `scripts/test_ds_*.py` | Pruebas de casos borde que escribe DeepSeek | DeepSeek |
+| `scripts/test_flujo.py` | Humo del companion de punta a punta sin cliente (champ select, partida, post-partida); corre en el CI | Opus |
 | `scripts/test_draft.py` | Pruebas de `draft.py` (funciones y recomendación con partidas sintéticas) y humo de `revision.py 1` | Opus |
 | `scripts/fixtures/datos/` | Perfil y una partida mínima: `test_draft` los usa si no hay `datos/raw` (CI, clon nuevo) | Opus |
 | `.github/workflows/pruebas.yml` | CI: `python -m unittest discover scripts` en Ubuntu y Windows | Opus |
@@ -141,6 +142,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: una respuesta cortada del cliente (`http.client.IncompleteRead`) no es `OSError` ni `ValueError`: tumbaba `companion.py`. Y un reinicio del cliente a media partida partía la grabación y repetía el aviso. Arreglados.
 - 2026-11-08 · DeepSeek (vía `test_ds_nivel6.py`): `aviso_nivel` también tronaba con `gameTime: null`. Arreglado.
 - 2026-11-08 · Opus: el aviso de draft no salta con ninguno de tus 99 rivales de mid/top: el único counter duro de tu pool (Ekko 0-4 contra Viktor) ya no sale recomendado por el encogido M=10.
+- 2026-11-08 · Opus: el flujo completo del companion (draft en champ select, 3 fotos en un archivo, 1 aviso, descarga + revisión una vez) pasa sin cliente; solo toca 127.0.0.1.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -179,6 +181,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 
 - 2026-11-08 · Opus: tras un reinicio del cliente, el companion sigue la última fase real (no `None`): si era `InProgress`, sigue grabando del puerto 2999 en el mismo archivo.
 - 2026-11-08 · Opus: «counter duro» en draft = techo Wilson del récord del pick contra el rival < tu WR base (el criterio de los bans); la alternativa es el siguiente por estimado que no lo sea. El aviso no cambia la recomendación, solo la anota.
+- 2026-11-08 · Opus: el humo del flujo simula solo `urlopen`, reloj, sleep y la descarga (sin red ni key); `draft` y `revision.py` corren de verdad sobre datos de fixture.
 
 ## Para el usuario (cuando vuelva)
 - Nuevo: en champ select, si el pick recomendado tiene menos de 5 partidas en el rol o es un counter duro del rival (incluso en el mejor caso queda bajo tu WR base), `draft.py` y la ventana lo avisan en rojo y te dan una alternativa.

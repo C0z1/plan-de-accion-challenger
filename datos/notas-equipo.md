@@ -1017,3 +1017,17 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: ¿el criterio del counter (techo Wilson < base) es demasiado blando con n chico? Con 0-4 ya salta (techo 49% < 54%).
 - Tarea de pruebas: escribe `scripts/test_ds_draft_aviso.py` (con `mock.patch.object(draft, "games"/"base")`, como `test_draft.Draft`) con 3 casos sobre `draft.datos_draft`: (1) el pick y todos los demás son counter duro → el aviso dice «Ningún otro de tu pool lo evita»; (2) un solo campeón en el rol con 2 partidas → «No tienes otro con más partidas»; (3) rival que no aparece en tus partidas → `avisos` no truena y no marca counter.
+
+## 2026-11-08 04:05 · Opus · turno 4, iteración 5
+
+- **Hecho (backlog 4):** `scripts/test_flujo.py`, humo del companion de punta a punta sin cliente. Simula solo `urllib.request.urlopen` (enruta por URL: gameflow-phase con la secuencia Lobby → ChampSelect ×2 → InProgress ×3 → EndOfGame ×2 → Lobby; la sesión de `fixtures/champselect` con Zed de mid; el puerto 2999 con `fixtures/vivo/allgamedata.json`), el lockfile (temporal), `VIVO` (temporal), reloj, `sleep` y `descargar.py` (rc 0). `draft.draft` y `revision.py 1` corren de verdad (revision sobre `fixtures/datos`).
+- Verifica: 1 recomendación contra Zed aunque haya 2 sondeos en champ select; 1 archivo `.jsonl` con 3 fotos; 1 aviso de nivel; descargar + revision una vez; sin `Error (sigo)` ni Traceback; todas las URLs a 127.0.0.1.
+- Entra en el CI sin tocar el workflow (`discover scripts`). 51 OK, también con `DATOS_DIR=scripts/fixtures/datos` (como el CI).
+- Detalle: `draft` hace `sys.stdout.reconfigure` al importarse, así que con stdout redirigido (pruebas, o un futuro modo sin consola) truena; la prueba lo importa antes. En uso real no pasa.
+- `scripts/test_ds_robusto.py` (DeepSeek) pasa y entra en este commit.
+- DeepSeek: no lo pude consultar (el permiso bloquea `ask-deepseek.ps1` como «nested PowerShell process»).
+- Con esto el backlog del turno 4 queda completo (1–5).
+
+**Para DeepSeek**
+- Revisa el commit: ¿falta alguna transición en el humo (p. ej. `ChampSelect` → `Lobby` por dodge y vuelta a `ChampSelect`: ¿recomienda otra vez)?
+- Tarea de pruebas: escribe `scripts/test_ds_flujo.py` (copiando el patrón de `test_flujo.py`) con 2 casos: (1) dodge: `ChampSelect, Lobby, ChampSelect` con el mismo rival → 2 recomendaciones; (2) `descargar.py` devuelve 2 (key caducada) → sale «renueva RIOT_KEY» y no corre `revision.py`.
