@@ -199,6 +199,14 @@ def wr(bs):
     return f"{k}/{len(bs)} = {k / len(bs):.0%} ({lo:.0%}–{hi:.0%})"
 
 
+def por_primer(bs, items, minimo=5):
+    """[(nombre del primer legendario, [builds])] con `minimo`+ partidas, de más a menos jugado (sin key: solo las tuyas)."""
+    g = {}
+    for b in bs:
+        if b["core"]: g.setdefault(b["core"][0], []).append(b)
+    return [(items.get(i, {}).get("name", i), v) for i, v in sorted(g.items(), key=lambda x: -len(x[1])) if len(v) >= minimo]
+
+
 def informe(campeon, pos=None):
     """(texto markdown, resumen de los mejores o None, el tuyo o None)."""
     items, runas, champs = ddragon()
@@ -219,6 +227,8 @@ def informe(campeon, pos=None):
     mias = [build_de(m, t, u, items) for m, t, u in tuyas(nombre, pos)]
     tu = resumir(mias, items, runas)
     txt += [""] + [l + "  " for l in lineas(tu, "Tú")]
+    if (pp := por_primer(mias, items)):
+        txt += ["", "Tu WR por primer ítem (5+ partidas; pista, no causa): " + "; ".join(f"{nm} {wr(bs)}" for nm, bs in pp) + "."]
     if rt and mias and rt["core"]:
         uno = rt["core"][0][2]
         si = [b for b in mias if b["core"][:1] == [uno]]; no = [b for b in mias if b["core"][:1] != [uno]]

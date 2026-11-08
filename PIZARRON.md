@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 5, iteración 10: `rivales()` aguanta `myTeam`/`theirTeam`/`assignedPosition` en null; el trabajador de la ventana ya no repite el evento de fase ni el mismo error cada 3 s tras una excepción. 99 OK.
-- **Siguiente:** revisión de DeepSeek (`test_ds_trabajador.py`); resumen del turno si es la última iteración.
-- **Actualizado:** 2026-11-08 (turno 5, iteración 10)
+- **Estado:** turno 5, iteración 11: `builds.py` da tu WR por primer legendario (5+ partidas, sin key). 100 OK.
+- **Siguiente:** revisión de DeepSeek (`test_ds_trabajador.py`, `test_ds_por_primer.py`); resumen del turno si es la última iteración.
+- **Actualizado:** 2026-11-08 (turno 5, iteración 11)
 
 ### DeepSeek · revisor
 - **Estado:** revisados 0c67ab0 (duelo de score.py: 124/284=44%, justo — la corrección de rol se cancela; `individualPosition` 0/284 difieren; `test_ds_duelo.py` 3 casos) y 971463f (avisos como dict: sin `q.put(("aviso", str))` sueltos, minuto correcto, 429 ya no da UnboundLocalError; `test_ds_aviso_dict.py` 3 casos). Suite 90 OK.
@@ -168,6 +168,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · DeepSeek: en las 284 partidas de score.py no hay ninguna con `teamPosition` vacío ni sin rival de línea, y para cozi `individualPosition` difiere del asignado en 0/284 (solo 6 ajenos, ninguno su rival): el «Duelo» identifica bien al rival de línea.
 - 2026-11-08 · Opus: la Live Client Data puede traer `activePlayer`/`allPlayers`/`gameData` en null al cargar; `.get(k, {})` no protege (la clave existe). Tumbaba los avisos en vivo; arreglado con `get(k) or {}`.
 - 2026-11-08 · Opus: en la ventana del companion, una excepción en el bucle dejaba la fase vieja: repetía el evento de fase y el mismo error cada 3 s (4 y 4 en 4 vueltas) sin subir la espera. Ahora el estado se actualiza fuera del `try` (como la consola) y el error repetido sale una vez.
+- 2026-11-08 · Opus: tu WR por primer ítem: Ekko Ocaso 49% (33–64, n=35) contra Liche 61% (41–78, n=23); Yone Rey Arruinado 52% (n=27) contra Filo de la Tormenta 70% (n=10). Intervalos cruzados y puede ser matchup: pista.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -220,6 +221,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: el duelo de `score.py` sigue con `teamPosition` (rol asignado), no `individualPosition`: cambiaría 0/284 partidas y Riot a veces trae «Invalid».
 
 ## Para el usuario (cuando vuelva)
+- Nuevo: `builds.py --pool` (sin key) te da tu WR por primer ítem con cada campeón. Con Ekko abres más con Ocaso y Alba (49%) que con Liche (61%); con Yone, Rey Arruinado 52% contra Filo de la Tormenta 70% (10 partidas). Pista, no causa: puede depender del rival.
 - Nuevo: en partida, la ventana del companion muestra arriba tu nivel contra el de tu rival y tu CS (con la meta al 10 si juegas Sylas), cada 30 s. Y la etiqueta «key ok / falta RIOT_KEY» se actualiza sola tras `setx`. Recompila `Companion.exe` para tenerlo.
 - Nuevo: cuando haya build de los mejores (con key), champ select te dice además tu WR cuando abres con su primer ítem contra cuando abres con otro («Tú con Rey Arruinado primero: …»). Es pista, no causa.
 - Nuevo: en la ventana del companion, los consejos en partida (nivel abajo, CS al 10) salen en azul y los errores (key caducada, descarga) en naranja. Recompila `Companion.exe` para tenerlo.

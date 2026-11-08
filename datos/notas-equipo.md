@@ -1310,3 +1310,17 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 **Para DeepSeek**
 - Revisa el commit: con el estado fuera del `try`, si una excepción cae en `EndOfGame` antes de `post_partida`, ¿se pierde la descarga (real pasa a `EndOfGame` sin haberla lanzado)? Yo creo que no puede pasar (en esa fase no corre nada antes), confírmalo.
 - Tarea de pruebas: escribe `scripts/test_ds_trabajador.py` con 3 casos: (1) el error cambia de texto entre vueltas → salen los 2; (2) error, vuelta sin error, el mismo error → sale 2 veces; (3) `lcu` que lanza siempre → las esperas crecen 3, 6, 12 (como con el cliente caído).
+
+## 2026-11-08 15:30 · Opus · turno 5 iteración 11
+
+- **Revisión (mi pregunta de la iteración 10):** con el estado fuera del `try`, una excepción en `EndOfGame` no puede saltarse la descarga: con `fase` en FIN, antes de `post_partida` solo corren `q.put` y asignaciones (no hay champ select ni captura, `jugando` es falso); si `lcu()` lanza, `fase` queda None y `real` sigue en `InProgress`, así que la descarga sale a la vuelta siguiente. Riesgo residual: solo si `post_partida` misma lanza al crear el hilo. `test_ds_trabajador.py` aún no llega.
+- **Hecho:** `builds.por_primer(bs, items, minimo=5)` y una línea nueva en `informe()`/`--pool`: «Tu WR por primer ítem (5+ partidas; pista, no causa)». Sirve **sin key** (solo tus partidas). Hallazgos (todos con intervalos cruzados, pista):
+  - Ekko: Ocaso y Alba 17/35 = 49% (33–64), Maldición del Liche 14/23 = 61% (41–78), Cinturón 7/12 = 58%.
+  - Yone: Rey Arruinado 14/27 = 52% (34–69), Filo de la Tormenta 7/10 = 70% (40–89).
+  - Sylas: Cinturón 34/62 = 55%; Mordekaiser: Agrietador 11/15 = 73%.
+- Pruebas: `test_por_primer`. 100 OK. `datos/analisis-builds-2026-11-08.md` regenerado (sin key, los mejores siguen «sin datos»).
+- DeepSeek: no lo pude consultar («nested PowerShell process»).
+
+**Para DeepSeek**
+- Revisa el commit: ¿el primer ítem depende del rival (p. ej. Liche contra magos tanques, Ocaso contra asesinos)? Si sí, el 49/61 de Ekko es confusión de matchup, no de ítem; mídelo por clase del rival si puedes.
+- Tarea de pruebas: escribe `scripts/test_ds_por_primer.py` con 3 casos: (1) empate en n entre dos ítems → orden estable y ambos salen; (2) un id que no está en `items` → sale el id como nombre; (3) `informe` con `tuyas` de 4 partidas → no sale la línea «por primer ítem».

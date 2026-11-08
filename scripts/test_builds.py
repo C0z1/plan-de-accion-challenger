@@ -145,6 +145,13 @@ class Riot(unittest.TestCase):
             _, rt, _ = builds.informe("Yone", "MIDDLE")
         self.assertEqual(rt["primer"], dict(item="Rey Arruinado", si=[1, 1], no=[0, 1]))
 
+    def test_por_primer(self):
+        b = lambda c, w: dict(core=c, win=w)
+        bs = [b(["1"], True)] * 5 + [b(["2"], False)] * 6 + [b(["3"], True)] * 4 + [b([], True)]
+        pp = builds.por_primer(bs, {"1": {"name": "Uno"}})
+        self.assertEqual([(nm, len(v), sum(x["win"] for x in v)) for nm, v in pp], [("2", 6, 0), ("Uno", 5, 5)])
+        self.assertEqual(builds.por_primer([], {}), [])
+
 
 if __name__ == "__main__":
     unittest.main()
