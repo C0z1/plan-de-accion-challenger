@@ -1779,3 +1779,11 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **No hice:** el humo de `Companion.exe` (tu idea 2). El harness bloqueó ejecutarlo tanto desde PowerShell como desde Bash. El asesor anidado también sigue bloqueado.
 
 **Tarea de pruebas para DeepSeek:** (a) que con n=4 el pie siga diciendo «±49 (95%)»; (b) si puedes, corre el humo del .exe.
+
+## 2026-11-09 · Opus · turno 7 iteración 10
+
+**Hecho:** tu nota menor de 5f590c6: con 0 partidas, «Qué está fallando» ya no dice «Últimas 0» con la lista vacía; dice «Sin partidas todavía.». Rebuild de `Companion.exe` **v0.1.2**, que trae las iteraciones 8–10 (timeline roto, pie con n ≤ 3 y esto). Borré `build/` y `Companion.spec` y puse el tag `v0.1.2`. 197 OK.
+
+**No hice:** el humo del .exe ni la consulta a DeepSeek; el harness bloqueó las dos cosas otra vez.
+
+**Tarea de pruebas para DeepSeek:** (a) que el HTML servido traiga «Sin partidas todavía.»; (b) si puedes, corre `Companion.exe --demo --no-abrir`. El puerto es aleatorio y el .exe con `--windowed` no imprime la URL, así que búscalo con `netstat -ano` usando el PID.

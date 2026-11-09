@@ -193,8 +193,8 @@ function perfil(s) {  // ventana 2 del canvas: score, WR y muertes de las últim
         return `<line x1="0" x2="100" y1="${40 - (50 - lo) / (hi - lo) * 40}" y2="${40 - (50 - lo) / (hi - lo) * 40}" stroke="#E8E7E7"/><polyline points="${pt}" fill="none" stroke="#478F96" stroke-width="2"/>`;
       })()}</svg><span class="pie">Score medio por bloque de 20 partidas, la más vieja a la izquierda; la raya es 50.</span></div>
   </div>
-  <div class="card"><div style="display:flex;justify-content:space-between"><h2>Qué está fallando</h2><span class="sub" style="font-size:12px">Últimas ${ps.length}</span></div>
-    <span class="sub" style="font-size:14px">Media de cada componente contra tu rol (desviaciones; 0 = típico). Los 3 más bajos:</span>
+  <div class="card"><div style="display:flex;justify-content:space-between"><h2>Qué está fallando</h2><span class="sub" style="font-size:12px">${ps.length ? `Últimas ${ps.length}` : ""}</span></div>
+    <span class="sub" style="font-size:14px">${ps.length ? "Media de cada componente contra tu rol (desviaciones; 0 = típico). Los 3 más bajos:" : "Sin partidas todavía."}</span>
     ${peores.map(([c, z]) => `<div class="regla"><span style="width:90px"><b>${esc(COMP[c] || c)}</b></span>
       <div style="flex:1;height:14px;background:#F1F1F1;border-radius:7px"><div style="width:${Math.min(100, Math.abs(z) / 1.5 * 100)}%;height:14px;border-radius:7px;background:${z < 0 ? "var(--red)" : "var(--teal)"}"></div></div>
       <span style="width:50px;text-align:right">${signo(z, 2)}</span></div>`).join("")}

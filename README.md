@@ -75,9 +75,9 @@ python scripts/companion_gui.py           # con el cliente abierto
 python scripts/companion_gui.py --demo    # vista de ejemplo, sin cliente
 ```
 
-**App web (v0.1.1):** `scripts/companion_web.py` es el companion con el diseño nuevo (champ select, franja en partida, línea al terminar y «Tu rendimiento»), servido en 127.0.0.1 y abierto como ventana de Edge. `--demo` recorre las tres fases sin cliente. `companion_gui.py` (tkinter) queda de respaldo.
+**App web (v0.1.2):** `scripts/companion_web.py` es el companion con el diseño nuevo (champ select, franja en partida, línea al terminar y «Tu rendimiento»), servido en 127.0.0.1 y abierto como ventana de Edge. `--demo` recorre las tres fases sin cliente. `companion_gui.py` (tkinter) queda de respaldo.
 
-**Ejecutable para Windows, v0.1.1** (no lo sube git; se compila en un paso):
+**Ejecutable para Windows, v0.1.2** (no lo sube git; se compila en un paso):
 
 ```bash
 pip install pyinstaller
