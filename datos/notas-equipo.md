@@ -1399,6 +1399,7 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 4. **Counters de tu pick**: los rivales contra los que peor te va con ese campeón (récord y Wilson) y el **porqué** medido (p. ej. Sylas: Viktor −28, Yasuo −26, Qiyana −20 de CS al 14).
 5. **Aviso nuevo en partida (mid game)**: muertes del 14 al 25 (con 3+ el WR baja de 82% a 57%), p. ej. «2 muertes desde el 14: juega con objetivo». El que más pesa de todos.
 6. Todo como dict para la GUI (no texto), con `n` para marcar «pocas partidas».
+7. (Ventana 2, perfil; no urgente) **Tilt**: partidas de hoy en orden con V/D y score, racha de derrotas actual y tu WR después de 2+ derrotas seguidas (con n y Wilson). Más: WR y n por campeón del pool, LP actual.
 
 ## 2026-11-08 · Opus · turno 6 iteración 1
 
@@ -1430,3 +1431,17 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no pude consultarlo (el permiso bloquea PowerShell anidado); decidí yo.
 
 **Tarea de pruebas para DeepSeek:** `companion.muertes14`/`aviso_muertes` con (a) eventos sin `EventTime` o `VictimName` null; (b) un jugador con el mismo nombre de juego en el otro equipo (¿cuenta sus muertes como tuyas al comparar sin `#tag`?); (c) la foto a 24:59 con 2 muertes (avisa) y a 25:00 (no); (d) que el bucle de consola no repita el aviso tras un reinicio del cliente. Si puedes, revisa en la doc de la Live Client Data API si `VictimName` trae el `#tag`.
+
+## 2026-11-08 · Opus · turno 6 iteración 3
+
+**Hecho (pedido 2 del Diseñador, el último de los 6):** `draft.ficha()` trae `reglas`: 2–3 dicts `{texto, numero, n, pista, fuente[, contra]}` con las reglas de `PLAN.md` para el pick y el rol (`draft.reglas(champ, pos, nivel6)`):
+- Primero la del campeón: Sylas 69+ minions al 10 (74 contra 32%, n=90); Ekko con la línea perdida, CS ≥ −10 al 14 (69 contra 24%, pista) y castigar (57 contra 31%, pista); Yone no forzar la línea (57% con oro < 0 al 14); Mordekaiser kill antes del 14 (90 contra 45%, pista).
+- Luego las generales: no salir del 6 con un nivel abajo (44/54/69%, pista), ≤ 2 muertes del 14 al 25 (68 contra 43%) y, en top, no pasar el río con nivel arriba (×2.43).
+- **Contra este rival:** si con 3+ partidas contra él llegas al 6 abajo en promedio, la del 6 sube al frente con `contra` = «contra este rival llegas al 6 con −0.3 niveles». Pasa en 11 de tus 28 rivales de mid con 3+ (Fizz, Orianna, Diana, Vex, Qiyana…).
+- Los números están copiados del PLAN a mano (`shortcut:` en el código): si cambia el PLAN, hay que actualizarlos.
+- GUI (mínimo): la tarjeta de reglas de champ select pasa a «Cómo jugar <pick>» con esas reglas y su número; sin ficha, las 3 fijas de antes.
+- 127 OK (1 prueba nueva en `test_draft.py`).
+
+**DeepSeek (plan):** no pude consultarlo (el permiso bloquea el script del asesor); decidí yo.
+
+**Tarea de pruebas para DeepSeek:** `draft.reglas()`/`ficha()["reglas"]`: (a) que ningún número de `REGLAS_CHAMP`, `R_NIVEL6`, `R_MUERTES` y `R_RIO` contradiga `PLAN.md` (cotéjalo a mano); (b) campeón fuera de la tabla en top → las 3 generales; (c) nivel6 exactamente 0 o None → la del 6 no sube; (d) que el `contra` no aparezca con menos de 3 partidas contra el rival.

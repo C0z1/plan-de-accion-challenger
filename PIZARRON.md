@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 6, iteración 2: pedido 5 hecho: `companion.aviso_muertes()` avisa al llegar a 2 muertes desde el 14 (hasta el 25), en consola y ventana; `meta_fase()` trae `muertes14` y la franja lo muestra. 82/57 verificado; en todas, 68 contra 43%. 123 OK.
-- **Siguiente:** pedido 2 (2–3 reglas del PLAN por campeón y rol, con su número, en `ficha()`).
-- **Actualizado:** 2026-11-08 (turno 6, iteración 2)
+- **Estado:** turno 6, iteración 3: pedido 2 hecho: `ficha()["reglas"]` da 2–3 reglas del PLAN para el pick y rol con su número (`n`, `pista`); la del 6 sube al frente si contra ese rival llegas al 6 abajo. La GUI las muestra en «Cómo jugar <pick>». Los 6 pedidos del Diseñador quedan cubiertos. 127 OK.
+- **Siguiente:** revisión de DeepSeek y lo que pida el Diseñador; resumen en `RESUMEN-NOCHE.md` en la última iteración.
+- **Actualizado:** 2026-11-08 (turno 6, iteración 3)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 509ac9b (solo commitea mi `test_ds_resumen.py`: nada nuevo que revisar). Refiné `clave`: engaña en 11/284 (no 29), victoria con todo z<0 o derrota con todo z>0 → propongo None cuando el extremo no tenga el signo del resultado. Dejé 2 casos fallando en `test_ds_resumen.py` + 2 controles que pasan. Suite 115 OK + 2 fallando a propósito.
@@ -176,6 +176,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · DeepSeek: `clave` de `score.resumen()` engaña en 11/284 (victoria con todo z<0: 6; derrota con todo z>0: 5): «lo que más te subió/bajó» con el signo equivocado. Propongo `clave = None` cuando el extremo no tenga el signo del resultado (más correcto que |z|<0.25, que pillaba 29 incluyendo 18 con signo correcto).
 - 2026-11-08 · Opus: counters medidos de Sylas mid: Fizz 1-2, Viktor 1-2 (CS −28 al 14) y Qiyana 2-3 (CS −20, 1.4 muertes antes del 6) contra tu media con Sylas de CS −7.6 y 0.6 muertes. Contra Viktor con cualquiera, 1-7 y CS −17 (rol −3). n ≤ 8: pista.
 - 2026-11-08 · Opus: muertes del 14 al 25 en tus 282 partidas: 0–2 → 68% (59–75), 3+ → 43% (35–50); 0/1/2 → 84/74/59%. El 82/57 es el subgrupo con línea y equipo ≥ 0 al 14 (se reproduce). Asociación, no causa.
+- 2026-11-08 · Opus: en 11 de tus 28 rivales de mid con 3+ partidas llegas al 6 abajo de nivel en promedio (Fizz, Orianna, Diana, Vex, Qiyana…): contra esos, «no salgas del 6 con un nivel abajo» va primero en champ select.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -230,6 +231,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: la «clave» de cada partida en `score.resumen()` es el componente que más pesó en tu score, no la causa del resultado; la GUI debe decirlo así.
 - 2026-11-08 · Opus: un counter del pick = rival con 3+ partidas cuyo estimado encogido (M=10) queda bajo tu WR con ese campeón; se marca `pocas` con n < 5 (DeepSeek pedía n ≥ 5, pero con eso casi no quedan). Lo cualitativo del matchup no se infiere: sale solo de `datos/matchups-notas.json`, que llenas tú.
 - 2026-11-08 · Opus: el aviso de muertes 14–25 salta con 2 (antes de la 3.ª, que es la que pesa), una vez, y cita el 68/43 de todas tus partidas, no el 82/57 (solo vale con línea y equipo arriba). Cuenta eventos `ChampionKill` de la foto, sin estado; `VictimName` sin cotejar con una partida real.
+- 2026-11-08 · Opus: las reglas de «cómo jugarlo» son una tabla fija en `draft.py` con los números del PLAN (no se recalculan en vivo); al cambiar el PLAN hay que actualizarla.
 
 ## Para el usuario (cuando vuelva)
 - Nuevo: del minuto 14 al 25 la franja en partida muestra «Muertes desde el 14: N (meta ≤ 2)», y al llegar a 2 el companion te avisa «juega con objetivo» (con 3+ tu WR baja de 68% a 43%). Recompila `Companion.exe` para tenerlo. Si en tu primera partida no cuenta tus muertes, avísale a Opus: el nombre en los eventos no se pudo cotejar sin una partida real.

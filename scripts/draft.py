@@ -171,6 +171,39 @@ def notas(rival):
     return [x for x in v if isinstance(x, str)]
 
 
+# Pedido 2: «cómo jugarlo», reglas de PLAN.md con su número (n = partidas detrás del número; pista = IC cruzados).
+# shortcut: números copiados del PLAN a mano, al cambiar el PLAN hay que actualizarlos aquí.
+R = lambda texto, numero, n, pista=False, fuente="": dict(texto=texto, numero=numero, n=n, pista=pista, fuente=fuente)
+REGLAS_CHAMP = {
+    "Sylas": [R("No tradees ni roamees a costa de oleadas antes del 10: 69+ minions de línea al 10.",
+                "74% (32/43) con 69+ contra 32% (15/47) con 68 o menos", 90, fuente="early.py")],
+    "Ekko": [R("Si pierdes la línea, cuida el farm: no más de 10 de CS abajo al 14.",
+               "con la línea perdida, 69% (9/13) contra 24% (4/17)", 30, True, "linea.py"),
+             R("Abajo, castiga a tu rival cuando se pase: busca el kill en tu línea.",
+               "con la línea perdida, 57% con 1+ kill sobre él contra 31% con 0", 30, True, "castigo.py")],
+    "Yone": [R("No necesitas ganar la línea: no fuerces tradeos, escala.",
+               "con oro < 0 al 14 ganas 57% (21/37); Ekko, 43%", 37, fuente="convertir.py")],
+    "Mordekaiser": [R("Busca un kill antes del 14.", "90% con 1+ kill antes del 14 contra 45% con 0", 21, True, "early.py")],
+}
+R_NIVEL6 = R("No salgas del 6 con un nivel abajo: tradea, pero no pierdas la carrera al 6.",
+             "abajo al 6, 44% (16/36); igual, 54%; arriba, 69%", 36, True, "muertes6.py")
+R_MUERTES = R("≤ 2 muertes del 14 al 25: antes de un dragón, heraldo o barón, no pelees si no hace falta.",
+              "0–2 muertes del 14 al 25, 68%; 3+, 43% (282 partidas)", 282, fuente="midgame.py")
+R_RIO = R("Con nivel arriba en top, no empujes pasado el río sin ver al jungla rival.",
+          "pasado el río con nivel arriba mueres ×2.43 por 10 min (top/bot)", 270, fuente="nivel6.py")
+
+
+def reglas(champ, pos, nivel6=None):
+    """2–3 reglas del PLAN para ese campeón y rol, la del campeón primero. Si contra este rival llegas al 6 abajo
+    (nivel6 < 0, tu media), la del 6 sube al frente con el dato del matchup en `contra`."""
+    gen = [R_NIVEL6, R_MUERTES] + ([R_RIO] if pos == "TOP" else [])
+    if nivel6 is not None and nivel6 < 0:
+        out = [dict(R_NIVEL6, contra=f"contra este rival llegas al 6 con {nivel6:+.1f} niveles")]
+        gen.remove(R_NIVEL6)
+    else: out = []
+    return (out + REGLAS_CHAMP.get(champ, []) + gen)[:3]
+
+
 def ficha(rival, pos, champ=None):
     """Champ select en torno a un pick (por defecto el recomendado), como dict para la GUI (pedidos 1, 3 y 4 del Diseñador).
     por_que: el dato que justifica el pick; cuidado: tus partidas contra ese rival en el rol (cualquier campeón tuyo) contra
@@ -210,7 +243,7 @@ def ficha(rival, pos, champ=None):
         cs.append(dict(rival=o, v=w, wr=round(w / len(rs), 3), ic=[round(x, 3) for x in wilson(w, len(rs))],
                        est=round(shrink(w, len(rs), p0), 3), **medidas(rs), pocas=len(rs) < 5))
     cs.sort(key=lambda x: x["est"])
-    return dict(champ=c, rival=nombre, pos=pos, por_que=por_que, cuidado=cuidado,
+    return dict(champ=c, rival=nombre, pos=pos, por_que=por_que, cuidado=cuidado, reglas=reglas(c, pos, cuidado["nivel6"] if len(vs) >= 3 else None),
                 counters=dict(lista=cs[:3], ref=medidas(mias)))
 
 

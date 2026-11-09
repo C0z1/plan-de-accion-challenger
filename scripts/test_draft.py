@@ -130,6 +130,19 @@ class Ficha(unittest.TestCase):  # draft.ficha(): pedidos 1, 3 y 4 del Diseñado
         self.assertEqual(self.ficha(js, "Fizz", notas="{roto")["cuidado"]["notas"], [])  # tabla rota: no truena
         self.assertEqual(self.ficha(js, "Fizz", notas="[1]")["cuidado"]["notas"], [])
 
+    def test_reglas_del_plan(self):  # pedido 2: la del campeón primero; la del 6 al frente si contra el rival llegas abajo
+        textos = lambda rs: [r["texto"][:12] for r in rs]
+        r = self.ficha(self.juegos(), "Viktor")["reglas"]
+        self.assertEqual(len(r), 3)
+        self.assertTrue(r[0]["texto"].startswith("Si pierdes la línea") and r[0]["pista"] and r[0]["n"] == 30)
+        js = self.juegos()
+        for j in js[16:19]: j["nivel6"] = -1  # contra Fizz llegas al 6 abajo
+        r = self.ficha(js, "Fizz")["reglas"]
+        self.assertTrue(r[0]["texto"].startswith("No salgas del 6") and "-1.0" in r[0]["contra"])
+        self.assertEqual(len(r), 3); self.assertEqual(len(set(textos(r))), 3)
+        self.assertNotIn("contra", draft.R_NIVEL6)  # no muta la tabla
+        self.assertEqual(textos(draft.reglas("Zeri", "TOP")), textos([draft.R_NIVEL6, draft.R_MUERTES, draft.R_RIO]))
+
     def test_sin_partidas_en_el_rol(self):
         self.assertIsNone(self.ficha([g("Ekko", True, pos="TOP")], "Zed"))
 

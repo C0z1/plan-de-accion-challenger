@@ -252,7 +252,9 @@ class App:
         for a in d.get("avisos", []):
             self.tk.Label(t, text=a, bg=PANEL, fg=MAL, font=(F, 9, "bold"), wraplength=340, justify="left").pack(anchor="w", pady=(8, 0))
         if d.get("build"): self.reglas(f"Build · {mejor['champ']}", [l.strip() for l in d["build"]], ACENTO, ACENTO)
-        self.reglas()
+        rs = (d.get("ficha") or {}).get("reglas")
+        self.reglas(f"Cómo jugar {mejor['champ']}", [f"{r['texto']} ({r.get('contra') or r['numero']}{'; pista' if r['pista'] else ''})"
+                                                    for r in rs]) if rs else self.reglas()
 
     def vista_revision(self, r):
         self.limpiar(); t = self.tarjeta()
