@@ -27,13 +27,75 @@ body{margin:0}
 .burL{position:absolute;bottom:6px;width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.6);animation:burbuja 5s ease-in infinite}
 .brillo{animation:brillo 6s ease-in-out infinite}
 @media (prefers-reduced-motion: reduce){.liq,.liqH,.olaL,.olaL2,.olaV,.burL,.brillo{animation:none}}
-@keyframes itmIn{from{opacity:0;transform:translateY(10px) scale(.8)}}
-@keyframes sheen{0%,72%{left:-60%}100%{left:140%}}
-@keyframes aro{0%,100%{box-shadow:0 6px 16px rgba(0,0,0,.45),0 0 10px rgba(242,141,176,.18)}50%{box-shadow:0 6px 16px rgba(0,0,0,.45),0 0 18px rgba(242,141,176,.45)}}
-.itm{animation:itmIn .7s cubic-bezier(.22,1,.36,1) both,aro 4s ease-in-out .7s infinite;transition:transform .2s ease}
-.itm:hover{transform:translateY(-4px) scale(1.06)}
-.sheen-i{animation:sheen 5.5s ease-in-out infinite}
-@media (prefers-reduced-motion: reduce){.itm,.sheen-i{animation:none}}
+@keyframes itmIn{0%{opacity:0;transform:perspective(400px) translateY(16px) rotateX(60deg) scale(.82);filter:blur(5px)}55%{opacity:1;filter:blur(0)}100%{opacity:1;transform:none}}
+@keyframes borde{to{background-position:300% 0}}
+@keyframes sheen{0%,78%{left:-70%}100%{left:150%}}
+@keyframes chispa{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
+.itm{background-size:300% 100% !important;animation:itmIn .9s cubic-bezier(.22,1,.36,1) both,borde 7s linear .9s infinite;transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s;box-shadow:0 6px 16px rgba(0,0,0,.45)}
+.itm:hover{transform:translateY(-5px) scale(1.08);box-shadow:0 12px 24px rgba(0,0,0,.5),0 0 18px rgba(242,141,176,.45)}
+.sheen-i{animation:sheen 6.5s cubic-bezier(.45,0,.2,1) infinite}
+.itm-ch{position:absolute;top:-3px;right:-3px;width:7px;height:7px;border-radius:50%;background:#FFE6EF;box-shadow:0 0 8px 2px rgba(242,141,176,.9);animation:chispa 6.5s ease-in-out infinite;pointer-events:none}
+@media (prefers-reduced-motion: reduce){.itm,.sheen-i,.itm-ch{animation:none}.itm-ch{display:none}}
+@keyframes balanza{0%{transform:rotate(0)}100%{transform:rotate(8deg)}}
+@keyframes vaiven{0%,100%{transform:rotate(7deg)}50%{transform:rotate(10deg)}}
+@keyframes contraR{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(-10deg)}}
+.balanza{transform-box:view-box;transform-origin:50px 46px;animation:balanza 1.4s cubic-bezier(.22,1,.36,1) both,vaiven 3.2s ease-in-out 1.4s infinite}
+.contra{transform-box:view-box;transform-origin:16px 66px;animation:contraR 3.2s ease-in-out 1.4s infinite}
+.contra2{transform-box:view-box;transform-origin:84px 66px;animation:contraR 3.2s ease-in-out 1.4s infinite}
+@keyframes flotaM{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes orbe{0%,100%{opacity:.75;transform:scale(.9)}50%{opacity:1;transform:scale(1.15)}}
+@keyframes parpadeo{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes moneda{0%,55%{opacity:0;transform:translateY(10px)}65%{opacity:1}100%{opacity:0;transform:translateY(-22px)}}
+.minion{animation:flotaM 2.6s ease-in-out infinite}
+.orbe{transform-box:fill-box;transform-origin:center;animation:orbe 1.8s ease-in-out infinite}
+.ojos{transform-box:fill-box;transform-origin:center;animation:parpadeo 4s infinite}
+.moneda{animation:moneda 2.6s ease-out infinite}
+@keyframes latido{0%,100%{transform:scale(1)}12%{transform:scale(1.18)}24%{transform:scale(.96)}36%{transform:scale(1.1)}}
+.latido{transform-origin:center;animation:latido 1.3s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(255,138,138,.6))}
+@media (prefers-reduced-motion: reduce){.balanza,.contra,.contra2,.minion,.orbe,.ojos,.moneda,.latido{animation:none}.balanza{transform:rotate(8deg)}}
+@keyframes xp{from{stroke-dashoffset:201}}
+.xp{animation:xp 1.6s cubic-bezier(.22,1,.36,1) both}
+@keyframes flechas{0%,100%{transform:translateX(-3px);opacity:.5}50%{transform:translateX(3px);opacity:1}}
+.flechas{animation:flechas 1.4s ease-in-out infinite}
+@keyframes cristal{0%,100%{filter:drop-shadow(0 0 3px rgba(242,141,176,.6))}50%{filter:drop-shadow(0 0 9px rgba(242,141,176,1))}}
+.cristal{animation:cristal 1.8s ease-in-out infinite}
+@keyframes chispas{0%{opacity:0;transform:translateY(4px)}40%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+.chispas{animation:chispas 1.8s ease-out infinite}
+@keyframes ecg{from{stroke-dashoffset:330}to{stroke-dashoffset:0}}
+.ecg{animation:ecg 1.3s linear infinite}
+@keyframes izq{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(-1px,1px) rotate(-6deg)}}
+@keyframes der{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(1px,1px) rotate(6deg)}}
+.izq{transform-box:fill-box;transform-origin:100% 100%;animation:izq 3s ease-in-out infinite}
+.der{transform-box:fill-box;transform-origin:0 100%;animation:der 3s ease-in-out infinite}
+.latido{transform-box:fill-box;transform-origin:center}
+@media (prefers-reduced-motion: reduce){.xp,.flechas,.cristal,.chispas,.ecg,.izq,.der{animation:none}}
+@keyframes gemaviva{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(3deg)}}
+@keyframes gemaaura{0%,100%{opacity:.5;transform:scale(.9)}50%{opacity:1;transform:scale(1.1)}}
+@keyframes frag{0%,100%{transform:translate(0,0)}50%{transform:translate(var(--dx),var(--dy))}}
+.gemaviva{transform-box:fill-box;transform-origin:center;animation:gemaviva 2.4s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(242,141,176,.8))}
+.gemaaura{transform-box:fill-box;transform-origin:center;animation:gemaaura 2.4s ease-in-out infinite}
+.frag1{--dx:-2px;--dy:-2px;animation:frag 3s ease-in-out infinite}.frag2{--dx:3px;--dy:-1px;animation:frag 3s ease-in-out infinite}.frag3{--dx:-1px;--dy:3px;animation:frag 3s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.gemaviva,.gemaaura,.frag1,.frag2,.frag3{animation:none}}
+
+@keyframes flotaM{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes sombra{0%,100%{transform:scaleX(1);opacity:.45}50%{transform:scaleX(.86);opacity:.3}}
+@keyframes respira{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.018)}}
+@keyframes baston{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(2deg)}}
+@keyframes orbe2{0%,100%{opacity:.65;transform:scale(.9)}50%{opacity:1;transform:scale(1.18)}}
+@keyframes cristal2{0%,100%{filter:drop-shadow(0 0 2px rgba(255,255,255,.5))}50%{filter:drop-shadow(0 0 8px rgba(120,230,255,.95))}}
+@keyframes onda{0%{transform:scale(.4);opacity:0}15%{opacity:.9}100%{transform:scale(2.6);opacity:0}}
+@keyframes part{0%{transform:translate(0,0);opacity:0}20%{opacity:1}100%{transform:translate(var(--x),-22px);opacity:0}}
+@keyframes parpadeo{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+.minion{animation:flotaM 3.2s ease-in-out infinite}
+.sombra{transform-box:fill-box;transform-origin:center;animation:sombra 3.2s ease-in-out infinite}
+.respira{transform-box:fill-box;transform-origin:50% 100%;animation:respira 3.2s ease-in-out infinite}
+.baston{transform-box:view-box;transform-origin:33px 66px;animation:baston 3.2s ease-in-out infinite}
+.orbe{transform-box:fill-box;transform-origin:center;animation:orbe2 2.2s ease-in-out infinite}
+.cristal{animation:cristal2 2.2s ease-in-out infinite}
+.onda{transform-box:fill-box;transform-origin:center;animation:onda 3s ease-out infinite}
+.part{animation:part 2.4s ease-out infinite}.p1{--x:-4px}.p2{--x:3px;animation-delay:.6s}.p3{--x:-2px;animation-delay:1.2s}.p4{--x:5px;animation-delay:1.8s}
+.ojos{transform-box:fill-box;transform-origin:center;animation:parpadeo 4.5s infinite}
+@media (prefers-reduced-motion: reduce){.minion,.sombra,.respira,.baston,.orbe,.cristal,.onda,.part,.ojos{animation:none}.onda,.part{display:none}}
 </style>
 </helmet>
 <div style="width: 1440px; height: 1024px; box-sizing: border-box; display: flex; border-radius: 40px; overflow: hidden; background: var(--bg); font-family: Mulish, 'Segoe UI', sans-serif; color: var(--text)">
@@ -61,29 +123,107 @@ body{margin:0}
 </div>
 
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
-<div style="height: 210px; box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 4px rgba(0,0,0,.25), 0 12px 32px rgba(0,0,0,.35); padding: 18px 20px; display: flex; gap: 18px; align-items: center">
-<div style="position: relative; width: 44px; height: 160px; border-radius: 22px; background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.01) 60%, rgba(255,255,255,.05)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 -10px 20px rgba(0,0,0,.35); overflow: hidden; flex-shrink: 0"><div class="liq" style="position: absolute; left: 0; right: 0; bottom: 0; height: 92%; background: linear-gradient(180deg, #F8C3D6, #A33A63); animation-delay: .4s"><svg aria-hidden="true" class="olaL2" width="176" height="12" viewBox="0 0 176 12" style="position: absolute; top: -8px; left: 0"><path d="M0 6 Q11 12 22 6 T44 6 T66 6 T88 6 T110 6 T132 6 T154 6 T176 6 V12 H0 Z" fill="#F28DB0" opacity=".6"></path></svg><svg aria-hidden="true" class="olaL" width="176" height="12" viewBox="0 0 176 12" style="position: absolute; top: -6px; left: 0; animation-delay: -1.6s"><path d="M0 6 Q11 0 22 6 T44 6 T66 6 T88 6 T110 6 T132 6 T154 6 T176 6 V12 H0 Z" fill="#F8C3D6"></path></svg><div style="position: absolute; left: 6px; right: 6px; top: 2px; height: 2px; border-radius: 1px; background: rgba(255,255,255,.55); filter: blur(1px)"></div><span class="burL" style="left: 14px; animation-delay: 1.6s"></span></div><div style="position: absolute; left: 6px; right: 6px; bottom: 100%; height: 1px; background: rgba(255,255,255,.8)"></div><div class="brillo" style="position: absolute; top: -40%; left: 0; right: 0; height: 40%; background: linear-gradient(180deg, transparent, rgba(255,255,255,.12), transparent); animation-delay: 1.6s"></div><div style="position: absolute; left: 6px; top: 15px; bottom: 15px; width: 3px; border-radius: 3px; background: linear-gradient(180deg, rgba(255,255,255,.4), rgba(255,255,255,0))"></div></div>
-<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
-<div style="display: flex; align-items: center; gap: 8px"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F8C3D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11l5-5 5 5"></path><path d="M7 18l5-5 5 5"></path></svg><b style="font-size: 15px; white-space: nowrap">Nivel vs Ahri</b></div>
-<div style="display: flex; align-items: baseline; gap: 6px; white-space: nowrap"><span style="font-size: 32px; font-weight: 700">[11 · 12]</span><span style="font-size: 14px; color: var(--muted2)"></span></div>
-<span style="font-size: 13px; font-weight: 700; color: #F8C3D6">▼ No pelees solo</span>
+<div style="height: 236px; box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 4px rgba(0,0,0,.25), 0 12px 32px rgba(0,0,0,.35); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+<div role="img" aria-label="Nivel: tú 11, Ahri 12" style="display: flex; align-items: center; justify-content: center; gap: 12px; height: 92px">
+<div style="position: relative; width: 74px; height: 74px">
+<svg aria-hidden="true" width="74" height="74" viewBox="0 0 74 74" style="position: absolute; inset: 0; transform: rotate(-90deg)"><defs><linearGradient id="xpT" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F8C3D6"></stop><stop offset="1" stop-color="#A33A63"></stop></linearGradient></defs>
+<circle cx="37" cy="37" r="32" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="4"></circle>
+<circle class="xp" cx="37" cy="37" r="32" fill="none" stroke="url(#xpT)" stroke-width="4" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="90" style="animation-delay: .1s"></circle></svg>
+<img src="/_blob/ec848c5631450d0fcda778c78bccdde4" alt="" style="position: absolute; inset: 9px; width: 56px; height: 56px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px #24111A">
+<span style="position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); min-width: 26px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 11px; background: linear-gradient(180deg, #F8C3D6, #A33A63); color: #24111A; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.5)">11</span>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+<svg aria-hidden="true" class="flechas" width="28" height="20" viewBox="0 0 28 20"><path d="M2 10h20M16 4l6 6-6 6" stroke="#FF8A8A" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<b style="font-size: 15px; color: #FF8A8A">−1</b></div>
+<div style="position: relative; width: 74px; height: 74px">
+<svg aria-hidden="true" width="74" height="74" viewBox="0 0 74 74" style="position: absolute; inset: 0; transform: rotate(-90deg)"><defs><linearGradient id="xpR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF8A8A"></stop><stop offset="1" stop-color="#9A2E3A"></stop></linearGradient></defs>
+<circle cx="37" cy="37" r="32" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="4"></circle>
+<circle class="xp" cx="37" cy="37" r="32" fill="none" stroke="url(#xpR)" stroke-width="4" stroke-linecap="round" stroke-dasharray="201" stroke-dashoffset="161" style="animation-delay: .3s"></circle></svg>
+<img src="/_blob/fc7bfd201ff36c59832e07805157a6e3" alt="" style="position: absolute; inset: 9px; width: 56px; height: 56px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px #24111A">
+<span style="position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); min-width: 26px; height: 22px; padding: 0 6px; box-sizing: border-box; border-radius: 11px; background: linear-gradient(180deg, #FF8A8A, #9A2E3A); color: #24111A; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.5)">12</span>
 </div>
 </div>
-<div style="height: 210px; box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 4px rgba(0,0,0,.25), 0 12px 32px rgba(0,0,0,.35); padding: 18px 20px; display: flex; gap: 18px; align-items: center">
-<div style="position: relative; width: 44px; height: 160px; border-radius: 22px; background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.01) 60%, rgba(255,255,255,.05)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 -10px 20px rgba(0,0,0,.35); overflow: hidden; flex-shrink: 0"><div class="liq" style="position: absolute; left: 0; right: 0; bottom: 0; height: 79%; background: linear-gradient(180deg, #A8D8C0, #3E7A62); animation-delay: .0s"><svg aria-hidden="true" class="olaL2" width="176" height="12" viewBox="0 0 176 12" style="position: absolute; top: -8px; left: 0"><path d="M0 6 Q11 12 22 6 T44 6 T66 6 T88 6 T110 6 T132 6 T154 6 T176 6 V12 H0 Z" fill="#7FB89E" opacity=".6"></path></svg><svg aria-hidden="true" class="olaL" width="176" height="12" viewBox="0 0 176 12" style="position: absolute; top: -6px; left: 0; animation-delay: -2.0s"><path d="M0 6 Q11 0 22 6 T44 6 T66 6 T88 6 T110 6 T132 6 T154 6 T176 6 V12 H0 Z" fill="#A8D8C0"></path></svg><div style="position: absolute; left: 6px; right: 6px; top: 2px; height: 2px; border-radius: 1px; background: rgba(255,255,255,.55); filter: blur(1px)"></div><span class="burL" style="left: 14px; animation-delay: 2.0s"></span></div><div style="position: absolute; left: 6px; right: 6px; bottom: 77%; height: 1px; background: rgba(255,255,255,.8)"></div><div class="brillo" style="position: absolute; top: -40%; left: 0; right: 0; height: 40%; background: linear-gradient(180deg, transparent, rgba(255,255,255,.12), transparent); animation-delay: 2.0s"></div><div style="position: absolute; left: 6px; top: 15px; bottom: 15px; width: 3px; border-radius: 3px; background: linear-gradient(180deg, rgba(255,255,255,.4), rgba(255,255,255,0))"></div></div>
-<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
-<div style="display: flex; align-items: center; gap: 8px"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#CDD3DC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"></path><path d="M13 19l6-6"></path><path d="M16 16l4 4"></path><path d="M19 21l2-2"></path></svg><b style="font-size: 15px; white-space: nowrap">CS al 10</b></div>
-<div style="display: flex; align-items: baseline; gap: 6px; white-space: nowrap"><span style="font-size: 32px; font-weight: 700">[71]</span><span style="font-size: 14px; color: var(--muted2)">/ 69</span></div>
-<span style="font-size: 13px; font-weight: 700; color: #A8D8C0">✓ Meta cumplida</span>
+<div style="display: flex; align-items: center; gap: 8px; margin-top: auto"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F8C3D6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11l5-5 5 5"></path><path d="M7 18l5-5 5 5"></path></svg><b style="font-size: 14px; white-space: nowrap">Nivel vs Ahri</b></div>
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px"><span style="white-space: nowrap"><span style="font-size: 26px; font-weight: 700">[11 · 12]</span> <span style="font-size: 13px; color: var(--muted2)"></span></span><span style="font-size: 12px; font-weight: 700; white-space: nowrap; color: #F8C3D6">▼ No pelees</span></div>
 </div>
+<div style="height: 236px; box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 4px rgba(0,0,0,.25), 0 12px 32px rgba(0,0,0,.35); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px">
+<svg role="img" class="cs-minion" style="display: block; margin: 4px auto 0; overflow: visible" aria-label="Minion caster" width="120" height="120" viewBox="0 0 120 120">
+<defs>
+<linearGradient id="Tep" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C25A85"></stop><stop offset="1" stop-color="#5E2440"></stop></linearGradient>
+<linearGradient id="Pep" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8EEF5"></stop><stop offset=".55" stop-color="#AFC0D2"></stop><stop offset="1" stop-color="#6F8296"></stop></linearGradient>
+<linearGradient id="Cep" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C98E5A"></stop><stop offset="1" stop-color="#8A5A30"></stop></linearGradient>
+<linearGradient id="Rep" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE6F0"></stop><stop offset=".45" stop-color="#F28DB0"></stop><stop offset="1" stop-color="#A33A63"></stop></linearGradient>
+<linearGradient id="Lep" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F28DB0" stop-opacity="0"></stop><stop offset=".65" stop-color="#F28DB0" stop-opacity="0"></stop><stop offset="1" stop-color="#F8C3D6" stop-opacity=".9"></stop></linearGradient>
+<radialGradient id="Aep"><stop offset="0" stop-color="#F28DB0" stop-opacity=".9"></stop><stop offset=".5" stop-color="#F28DB0" stop-opacity=".3"></stop><stop offset="1" stop-color="#F28DB0" stop-opacity="0"></stop></radialGradient>
+<radialGradient id="Oep" cx=".5" cy=".1" r=".7"><stop offset="0" stop-color="#000" stop-opacity=".6"></stop><stop offset="1" stop-color="#000" stop-opacity="0"></stop></radialGradient>
+</defs>
+<ellipse class="sombra" cx="62" cy="116" rx="38" ry="4.5" fill="rgba(0,0,0,.45)"></ellipse>
+<g class="minion">
+<g class="respira">
+<!-- túnica rasgada con borde de cuero -->
+<path d="M30 112 L36 82 Q44 66 62 64 Q80 64 90 82 L96 112 L87 106 L80 114 L71 106 L62 114 L53 106 L45 114 L38 106 Z" fill="url(#Tep)" stroke="url(#Lep)" stroke-width="1.6"></path>
+<path d="M38 106 L45 114 L53 106 L62 114 L71 106 L80 114 L87 106" stroke="url(#Cep)" stroke-width="3" fill="none" stroke-linejoin="round"></path>
+<path d="M48 104 Q48 88 54 76 M76 104 Q78 90 72 76" stroke="#3A1426" stroke-opacity=".6" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+<!-- capucha alta -->
+<path d="M42 66 Q40 34 58 20 Q64 15 70 22 Q86 38 84 66 Z" fill="url(#Tep)" stroke="url(#Lep)" stroke-width="1.6"></path>
+<path d="M58 20 Q64 15 70 22 Q66 26 62 24 Z" fill="#C25A85" opacity=".6"></path>
+<path d="M50 34 l4 4 M54 34 l-4 4 M70 30 l4 4 M74 30 l-4 4" stroke="#3A1426" stroke-width="1.6" stroke-linecap="round"></path>
+<ellipse cx="62" cy="46" rx="16" ry="7" fill="url(#Oep)"></ellipse>
+<!-- correa de cuero con runas -->
+<path d="M32 66 Q62 56 92 66 L94 76 Q62 66 30 76 Z" fill="url(#Cep)" stroke="#5E3A1C" stroke-width=".8"></path>
+<path d="M36 70 q3 -3 5 0 M84 70 q-3 -3 -5 0" stroke="#5E3A1C" stroke-width="1.4" fill="none"></path>
+<path d="M33 68 Q62 59 91 68" stroke="#fff" stroke-opacity=".25" stroke-width="1" fill="none"></path>
+<!-- máscara de piedra -->
+<path d="M47 44 L77 44 L79 60 L63 76 L45 60 Z" fill="url(#Pep)" stroke="#6F8296" stroke-width=".8"></path>
+<path d="M47 44 L77 44 L76 48 L48 48 Z" fill="#fff" opacity=".3"></path>
+<path d="M63 76 L79 60 L77 44" stroke="#000" stroke-opacity=".15" stroke-width="3" fill="none"></path>
+<g class="ojos"><path d="M50 53 L60 57 L51 59 Z M76 53 L66 57 L75 59 Z" fill="#0B1630"></path><path d="M52 55 l5 2 M74 55 l-5 2" stroke="#F28DB0" stroke-width="1" opacity=".9"></path></g>
+<path d="M62 45 L60 50 L63 53" stroke="#6F8296" stroke-width=".9" fill="none"></path>
+<!-- placa hexagonal del pecho -->
+<path d="M62 74 L75 81 L75 95 L62 102 L49 95 L49 81 Z" fill="url(#Pep)" stroke="#6F8296" stroke-width="1"></path>
+<path d="M62 74 L75 81 L62 88 L49 81 Z" fill="#fff" opacity=".22"></path>
+<path d="M56 83 h7 q5 0 5 5 q0 5 -5 5 h-7 M59 86 h3 q2 0 2 2 q0 2 -2 2 h-3" stroke="#6F8296" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+<!-- escudo de piedra -->
+<path d="M86 70 L106 74 L104 100 L90 104 L82 86 Z" fill="url(#Pep)" stroke="#6F8296" stroke-width="1"></path>
+<path d="M86 70 L106 74 L105 79 L86 76 Z" fill="#fff" opacity=".25"></path>
+<path d="M106 74 L104 100 L90 104" stroke="url(#Lep)" stroke-width="1.8" fill="none"></path>
+<path d="M90 80 l4 8 l4 -6 l4 8 M92 94 q5 -3 9 0" stroke="#6F8296" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<circle cx="104" cy="88" r="4.5" fill="#7A2E52"></circle>
+</g>
+<!-- bastón con cristal -->
+<g class="baston">
+<path d="M28 44 L35 112" stroke="url(#Cep)" stroke-width="6" stroke-linecap="round"></path>
+<path d="M29 54 l5 -1 M30 62 l5 -1 M31 70 l5 -1" stroke="#5E3A1C" stroke-width="1.3"></path>
+<path d="M20 36 L36 34 L38 44 L22 46 Z" fill="url(#Pep)" stroke="#6F8296" stroke-width=".8"></path>
+<path d="M20 36 L24 30 L28 36 M28 35 L32 29 L36 34" fill="url(#Pep)" stroke="#6F8296" stroke-width=".8"></path>
+<circle cx="33" cy="66" r="5" fill="#7A2E52"></circle>
+<circle class="onda" cx="28" cy="18" r="11" fill="none" stroke="#FFE6F0" stroke-width="1.2"></circle>
+<circle class="orbe" cx="28" cy="18" r="22" fill="url(#Aep)"></circle>
+<g class="cristal">
+<path d="M28 -6 L40 4 L38 26 L28 34 L18 26 L16 4 Z" fill="url(#Rep)"></path>
+<path d="M28 -6 L40 4 L28 10 L16 4 Z" fill="#FFE6F0" opacity=".9"></path>
+<path d="M16 4 L28 10 L28 34 L18 26 Z" fill="#A33A63" opacity=".35"></path>
+<path d="M28 10 L40 4 L38 26 L28 34 Z" fill="#fff" opacity=".12"></path>
+<path d="M14 14 L18 10 L20 22 L16 26 Z" fill="url(#Rep)" opacity=".9"></path>
+<path d="M40 12 L45 16 L42 26 L38 24 Z" fill="url(#Rep)" opacity=".85"></path>
+<path d="M21 3 L25 -2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".95"></path>
+</g>
+<g class="parts"><circle class="part p1" cx="22" cy="12" r="1.4" fill="#FFE6F0"></circle><circle class="part p2" cx="34" cy="6" r="1.1" fill="#fff"></circle><circle class="part p3" cx="28" cy="22" r="1.2" fill="#FFE6F0"></circle><circle class="part p4" cx="38" cy="16" r="1" fill="#fff"></circle></g>
+</g>
+</g></svg>
+<div style="display: flex; align-items: center; gap: 8px; margin-top: auto"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CDD3DC" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"></path><path d="M13 19l6-6"></path></svg><b style="font-size: 14px; white-space: nowrap">CS al 10</b></div>
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px"><span style="white-space: nowrap"><span style="font-size: 26px; font-weight: 700">[71]</span> <span style="font-size: 13px; color: var(--muted2)">/ 69</span></span><span style="font-size: 12px; font-weight: 700; white-space: nowrap; color: #A8D8C0">✓ Meta cumplida</span></div>
 </div>
-<div style="height: 210px; box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 4px rgba(0,0,0,.25), 0 12px 32px rgba(0,0,0,.35); padding: 18px 20px; display: flex; gap: 18px; align-items: center; outline: 2px solid #F28DB0">
-<div style="position: relative; width: 44px; height: 160px; border-radius: 22px; background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.01) 60%, rgba(255,255,255,.05)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 -10px 20px rgba(0,0,0,.35), 0 0 24px rgba(217,96,106,.3); overflow: hidden; flex-shrink: 0"><div class="liq" style="position: absolute; left: 0; right: 0; bottom: 0; height: 66.6%; background: linear-gradient(180deg, #FF8A8A, #9A2E3A); animation-delay: .1s"><svg aria-hidden="true" class="olaL2" width="176" height="12" viewBox="0 0 176 12" style="position: absolute; top: -8px; left: 0"><path d="M0 6 Q11 12 22 6 T44 6 T66 6 T88 6 T110 6 T132 6 T154 6 T176 6 V12 H0 Z" fill="#D9606A" opacity=".6"></path></svg><svg aria-hidden="true" class="olaL" width="176" height="12" viewBox="0 0 176 12" style="position: absolute; top: -6px; left: 0; animation-delay: -2.4s"><path d="M0 6 Q11 0 22 6 T44 6 T66 6 T88 6 T110 6 T132 6 T154 6 T176 6 V12 H0 Z" fill="#FF8A8A"></path></svg><div style="position: absolute; left: 6px; right: 6px; top: 2px; height: 2px; border-radius: 1px; background: rgba(255,255,255,.55); filter: blur(1px)"></div><span class="burL" style="left: 14px; animation-delay: 2.4s"></span></div><div style="position: absolute; left: 6px; right: 6px; bottom: 66.6%; height: 1px; background: rgba(255,255,255,.8)"></div><div class="brillo" style="position: absolute; top: -40%; left: 0; right: 0; height: 40%; background: linear-gradient(180deg, transparent, rgba(255,255,255,.12), transparent); animation-delay: 2.4s"></div><div style="position: absolute; left: 6px; top: 15px; bottom: 15px; width: 3px; border-radius: 3px; background: linear-gradient(180deg, rgba(255,255,255,.4), rgba(255,255,255,0))"></div></div>
-<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
-<div style="display: flex; align-items: center; gap: 8px"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF8A8A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1"></circle></svg><b style="font-size: 15px; white-space: nowrap">Muertes 14+</b></div>
-<div style="display: flex; align-items: baseline; gap: 6px; white-space: nowrap"><span style="font-size: 32px; font-weight: 700">[2]</span><span style="font-size: 14px; color: var(--muted2)">/ 2</span></div>
-<span style="font-size: 13px; font-weight: 700; color: #F8C3D6">▲ Al límite</span>
-</div>
+<div style="height: 236px; box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 4px rgba(0,0,0,.25), 0 12px 32px rgba(0,0,0,.35); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; outline: 2px solid #F28DB0">
+<svg role="img" aria-label="Muertes desde el 14: 2 de 2; te queda una vida" width="190" height="92" viewBox="0 0 190 92" style="display: block; margin: 0 auto; overflow: visible">
+<defs><linearGradient id="gV" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB3C6"></stop><stop offset=".5" stop-color="#F28DB0"></stop><stop offset="1" stop-color="#9A2E3A"></stop></linearGradient>
+<radialGradient id="gA"><stop offset="0" stop-color="#F28DB0" stop-opacity=".55"></stop><stop offset="1" stop-color="#F28DB0" stop-opacity="0"></stop></radialGradient></defs>
+<circle class="gemaaura" cx="95" cy="37" r="38" fill="url(#gA)"></circle>
+<g transform="translate(22 18) scale(.7)"><g class="frag1"><polygon points="20,0 30,8 22,30 2,16" fill="#4A2635" stroke="#5E3A4A"></polygon></g><g class="frag2"><polygon points="30,8 38,16 26,40 22,30" fill="#3D2130" stroke="#5E3A4A"></polygon></g><g class="frag3"><polygon points="2,16 22,30 26,40 20,58" fill="#4A2635" stroke="#5E3A4A"></polygon></g></g><g transform="translate(75 8)"><g class="gemaviva"><polygon points="20,0 38,16 20,58 2,16" fill="url(#gV)"></polygon><polygon points="20,0 38,16 20,22 2,16" fill="#FFD6E4" opacity=".75"></polygon><polygon points="20,22 38,16 20,58" fill="#9A2E3A" opacity=".55"></polygon><path d="M10 14 L18 6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".8"></path></g></g><g transform="translate(142 18) scale(.7)"><g class="frag1"><polygon points="20,0 30,8 22,30 2,16" fill="#4A2635" stroke="#5E3A4A"></polygon></g><g class="frag2"><polygon points="30,8 38,16 26,40 22,30" fill="#3D2130" stroke="#5E3A4A"></polygon></g><g class="frag3"><polygon points="2,16 22,30 26,40 20,58" fill="#4A2635" stroke="#5E3A4A"></polygon></g></g>
+<text x="95" y="88" text-anchor="middle" font-size="9" letter-spacing="1.2" fill="#AE95A0" font-family="Mulish, sans-serif">TE QUEDA 1 CRISTAL</text>
+</svg>
+<div style="display: flex; align-items: center; gap: 8px; margin-top: auto"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF8A8A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="5"></circle><circle cx="12" cy="12" r="1"></circle></svg><b style="font-size: 14px; white-space: nowrap">Muertes desde el 14</b></div>
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px"><span style="white-space: nowrap"><span style="font-size: 26px; font-weight: 700">[2]</span> <span style="font-size: 13px; color: var(--muted2)">/ 2</span></span><span style="font-size: 12px; font-weight: 700; white-space: nowrap; color: #FF8A8A">▲ Al límite</span></div>
 </div>
 </div>
 
@@ -139,10 +279,10 @@ body{margin:0}
 <div style="border-radius: 14px; background: var(--dark2); box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 6px 16px rgba(0,0,0,.45); padding: 20px; display: flex; flex-direction: column; gap: 14px">
 <span style="font-size: 14px; color: var(--ondark2)">Tu build</span>
 <div style="display: flex; gap: 10px; align-items: center">
-<span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 10px; background: linear-gradient(135deg, #F8C3D6, #A33A63 55%, #44203A); animation-delay: 0.12s, 0.82s"><img src="/_blob/009c4e1227be125816cd05faf439fb54" alt="Cinturón Cohete Hextech, comprado" style="width: 48px; height: 48px; border-radius: 8px; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 8px; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 0.35s"></span></span></span>
-<span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 10px; background: linear-gradient(135deg, #F8C3D6, #A33A63 55%, #44203A); animation-delay: 0.24s, 0.94s"><img src="/_blob/240257950221b03abb40a8fb7e0c9f9e" alt="Botas del Hechicero, compradas" style="width: 48px; height: 48px; border-radius: 8px; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 8px; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 0.70s"></span></span></span>
-<span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 10px; background: transparent; outline: 2px dashed rgba(242,141,176,.7); outline-offset: -2px; opacity: 0.6; animation-delay: 0.36s, 1.06s"><img src="/_blob/820ab3bd96665014a599edf1d3f4069c" alt="Lumbría, siguiente" style="width: 48px; height: 48px; border-radius: 8px; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 8px; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 1.05s"></span></span></span>
-<span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 10px; background: linear-gradient(135deg, #F8C3D6, #A33A63 55%, #44203A); opacity: 0.35; animation-delay: 0.48s, 1.18s"><img src="/_blob/e8c51297aedb29e99d943820ea9bcda4" alt="Rabadon, después" style="width: 48px; height: 48px; border-radius: 8px; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 8px; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 1.40s"></span></span></span>
+<span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 10px; background: linear-gradient(110deg, #5E2440, #A33A63, #F8C3D6, #A33A63, #5E2440, #A33A63, #F8C3D6, #A33A63, #5E2440); animation-delay: 0.12s, 0.82s"><img src="/_blob/009c4e1227be125816cd05faf439fb54" alt="Cinturón Cohete Hextech, comprado" style="width: 48px; height: 48px; border-radius: 8px; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 8px; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 0.35s"></span></span><span class="itm-ch" aria-hidden="true" style="animation-delay: 4.55s"></span></span>
+<span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 10px; background: linear-gradient(110deg, #5E2440, #A33A63, #F8C3D6, #A33A63, #5E2440, #A33A63, #F8C3D6, #A33A63, #5E2440); animation-delay: 0.24s, 0.94s"><img src="/_blob/240257950221b03abb40a8fb7e0c9f9e" alt="Botas del Hechicero, compradas" style="width: 48px; height: 48px; border-radius: 8px; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 8px; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 0.70s"></span></span><span class="itm-ch" aria-hidden="true" style="animation-delay: 4.90s"></span></span>
+<span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 10px; background: transparent; outline: 2px dashed rgba(242,141,176,.7); outline-offset: -2px; opacity: 0.6; animation-delay: 0.36s, 1.06s"><img src="/_blob/820ab3bd96665014a599edf1d3f4069c" alt="Lumbría, siguiente" style="width: 48px; height: 48px; border-radius: 8px; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 8px; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 1.05s"></span></span><span class="itm-ch" aria-hidden="true" style="animation-delay: 5.25s"></span></span>
+<span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 10px; background: linear-gradient(110deg, #5E2440, #A33A63, #F8C3D6, #A33A63, #5E2440, #A33A63, #F8C3D6, #A33A63, #5E2440); opacity: 0.35; animation-delay: 0.48s, 1.18s"><img src="/_blob/e8c51297aedb29e99d943820ea9bcda4" alt="Rabadon, después" style="width: 48px; height: 48px; border-radius: 8px; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 8px; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 1.40s"></span></span><span class="itm-ch" aria-hidden="true" style="animation-delay: 5.60s"></span></span>
 </div>
 <span style="font-size: 13px; color: var(--ondark2)">Siguiente: <b style="color: var(--ondark)">Lumbría</b> · [faltan 1200 de oro]</span>
 </div>

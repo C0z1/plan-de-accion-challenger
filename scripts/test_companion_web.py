@@ -83,7 +83,7 @@ class Http(unittest.TestCase):
 
     def test_vista_partidas(self):
         st, b = self.get("/"); t = b.decode()
-        for f in ('id="b-partidas"', "\n  partidas: '<", "function partidas(s)", "Tus partidas", '"partidas"]'):
+        for f in ('id="b-partidas"', "\n  partidas: '<", "function partidas(s)", "Tus partidas", '"partidas", "campeones"'):
             self.assertIn(f, t)
 
     def test_csp_no_deja_cargar_de_fuera(self):
@@ -114,6 +114,54 @@ class CacheRendimiento(unittest.TestCase):
                 (raw / "LA1_2.json").write_text("{}")
                 w.rendimiento_rapido(raw, cache)
                 self.assertEqual(r.call_count, 2)  # partida nueva: se recalcula
+
+
+class RapidoSinRaw(unittest.TestCase):
+    def test_sin_raw_pide_rendimiento_con_none(self):  # con la ruta resuelta, rendimiento() no agregaba las vistas
+        import pathlib, tempfile
+        with tempfile.TemporaryDirectory() as d:
+            with mock.patch.object(w, "rendimiento", return_value={"x": 1}) as r, mock.patch.dict("os.environ", {"DATOS_DIR": d}):
+                w.rendimiento_rapido(None, pathlib.Path(d, "c.json"))
+            r.assert_called_once_with(None)
+
+
+class Fondo(unittest.TestCase):
+    def setUp(self): self.prev = (dict(w.ESTADO), w.FONDO[0], w.VIVO[0]); w.URL[0] = "http://127.0.0.1:1/"
+    def tearDown(self): w.ESTADO.clear(); w.ESTADO.update(self.prev[0]); w.FONDO[0], w.VIVO[0] = self.prev[1], self.prev[2]
+
+    def test_abre_la_ventana_al_abrir_el_cliente(self):
+        import time
+        w.FONDO[0], w.VIVO[0] = True, time.time() - 60
+        with mock.patch.object(w, "abrir") as a, mock.patch.object(w.gui, "perfil", return_value="x"):
+            w.evento(("fase", None)); a.assert_not_called()          # cliente cerrado: nada
+            w.evento(("fase", "Lobby")); a.assert_called_once()      # se abrió el cliente: abre HTC
+            w.evento(("fase", "Matchmaking")); a.assert_called_once()  # ya abierto: no repite
+
+    def test_no_abre_si_la_ventana_ya_esta_o_sin_fondo(self):
+        import time
+        with mock.patch.object(w, "abrir") as a, mock.patch.object(w.gui, "perfil", return_value="x"):
+            w.FONDO[0], w.VIVO[0] = True, time.time(); w.ESTADO["fase"] = None
+            w.evento(("fase", "Lobby")); a.assert_not_called()       # la ventana sigue preguntando
+            w.FONDO[0], w.VIVO[0] = False, 0; w.ESTADO["fase"] = None
+            w.evento(("fase", "Lobby")); a.assert_not_called()       # sin --fondo nunca abre sola
+
+
+class Post(unittest.TestCase):
+    def setUp(self):
+        self.srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), w.H); threading.Thread(target=self.srv.serve_forever, daemon=True).start()
+    def tearDown(self): self.srv.shutdown(); self.srv.server_close()
+    def post(self, cab, cuerpo=b'{"on": true}'):
+        c = http.client.HTTPConnection("127.0.0.1", self.srv.server_port); c.request("POST", "/api/autoarranque", cuerpo, cab)
+        r = c.getresponse(); return r.status
+
+    def test_sin_cabecera_htc_403(self):  # una web ajena no puede activar el arranque con Windows
+        with mock.patch.object(w, "autoarranque") as a:
+            self.assertEqual(self.post({"Content-Type": "application/json"}), 403); a.assert_not_called()
+
+    def test_con_cabecera_llama_y_valida(self):
+        with mock.patch.object(w, "autoarranque", return_value=True) as a:
+            self.assertEqual(self.post({"X-HTC": "1"}), 200); a.assert_called_once_with(True)
+            self.assertEqual(self.post({"X-HTC": "1"}, b'{"on": "si"}'), 400)
 
 
 if __name__ == "__main__":

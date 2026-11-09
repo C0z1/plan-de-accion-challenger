@@ -180,6 +180,7 @@ def trabajador(q):
                 if ids and (pos, ids) != visto:
                     m = m or companion.nombres(); visto = (pos, ids)
                     q.put(("draft", pos, recomendaciones(pos, [m.get(i) for i in ids])))
+                elif not ids and pos and visto != pos: q.put(("pos", pos)); visto = pos  # bans y picks antes del rival
             elif fase != "ChampSelect": visto = None
             if jugando and time.time() - ult >= 30:
                 d = companion.vivo(); archivo, ult = companion.capturar(archivo, d), time.time(); foto = d or foto

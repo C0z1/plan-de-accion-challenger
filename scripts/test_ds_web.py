@@ -89,6 +89,12 @@ class TestServidor(unittest.TestCase):
         _, _, cuerpo = self.s.get("/")
         self.assertIn(b'id="b-partidas" aria-label="Tus partidas"', cuerpo)
 
+    def test_inicio_es_la_vista_por_defecto(self):  # turno 8: la casa es el botón activo y el fallback fuera de partida
+        _, _, cuerpo = self.s.get("/")
+        self.assertIn(b'id="b-inicio" aria-label="Inicio" aria-current="page"', cuerpo)
+        self.assertIn(b'vista === "inicio" ? inicio(s)', cuerpo)
+        self.assertIn(b': "inicio"', cuerpo)  # la fase por defecto (fuera de champ select/partida) cae en Inicio
+
 
 class TestEstado(unittest.TestCase):
     def test_evento_fase_resetea_draft(self):

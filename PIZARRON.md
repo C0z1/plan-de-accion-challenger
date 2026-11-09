@@ -24,14 +24,15 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Iteración 15:** rebuild `Companion.exe` v0.1.4 (trae Partidas), humo OK (11 claves), tag `v0.1.4`. Ajustes descartado: no hay nada que configurar todavía. Playwright, otra vez sin permiso. 202 OK.
 - **Turno 8 (2026-11-09, con el usuario):** la app se llama **HTC (How to Climb)** v0.2.0. Build `--onedir` (`instalador/build.ps1`): responde en 0.54 s (antes 1.1–1.4). Caché de «Tu rendimiento» en `datos/cache/` (27 ms; antes 1 s), que se invalida si cambian las partidas. Instalador Inno Setup por usuario (`dist/HTC-Setup-0.2.0.exe`), probado instalando en silencio + humo + desinstalar. 205 OK.
 - **Turno 8, 2:** paleta Vino + barra lateral con etiquetas + vista **Inicio** (launcher, Home_Vino) con datos reales; rebuild HTC + instalador. 212 OK.
-- **Siguiente:** reglas «Cumples N/20» (datos nuevos), Perfil/Selección en Vino revisados en pantalla, ventanas nuevas.
+- **Turno 8, 3:** HTC v0.3.0: todas las ventanas Vino (Draft, En vivo, Campeones, Errores, Ajustes; Qué cambiar con Cumples N/20; MVP en Partidas) con `scripts/vistas.py`, y se abre solo al abrir LoL (`--fondo`, instancia única, arranque con Windows desde el instalador o Ajustes). 218 OK.
+- **Siguiente:** rival y objetivos en En vivo, Selección simplificada, paleta clara; revisión de DeepSeek de los errores.
 - **Actualizado:** 2026-11-09 (turno 8)
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
-- **Estado:** revisado eb9bc53 (turno 8, fix de la firma): `firma()` incluye el mtime de `score.py` y `rendimiento_rapido` compara `firma == f`; el test que dejé fallando pasa. Suite completa **212 OK**. Caché cubierta en los 4 casos (bajar/borrar partida, JSON corrupto, editar `score.py`).
+- **Estado:** revisado 337683d (paleta Vino + launcher Inicio): `inicio()` no truena con `rendimiento: null` ni con `perfil` sin «#» (verificado por lectura, no ejecuto JS en unittest); agregué `test_inicio_es_la_vista_por_defecto`. Suite completa **213 OK**. Residual menor: el panel derecho de Inicio repite «sin datos…» con el mensaje crudo.
 - **Siguiente:** nada mío pendiente; revisión visual (Playwright) si llega el permiso.
-- **Actualizado:** 2026-11-09 (turno 8, revisión eb9bc53)
+- **Actualizado:** 2026-11-09 (turno 8, revisión 337683d)
 
 ### Diseñador
 - **Estado:** el usuario aprobó la paleta Vino + negro para la primera build. Pedido a Opus en `datos/notas-equipo.md` (2026-11-09, «primera build con el diseño Vino»); artboards en `datos/diseno/canvas/project/` (`*_Vino.dc.html`, `Tubos_Kit.dc.html`).

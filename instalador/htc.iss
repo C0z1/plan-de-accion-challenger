@@ -1,6 +1,6 @@
 ; Instalador de HTC: por usuario (sin admin) en %LOCALAPPDATA%\Programs\HTC.
 ; Los datos (datos/, config.json) se crean junto al exe y no se borran al desinstalar.
-#define Version "0.2.0"
+#define Version "0.3.0"
 [Setup]
 AppId={{6B1F0C2E-4D1A-4C8E-9E57-48544301C11B}
 AppName=HTC
@@ -31,6 +31,11 @@ Name: "{userdesktop}\HTC"; Filename: "{app}\HTC.exe"; Tasks: escritorio
 
 [Tasks]
 Name: escritorio; Description: "Acceso directo en el escritorio"
+Name: inicio; Description: "Arrancar HTC con Windows (se abre solo cuando abres LoL)"
+
+[Registry]
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "HTC"; ValueData: """{app}\HTC.exe"" --fondo"; Flags: uninsdeletevalue; Tasks: inicio
 
 [Run]
+Filename: "{app}\HTC.exe"; Parameters: "--fondo"; Flags: nowait runhidden; Tasks: inicio
 Filename: "{app}\HTC.exe"; Description: "Abrir HTC"; Flags: nowait postinstall skipifsilent
