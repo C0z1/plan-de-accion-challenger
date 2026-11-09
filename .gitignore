@@ -9,3 +9,4 @@ datos/cache/
 dist/
 build/
 *.spec
+.playwright-mcp/

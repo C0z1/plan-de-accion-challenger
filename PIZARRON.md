@@ -28,14 +28,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
-- **Estado:** revisado a3468a1…d59947b (iter 12–15): `unidades()` sin rival de línea → 0; mapeo de íconos completo; `OSError` de `muertes14_25` y foto previa de netstat en `humo_exe.py` correctos; visión ya no cita «control ward» (sin respaldo); vista Partidas lee `rendimiento.resumen.partidas` y `clave` serializa `[comp, z]`. Humo v0.1.4 OK. Suite 204 OK (sumé 3 pruebas: rival de línea, PermissionError y aria-label de Partidas).
-- **Siguiente:** revisión visual en navegador (Playwright) cuando haya permiso; RESUMEN-NOCHE.
-- **Actualizado:** 2026-11-09 03:55 (turno 7, revisión iter 12–15)
+- **Estado:** revisado 57ed203 (turno 8, HTC v0.2.0): caché invalida al bajar/borrar partida y con JSON corrupto (pruebas en `test_ds_cache.py`); rutas del exe OK (instalado / `dist/HTC` / sin `scripts/`); el instalador no filtra nada personal y la desinstalación conserva `datos/`; primera vez instalado no truena (`perfil()`, `rendimiento_rapido()`, `/api/estado`). **Bug:** la caché NO se invalida al cambiar `score.py` sin subir `VERSION` — dejado fallando en `test_ds_cache`.
+- **Siguiente:** meter el mtime de `score.py` en `firma()` (o regla dura de bump de `VERSION`); revisión visual (Playwright) si hay permiso.
+- **Actualizado:** 2026-11-09 15:11 (turno 8, revisión 57ed203)
 
 ### Diseñador
-- **Estado:** retomé la sesión en vivo. El canvas publicado tiene solo 2 artboards en Paleta 3E (Inv5 = Perfil, ChampSelect_Paleta3E). Contexto al día en `datos/diseno-contexto.md`; vigilo comentarios del canvas.
+- **Estado:** el usuario aprobó la paleta Vino + negro para la primera build. Pedido a Opus en `datos/notas-equipo.md` (2026-11-09, «primera build con el diseño Vino»); artboards en `datos/diseno/canvas/project/` (`*_Vino.dc.html`, `Tubos_Kit.dc.html`).
 - **Siguiente:** publicar los cambios que pida el usuario al canvas; al cerrar, acuerdos en `datos/diseno-acuerdos.md`.
-- **Actualizado:** 2026-11-09 (retomo sesión en vivo)
+- **Actualizado:** 2026-11-09 (Vino aprobado, entregado a Opus)
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -215,6 +215,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-09 · DeepSeek: en 5f590c6 el pie queda bien (±22 al 95% con n real, «Sin partidas» con n=0); menor: con n=1 la misma fórmula da «±98 (95%)», honesto pero inservible con muestras chicas.
 - 2026-11-09 · DeepSeek: en 4355eaa el timeline roto ya no vacía Perfil (None solo para esa partida, verificado y con prueba `test_ds_score`); queda un hueco menor: el `except` no cubre `OSError`, así que un timeline ilegible (permiso/borrado) aún vaciaría Perfil vía `rendimiento()`.
 - 2026-11-09 · DeepSeek: el humo del `.exe` (ef71e63) sale 0 y el binario v0.1.2 responde `/api/estado`; único hueco: si hay otra instancia de `Companion.exe` abierta, `ports[0]` puede leer su puerto y dar un falso OK (una foto previa de netstat lo cubre).
+- 2026-11-09 · DeepSeek: la caché de rendimiento (57ed203) no se invalida al cambiar `score.py` sin subir `VERSION` (la `firma` solo mira los JSON de raw); un arreglo de `score.py` dejaría números viejos a los instalados. Dejado fallando en `test_ds_cache.Cache.test_cambiar_score_py_invalida_la_cache`.
 
 ## Decisiones
 - 2026-11-09 · Opus: `Companion.exe` v0.1.0 es la app web (`companion_web.py`), no tkinter. Lee `scripts/web` del repo si está junto a él (se actualiza sin recompilar) y si no, la copia empaquetada.

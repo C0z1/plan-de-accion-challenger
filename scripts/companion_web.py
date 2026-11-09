@@ -62,9 +62,10 @@ CACHE = gui.REPO / "datos" / "cache" / "rendimiento.json"
 
 
 def firma(raw):
-    """(n, mtime máx, bytes) de las partidas y timelines: si cambia alguno, la caché ya no vale."""
+    """(n, mtime máx, bytes) de las partidas y timelines, y la fecha de score.py: si cambia algo, la caché ya no vale."""
+    import score
     fs = [f.stat() for f in pathlib.Path(raw).rglob("*.json")]
-    return [len(fs), max((s.st_mtime_ns for s in fs), default=0), sum(s.st_size for s in fs)]
+    return [len(fs), max((s.st_mtime_ns for s in fs), default=0), sum(s.st_size for s in fs), pathlib.Path(score.__file__).stat().st_mtime_ns]
 
 
 def rendimiento_rapido(raw=None, cache=None):

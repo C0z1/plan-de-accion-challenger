@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Selección de campeón · Paleta 3E</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+:root{--bg:#24111A;--card:#36192A;--text:#F2F4F7;--muted:#D2BAC4;--muted2:#AE95A0;--muted3:#CDD3DC;--line:#5A2D40;--dark:#0B0709;--dark2:#1A1014;--dark3:#2C1420;--dark4:#3D2130;--ondark:#FFFFFF;--ondark2:#B8BCC6;--acc:#F28DB0;--ontint:#161A21;--ontint2:#3F4652}
+@keyframes ola{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes olaV{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+@keyframes burbuja{0%{transform:translateY(0);opacity:0}20%{opacity:.8}100%{transform:translateY(-60px);opacity:0}}
+@keyframes llenar{from{height:0}}
+@keyframes llenarH{from{width:0}}
+@keyframes brillo{0%,70%{transform:translateY(0)}100%{transform:translateY(350%)}}
+.liq{animation:llenar 1.6s cubic-bezier(.22,1,.36,1) both}
+.liqH{animation:llenarH 1.6s cubic-bezier(.22,1,.36,1) both}
+.olaL{animation:ola 7s linear infinite}
+.olaL2{animation:ola 11s linear infinite reverse}
+.olaV{animation:olaV 3s linear infinite}
+.burL{position:absolute;bottom:6px;width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.6);animation:burbuja 5s ease-in infinite}
+.brillo{animation:brillo 6s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.liq,.liqH,.olaL,.olaL2,.olaV,.burL,.brillo{animation:none}}
+@keyframes viaje{0%{left:0;opacity:0}8%{opacity:1}80%{left:100%;opacity:1}100%{left:100%;opacity:0}}
+@keyframes meta6{0%,70%{box-shadow:0 0 0 3px rgba(242,141,176,.25)}85%{box-shadow:0 0 0 9px rgba(242,141,176,0),0 0 18px rgba(242,141,176,.8)}100%{box-shadow:0 0 0 3px rgba(242,141,176,.25)}}
+.viaje{animation:viaje 3.6s cubic-bezier(.45,0,.2,1) infinite}
+.meta6{animation:meta6 3.6s ease-out infinite}
+@media (prefers-reduced-motion: reduce){.viaje,.meta6{animation:none}}
+@keyframes itmIn{from{opacity:0;transform:translateY(10px) scale(.8)}}
+@keyframes sheen{0%,72%{left:-60%}100%{left:140%}}
+@keyframes aro{0%,100%{box-shadow:0 6px 16px rgba(0,0,0,.45),0 0 10px rgba(242,141,176,.18)}50%{box-shadow:0 6px 16px rgba(0,0,0,.45),0 0 18px rgba(242,141,176,.45)}}
+.itm{animation:itmIn .7s cubic-bezier(.22,1,.36,1) both,aro 4s ease-in-out .7s infinite;transition:transform .2s ease}
+.itm:hover{transform:translateY(-4px) scale(1.06)}
+.sheen-i{animation:sheen 5.5s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce){.itm,.sheen-i{animation:none}}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1024px; box-sizing: border-box; display: flex; border-radius: 40px; overflow: hidden; background: var(--bg); font-family: Mulish, 'Segoe UI', sans-serif; color: var(--text)">
+
+<nav aria-label="Secciones" style="width: 101px; flex-shrink: 0; background: var(--card); display: flex; flex-direction: column; align-items: center; padding: 30px 0 26px 0; gap: 6px; box-sizing: border-box">
+<button style="width: 76px; padding: 8px 0; border-radius: 12px; border: none; background: none; color: var(--muted3); display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; font: inherit; font-size: 11px"><svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F28DB0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"></path><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"></path></svg>Inicio</button>
+<div style="width: 44px; height: 1px; background: rgba(255,255,255,.08); margin: 4px 0"></div>
+<button style="width: 76px; padding: 8px 0; border-radius: 12px; border: none; background: none; color: var(--muted3); display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; font: inherit; font-size: 11px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5"></path><path d="M13 19l6-6"></path><path d="M16 16l4 4"></path><path d="M19 21l2-2"></path><path d="M14.5 6.5L18 3h3v3l-3.5 3.5"></path><path d="M5 14l4 4"></path><path d="M7 17l-3 3"></path><path d="M3 19l2 2"></path></svg>Draft</button>
+<button aria-current="page" style="width: 76px; padding: 8px 0; border-radius: 12px; border: none; background: var(--dark); font-weight: 700; color: var(--ondark); box-shadow: inset 3px 0 0 #F28DB0; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; font: inherit; font-size: 11px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F28DB0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M5 21v-1a7 7 0 0 1 14 0v1"></path><path d="M16 4l2-2M8 4L6 2"></path></svg>Selección</button>
+<button style="width: 76px; padding: 8px 0; border-radius: 12px; border: none; background: none; color: var(--muted3); display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; font: inherit; font-size: 11px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M10 8l6 4-6 4z"></path></svg>En vivo</button>
+<button style="width: 76px; padding: 8px 0; border-radius: 12px; border: none; background: none; color: var(--muted3); display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; font: inherit; font-size: 11px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"></rect><rect x="14" y="3" width="7" height="5" rx="1"></rect><rect x="14" y="12" width="7" height="9" rx="1"></rect><rect x="3" y="16" width="7" height="5" rx="1"></rect></svg>Perfil</button>
+<button style="width: 76px; padding: 8px 0; border-radius: 12px; border: none; background: none; color: var(--muted3); display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; font: inherit; font-size: 11px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Partidas</button>
+<button style="width: 76px; padding: 8px 0; border-radius: 12px; border: none; background: none; color: var(--muted3); display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; font: inherit; font-size: 11px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.9"></path><path d="M16 3.1a4 4 0 0 1 0 7.8"></path></svg>Campeones</button>
+<button style="width: 76px; padding: 8px 0; border-radius: 12px; border: none; background: none; color: var(--muted3); display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; font: inherit; font-size: 11px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>Errores</button>
+<button style="margin-top: auto; width: 76px; padding: 8px 0; border-radius: 12px; border: none; background: none; color: var(--muted3); display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; font: inherit; font-size: 11px"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"></path></svg>Ajustes</button>
+</nav>
+
+<main style="width: 779px; flex-shrink: 0; box-sizing: border-box; padding: 48px 40px 36px 40px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; justify-content: space-between; align-items: flex-start">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<h1 style="margin: 0; font-size: 28px; font-weight: 700">Selección de campeón</h1>
+<span style="font-size: 16px; color: var(--muted)">Mid · ranked · Sylas contra Ahri</span>
+</div>
+<div style="height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); display: flex; align-items: center; gap: 8px; font-size: 16px"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F2F4F7" stroke-width="2"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l3 2M9 2h6"></path></svg><b>[0:24]</b></div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+<div style="height: 196px; box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 4px rgba(0,0,0,.25), 0 12px 32px rgba(0,0,0,.35); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 12px"><img src="/_blob/fc7bfd201ff36c59832e07805157a6e3" alt="" style="width: 40px; height: 40px; border-radius: 10px"><b style="font-size: 16px">Contra Ahri</b></div>
+<div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 34px; font-weight: 700; white-space: nowrap">[4-1]</span><span style="font-size: 15px; color: var(--muted); white-space: nowrap">con Sylas</span></div>
+<span style="margin-top: auto; font-size: 14px; color: var(--muted); line-height: 1.4">Pocas partidas: pista</span>
+</div>
+
+<div style="height: 196px; box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 4px rgba(0,0,0,.25), 0 12px 32px rgba(0,0,0,.35); padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 12px"><img src="/_blob/ec848c5631450d0fcda778c78bccdde4" alt="" style="width: 40px; height: 40px; border-radius: 10px"><b style="font-size: 16px">Tu Sylas</b></div>
+<div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 34px; font-weight: 700">[48%]</span><span style="font-size: 15px; color: var(--muted); white-space: nowrap">tu WR 54%</span></div>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 6px">
+<div style="position: relative; width: 100%; height: 16px; border-radius: 8px; background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 4px 10px rgba(0,0,0,.35); overflow: hidden"><div class="liqH" style="position: absolute; left: 0; top: 0; bottom: 0; width: 48%; background: linear-gradient(90deg, #A33A63, #F8C3D6); border-radius: 0 8px 8px 0"><svg aria-hidden="true" class="olaV" width="10" height="64" viewBox="0 0 10 64" style="position: absolute; right: -6px; top: 0"><path d="M0 0 Q10 4 5 8 T5 16 T5 24 T5 32 T5 40 T5 48 T5 56 T5 64 H0 Z" fill="#F8C3D6"></path></svg><div style="position: absolute; left: 0; right: 0; top: 3px; height: 3px; background: rgba(255,255,255,.25); filter: blur(1px)"></div></div><div style="position: absolute; top: 3px; bottom: 3px; left: 54%; width: 2px; background: rgba(255,255,255,.85)"></div></div>
+</div>
+</div>
+
+<div style="height: 196px; box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 4px rgba(0,0,0,.25), 0 12px 32px rgba(0,0,0,.35); padding: 18px 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><b style="font-size: 16px; white-space: nowrap">Hasta el nivel 6</b><span style="font-size: 12px; color: var(--muted2)">vs Ahri</span></div>
+<div role="img" aria-label="Del nivel 1 al 6: juega seguro hasta el 6" style="position: relative; display: flex; justify-content: space-between; align-items: center; height: 32px">
+<div style="position: absolute; left: 10px; right: 14px; top: 50%; height: 3px; margin-top: -1.5px; border-radius: 2px; background: linear-gradient(90deg, rgba(242,141,176,.15), rgba(242,141,176,.7))"></div>
+<div style="position: absolute; left: 10px; right: 14px; top: 50%; height: 0">
+<span class="viaje" style="position: absolute; top: -6px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: #F8C3D6; box-shadow: 0 0 12px 3px rgba(242,141,176,.7); z-index: 2"></span></div>
+<span class="" style="position: relative; z-index: 1; width: 20px; height: 20px; border-radius: 50%; background: #2C1420; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--muted2)">1</span><span class="" style="position: relative; z-index: 1; width: 20px; height: 20px; border-radius: 50%; background: #2C1420; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--muted2)">2</span><span class="" style="position: relative; z-index: 1; width: 20px; height: 20px; border-radius: 50%; background: #2C1420; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--muted2)">3</span><span class="" style="position: relative; z-index: 1; width: 20px; height: 20px; border-radius: 50%; background: #2C1420; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--muted2)">4</span><span class="" style="position: relative; z-index: 1; width: 20px; height: 20px; border-radius: 50%; background: #2C1420; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--muted2)">5</span><span class="meta6" style="position: relative; z-index: 1; width: 28px; height: 28px; border-radius: 50%; background: #F28DB0; box-shadow: 0 0 0 3px rgba(242,141,176,.25); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #24111A">6</span>
+</div>
+<span style="font-size: 14px; color: var(--muted)">Juega seguro: mueres antes del 6 en <b style="color: var(--text)">[1 de 5]</b></span>
+</div>
+</div>
+
+<div style="flex-grow: 1; box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 4px rgba(0,0,0,.25), 0 12px 32px rgba(0,0,0,.35); padding: 22px 30px; display: flex; flex-direction: column; gap: 14px">
+<div style="margin: -22px -30px 0 -30px; padding: 16px 30px; border-radius: 16px 16px 0 0; background: linear-gradient(90deg, rgba(242,141,176,.20), rgba(242,141,176,0) 65%); border-bottom: 1px solid rgba(255,255,255,.06); display: flex; justify-content: space-between; align-items: baseline">
+<h2 style="margin: 0; font-size: 20px; font-weight: 700">Tu plan con Sylas</h2>
+<span style="font-size: 13px; color: var(--muted)">3 reglas · la más urgente, arriba</span>
+</div>
+<div style="display: grid; grid-template-columns: 36px 1fr 150px; align-items: center; column-gap: 16px; padding: 20px 18px; border-radius: 12px; background: linear-gradient(180deg, #2E1622, #26121C); box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 4px 12px rgba(0,0,0,.3); outline: 1px solid rgba(242,141,176,.6)">
+<span style="width: 36px; height: 36px; border-radius: 50%; background: rgba(242,141,176,.14); color: #F8C3D6; display: flex; align-items: center; justify-content: center; font-weight: 700">1</span>
+<div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><b style="font-size: 16px">Llega al 6 sin nivel abajo</b><span style="font-size: 13px; color: var(--muted)">Contra Ahri sueles llegar abajo · abajo ganas 44%</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; color: var(--muted2); text-align: right">Cumples <b style="color: var(--text)">[6/20]</b></span><div style="position: relative; width: 100%; height: 10px; border-radius: 5px; background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 4px 10px rgba(0,0,0,.35); overflow: hidden"><div class="liqH" style="position: absolute; left: 0; top: 0; bottom: 0; width: 30%; background: linear-gradient(90deg, #9A2E3A, #FF8A8A); border-radius: 0 5px 5px 0"><svg aria-hidden="true" class="olaV" width="10" height="40" viewBox="0 0 10 40" style="position: absolute; right: -6px; top: 0"><path d="M0 0 Q10 2 5 5 T5 10 T5 15 T5 20 T5 25 T5 30 T5 35 T5 40 H0 Z" fill="#FF8A8A"></path></svg><div style="position: absolute; left: 0; right: 0; top: 3px; height: 3px; background: rgba(255,255,255,.25); filter: blur(1px)"></div></div></div></div>
+</div>
+<div style="display: grid; grid-template-columns: 36px 1fr 150px; align-items: center; column-gap: 16px; padding: 20px 18px; border-radius: 12px; background: linear-gradient(180deg, #2E1622, #26121C); box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 4px 12px rgba(0,0,0,.3)">
+<span style="width: 36px; height: 36px; border-radius: 50%; background: rgba(242,141,176,.14); color: #F8C3D6; display: flex; align-items: center; justify-content: center; font-weight: 700">2</span>
+<div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><b style="font-size: 16px">69+ minions al 10</b><span style="font-size: 13px; color: var(--muted)">Con 69+ ganas 74%; sin eso, 32%</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; color: var(--muted2); text-align: right">Cumples <b style="color: var(--text)">[8/20]</b></span><div style="position: relative; width: 100%; height: 10px; border-radius: 5px; background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 4px 10px rgba(0,0,0,.35); overflow: hidden"><div class="liqH" style="position: absolute; left: 0; top: 0; bottom: 0; width: 40%; background: linear-gradient(90deg, #A33A63, #F8C3D6); border-radius: 0 5px 5px 0"><svg aria-hidden="true" class="olaV" width="10" height="40" viewBox="0 0 10 40" style="position: absolute; right: -6px; top: 0"><path d="M0 0 Q10 2 5 5 T5 10 T5 15 T5 20 T5 25 T5 30 T5 35 T5 40 H0 Z" fill="#F8C3D6"></path></svg><div style="position: absolute; left: 0; right: 0; top: 3px; height: 3px; background: rgba(255,255,255,.25); filter: blur(1px)"></div></div></div></div>
+</div>
+<div style="display: grid; grid-template-columns: 36px 1fr 150px; align-items: center; column-gap: 16px; padding: 20px 18px; border-radius: 12px; background: linear-gradient(180deg, #2E1622, #26121C); box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 4px 12px rgba(0,0,0,.3)">
+<span style="width: 36px; height: 36px; border-radius: 50%; background: rgba(242,141,176,.14); color: #F8C3D6; display: flex; align-items: center; justify-content: center; font-weight: 700">3</span>
+<div style="display: flex; flex-direction: column; gap: 4px; min-width: 0"><b style="font-size: 16px">Máximo 2 muertes del 14 al 25</b><span style="font-size: 13px; color: var(--muted)">Con 3+ tu WR baja de 68% a 43%</span></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 12px; color: var(--muted2); text-align: right">Cumples <b style="color: var(--text)">[14/20]</b></span><div style="position: relative; width: 100%; height: 10px; border-radius: 5px; background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 4px 10px rgba(0,0,0,.35); overflow: hidden"><div class="liqH" style="position: absolute; left: 0; top: 0; bottom: 0; width: 70%; background: linear-gradient(90deg, #3E7A62, #A8D8C0); border-radius: 0 5px 5px 0"><svg aria-hidden="true" class="olaV" width="10" height="40" viewBox="0 0 10 40" style="position: absolute; right: -6px; top: 0"><path d="M0 0 Q10 2 5 5 T5 10 T5 15 T5 20 T5 25 T5 30 T5 35 T5 40 H0 Z" fill="#A8D8C0"></path></svg><div style="position: absolute; left: 0; right: 0; top: 3px; height: 3px; background: rgba(255,255,255,.25); filter: blur(1px)"></div></div></div></div>
+</div>
+</div>
+
+<div style="flex-shrink: 0; box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 2px 4px rgba(0,0,0,.25), 0 12px 32px rgba(0,0,0,.35); padding: 18px 30px; display: flex; flex-direction: column; gap: 12px">
+<div style="margin: -18px -30px 0 -30px; padding: 16px 30px; border-radius: 16px 16px 0 0; background: linear-gradient(90deg, rgba(242,141,176,.20), rgba(242,141,176,0) 65%); border-bottom: 1px solid rgba(255,255,255,.06); display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 18px; font-weight: 700">Build</h2><span style="font-size: 12px; color: var(--muted2)">Tu build · 55%</span></div>
+<div style="display: flex; align-items: center; gap: 10px">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 10px; background: linear-gradient(135deg, #F8C3D6, #A33A63 55%, #44203A); animation-delay: 0.12s, 0.82s"><img src="/_blob/009c4e1227be125816cd05faf439fb54" alt="Cinturón Cohete Hextech" style="width: 48px; height: 48px; border-radius: 8px; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 8px; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 0.35s"></span></span></span><span style="font-size: 11px; color: var(--muted)">78%</span></div>
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#AE95A0" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 10px; background: linear-gradient(135deg, #F8C3D6, #A33A63 55%, #44203A); animation-delay: 0.24s, 0.94s"><img src="/_blob/820ab3bd96665014a599edf1d3f4069c" alt="Lumbría" style="width: 48px; height: 48px; border-radius: 8px; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 8px; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 0.70s"></span></span></span><span style="font-size: 11px; color: var(--muted)">46%</span></div>
+<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#AE95A0" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 10px; background: linear-gradient(135deg, #F8C3D6, #A33A63 55%, #44203A); animation-delay: 0.36s, 1.06s"><img src="/_blob/e8c51297aedb29e99d943820ea9bcda4" alt="Sombrero Mortífero de Rabadon" style="width: 48px; height: 48px; border-radius: 8px; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 8px; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 1.05s"></span></span></span><span style="font-size: 11px; color: var(--muted)">24%</span></div>
+<div style="width: 1px; height: 48px; background: var(--line); margin: 0 6px"></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 10px; background: linear-gradient(135deg, #F8C3D6, #A33A63 55%, #44203A); animation-delay: 0.48s, 1.18s"><img src="/_blob/240257950221b03abb40a8fb7e0c9f9e" alt="Botas del Hechicero" style="width: 48px; height: 48px; border-radius: 8px; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 8px; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 1.40s"></span></span></span><span style="font-size: 11px; color: var(--muted)">56%</span></div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px"><span class="itm" style="position: relative; display: inline-flex; flex-shrink: 0; padding: 2px; border-radius: 50%; background: linear-gradient(135deg, #F8C3D6, #A33A63 55%, #44203A); animation-delay: 0.60s, 1.30s"><img src="/_blob/509bb5fe095f7775a1d87f7911a45cae" alt="Conquistador" style="width: 48px; height: 48px; border-radius: 50%; display: block; background: #0B0709"><span aria-hidden="true" style="position: absolute; inset: 2px; border-radius: 50%; overflow: hidden; pointer-events: none"><span class="sheen-i" style="position: absolute; top: 0; bottom: 0; width: 45%; background: linear-gradient(100deg, transparent, rgba(255,255,255,.4), transparent); animation-delay: 1.75s"></span></span></span><span style="font-size: 11px; color: var(--muted)">55%</span></div>
+<span style="margin-left: auto; display: flex; gap: 4px; font-size: 14px; font-weight: 700"><span style="padding: 6px 10px; border-radius: 6px; background: #F28DB0; color: var(--ontint)">W</span><span style="padding: 6px 4px; color: var(--muted2)">&gt;</span><span style="padding: 6px 10px; border-radius: 6px; background: var(--dark3)">Q</span><span style="padding: 6px 4px; color: var(--muted2)">&gt;</span><span style="padding: 6px 10px; border-radius: 6px; background: var(--dark3)">E</span></span>
+</div>
+</div>
+</main>
+
+<aside style="flex-grow: 1; background: var(--dark); color: var(--ondark); border-radius: 40px; box-sizing: border-box; padding: 44px 36px 36px 36px; display: flex; flex-direction: column; gap: 26px">
+<div style="display: flex; align-items: center; gap: 18px">
+<img src="/_blob/ec848c5631450d0fcda778c78bccdde4" alt="Sylas" style="width: 96px; height: 96px; border-radius: 50%; border: 3px solid #F28DB0; object-fit: cover">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 13px; color: var(--ondark2)">Pickea</span>
+<b style="font-size: 24px">Sylas</b>
+<span style="font-size: 14px; color: var(--ondark2); display: flex; align-items: center; gap: 8px"><img src="/_blob/6146daf063dc003ead2c4f6da3aef378" alt="Mid" style="width: 20px; height: 20px"> Mid contra <img src="/_blob/fc7bfd201ff36c59832e07805157a6e3" alt="" style="width: 20px; height: 20px; border-radius: 4px"> Ahri</span>
+</div>
+<button style="height: 40px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--muted2); background: none; font: inherit; font-size: 14px; color: var(--ondark); display: flex; align-items: center; gap: 8px; cursor: pointer">Otras 3 <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" style="stroke: var(--ondark)" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg></button>
+</div>
+
+<div style="border-radius: 14px; background: var(--dark2); box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 6px 16px rgba(0,0,0,.45); padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><span style="font-size: 14px; color: var(--ondark2)">Estimado contra Ahri</span><span><b style="font-size: 26px">[58%]</b> <span style="font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 4px; background: #F28DB0; color: var(--ontint)">Mejor pick</span></span></div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div role="img" aria-label="Estimado 58% en escala de 40 a 70; tu WR general 54%" style="position: relative"><div style="position: relative; width: 100%; height: 18px; border-radius: 9px; background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 4px 10px rgba(0,0,0,.35); overflow: hidden"><div class="liqH" style="position: absolute; left: 0; top: 0; bottom: 0; width: 60%; background: linear-gradient(90deg, #3E7A62, #A8D8C0); border-radius: 0 9px 9px 0"><svg aria-hidden="true" class="olaV" width="10" height="72" viewBox="0 0 10 72" style="position: absolute; right: -6px; top: 0"><path d="M0 0 Q10 4 5 9 T5 18 T5 27 T5 36 T5 45 T5 54 T5 63 T5 72 H0 Z" fill="#A8D8C0"></path></svg><div style="position: absolute; left: 0; right: 0; top: 3px; height: 3px; background: rgba(255,255,255,.25); filter: blur(1px)"></div></div><div style="position: absolute; top: 3px; bottom: 3px; left: 46.7%; width: 2px; background: rgba(255,255,255,.85)"></div></div><span style="position: absolute; left: 46.7%; top: -20px; transform: translateX(-50%); font-size: 11px; color: var(--ondark2)">tu WR</span></div>
+<div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--ondark2)"><span>40%</span><span>50%</span><span>60%</span><span>70%</span></div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px; flex-grow: 1">
+<div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 20px; font-weight: 600">Si te toca contra…</h2><span style="font-size: 13px; color: var(--ondark2)">CS al 14</span></div>
+
+<div style="display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; background: var(--dark2); box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 6px 16px rgba(0,0,0,.45)">
+<img src="/_blob/d1568f9daad348f5287174e54368405d" alt="" style="width: 44px; height: 44px; border-radius: 8px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between"><span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px">Viktor <span style="font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 8px; background: rgba(255,138,138,.14); color: #FF8A8A">Evítalo</span></b><span style="font-size: 12px; color: var(--ondark2); font-weight: 400">Te niega el farm</span></span><span style="font-size: 15px"><b style="color: #FF8A8A">−28</b></span></div>
+<div style="position: relative; width: 100%; height: 10px; border-radius: 5px; background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 4px 10px rgba(0,0,0,.35); overflow: hidden"><div class="liqH" style="position: absolute; left: 0; top: 0; bottom: 0; width: 93%; background: linear-gradient(90deg, #9A2E3A, #FF8A8A); border-radius: 0 5px 5px 0"><svg aria-hidden="true" class="olaV" width="10" height="40" viewBox="0 0 10 40" style="position: absolute; right: -6px; top: 0"><path d="M0 0 Q10 2 5 5 T5 10 T5 15 T5 20 T5 25 T5 30 T5 35 T5 40 H0 Z" fill="#FF8A8A"></path></svg><div style="position: absolute; left: 0; right: 0; top: 3px; height: 3px; background: rgba(255,255,255,.25); filter: blur(1px)"></div></div></div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; background: var(--dark2); box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 6px 16px rgba(0,0,0,.45)">
+<img src="/_blob/87e041913d4e0cc082019b63ffa531bb" alt="" style="width: 44px; height: 44px; border-radius: 8px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between"><span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px">Yasuo <span style="font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 8px; background: rgba(255,138,138,.14); color: #FF8A8A">Evítalo</span></b><span style="font-size: 12px; color: var(--ondark2); font-weight: 400">Te niega el farm</span></span><span style="font-size: 15px"><b style="color: #FF8A8A">−26</b></span></div>
+<div style="position: relative; width: 100%; height: 10px; border-radius: 5px; background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 4px 10px rgba(0,0,0,.35); overflow: hidden"><div class="liqH" style="position: absolute; left: 0; top: 0; bottom: 0; width: 87%; background: linear-gradient(90deg, #9A2E3A, #FF8A8A); border-radius: 0 5px 5px 0"><svg aria-hidden="true" class="olaV" width="10" height="40" viewBox="0 0 10 40" style="position: absolute; right: -6px; top: 0"><path d="M0 0 Q10 2 5 5 T5 10 T5 15 T5 20 T5 25 T5 30 T5 35 T5 40 H0 Z" fill="#FF8A8A"></path></svg><div style="position: absolute; left: 0; right: 0; top: 3px; height: 3px; background: rgba(255,255,255,.25); filter: blur(1px)"></div></div></div>
+</div>
+</div>
+<div style="display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; background: var(--dark2); box-shadow: 0 1px 0 rgba(255,255,255,.05) inset, 0 6px 16px rgba(0,0,0,.45)">
+<img src="/_blob/093e314963bfee7fd26386e700a76da4" alt="" style="width: 44px; height: 44px; border-radius: 8px">
+<div style="flex-grow: 1; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between"><span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px">Qiyana <span style="font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 8px; background: rgba(255,138,138,.14); color: #FF8A8A">Evítalo</span></b><span style="font-size: 12px; color: var(--ondark2); font-weight: 400">Te niega el farm</span></span><span style="font-size: 15px"><b style="color: #FF8A8A">−20</b></span></div>
+<div style="position: relative; width: 100%; height: 10px; border-radius: 5px; background: rgba(255,255,255,.03); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), inset 0 4px 10px rgba(0,0,0,.35); overflow: hidden"><div class="liqH" style="position: absolute; left: 0; top: 0; bottom: 0; width: 67%; background: linear-gradient(90deg, #9A2E3A, #FF8A8A); border-radius: 0 5px 5px 0"><svg aria-hidden="true" class="olaV" width="10" height="40" viewBox="0 0 10 40" style="position: absolute; right: -6px; top: 0"><path d="M0 0 Q10 2 5 5 T5 10 T5 15 T5 20 T5 25 T5 30 T5 35 T5 40 H0 Z" fill="#FF8A8A"></path></svg><div style="position: absolute; left: 0; right: 0; top: 3px; height: 3px; background: rgba(255,255,255,.25); filter: blur(1px)"></div></div></div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1024}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

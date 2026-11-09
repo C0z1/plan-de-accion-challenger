@@ -11,9 +11,15 @@ Sesión en vivo con el usuario, 2026-11-09. Canvas: https://claude.ai/artifact/R
 6. **«Cómo jugarlo»** son 3 tarjetas de stat (Nivel al 6, Minions al 10, Muertes 14–25) con ícono, valor, ✓/✕ y su número; **Perfil** tiene «Qué está fallando» en 3 filas. Los valores entre [corchetes] son ejemplo.
 7. Copia vigente del canvas (versión 1794217527-6e0d) guardada en `datos/diseno/canvas/project/`: es lo que lee Opus.
 8. Las ventanas de franja y post-partida que propuse se descartaron por ahora. Opus las construye desde `datos/diseno-propuesta.md` (su siguiente paso en el turno 7).
+9. **Frascos premium** (2026-11-09) para medidores en las 3 pantallas: vidrio, llenado 1.6 s, ola de 2 capas, brillo cada 6 s; colores por métrica (win rate teal, score azul, muertes rojo, minions naranja). Especificación en el artboard `Tubos_Kit.dc.html`.
+10. **Elevación suave + encabezado con luz** (2026-11-09) en todas las tarjetas: degradado #3B4452→#343C49, sombra en capas, filo de luz arriba; títulos de sección con degradado naranja. Referencia: `Sombras_Opciones.dc.html` (opción A).
+11. **Selección de campeón simplificada**: una idea por tarjeta; «Cómo jugarlo» = 3 frascos con % de partidas que cumples la meta.
+12. **Paleta Vino + negro** para la primera build (2026-11-09), con acento rosa `#F28DB0` y frascos en salvia / lila / carmín. Artboards `Perfil_Vino`, `Seleccion_Vino`, `EnPartida_Vino` en `datos/diseno/canvas/project/`.
+13. El acento y los frascos se adaptan a la paleta (nada de naranja fijo).
+14. **Qué está fallando**: barras divergentes desde el centro, escala ±0.35.
+15. Logo de la barra lateral: **casa** (Inicio), no escudo.
 
 ## Sigue abierto
-- Paleta final: crema (base), Navy 3, Vino 3A o Pizarra 3E.
 - «All-in con su definitiva» y «Ese minuto juega bajo torre» no salen de ningún dato. Hay que quitarlas o escribirlas en `datos/matchups-notas.json`.
 - Build: íconos de Data Dragon (la app web de Opus ya los usa) o iniciales.
 - Tamaño real de la ventana: la app web abre a 1440×1024, como el canvas.
