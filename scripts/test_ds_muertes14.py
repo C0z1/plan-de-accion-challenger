@@ -1,7 +1,7 @@
 """Pruebas de DeepSeek para companion.muertes14()/aviso_muertes() (turno 6, iteración 2). Sin red ni key.
 
 Cubre los bordes que pidió Opus: eventos sin EventTime o VictimName, un jugador con el mismo
-nombre de juego en el otro equipo (falso positivo del VictimName sin #tag) y el borde 24:59/25:00."""
+nombre de juego en el otro equipo (desde 0e8f464 ya no cuenta como tuya) y el borde 24:59/25:00."""
 import pathlib, sys, unittest
 
 AQUI = pathlib.Path(__file__).parent
@@ -30,10 +30,9 @@ class Muertes14(unittest.TestCase):
         ])
         self.assertEqual(companion.muertes14(d), 1)
 
-    def test_mismo_nombre_de_juego_sin_tag_se_confunde(self):
-        # El otro «cozi» (misma game name, otro #tag) muere y la API da VictimName sin #tag:
-        # ids incluye el nombre pelado, así que cuenta esa muerte como tuya. Documentado: riesgo si
-        # la Live Client Data API reporta VictimName sin tag (Opus no lo pudo cotejar; datos/vivo vacío).
+    def test_homonimo_del_otro_equipo_ya_no_cuenta(self):
+        # 0e8f464: el nombre sin #tag solo vale si nadie más lo comparte. El otro «cozi» muere y
+        # la API da VictimName sin #tag: ya no cuenta como tuya (antes sí).
         d = {
             "activePlayer": {"riotId": "cozi#1134", "summonerName": "cozi"},
             "allPlayers": [
@@ -45,7 +44,7 @@ class Muertes14(unittest.TestCase):
             "events": {"Events": [{"EventName": "ChampionKill", "VictimName": "cozi", "EventTime": 900}]},
             "gameData": {"gameTime": 950},
         }
-        self.assertEqual(companion.muertes14(d), 1)
+        self.assertEqual(companion.muertes14(d), 0)
 
     def test_aviso_2449_si_y_2500_no(self):
         muertes = [{"EventName": "ChampionKill", "VictimName": "cozi#1134", "EventTime": 900 + i} for i in range(2)]

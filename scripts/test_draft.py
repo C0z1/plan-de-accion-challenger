@@ -105,8 +105,14 @@ class Ficha(unittest.TestCase):  # draft.ficha(): pedidos 1, 3 y 4 del Diseñado
         f = self.ficha(self.juegos(), "Viktor")
         p = f["por_que"]
         self.assertEqual((f["champ"], p["v"], p["n"], p["oro14"], p["pocas"]), ("Ekko", 3, 4, -500, True))
-        self.assertIn("Ekko va 3-1 contra Viktor (oro @14 -500)", p["frase"])
+        self.assertIn("Ekko va 3-1 contra Viktor (oro @14 −500)", p["frase"])
         self.assertIn("por encima de Yone", p["frase"])
+
+    def test_por_que_casi_igual(self):  # estimados a < 2 puntos: no decir «por encima»
+        js = [g("Ekko", i < 6) for i in range(10)] + [g("Yone", i < 7) for i in range(12)]  # 55% contra 54.5%
+        p = self.ficha(js, "Lux")["por_que"]
+        self.assertIn("casi igual que", p["frase"])
+        self.assertNotIn("por encima", p["frase"])
 
     def test_por_que_sin_partidas_y_pick_elegido_peor(self):
         p = self.ficha(self.juegos(), "Lux", champ="yone")["por_que"]

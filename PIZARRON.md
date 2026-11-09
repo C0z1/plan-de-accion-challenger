@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 6, iteración 9: el homónimo del otro equipo ya no cuenta como tus muertes 14–25 tampoco por `summonerName`. Una prueba de DeepSeek (`test_mismo_nombre_de_juego_sin_tag_se_confunde`) queda roja porque afirmaba el bug: le pedí invertirla. 157/158.
-- **Siguiente:** que DeepSeek invierta su prueba; cotejar `VictimName` con la primera partida real en `datos/vivo/`.
-- **Actualizado:** 2026-11-08 (turno 6, iteración 9)
+- **Estado:** turno 6, iteración 10: recorrí champ select con tus 10 rivales de mid (`recorrido_ficha.py`); la frase del pick ya no dice «por encima» con estimados a < 2 puntos («casi igual que…: cualquiera de los dos»). 164 OK.
+- **Siguiente:** cotejar `VictimName` con la primera partida real en `datos/vivo/`; medir el corte de la regla del 6 (hoy sube con −0.1).
+- **Actualizado:** 2026-11-08 (turno 6, iteración 10)
 
 ### DeepSeek · revisor
 - **Estado:** revisado c344309 (iteración 6, «línea al terminar»): correcto, 156 OK. Escribí `test_ds_linea_fin.py` (6 casos: 840 in / 1500 out, reinicio EndOfGame no repite, sin foto no truena, kills null, corte ✓/✕). Hallazgo menor: `resumen_fin()` lee `config.json`; malformado → en consola se salta `post_partida()` (descarga + revisión) en silencio.
@@ -31,6 +31,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/analizar.py` | Estadísticas agregadas → `datos/analisis-*.md` | Opus |
 | `scripts/timeline.py` | Análisis de timeline (muertes, oro por minuto) | Opus |
 | `scripts/draft.py` | Guía de matchups (sin args) o recomendación de pick: `draft.py <rival> [rol]`; `ficha()` da por qué el pick, cuidado con el rival y counters como dict | Opus |
+| `scripts/recorrido_ficha.py` | Champ select en texto contra tus N rivales más frecuentes de un rol, para revisar lo que ve el usuario: `recorrido_ficha.py [rol] [N]` | Opus |
 | `datos/matchups-notas.json` | Opcional, a mano: `{"Rival": "nota" o ["…"]}`; sale en `ficha()["cuidado"]["notas"]` (si no existe, nada) | Usuario |
 | `datos/analisis-aviso-muertes-*.md` | Verificación del aviso de muertes 14–25 (WR por número de muertes, con y sin equipo arriba) | Opus |
 | `datos/analisis-matchups-*.md` | Guía de matchups y bans generada por `draft.py` | Opus |
@@ -182,6 +183,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · DeepSeek: `resumen_fin()` (iteración 6) lee `config.json` vía `meta_fase()`; un config malformado hace que, en consola, el companion se salte `post_partida()` (descarga + revisión) en silencio al terminar. Menor.
 - 2026-11-08 · Opus: el nombre sin #tag en los eventos en vivo contaba las muertes de un homónimo del otro equipo como tuyas; ahora solo vale si nadie más lo comparte.
 - 2026-11-08 · Opus: `summonerName` en la Live Client Data puede venir sin #tag; meterlo siempre en tus nombres dejaba contar las muertes de un homónimo. Ahora solo el riotId completo vale siempre.
+- 2026-11-08 · Opus: en 6 de tus 10 rivales de mid más frecuentes el pick recomendado y la alternativa quedan a < 2 puntos de estimado: ahí el draft no separa tus picks.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -242,6 +244,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: ante un homónimo en la partida, el aviso de muertes 14–25 prefiere no contarte (el cotejo de la línea final lo dice) a contar muertes ajenas.
 
 ## Para el usuario (cuando vuelva)
+- Nuevo: si champ select dice «casi igual que Ekko (54%): cualquiera de los dos», tus picks no se separan contra ese rival (pasa con 6 de tus 10 rivales de mid más frecuentes): elige el que mejor manejes. Recompila `Companion.exe`.
 - Nuevo: si en tu primera partida la línea al terminar dice «no cuadran tus muertes con los eventos», el aviso del 14 al 25 no te está contando: avísale a Opus. Resumen de la noche en `RESUMEN-NOCHE.md` (Turno 6).
 - Nuevo: la ventana muestra tu LP real aunque la key haya caducado («cozi#1134 · Master 15 LP · 186-157 (54%)»), leído del cliente al entrar a champ select. Recompila `Companion.exe`.
 - Nuevo: al terminar la partida, la ventana (y la consola) da una línea aunque la key haya caducado: «Min 31 · Sylas 5/4/7 contra Zed · CS 245 · muertes del 14 al 25: 3 (meta ≤ 2) ✕». Recompila `Companion.exe`.

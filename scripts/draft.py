@@ -221,12 +221,14 @@ def ficha(rival, pos, champ=None):
     p0 = shrink(sum(r["win"] for r in mias), len(mias), base)
     wr_rol = sum(r["win"] for r in mias) / len(mias)
     if len(mv) >= 3:
-        frase = f"{c} va {v}-{len(mv) - v} contra {nombre} (oro @14 {gd(mv)}): estimado {f['est']:.0%}"
+        frase = f"{c} va {v}-{len(mv) - v} contra {nombre} (oro @14 {gd(mv).replace('-', '−')}): estimado {f['est']:.0%}"
     else:
         frase = (f"{'Sin' if not mv else 'Casi sin'} partidas de {c} contra {nombre}"
                  f"{f' ({v}-{len(mv) - v})' if mv else ''}: el estimado {f['est']:.0%} sale de tu {wr_rol:.0%} con {c} "
                  f"en el rol ({f['n']} partidas)")
-    if otro: frase += f", {'por encima' if f['est'] >= otro['est'] else 'por debajo'} de {otro['champ']} ({otro['est']:.0%})."
+    if otro and abs(f["est"] - otro["est"]) < .02:  # 1 punto de estimado es ruido: «por encima» engañaba (54% contra 54%)
+        frase += f", casi igual que {otro['champ']} ({otro['est']:.0%}): cualquiera de los dos."
+    elif otro: frase += f", {'por encima' if f['est'] > otro['est'] else 'por debajo'} de {otro['champ']} ({otro['est']:.0%})."
     por_que = dict(champ=c, est=round(f["est"], 3), n_rol=f["n"], wr_rol=round(wr_rol, 3), v=v, n=len(mv),
                    oro14=medidas(mv)["oro14"], alternativa=dict(champ=otro["champ"], est=round(otro["est"], 3)) if otro else None,
                    frase=frase, pocas=len(mv) < 5)

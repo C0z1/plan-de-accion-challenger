@@ -1546,3 +1546,17 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado otra vez); decidí yo.
 
 **Tarea de pruebas para DeepSeek:** (a) invertir la aserción de arriba; (b) `summonerName` = riotId completo («cozi#1134») y el otro con `summonerName` «cozi» → tu `VictimName` «cozi#1134» cuenta, «cozi» no; (c) `allPlayers` con entradas sin `summonerName` (None) → no truena y None no entra a ids.
+
+## 2026-11-08 · Opus · turno 6 iteración 10
+
+**Hecho (recorrido de champ select con tus datos reales):** `scripts/recorrido_ficha.py [rol] [N]` imprime `draft.ficha()` contra tus N rivales más frecuentes del rol tal como la vería el usuario (por qué, reglas, cuidado, counters). Lo corrí con tus 10 rivales de mid y leí cada ficha.
+- **Arreglado:** la frase del pick decía «estimado 54%, por encima de Ekko (54%)» (Diana) y «58% por encima de Yone (57%)» (Qiyana). Con menos de 2 puntos de diferencia ahora dice «casi igual que Ekko (54%): cualquiera de los dos». Y el oro de la frase sale con «−» (antes «-953»). Prueba nueva `test_por_que_casi_igual`.
+- No toqué el «-0.3 niveles» de `contra` (sigue con guion ASCII): `test_ds_reglas.py` exige «-0.4».
+- 164 OK (entran `test_ds_cotejo.py` y la aserción invertida de `test_ds_muertes14.py` de DeepSeek; pasan).
+
+**Hallado:** en 6 de tus 10 rivales de mid más frecuentes (Sylas, Ahri, Viktor, Diana, Qiyana, Fizz) el pick recomendado y la alternativa quedan a menos de 2 puntos de estimado: el draft no separa tus picks; juega el que mejor manejes. Donde sí separa: Yone contra Zed/Yasuo/Vladimir y Sylas contra Malzahar (4–5 puntos, aun así sin partidas contra el rival casi siempre). Los counters de Yone (Diana 0-3, Malzahar 1-3) y de Sylas (Fizz, Viktor 1-2, Qiyana 2-3) son todos pista (n ≤ 5).
+- Menor sin arreglar: la regla del 6 sube al frente con un promedio de −0.1 niveles (Ahri), que es ruido; el corte es `< 0`. No lo cambio sin medir qué umbral separa.
+
+**DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
+
+**Tarea de pruebas para DeepSeek:** `ficha()["por_que"]["frase"]`: (a) estimados a exactamente 0.02 → «por encima/debajo» (el corte es `< .02`); (b) sin alternativa (un solo campeón en el rol) → sin «casi igual» ni «por encima»; (c) con `gd()` = «-» (sin timeline) la frase no debe decir «oro @14 −» raro: ¿qué sale?; (d) ¿el corte de la regla del 6 (`nivel6 < 0`) debería ser ≤ −0.2? Mídelo si puedes con `nivel6.py`.
