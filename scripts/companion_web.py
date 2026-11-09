@@ -103,6 +103,10 @@ def demo(q):
     pos, ids = companion.rivales(json.loads(fx.read_text())) if fx.exists() else ("MIDDLE", [])
     m = companion.nombres(); rivales = [m.get(i) for i in ids] or ["Zed"]
     q.put(("fase", "ChampSelect")); q.put(("draft", pos, gui.recomendaciones(pos, rivales[:1])))
+    vivo = gui.REPO / "scripts" / "fixtures" / "vivo" / "allgamedata.json"  # luego la partida y el fin, de la foto en vivo
+    if not vivo.exists() or not (mf := companion.meta_fase(d := json.loads(vivo.read_text(encoding="utf-8")))): return
+    time.sleep(8); q.put(("fase", "InProgress")); q.put(("meta", mf))
+    time.sleep(8); q.put(("fase", "EndOfGame")); q.put(("fin", companion.resumen_fin(d)))
 
 
 def main(argv=None):

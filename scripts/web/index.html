@@ -135,10 +135,27 @@ function champSelect(s) {
   return [main, aside];
 }
 
-function otraFase(s) {  // en partida, al terminar y esperando: lo mínimo (la franja y la línea del canvas van en la próxima iteración)
-  const r = s.revision, bloques = [`<div><h1>${esc(FASES[s.fase] ?? s.fase)}</h1><span class="sub">${esc(s.perfil)}</span></div>`];
-  if (s.meta && s.fase === "InProgress") bloques.push(`<div class="card"><b>${esc(s.meta.texto)}</b></div>`);
-  if (s.fin) bloques.push(`<div class="card"><span class="tag amber">Al terminar (foto en vivo)</span><b>${esc(s.fin.texto)}</b></div>`);
+function meta(cls, k, titulo, valor, pie) {  // una tarjeta de la franja: número de la fase, qué mides, cuánto llevas y la meta
+  return `<div class="card"><div class="cab"><span class="num ${cls}">${k}</span><b>${esc(titulo)}</b></div>
+    <div class="big"><b>${valor}</b></div><span class="pie">${pie}</span></div>`;
+}
+
+function franja(m, fin) {  // en partida: las metas 6 / 10 / 14+ con lo que llevas; al terminar, lo mismo con ✓/✕ en el 14–25
+  const n = v => v == null ? "?" : esc(v), t = [];
+  t.push(meta("amber", "6", "Nivel", `${n(m.nivel)}<span> contra ${n(m.nivel_rival)}</span>`,
+    m.rival ? `${img("champion", m.rival, "item", m.rival)} ${esc(m.rival)}${m.nivel != null && m.nivel_rival != null && m.nivel < m.nivel_rival ? ' · <b style="color:#CA6B6E">vas abajo: no tradees</b>' : ""}` : "Sin rival de línea."));
+  t.push(meta("teal", "10", "CS", n(m.cs), m.cs_meta && (fin || m.minuto < 11) ? `Meta ${m.cs_meta} al 10 con ${esc(m.campeon)}.` : `Min ${m.minuto}.`));
+  const d = fin ? m.muertes14_25 : m.muertes14;
+  t.push(meta("red", "14+", fin ? "Muertes del 14 al 25" : "Muertes desde el 14", d == null ? "–" : `${d}<span> / 2</span> ${d <= 2 ? "✓" : "✕"}`,
+    d == null ? (fin ? "Acabó antes del 14." : "Cuenta desde el minuto 14.") : "Con 3+ del 14 al 25 tu WR baja de 68% a 43%."));
+  return `<div class="tres">${t.join("")}</div>`;
+}
+
+function otraFase(s) {  // en partida, al terminar y esperando
+  const r = s.revision, f = s.fin, bloques = [`<div><h1>${esc(FASES[s.fase] ?? s.fase)}</h1><span class="sub">${esc(s.perfil)}</span></div>`];
+  if (s.meta && s.fase === "InProgress") bloques.push(`<span class="sub">${img("champion", s.meta.campeon, "item", s.meta.campeon)} ${esc(s.meta.campeon)} · min ${s.meta.minuto}</span>`, franja(s.meta, false));
+  if (f) bloques.push(`<div class="card"><span class="tag amber">Al terminar (foto en vivo)</span><b>${esc(f.campeon)} ${esc(f.kda)}${f.rival ? " contra " + esc(f.rival) : ""} · min ${f.minuto}</b>
+    ${f.cotejo === false ? '<div class="aviso red">No cuadran tus muertes con los eventos: el conteo del 14 al 25 no te cuenta.</div>' : ""}</div>`, franja(f, true));
   if (r) bloques.push(`<div class="card"><span class="tag ${r.win ? "ok" : "red"}">${r.win ? "Victoria" : "Derrota"}${r.min ? " · " + r.min + " min" : ""}</span>
     <b>${esc(r.champ)}${r.rival ? " vs " + esc(r.rival) : ""} ${esc(r.kda || "")}</b>
     <span class="sub">Oro al 14 ${esc(r.oro)} · CS al 14 ${esc(r.cs)} · muertes 14–25 ${esc(r.m25)} · score ${esc(r.score)}</span></div>`);

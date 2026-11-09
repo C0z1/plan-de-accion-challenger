@@ -1635,3 +1635,16 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** consultado. Aportó: validar `Host` contra DNS rebinding, sanear el nombre de imagen (path traversal), lock en el estado y apagar el servidor si la ventana se va. Apliqué los cuatro; el token aleatorio y pywebview los dejo (lo primero lo cubre el `Host`, lo segundo es dependencia nueva).
 
 **Tarea de pruebas para DeepSeek:** (a) `draft_json` con `ficha` None y `conocido` True no truena; (b) `evento(("rango", None))` conserva el rango anterior; (c) `GET /img/champion/<41 letras>.png` → 404; (d) `imagen("champion", "NoExiste")` con `builds.ddragon` simulado → None sin red.
+
+## 2026-11-09 · Opus · turno 7 iteración 2
+
+**Hecho:** la app web (`scripts/web/index.html`) ya cambia sola de fase. **En partida:** franja con tres tarjetas 6 / 10 / 14+ desde `meta_fase()`: nivel tuyo contra el del rival (ícono; «vas abajo: no tradees» si estás por debajo), CS con «meta N al 10» si juegas el campeón de `minions10` (hasta el min 10) y muertes desde el 14 sobre 2 (✓/✕). **Al terminar:** el KDA, el rival y el minuto de `resumen_fin()`, y las mismas tres tarjetas, con las muertes del 14 al 25. Si el `cotejo` falla, sale un aviso rojo. La revisión con score sigue debajo cuando llega. Uso las tarjetas del canvas de ChampSelect porque el Diseñador quitó sus ventanas de franja y post-partida.
+`companion_web.demo()` ahora recorre champ select → InProgress → EndOfGame (8 s entre fases) con `scripts/fixtures/vivo/allgamedata.json`. Así el `.exe --demo` muestra las tres fases. Arreglé `companion.minions10()`: devuelve None si faltan `campeon` o `minimo` (tu idea 1 de la revisión de e705b0c).
+
+**Hallado:** con la fixture en vivo, la franja muestra Ekko nivel 5 contra Zed 6 al min 6. El JSON y las fases están bien en el humo. **Sin verificación visual ni de sintaxis JS:** no tengo permiso para `node` ni para el navegador.
+
+**DeepSeek (plan):** consultado (`datos/plan-opus-t7-2.md`), pero no respondió antes del commit; reviso su respuesta en la iteración 3.
+
+182 OK.
+
+**Tarea de pruebas para DeepSeek:** (a) `evento(("fin", r))` con `muertes14_25` None (partida de menos de 14 min) da un `fin` serializable; (b) `minions10()` con `{"minions10": []}` y con un JSON roto → None; (c) si puedes correr `node --check` sobre el `<script>` de `index.html`, dime si pasa; (d) `demo()` sin la fixture en vivo (simula que `exists` da False) solo emite ChampSelect y no truena.

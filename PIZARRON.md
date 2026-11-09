@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 7, iteración 1: app web local (`companion_web.py` + `web/index.html`) con champ select del canvas y datos reales de `ficha()`. 172 OK.
-- **Siguiente:** franja en partida y línea al terminar; luego Perfil (`score.resumen()`, `tilt()`); build v0.1.0.
-- **Actualizado:** 2026-11-09 (turno 7, iteración 1)
+- **Estado:** turno 7, iteración 2: la app web ya cambia sola de fase. En partida: franja 6 / 10 / 14+ (nivel contra el rival, CS y meta al 10, muertes desde el 14 / 2); al terminar, las mismas tres con ✓/✕ y el KDA. `--demo` recorre champ select → partida → fin con la fixture en vivo. `minions10()` exige `campeon` y `minimo` (pedido de DeepSeek). 182 OK.
+- **Siguiente:** Perfil (`score.resumen()`, `tilt()`); luego la build v0.1.0.
+- **Actualizado:** 2026-11-09 (turno 7, iteración 2)
 
 ### DeepSeek · revisor
 - **Estado:** revisado f8f7c13 (iteración 12, `anticipa.py`): correcto. Solo muertes6 anticipa (r 0.28 LOO n=155, 0.37 temporal n=77); aguanta 4+ anteriores (r 0.34–0.40) y permutar por campeón no lo explica (p 0.002→0.004). Escribí `test_ds_anticipa.py` (3) → 166 OK. Menor: los p no se reproducen entre corridas (set sin ordenar en `anticipa.py`).
@@ -19,9 +19,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Actualizado:** 2026-11-08 22:47
 
 ### Diseñador
-- **Estado:** retomo la sesión en vivo sobre el canvas «Base LOL» (5 artboards: Perfil, ChampSelect y 3 paletas). Contexto en `datos/diseno-contexto.md`; 6 preguntas abiertas, incluido un error de copy (82/57 → 68/43).
+- **Estado:** canvas «Base LOL» de vuelta a su versión anterior (Perfil, ChampSelect y 3 paletas) más ChampSelect en Paleta 3E. Las ventanas de franja y post-partida que hice se quitaron del canvas. Contexto en `datos/diseno-contexto.md`; sigue abierto el error de copy (82/57 → 68/43).
 - **Siguiente:** publicar los cambios que pida el usuario al canvas; al cerrar, acuerdos en `datos/diseno-acuerdos.md`.
-- **Actualizado:** 2026-11-09 (retomo sesión)
+- **Actualizado:** 2026-11-09 (revierte franja/post y agrega ChampSelect 3E)
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -197,6 +197,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · DeepSeek: `anticipa.py` (f8f7c13) correcto y robusto: muertes6 aguanta 4+ anteriores (r 0.34–0.40) y el control por campeón no lo explica (p 0.002→0.004). Menor: los p no se reproducen entre corridas porque itera un set sin ordenar (`for pos in {g["pos"] …}`); r y n sí estables. Sugerencia: `sorted(...)`.
 
 ## Decisiones
+- 2026-11-09 · Opus: la franja en partida y la línea al terminar de la app web usan las tarjetas del canvas de ChampSelect (6 / 10 / 14+), porque el Diseñador quitó del canvas sus ventanas de franja y post-partida. Si el usuario aprueba otro diseño, se cambia solo `index.html`.
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
 - 2026-11-07 · Opus: el pick se recomienda con un estimado encogido (M=10) hacia tu WR del campeón, no con el récord crudo contra el rival.
 - 2026-11-07 · Opus: la meta del mid game baja a ≤ 2 muertes del 14 al 25 (también en revision.py) y queda como monitor. La regla nueva: no pelear si no hace falta antes de que salga un objetivo.

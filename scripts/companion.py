@@ -147,7 +147,7 @@ def minions10():
     try: c = json.loads(CFG.read_text(encoding="utf-8")) if CFG.exists() else {}
     except (OSError, ValueError): return None
     m = c.get("minions10") if isinstance(c, dict) else None
-    return m if isinstance(m, dict) else None
+    return m if isinstance(m, dict) and "campeon" in m and "minimo" in m else None
 
 
 def aviso_minions(d, m10=None):

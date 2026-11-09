@@ -36,6 +36,23 @@ class Estado(unittest.TestCase):
         self.assertIsNone(w.ESTADO["draft"]); w.evento(("fase", "Lobby")); self.assertIsNone(w.ESTADO["aviso"])
 
 
+    def test_demo_recorre_las_fases(self):
+        q = []
+        with mock.patch.object(w.gui, "recomendaciones", return_value=RECS), mock.patch.object(w.time, "sleep"), \
+             mock.patch.object(w.companion, "minions10", return_value=None):
+            w.demo(type("Q", (), {"put": lambda _, e: q.append(e)})())
+        self.assertEqual([e[1] for e in q if e[0] == "fase"], ["ChampSelect", "InProgress", "EndOfGame"])
+        for e in q: w.evento(e)
+        s = json.loads(w.estado())
+        self.assertEqual(s["fase"], "EndOfGame"); self.assertIn("kda", s["fin"]); self.assertIn("muertes14_25", s["fin"]); self.assertIn("nivel_rival", s["meta"])
+
+    def test_minions10_incompleto_es_none(self):
+        for cfg in ('{"minions10": {"campeon": "Sylas"}}', '{"minions10": {"minimo": 69}}'):
+            with mock.patch.object(w.companion, "CFG") as f:
+                f.exists.return_value = True; f.read_text.return_value = cfg
+                self.assertIsNone(w.companion.minions10())
+
+
 class Http(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
