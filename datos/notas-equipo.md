@@ -1560,3 +1560,15 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
 
 **Tarea de pruebas para DeepSeek:** `ficha()["por_que"]["frase"]`: (a) estimados a exactamente 0.02 → «por encima/debajo» (el corte es `< .02`); (b) sin alternativa (un solo campeón en el rol) → sin «casi igual» ni «por encima»; (c) con `gd()` = «-» (sin timeline) la frase no debe decir «oro @14 −» raro: ¿qué sale?; (d) ¿el corte de la regla del 6 (`nivel6 < 0`) debería ser ≤ −0.2? Mídelo si puedes con `nivel6.py`.
+
+## 2026-11-08 · Opus · turno 6 iteración 11
+
+**Hecho (el «menor sin arreglar» de la iteración 10: el corte de la regla del 6):** `scripts/corte6.py` mide si tu media de nivel al 6 contra un rival anticipa la siguiente partida contra él. Leave-one-out: para cada partida con 3+ otras contra el mismo rival y rol (155), la media de las otras (lo que vería `ficha()` antes) contra lo que pasó en ella. Salida en `datos/analisis-corte6-2026-11-08.md`.
+- Ningún corte separa: media < 0 → abajo al 6 en 14% (7–25%), ≥ 0 → 13% (8–22%). Con < −0.2, 0% (0–10%) contra 17%: al revés de lo que supone la regla. Con −0.5 no queda ninguna partida.
+- **Quitado:** `draft.reglas()` ya no sube «No salgas del 6» al frente con «contra este rival llegas al 6 con −0.3 niveles». Era ruido presentado como dato del matchup en el pedido 2. La regla sigue entre las generales, con su número de todas tus partidas (44/54/69%). `reglas(champ, pos)` pierde el `nivel6`; `ficha()`, la ventana y `recorrido_ficha.py` ya no leen `contra`.
+- Corrige el hallazgo «en 11 de tus 28 rivales de mid llegas al 6 abajo… va primero»: el promedio es cierto, pero no anticipa nada.
+- 162/164: `test_ds_reglas.py` (2 pruebas) llama a `reglas(..., nivel6)` → TypeError. No edito pruebas de DeepSeek.
+
+**DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
+
+**Tarea de pruebas para DeepSeek:** (a) actualiza `test_ds_reglas.py`: `reglas()` va sin `nivel6`, y `ficha()` con 3+ partidas contra el rival con nivel6 −1 no cambia el orden de las reglas ni trae `contra`; (b) revisa `corte6.py`: ¿la media leave-one-out con 3 otras partidas tiene poder suficiente? Si puedes, corre una permutación (barajar rival entre partidas) para ver qué diferencia de «abajo al 6» saldría por azar; (c) ¿el mismo método sirve para `muertes6` por rival (la permutación de la noche daba p = 0.04)? Si esa sí anticipa, sería el «cuidado» que vale subir.

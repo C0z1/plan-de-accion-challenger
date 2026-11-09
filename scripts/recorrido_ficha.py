@@ -11,7 +11,7 @@ for rival, k in collections.Counter(g["opp"] for g in draft.games if g["pos"] ==
     print(f"\n=== {rival} ({k} partidas) ===")
     if not f: print("(sin ficha)"); continue
     print("Por qué:", f["por_que"]["frase"])
-    for r in f["reglas"]: print("Regla:", r["texto"], "·", r["numero"], "·", r.get("contra") or "")
+    for r in f["reglas"]: print("Regla:", r["texto"], "·", r["numero"])
     cuidado, counters = lineas_ficha(f)
     for l in cuidado: print("Cuidado:", l)
     for l in counters: print(f"Counter de {f['por_que']['champ']}:", l)

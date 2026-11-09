@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 6, iteración 10: recorrí champ select con tus 10 rivales de mid (`recorrido_ficha.py`); la frase del pick ya no dice «por encima» con estimados a < 2 puntos («casi igual que…: cualquiera de los dos»). 164 OK.
-- **Siguiente:** cotejar `VictimName` con la primera partida real en `datos/vivo/`; medir el corte de la regla del 6 (hoy sube con −0.1).
-- **Actualizado:** 2026-11-08 (turno 6, iteración 10)
+- **Estado:** turno 6, iteración 11: medí el corte de la regla del 6 (`corte6.py`): tu media contra un rival no anticipa ir abajo al 6 (14% contra 13%); quité el «contra este rival llegas al 6…» de champ select. 162/164 (2 de DeepSeek por la firma de `reglas()`).
+- **Siguiente:** cotejar `VictimName` con la primera partida real en `datos/vivo/`; medir si `muertes6` por rival sí anticipa (leave-one-out).
+- **Actualizado:** 2026-11-08 (turno 6, iteración 11)
 
 ### DeepSeek · revisor
 - **Estado:** revisado c344309 (iteración 6, «línea al terminar»): correcto, 156 OK. Escribí `test_ds_linea_fin.py` (6 casos: 840 in / 1500 out, reinicio EndOfGame no repite, sin foto no truena, kills null, corte ✓/✕). Hallazgo menor: `resumen_fin()` lee `config.json`; malformado → en consola se salta `post_partida()` (descarga + revisión) en silencio.
@@ -32,6 +32,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/timeline.py` | Análisis de timeline (muertes, oro por minuto) | Opus |
 | `scripts/draft.py` | Guía de matchups (sin args) o recomendación de pick: `draft.py <rival> [rol]`; `ficha()` da por qué el pick, cuidado con el rival y counters como dict | Opus |
 | `scripts/recorrido_ficha.py` | Champ select en texto contra tus N rivales más frecuentes de un rol, para revisar lo que ve el usuario: `recorrido_ficha.py [rol] [N]` | Opus |
+| `scripts/corte6.py` | ¿Tu media de nivel al 6 contra un rival anticipa la siguiente partida contra él? (leave-one-out, cortes 0 a −0.5) | Opus |
+| `datos/analisis-corte6-*.md` | Salida de `corte6.py` | Opus |
 | `datos/matchups-notas.json` | Opcional, a mano: `{"Rival": "nota" o ["…"]}`; sale en `ficha()["cuidado"]["notas"]` (si no existe, nada) | Usuario |
 | `datos/analisis-aviso-muertes-*.md` | Verificación del aviso de muertes 14–25 (WR por número de muertes, con y sin equipo arriba) | Opus |
 | `datos/analisis-matchups-*.md` | Guía de matchups y bans generada por `draft.py` | Opus |
@@ -184,6 +186,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: el nombre sin #tag en los eventos en vivo contaba las muertes de un homónimo del otro equipo como tuyas; ahora solo vale si nadie más lo comparte.
 - 2026-11-08 · Opus: `summonerName` en la Live Client Data puede venir sin #tag; meterlo siempre en tus nombres dejaba contar las muertes de un homónimo. Ahora solo el riotId completo vale siempre.
 - 2026-11-08 · Opus: en 6 de tus 10 rivales de mid más frecuentes el pick recomendado y la alternativa quedan a < 2 puntos de estimado: ahí el draft no separa tus picks.
+- 2026-11-08 · Opus: tu media de nivel al 6 contra un rival (3+ partidas) no anticipa la siguiente: leave-one-out en 155 partidas, media < 0 → abajo al 6 14%, ≥ 0 → 13%; con < −0.2, 0% contra 17%. Corrige el «11 de 28 rivales… va primero».
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -242,8 +245,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: «una línea al terminar» sale de la última foto en vivo (hasta 30 s antes del final), no de la Riot API: así funciona con la key caducada; la revisión completa la reemplaza cuando llega.- 2026-11-08 · Opus: el LP de la ventana sale del cliente (se lee al entrar a champ select), no de `perfil.json`; sin cliente cae a `perfil.json`.
 - 2026-11-08 · Opus: el cotejo de muertes solo marca el caso «0 eventos tuyos con muertes en el marcador» (formato de nombre desconocido), no exige igualdad exacta.
 - 2026-11-08 · Opus: ante un homónimo en la partida, el aviso de muertes 14–25 prefiere no contarte (el cotejo de la línea final lo dice) a contar muertes ajenas.
+- 2026-11-08 · Opus: la regla del 6 ya no sube al frente por rival en champ select (era ruido, `corte6.py`); queda como regla general con su número.
 
 ## Para el usuario (cuando vuelva)
+- Cambio: champ select ya no dice «contra este rival llegas al 6 con −0.3 niveles»; ese promedio no anticipaba nada. Recompila `Companion.exe`.
 - Nuevo: si champ select dice «casi igual que Ekko (54%): cualquiera de los dos», tus picks no se separan contra ese rival (pasa con 6 de tus 10 rivales de mid más frecuentes): elige el que mejor manejes. Recompila `Companion.exe`.
 - Nuevo: si en tu primera partida la línea al terminar dice «no cuadran tus muertes con los eventos», el aviso del 14 al 25 no te está contando: avísale a Opus. Resumen de la noche en `RESUMEN-NOCHE.md` (Turno 6).
 - Nuevo: la ventana muestra tu LP real aunque la key haya caducado («cozi#1134 · Master 15 LP · 186-157 (54%)»), leído del cliente al entrar a champ select. Recompila `Companion.exe`.

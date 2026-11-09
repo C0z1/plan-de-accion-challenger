@@ -292,7 +292,7 @@ class App:
             self.tk.Label(t, text=a, bg=PANEL, fg=MAL, font=(F, 9, "bold"), wraplength=340, justify="left").pack(anchor="w", pady=(8, 0))
         if d.get("build"): self.reglas(f"Build · {mejor['champ']}", [l.strip() for l in d["build"]], ACENTO, ACENTO)
         rs = (d.get("ficha") or {}).get("reglas")
-        self.reglas(f"Cómo jugar {mejor['champ']}", [f"{r['texto']} ({r.get('contra') or r['numero']}{'; pista' if r['pista'] else ''})"
+        self.reglas(f"Cómo jugar {mejor['champ']}", [f"{r['texto']} ({r['numero']}{'; pista' if r['pista'] else ''})"
                                                     for r in rs]) if rs else self.reglas()
         cuidado, counters = lineas_ficha(d.get("ficha"))
         if cuidado: self.reglas(f"Cuidado con {d['ficha']['rival']}", cuidado, MAL, MAL)

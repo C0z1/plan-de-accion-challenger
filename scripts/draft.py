@@ -193,15 +193,10 @@ R_RIO = R("Con nivel arriba en top, no empujes pasado el río sin ver al jungla 
           "pasado el río con nivel arriba mueres ×2.43 por 10 min (top/bot)", 270, fuente="nivel6.py")
 
 
-def reglas(champ, pos, nivel6=None):
-    """2–3 reglas del PLAN para ese campeón y rol, la del campeón primero. Si contra este rival llegas al 6 abajo
-    (nivel6 < 0, tu media), la del 6 sube al frente con el dato del matchup en `contra`."""
-    gen = [R_NIVEL6, R_MUERTES] + ([R_RIO] if pos == "TOP" else [])
-    if nivel6 is not None and nivel6 < 0:
-        out = [dict(R_NIVEL6, contra=f"contra este rival llegas al 6 con {nivel6:+.1f} niveles")]
-        gen.remove(R_NIVEL6)
-    else: out = []
-    return (out + REGLAS_CHAMP.get(champ, []) + gen)[:3]
+def reglas(champ, pos):
+    """2–3 reglas del PLAN para ese campeón y rol, la del campeón primero. No hay versión «contra este rival»: tu media
+    de nivel al 6 contra él no anticipa ir abajo en la siguiente (corte6.py: 14% contra 13%)."""
+    return (REGLAS_CHAMP.get(champ, []) + [R_NIVEL6, R_MUERTES] + ([R_RIO] if pos == "TOP" else []))[:3]
 
 
 def ficha(rival, pos, champ=None):
@@ -245,7 +240,7 @@ def ficha(rival, pos, champ=None):
         cs.append(dict(rival=o, v=w, wr=round(w / len(rs), 3), ic=[round(x, 3) for x in wilson(w, len(rs))],
                        est=round(shrink(w, len(rs), p0), 3), **medidas(rs), pocas=len(rs) < 5))
     cs.sort(key=lambda x: x["est"])
-    return dict(champ=c, rival=nombre, pos=pos, por_que=por_que, cuidado=cuidado, reglas=reglas(c, pos, cuidado["nivel6"] if len(vs) >= 3 else None),
+    return dict(champ=c, rival=nombre, pos=pos, por_que=por_que, cuidado=cuidado, reglas=reglas(c, pos),
                 counters=dict(lista=cs[:3], ref=medidas(mias)))
 
 
