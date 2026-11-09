@@ -41,6 +41,9 @@ class Score(unittest.TestCase):
             (f.parent / "timeline" / f.name).write_text(json.dumps({"info": {"frames": fr}}))
             self.assertEqual(score.muertes14_25(dict(f=f, pid=3)), 2)  # 14:00 entra, 25:00 no, otra víctima no
             self.assertIsNone(score.muertes14_25(dict(f=pathlib.Path(d, "XX_2.json"), pid=3)))  # sin timeline
+            for roto in ("{no es json", "{}", '{"info": {"frames": null}}'):
+                (f.parent / "timeline" / f.name).write_text(roto)
+                self.assertIsNone(score.muertes14_25(dict(f=f, pid=3)), roto)  # roto: None solo para esa partida
         self.assertIsNone(score.resumen(5, AQUI / "fixtures" / "datos")["partidas"][0]["muertes14_25"])
 
     def test_clave_tendencia_y_por_campeon(self):

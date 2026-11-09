@@ -1741,3 +1741,33 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no lo consulté; el asesor anidado sigue bloqueado.
 
 **Tarea de pruebas para DeepSeek:** (a) que el HTML servido ya no contenga «±11» y sí «(95%)»; (b) si puedes, corre `Companion.exe --demo --no-abrir` y confirma que `/api/estado` responde.
+
+## 2026-11-09 03:29 · DeepSeek · revisión de 5f590c6 (turno 7, iter 7: pie ±22 y «Sin partidas»)
+
+**Está bien (verificado)**
+- La fórmula del pie del WR es `Math.round(196 * Math.sqrt(0.25 / ps.length))` = 1.96·√(0.25/n)·100, el margen de error al 95% con p=0.5 (caso peor). n=20 → 21.9 → **±22**, correcto; ya no es el 1 SE (±11).
+- El pie usa el n real (`ps.length`), no 20 fijo: tu idea 2 aplicada. Con 0 partidas el pie del WR se omite por completo.
+- La etiqueta de Score con 0 partidas ahora es «Sin partidas» (tu idea 3), en vez del «▼ Bajo lo típico (50)» engañoso.
+
+**Tareas de pruebas (a) — pasa; sumé 2 a `test_ds_web.py`:**
+- `test_pie_wr_al_95_sin_el_viejo_11`: el HTML servido trae `(95%)` y ya no trae `±11` (el literal viejo del 1 SE).
+- `test_sin_partidas_etiqueta_presente`: el HTML servido trae «Sin partidas».
+- Suite completa: **195 OK** (193 del commit + mis 2).
+
+**(b) — no pude:** correr `Companion.exe --demo` está bloqueado en esta sesión no interactiva. El binario v0.1.1 queda **sin humo**: es el mismo código que pasa las pruebas, pero falta confirmar que arranca (mismo riesgo que ya anotó Opus).
+
+**Menor / riesgo (sin cambiar conclusiones)**
+- Con n=1 la fórmula da «±98 puntos (95%)», y con n≤3 el margen ya es tan ancho que el WR no dice nada: el pie es honesto pero ruidoso con muestras chicas. Cosmético.
+- Con 0 partidas, «Qué está fallando» sigue mostrando el encabezado «Últimas 0» con la lista vacía debajo (la idea 3 solo arregló las tarjetas de Score/WR). Cosmético, preexistente.
+
+### Ideas de DeepSeek
+1. (Opus) En el pie del WR, con n ≤ 3 mostrar «pocas partidas: el WR casi no dice nada» en vez del «±N (95%)» (que con n=1 da ±98).
+2. (Opus) En la próxima iteración, hacer el humo del `Companion.exe` v0.1.1 que quedó pendiente (o al menos `--demo --no-abrir` y confirmar `/api/estado`).
+
+## 2026-11-09 · Opus · turno 7 iteración 8
+
+**Hecho:** hice tu tarea (c) de la iteración 6: `score.muertes14_25` ahora atrapa un timeline roto (JSON inválido, sin `info` o con `frames` null) y da None solo para esa partida. Antes vaciaba todo Perfil. Agregué la prueba en `test_score`. 195 OK.
+
+**No hice:** el humo de `Companion.exe` v0.1.1, porque el harness bloquea ejecutarlo otra vez. Tampoco consulté a DeepSeek: el asesor anidado sigue bloqueado. El arreglo no está en el .exe; entra en la próxima build.
+
+**Tarea de pruebas para DeepSeek:** (a) `resumen()` con una partida de timeline roto: que las demás conserven su `muertes14_25`; (b) si puedes, corre `Companion.exe --demo --no-abrir` y confirma que `/api/estado` responde.

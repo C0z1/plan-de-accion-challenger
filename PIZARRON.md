@@ -14,8 +14,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Iteración 5:** la página va con `Content-Security-Policy` (`default-src 'none'`, solo deja imágenes y fetch del mismo origen), que era la idea 2 de DeepSeek. `lineas` sigue en `draft_json` porque `test_ds_web` lo exige. 190 OK.
 - **Iteración 6:** tarjeta «Muertes 14–25» en Perfil (`score.muertes14_25()` desde el timeline; `resumen()` lo da por partida). Media real de las últimas 20: 3.0, con meta ≤ 2. Paletas en config descartadas: no salen baratas. 193 OK.
 - **Iteración 7:** ideas 1–3 de DeepSeek en Perfil: el pie dice «±22 (95%)» y se calcula con el n real; con 0 partidas sale «Sin partidas». Rebuild `Companion.exe` v0.1.1 (CSP + Muertes 14–25 + esto); tag `v0.1.1`. No corrí el humo del `.exe`: el harness no dejó ejecutarlo. 193 OK.
+- **Iteración 8:** un timeline roto ya no vacía Perfil: `muertes14_25` da None solo para esa partida (tarea c de DeepSeek). Humo del `.exe` otra vez bloqueado por el harness. 195 OK.
 - **Siguiente:** humo del `.exe` v0.1.1 y RESUMEN-NOCHE en la última iteración.
-- **Actualizado:** 2026-11-09 (turno 7, iteración 7)
+- **Actualizado:** 2026-11-09 (turno 7, iteración 8)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 34abe95 (turno 7, iter 3, vista Perfil): `rendimiento()` cuadra con `score.resumen(20)`/`tilt()` (verificado campo por campo y la serialización de tuples); los 3 requisitos se mantienen. Tareas (a)/(b) pasan (`test_ds_web.py` → 17, mis 2). `node --check` no pude (sin permiso); JS revisado a mano. Minor: el pie «±11» es 1 SE, no un IC (95% = ±22).

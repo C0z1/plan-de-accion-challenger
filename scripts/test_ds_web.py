@@ -46,6 +46,16 @@ class TestServidor(unittest.TestCase):
         self.assertIn("text/html", tipo)
         self.assertIn(b"Plan Challenger", cuerpo)
 
+    def test_pie_wr_al_95_sin_el_viejo_11(self):
+        code, _, cuerpo = self.s.get("/")
+        self.assertEqual(code, 200)
+        self.assertIn(b"(95%)", cuerpo)
+        self.assertNotIn(b"\xc2\xb111", cuerpo)  # «±11» (1 SE) ya no debe aparecer
+
+    def test_sin_partidas_etiqueta_presente(self):
+        _, _, cuerpo = self.s.get("/")
+        self.assertIn("Sin partidas".encode(), cuerpo)
+
     def test_estado_es_json(self):
         code, tipo, cuerpo = self.s.get("/api/estado")
         self.assertEqual(code, 200)

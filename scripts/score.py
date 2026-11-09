@@ -123,9 +123,12 @@ def muertes14_25(g):
     if "f" not in g: return None
     tf = g["f"].parent / "timeline" / g["f"].name
     if not tf.exists(): return None
-    fr = json.loads(tf.read_text())["info"]["frames"]
-    return sum(14 * 60000 <= e["timestamp"] < 25 * 60000 for x in fr for e in x["events"]
-               if e["type"] == "CHAMPION_KILL" and e["victimId"] == g["pid"])
+    try:  # un timeline roto deja sin dato solo a esa partida, no a todo Perfil
+        fr = json.loads(tf.read_text())["info"]["frames"]
+        return sum(14 * 60000 <= e["timestamp"] < 25 * 60000 for x in fr for e in x["events"]
+                   if e["type"] == "CHAMPION_KILL" and e["victimId"] == g["pid"])
+    except (ValueError, KeyError, TypeError):
+        return None
 
 
 def resumen(n=10, raw=None):
