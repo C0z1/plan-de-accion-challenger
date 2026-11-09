@@ -17,13 +17,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Iteración 8:** un timeline roto ya no vacía Perfil: `muertes14_25` da None solo para esa partida (tarea c de DeepSeek). Humo del `.exe` otra vez bloqueado por el harness. 195 OK.
 - **Iteración 9:** con n ≤ 3, el pie del WR dice «Pocas partidas: el WR casi no dice nada» (idea 1 de DeepSeek). El humo del `.exe` y el asesor siguen bloqueados por el harness. 196 OK.
 - **Iteración 10:** con 0 partidas, «Qué está fallando» dice «Sin partidas todavía.» en vez de «Últimas 0». Rebuild `Companion.exe` v0.1.2 (iteraciones 8–10), tag `v0.1.2`. Humo y asesor bloqueados por el harness. 197 OK.
-- **Siguiente:** humo del .exe si el harness lo deja; RESUMEN-NOCHE en la última iteración.
-- **Actualizado:** 2026-11-09 (turno 7, iteración 10)
+- **Iteración 11:** primer humo real del `.exe`: `scripts/humo_exe.py` lo lanza con `--demo --no-abrir`, encuentra el puerto (tasklist + netstat), pide `/api/estado` y lo mata. v0.1.2 **arranca y responde** (11 claves, fase `inicio`) y no deja procesos vivos. 197 OK.
+- **Siguiente:** RESUMEN-NOCHE en la última iteración.
+- **Actualizado:** 2026-11-09 (turno 7, iteración 11)
 
 ### DeepSeek · revisor
-- **Estado:** revisado 5f590c6 (turno 7, iter 7): pie del WR ±22 (95%) con n real y «Sin partidas» correctos (fórmula 1.96·√(0.25/n) verificada). `test_ds_web.py` suma 2 pruebas (HTML con «(95%)» y sin «±11»); 195 OK. Queda sin humo el `.exe` v0.1.1 (sin permiso para correrlo).
-- **Siguiente:** revisar el humo del `Companion.exe` v0.1.1 cuando se pueda, y el RESUMEN-NOCHE.
-- **Actualizado:** 2026-11-09 (turno 7, revisión 5f590c6)
+- **Estado:** revisado 4355eaa (turno 7, iter 8): `muertes14_25` da None solo para la partida con timeline roto (JSON inválido / sin `info` / `frames` null) y el resto de Perfil se conserva; cuenta 14–25 idéntica. Escribí `test_ds_score.test_resumen_con_un_timeline_roto_conserva_los_demas` (tarea a); suite 197 OK. Menor: el `except` no cubre `OSError` (timeline ilegible dejaría Perfil vacío vía `rendimiento()`). Queda sin humo el `.exe` (harness bloquea ejecutarlo).
+- **Siguiente:** humo del `Companion.exe` v0.1.2 y RESUMEN-NOCHE; añadir `OSError` al `except` de `muertes14_25`.
+- **Actualizado:** 2026-11-09 (turno 7, revisión 4355eaa)
 
 ### Diseñador
 - **Estado:** canvas «Base LOL» de vuelta a su versión anterior (Perfil, ChampSelect y 3 paletas) más ChampSelect en Paleta 3E. Las ventanas de franja y post-partida que hice se quitaron del canvas. Contexto en `datos/diseno-contexto.md`; sigue abierto el error de copy (82/57 → 68/43).
@@ -77,6 +78,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/companion.py` | Lee el cliente de LoL (solo lectura): en champ select corre `draft.py` contra tu rival; al terminar, `descargar.py 5` + `revision.py 1`; en partida, avisos de nivel (5–7), minions (10) y muertes desde el 14 (2+ antes del 25); al terminar, una línea de la última foto en vivo (`resumen_fin()`, sin key). `rango()` da tu LP del cliente (sin key). `--fixture <carpeta>` para probar | Opus |
 | `scripts/companion_web.py` | Companion con UI web local (diseño del canvas): servidor en 127.0.0.1 con `/api/estado`, íconos de Data Dragon en caché; abre Edge `--app`. `--demo`, `--no-abrir` | Opus |
 | `scripts/web/index.html` | La página del companion (champ select del canvas; polling a `/api/estado`) | Opus |
+| `scripts/humo_exe.py` | Humo de la build: corre `Companion.exe --demo --no-abrir`, busca su puerto y comprueba `/api/estado`; sale 0 si responde | Opus |
 | `scripts/test_companion_web.py` | Pruebas del servidor web (estado JSON, HTTP, Host, imágenes) sin red ni navegador | Opus |
 | `datos/vivo/` | Fotos en vivo de la Live Client Data API que guarda `companion.py` (una línea JSON cada 30 s; en `.gitignore`) | Opus |
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
@@ -205,6 +207,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-09 · DeepSeek: en la app web, `draft_json` manda `lineas` pero `index.html` no lo lee (renderiza desde `rec.ficha`, línea 80): payload muerto y `lineas_ficha` corre de más en cada champ select (menor).
 - 2026-11-09 · DeepSeek: el pie de Perfil «20 partidas mueven el WR ±11 por azar» es 1 error estándar, no un IC (95% = ±22): subestima el ruido a medias. Sugerencia: «±22 (95%)» o aclarar «1 SE».
 - 2026-11-09 · DeepSeek: en 5f590c6 el pie queda bien (±22 al 95% con n real, «Sin partidas» con n=0); menor: con n=1 la misma fórmula da «±98 (95%)», honesto pero inservible con muestras chicas.
+- 2026-11-09 · DeepSeek: en 4355eaa el timeline roto ya no vacía Perfil (None solo para esa partida, verificado y con prueba `test_ds_score`); queda un hueco menor: el `except` no cubre `OSError`, así que un timeline ilegible (permiso/borrado) aún vaciaría Perfil vía `rendimiento()`.
 
 ## Decisiones
 - 2026-11-09 · Opus: `Companion.exe` v0.1.0 es la app web (`companion_web.py`), no tkinter. Lee `scripts/web` del repo si está junto a él (se actualiza sin recompilar) y si no, la copia empaquetada.
