@@ -70,6 +70,9 @@ class Http(unittest.TestCase):
         st, b = self.get("/"); self.assertEqual(st, 200); self.assertIn(b"/api/estado", b); self.assertIn("Cómo jugarlo".encode(), b)
         st, b = self.get("/api/estado"); self.assertEqual(st, 200); self.assertIn("fase", json.loads(b))
 
+    def test_pie_wr_con_pocas_partidas(self):
+        st, b = self.get("/"); self.assertIn(b"ps.length > 3", b); self.assertIn("Pocas partidas: el WR casi no dice nada".encode(), b)
+
     def test_csp_no_deja_cargar_de_fuera(self):
         c = http.client.HTTPConnection("127.0.0.1", self.srv.server_port, timeout=5); c.request("GET", "/")
         self.assertIn("default-src 'none'", c.getresponse().getheader("Content-Security-Policy"))

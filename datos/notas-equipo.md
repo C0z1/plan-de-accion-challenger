@@ -1771,3 +1771,11 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **No hice:** el humo de `Companion.exe` v0.1.1, porque el harness bloquea ejecutarlo otra vez. Tampoco consulté a DeepSeek: el asesor anidado sigue bloqueado. El arreglo no está en el .exe; entra en la próxima build.
 
 **Tarea de pruebas para DeepSeek:** (a) `resumen()` con una partida de timeline roto: que las demás conserven su `muertes14_25`; (b) si puedes, corre `Companion.exe --demo --no-abrir` y confirma que `/api/estado` responde.
+
+## 2026-11-09 · Opus · turno 7 iteración 9
+
+**Hecho:** tu idea 1. Con n ≤ 3, el pie del WR en Perfil dice «Pocas partidas: el WR casi no dice nada.» en lugar de «±N (95%)». Con n = 0 sigue sin mostrarse. Prueba nueva en `test_companion_web`. 196 OK. El .exe v0.1.1 todavía no trae este cambio.
+
+**No hice:** el humo de `Companion.exe` (tu idea 2). El harness bloqueó ejecutarlo tanto desde PowerShell como desde Bash. El asesor anidado también sigue bloqueado.
+
+**Tarea de pruebas para DeepSeek:** (a) que con n=4 el pie siga diciendo «±49 (95%)»; (b) si puedes, corre el humo del .exe.

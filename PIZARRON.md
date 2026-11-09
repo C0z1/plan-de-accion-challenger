@@ -15,13 +15,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Iteración 6:** tarjeta «Muertes 14–25» en Perfil (`score.muertes14_25()` desde el timeline; `resumen()` lo da por partida). Media real de las últimas 20: 3.0, con meta ≤ 2. Paletas en config descartadas: no salen baratas. 193 OK.
 - **Iteración 7:** ideas 1–3 de DeepSeek en Perfil: el pie dice «±22 (95%)» y se calcula con el n real; con 0 partidas sale «Sin partidas». Rebuild `Companion.exe` v0.1.1 (CSP + Muertes 14–25 + esto); tag `v0.1.1`. No corrí el humo del `.exe`: el harness no dejó ejecutarlo. 193 OK.
 - **Iteración 8:** un timeline roto ya no vacía Perfil: `muertes14_25` da None solo para esa partida (tarea c de DeepSeek). Humo del `.exe` otra vez bloqueado por el harness. 195 OK.
-- **Siguiente:** humo del `.exe` v0.1.1 y RESUMEN-NOCHE en la última iteración.
-- **Actualizado:** 2026-11-09 (turno 7, iteración 8)
+- **Iteración 9:** con n ≤ 3, el pie del WR dice «Pocas partidas: el WR casi no dice nada» (idea 1 de DeepSeek). El humo del `.exe` y el asesor siguen bloqueados por el harness. 196 OK.
+- **Siguiente:** rebuild v0.1.2 (trae las iteraciones 8 y 9), humo si el harness lo deja y RESUMEN-NOCHE en la última iteración.
+- **Actualizado:** 2026-11-09 (turno 7, iteración 9)
 
 ### DeepSeek · revisor
-- **Estado:** revisado 34abe95 (turno 7, iter 3, vista Perfil): `rendimiento()` cuadra con `score.resumen(20)`/`tilt()` (verificado campo por campo y la serialización de tuples); los 3 requisitos se mantienen. Tareas (a)/(b) pasan (`test_ds_web.py` → 17, mis 2). `node --check` no pude (sin permiso); JS revisado a mano. Minor: el pie «±11» es 1 SE, no un IC (95% = ±22).
-- **Siguiente:** revisar iteraciones 4–6 (CSP y «Muertes 14–25» en Perfil) cuando queden commiteadas.
-- **Actualizado:** 2026-11-09 (turno 7, revisión 34abe95)
+- **Estado:** revisado 5f590c6 (turno 7, iter 7): pie del WR ±22 (95%) con n real y «Sin partidas» correctos (fórmula 1.96·√(0.25/n) verificada). `test_ds_web.py` suma 2 pruebas (HTML con «(95%)» y sin «±11»); 195 OK. Queda sin humo el `.exe` v0.1.1 (sin permiso para correrlo).
+- **Siguiente:** revisar el humo del `Companion.exe` v0.1.1 cuando se pueda, y el RESUMEN-NOCHE.
+- **Actualizado:** 2026-11-09 (turno 7, revisión 5f590c6)
 
 ### Diseñador
 - **Estado:** canvas «Base LOL» de vuelta a su versión anterior (Perfil, ChampSelect y 3 paletas) más ChampSelect en Paleta 3E. Las ventanas de franja y post-partida que hice se quitaron del canvas. Contexto en `datos/diseno-contexto.md`; sigue abierto el error de copy (82/57 → 68/43).
@@ -202,6 +203,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · DeepSeek: `anticipa.py` (f8f7c13) correcto y robusto: muertes6 aguanta 4+ anteriores (r 0.34–0.40) y el control por campeón no lo explica (p 0.002→0.004). Menor: los p no se reproducen entre corridas porque itera un set sin ordenar (`for pos in {g["pos"] …}`); r y n sí estables. Sugerencia: `sorted(...)`.
 - 2026-11-09 · DeepSeek: en la app web, `draft_json` manda `lineas` pero `index.html` no lo lee (renderiza desde `rec.ficha`, línea 80): payload muerto y `lineas_ficha` corre de más en cada champ select (menor).
 - 2026-11-09 · DeepSeek: el pie de Perfil «20 partidas mueven el WR ±11 por azar» es 1 error estándar, no un IC (95% = ±22): subestima el ruido a medias. Sugerencia: «±22 (95%)» o aclarar «1 SE».
+- 2026-11-09 · DeepSeek: en 5f590c6 el pie queda bien (±22 al 95% con n real, «Sin partidas» con n=0); menor: con n=1 la misma fórmula da «±98 (95%)», honesto pero inservible con muestras chicas.
 
 ## Decisiones
 - 2026-11-09 · Opus: `Companion.exe` v0.1.0 es la app web (`companion_web.py`), no tkinter. Lee `scripts/web` del repo si está junto a él (se actualiza sin recompilar) y si no, la copia empaquetada.

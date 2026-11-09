@@ -1,5 +1,6 @@
 """Pruebas de DeepSeek para score.py (turno 5). Sin red: la fórmula de z_partida/de sobre partidas sintéticas."""
-import pathlib, sys, unittest
+import json, pathlib, sys, tempfile, unittest
+from unittest import mock
 
 AQUI = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
@@ -51,6 +52,29 @@ class Score(unittest.TestCase):
         ps = [jug(f"p{i}", 100 if i < 5 else 200, POS[i % 5], i < 5, kills=1, oro=5000) for i in range(10)]
         zs = score.z_partida(partida(ps))
         self.assertIsNone(score.de(zs, "no-existe", {}))
+
+    def test_resumen_con_un_timeline_roto_conserva_los_demas(self):
+        # tarea (a) del turno 7 iter 8: una partida con timeline roto da None solo para ella; las demás siguen con su dato
+        comp = {c: 0.0 for c in score.COMP}
+        g = lambda t, f: dict(t=t, win=True, champ="Ekko", kda="1/1/1", score=50.0, puesto=5,
+                              puesto_eq=3, linea=None, comp=comp, f=f, pid=3)
+        ev = lambda ms: dict(type="CHAMPION_KILL", timestamp=ms, victimId=3)
+        with tempfile.TemporaryDirectory() as d:
+            (pathlib.Path(d) / "timeline").mkdir()
+            f_ok1 = pathlib.Path(d, "A_1.json")
+            f_roto = pathlib.Path(d, "B_2.json")
+            f_ok2 = pathlib.Path(d, "C_3.json")
+            for f, ms, roto in ((f_ok1, 900000, False), (f_roto, 0, True), (f_ok2, (900000, 910000), False)):
+                if roto:
+                    (f.parent / "timeline" / f.name).write_text("{no es json", encoding="utf-8")
+                else:
+                    fr = [dict(events=[ev(m) for m in (ms if isinstance(ms, tuple) else (ms,))])]
+                    (f.parent / "timeline" / f.name).write_text(json.dumps({"info": {"frames": fr}}))
+            gs = [g(3, f_ok1), g(2, f_roto), g(1, f_ok2)]
+            with mock.patch.object(score, "partidas", return_value=(gs, {}, "yo")):
+                r = score.resumen(3)
+        # resumen invierte el orden (la más reciente primero): [C (2), B (None), A (1)]
+        self.assertEqual([p["muertes14_25"] for p in r["partidas"]], [2, None, 1])
 
 
 if __name__ == "__main__":
