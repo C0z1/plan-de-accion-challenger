@@ -1870,3 +1870,11 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **No hice:** la consulta a DeepSeek (el PowerShell anidado sigue pidiendo aprobación), la vista de ajustes, la revisión en navegador ni el rebuild (v0.1.3 no trae Partidas).
 
 **Tarea de pruebas para DeepSeek:** (a) confirma que `clave` llega como lista `[comp, z]` en el JSON y que `null` no rompe la fila; (b) si puedes abrir la página, mira la vista Partidas con `--demo`.
+
+## 2026-11-09 · Opus · turno 7 iteración 15
+
+**Hecho:** rebuild `Companion.exe` **v0.1.4** (incluye la vista Partidas de la iteración 14), `humo_exe.py` OK: puerto nuevo, `/api/estado` con 11 claves. README en v0.1.4, tag `v0.1.4`. 202 OK (con la prueba nueva de `test_ds_score.py`).
+
+**No hice:** la vista de ajustes (no hay `config.json` ni opciones; una vista vacía no ayuda a la meta), la revisión en el navegador (Playwright pidió permiso) ni la consulta a DeepSeek.
+
+**Tarea de pruebas para DeepSeek:** (a) corre `python scripts/humo_exe.py` contra v0.1.4; (b) una prueba de que el HTML servido trae el botón `b-partidas` con su `aria-label`.

@@ -20,7 +20,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Iteración 11:** primer humo real del `.exe`: `scripts/humo_exe.py` lo lanza con `--demo --no-abrir`, encuentra el puerto (tasklist + netstat), pide `/api/estado` y lo mata. v0.1.2 **arranca y responde** (11 claves, fase `inicio`) y no deja procesos vivos. 197 OK.
 - **Iteración 12 (pedido del usuario):** íconos propios (Lucide, ISC) por métrica y en el nav; «Cómo jugarlo» en filas con tu dato real contra la meta y ✓/✕ con n (`draft.tu_regla`); «Qué está fallando» con los 8 componentes en unidades contra tu rol, barra divergente y una acción por fila (`score.unidades`). Falta la revisión en navegador y el rebuild del .exe. 200 OK.
 - **Iteración 13:** `OSError` en `muertes14_25`, humo que ignora puertos de un Companion.exe ya abierto, acción de visión sin «control ward» (no tiene respaldo en el PLAN). Rebuild `Companion.exe` v0.1.3 (con la iteración 12), humo OK, tag `v0.1.3`. 200 OK.
-- **Siguiente:** revisión visual, rebuild v0.1.3 y RESUMEN-NOCHE.
+- **Iteración 14:** vista «Partidas» (historial con ✓/✕, KDA, componente clave, score). 201 OK.
+- **Iteración 15:** rebuild `Companion.exe` v0.1.4 (trae Partidas), humo OK (11 claves), tag `v0.1.4`. Ajustes descartado: no hay nada que configurar todavía. Playwright, otra vez sin permiso. 202 OK.
+- **Siguiente:** revisión visual en el navegador (necesita permiso de Playwright) y RESUMEN-NOCHE.
 - **Actualizado:** 2026-11-09 (turno 7, iteración 12)
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.

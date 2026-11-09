@@ -76,6 +76,24 @@ class Score(unittest.TestCase):
         # resumen invierte el orden (la más reciente primero): [C (2), B (None), A (1)]
         self.assertEqual([p["muertes14_25"] for p in r["partidas"]], [2, None, 1])
 
+    def test_resumen_con_partida_sin_rival_de_linea(self):
+        # tarea (b) del turno 7 iter 12: sin rival de línea, unidades["línea"] da 0 y resumen() no truena
+        ps = [jug("yo", 100, "MIDDLE", True, oro=6000, dano=8000, obj=2000, kills=2, assists=3, deaths=4, vision=20, cs=180)]
+        ps += [jug(f"a{i}", 100, p, True, oro=5000, dano=5000, obj=1000, kills=1, assists=2, deaths=3, vision=10, cs=150)
+               for i, p in enumerate(("TOP", "JUNGLE", "BOTTOM", "UTILITY"))]
+        ps += [jug(f"b{i}", 200, p, False, oro=4000, dano=4000, obj=800, kills=1, assists=1, deaths=2, vision=9, cs=140)
+               for i, p in enumerate(("TOP", "JUNGLE", "BOTTOM", "UTILITY"))]  # 200 sin MIDDLE: yo no tiene espejo
+        u = score.unidades(partida(ps))
+        mio = next(x for p, _, x in u if p == "yo")
+        self.assertEqual(mio["línea"], 0.0)
+        comp = {c: 0.0 for c in score.COMP}
+        g = dict(t=1000, win=True, champ="Ekko", rol="MIDDLE", kda="1/1/1", score=50.0,
+                 puesto=5, puesto_eq=3, linea=None, comp=comp, u=u)
+        with mock.patch.object(score, "partidas", return_value=([g], {}, "yo")):
+            r = score.resumen(1)
+        self.assertEqual(r["unidades"]["línea"]["tu"], 0.0)
+        self.assertEqual(r["unidades"]["línea"]["rol"], 0.0)
+
 
 if __name__ == "__main__":
     unittest.main()
