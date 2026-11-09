@@ -91,6 +91,29 @@ class AvisoNivel(unittest.TestCase):
         d["gameData"]["gameTime"] = 1000; d["events"] = None; self.assertIsNone(companion.aviso_muertes(d))  # null no truena
         for x in (None, {}): self.assertIsNone(companion.aviso_muertes(x))
 
+    def test_linea_al_terminar(self):
+        d = foto(); d["gameData"]["gameTime"] = 1860
+        kill = lambda t: {"EventName": "ChampionKill", "EventTime": t, "VictimName": "Jugador"}
+        d["events"]["Events"] += [kill(t) for t in (500, 900, 1000, 1499, 1500, 1700)]  # 900, 1000, 1499: del 14 al 25
+        r = companion.resumen_fin(d)
+        self.assertEqual((r["minuto"], r["kda"], r["muertes14_25"], r["muertes14"]), (31, "0/0/0", 3, 5))
+        self.assertEqual(companion.linea_fin(r), "Min 31 · Ekko 0/0/0 contra Zed · CS 38 · muertes del 14 al 25: 3 (meta ≤ 2) ✕")
+        d["gameData"]["gameTime"] = 700; d["allPlayers"][0]["scores"] = None  # acabó antes del 14, scores null
+        self.assertEqual(companion.linea_fin(companion.resumen_fin(d)), "Min 11 · Ekko 0/0/0 contra Zed · CS ?")
+        for x in (None, {}): self.assertIsNone(companion.linea_fin(companion.resumen_fin(x)))
+
+    def test_el_bucle_da_la_linea_al_terminar(self):
+        orig = companion.lcu, companion.vivo, companion.capturar, companion.time.sleep, companion.post_partida
+        fases = iter(["InProgress", "InProgress", "EndOfGame", "EndOfGame"])
+        fotos = iter([foto(), None])  # la segunda falla (partida cerrándose): queda la anterior
+        companion.lcu = lambda path: next(fases); companion.vivo = lambda: next(fotos)
+        companion.capturar = lambda a, d: a; companion.time.sleep = lambda _: None; companion.post_partida = lambda: None
+        out = io.StringIO()
+        try:
+            with self.assertRaises(StopIteration), contextlib.redirect_stdout(out): companion.main([])
+        finally: companion.lcu, companion.vivo, companion.capturar, companion.time.sleep, companion.post_partida = orig
+        self.assertEqual(out.getvalue().count("Min 6 · Ekko 0/0/0 contra Zed"), 1)
+
     def test_el_bucle_avisa_una_vez_por_partida(self):
         orig = companion.lcu, companion.vivo, companion.capturar, companion.time.sleep, companion.time.time
         fases = iter(["InProgress"] * 3 + ["Lobby", "InProgress"])

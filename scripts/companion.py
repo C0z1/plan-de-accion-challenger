@@ -7,7 +7,7 @@ Uso:
 - InProgress: cada 30 s guarda una foto de la Live Client Data API (puerto 2999) en datos/vivo/<inicio>.jsonl
   y avisa una vez: del minuto 5 al 7 si vas abajo de nivel contra tu rival de línea; del 10 al 11 si vas bajo
   la meta minions10 de config.json (p. ej. Sylas 69+).
-- EndOfGame/PreEndOfGame: espera 60 s y corre descargar.py 5 y revision.py 1 (si la key caducó, lo avisa).
+- EndOfGame/PreEndOfGame: una línea con la última foto en vivo (KDA, CS, muertes del 14 al 25; sirve sin key), espera 60 s y corre descargar.py 5 y revision.py 1 (si la key caducó, lo avisa).
 Lockfile: C:\\Riot Games\\League of Legends\\lockfile (o la variable LOL_LOCKFILE)."""
 import argparse, base64, http.client, json, os, pathlib, ssl, subprocess, sys, time, urllib.request
 
@@ -80,13 +80,29 @@ def aviso_nivel(d):
             f"({me.get('level') or '?'} contra {rival.get('level') or '?'}). No tradees hasta igualar; quédate en rango de XP de cada oleada.")
 
 
-def muertes14(d, me=None):
-    """Tus muertes desde el 14:00 (eventos ChampionKill de la foto en vivo); None antes del 14 o sin tu jugador."""
+def muertes14(d, me=None, hasta=float("inf")):
+    """Tus muertes desde el 14:00 hasta `hasta` s (eventos ChampionKill de la foto en vivo); None antes del 14 o sin tu jugador."""
     if me is None: me, _ = yo_rival(d)
     if not me or (((d or {}).get("gameData") or {}).get("gameTime") or 0) < 840: return None
     ids = {me.get("riotId"), me.get("summonerName"), me.get("riotIdGameName"), (me.get("riotId") or "").split("#")[0]} - {None, ""}
     evs = (((d or {}).get("events") or {}).get("Events")) or []  # VictimName: sin cotejar con una partida real (¿con o sin #tag?)
-    return sum(1 for e in evs if e.get("EventName") == "ChampionKill" and e.get("VictimName") in ids and (e.get("EventTime") or 0) >= 840)
+    return sum(1 for e in evs if e.get("EventName") == "ChampionKill" and e.get("VictimName") in ids and 840 <= (e.get("EventTime") or 0) < hasta)
+
+
+def resumen_fin(d):
+    """«Una línea al terminar» sin key de Riot, de la última foto en vivo (hasta 30 s antes del final): meta_fase() más
+    kda y muertes14_25 (tus muertes del 14:00 al 25:00; None si acabó antes del 14). None sin foto o sin tu jugador."""
+    if not (mf := meta_fase(d)): return None
+    s = (yo_rival(d)[0].get("scores") or {})
+    return {**mf, "kda": f"{s.get('kills') or 0}/{s.get('deaths') or 0}/{s.get('assists') or 0}", "muertes14_25": muertes14(d, hasta=1500)}
+
+
+def linea_fin(r):
+    """«Min 31 · Sylas 5/4/7 contra Zed · CS 245 · muertes del 14 al 25: 3 (meta ≤ 2) ✕» o None."""
+    if not r: return None
+    t = [f"Min {r['minuto']}", f"{r['campeon'] or '?'} {r['kda']}" + (f" contra {r['rival']}" if r["rival"] else ""), f"CS {r['cs'] if r['cs'] is not None else '?'}"]
+    if r["muertes14_25"] is not None: t.append(f"muertes del 14 al 25: {r['muertes14_25']} (meta ≤ 2) {'✓' if r['muertes14_25'] <= 2 else '✕'}")
+    return " · ".join(t)
 
 
 def aviso_muertes(d):
@@ -168,7 +184,7 @@ def main(argv=None):
     if a.fixture:
         d = pathlib.Path(a.fixture)
         get = lambda path: json.loads((d / ("session.json" if "champ-select" in path else "gameflow-phase.json")).read_text())
-    m, visto, fase_ant, real, archivo, ult, avisado, fallos = None, None, None, None, None, 0, set(), 0
+    m, visto, fase_ant, real, archivo, ult, avisado, fallos, foto = None, None, None, None, None, 0, set(), 0, None
     while True:
         fase = get("/lol-gameflow/v1/gameflow-phase")  # fuera del try: lcu() ya atrapa todo, y las pruebas cortan el bucle desde aquí
         if fase is None and fase_ant != "cerrado": print("Cliente cerrado: espero…")
@@ -181,11 +197,13 @@ def main(argv=None):
                     m = m or nombres(); recomendar(pos, ids, m); visto = (pos, ids)
             elif fase != "ChampSelect": visto = None
             if jugando and get is lcu and time.time() - ult >= 30:
-                d = vivo(); archivo, ult = capturar(archivo, d), time.time()
+                d = vivo(); archivo, ult = capturar(archivo, d), time.time(); foto = d or foto
                 for f in (aviso_nivel, aviso_muertes):  # cada aviso, una vez por partida
                     if f.__name__ not in avisado and (txt := f(d)): print(f"\n*** {txt} ***\n"); avisado.add(f.__name__)
             elif not jugando: archivo, avisado = None, set()  # partida nueva, archivo y avisos nuevos
-            if fase in FIN and real not in FIN and get is lcu: post_partida()  # real: un reinicio en EndOfGame no repite la descarga
+            if fase in FIN and real not in FIN and get is lcu:  # real: un reinicio en EndOfGame no repite la descarga
+                if txt := linea_fin(resumen_fin(foto)): print(f"\n{txt}\n")
+                foto = None; post_partida()
         except Exception as e: print(f"Error (sigo): {e!r}")  # un JSON raro no tumba el companion
         fase_ant, real, fallos = fase or "cerrado", fase or real, 0 if fase else fallos + 1
         if get is not lcu: return

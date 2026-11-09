@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 6, iteración 5: champ select ya muestra «Cuidado con <rival>» y «Counters de <pick>» (de `ficha()`, vía `companion_gui.lineas_ficha()`). Los 7 pedidos del Diseñador tienen dato; 1–5 se ven en la ventana. 137 OK.
+- **Estado:** turno 6, iteración 6: «una línea al terminar» sin key: `companion.resumen_fin()` (dict) y `linea_fin()` de la última foto en vivo; la ventana la pone arriba hasta que llega la revisión, la consola la imprime. 140 OK.
 - **Siguiente:** revisión de DeepSeek; resumen en `RESUMEN-NOCHE.md` en la última iteración.
-- **Actualizado:** 2026-11-08 (turno 6, iteración 5)
+- **Actualizado:** 2026-11-08 (turno 6, iteración 6)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 509ac9b (solo commitea mi `test_ds_resumen.py`: nada nuevo que revisar). Refiné `clave`: engaña en 11/284 (no 29), victoria con todo z<0 o derrota con todo z>0 → propongo None cuando el extremo no tenga el signo del resultado. Dejé 2 casos fallando en `test_ds_resumen.py` + 2 controles que pasan. Suite 115 OK + 2 fallando a propósito.
@@ -62,7 +62,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-muertes6-*.md` | Salida de `muertes6.py` | Opus |
 | `scripts/wards.py` | Control wards: tú y los 1,431 jugadores de línea ajenos (gank <14 y WR, a igual oro y por rol) | Opus |
 | `datos/analisis-wards-*.md` | Salida de `wards.py` | Opus |
-| `scripts/companion.py` | Lee el cliente de LoL (solo lectura): en champ select corre `draft.py` contra tu rival; al terminar, `descargar.py 5` + `revision.py 1`; en partida, avisos de nivel (5–7), minions (10) y muertes desde el 14 (2+ antes del 25). `--fixture <carpeta>` para probar | Opus |
+| `scripts/companion.py` | Lee el cliente de LoL (solo lectura): en champ select corre `draft.py` contra tu rival; al terminar, `descargar.py 5` + `revision.py 1`; en partida, avisos de nivel (5–7), minions (10) y muertes desde el 14 (2+ antes del 25); al terminar, una línea de la última foto en vivo (`resumen_fin()`, sin key). `--fixture <carpeta>` para probar | Opus |
 | `datos/vivo/` | Fotos en vivo de la Live Client Data API que guarda `companion.py` (una línea JSON cada 30 s; en `.gitignore`) | Opus |
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
 | `scripts/fixtures/vivo/allgamedata.json` | Foto sintética de la Live Client Data API (min 6, Ekko 5 contra Zed 6; nombres inventados) | Opus |
@@ -234,8 +234,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: un counter del pick = rival con 3+ partidas cuyo estimado encogido (M=10) queda bajo tu WR con ese campeón; se marca `pocas` con n < 5 (DeepSeek pedía n ≥ 5, pero con eso casi no quedan). Lo cualitativo del matchup no se infiere: sale solo de `datos/matchups-notas.json`, que llenas tú.
 - 2026-11-08 · Opus: el aviso de muertes 14–25 salta con 2 (antes de la 3.ª, que es la que pesa), una vez, y cita el 68/43 de todas tus partidas, no el 82/57 (solo vale con línea y equipo arriba). Cuenta eventos `ChampionKill` de la foto, sin estado; `VictimName` sin cotejar con una partida real.
 - 2026-11-08 · Opus: las reglas de «cómo jugarlo» son una tabla fija en `draft.py` con los números del PLAN (no se recalculan en vivo); al cambiar el PLAN hay que actualizarla.
+- 2026-11-08 · Opus: «una línea al terminar» sale de la última foto en vivo (hasta 30 s antes del final), no de la Riot API: así funciona con la key caducada; la revisión completa la reemplaza cuando llega.
 
 ## Para el usuario (cuando vuelva)
+- Nuevo: al terminar la partida, la ventana (y la consola) da una línea aunque la key haya caducado: «Min 31 · Sylas 5/4/7 contra Zed · CS 245 · muertes del 14 al 25: 3 (meta ≤ 2) ✕». Recompila `Companion.exe`.
 - Nuevo: en champ select, bajo «Cómo jugar», la ventana muestra «Cuidado con <rival>» (tu récord contra él y tu oro/CS al 14, nivel al 6 y muertes antes del 6 contra tu media, más tus notas) y los counters de tu pick con su récord. Recompila `Companion.exe` para tenerlo.
 - Nuevo: del minuto 14 al 25 la franja en partida muestra «Muertes desde el 14: N (meta ≤ 2)», y al llegar a 2 el companion te avisa «juega con objetivo» (con 3+ tu WR baja de 68% a 43%). Recompila `Companion.exe` para tenerlo. Si en tu primera partida no cuenta tus muertes, avísale a Opus: el nombre en los eventos no se pudo cotejar sin una partida real.
 - Nuevo: si quieres notas propias por rival en champ select («pega fuerte al 3»), crea `datos/matchups-notas.json` con `{"Zed": "tu nota"}`. Sin el archivo no pasa nada. La ventana ya te dice por qué te recomienda el pick (recompila `Companion.exe` para tenerlo).

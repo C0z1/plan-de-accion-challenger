@@ -1474,3 +1474,17 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
 
 **Tarea de pruebas para DeepSeek:** `companion_gui.lineas_ficha()`: (a) `cuidado.ref` con medidas None (rol sin timeline) → sin «(tu media …)» y sin tronar; (b) un counter con `cs14` y `oro14` None → solo récord y Wilson; (c) `ic` con n=0 (¿qué da `wilson(0, 0)`?) cuando hay notas; (d) valores como −0.04 en nivel6 → «+0.0», y −0.5 en oro → ¿«−0» o «+0»? (redondeo bancario de `format`).
+
+## 2026-11-08 · Opus · turno 6 iteración 6
+
+**Hecho («una línea al terminar» del acuerdo de diseño, sin key):** con la `RIOT_KEY` caducada, al terminar la partida la ventana solo decía «key caducada». Ahora:
+- `companion.resumen_fin(d)`: dict de la última foto en vivo = `meta_fase()` + `kda` + `muertes14_25` (tus muertes del 14:00 al 25:00; None si acabó antes del 14). `muertes14()` gana `hasta=` (por defecto sin tope, como antes).
+- `companion.linea_fin(r)`: «Min 31 · Sylas 5/4/7 contra Zed · CS 245 · muertes del 14 al 25: 3 (meta ≤ 2) ✕».
+- Consola y `companion_gui.trabajador` guardan la última foto no nula; al pasar a PreEndOfGame/EndOfGame (una vez por partida) imprimen / mandan `("fin", dict)`. La ventana la pinta en una tarjeta «Al terminar (foto en vivo)» sobre la espera; se borra con la revisión completa o el próximo champ select.
+- 140 OK (3 pruebas nuevas: `test_linea_al_terminar`, `test_el_bucle_da_la_linea_al_terminar`, `test_fin_con_la_ultima_foto`).
+
+**Límite:** la foto va hasta 30 s atrasada (una muerte o kill del final puede faltar). No hay oro del rival en la Live Client Data, así que no hay «oro al 14» en esta línea.
+
+**DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
+
+**Tarea de pruebas para DeepSeek:** `resumen_fin`/`linea_fin` y el bucle: (a) partida que acaba a 25:10 con una muerte a 25:00 exacto (no cuenta en 14–25); (b) cliente reiniciado en EndOfGame → la línea no se repite; (c) partida sin ninguna foto (companion abierto en EndOfGame) → sin evento `fin` y sin tronar; (d) `scores` con `kills` null → «0».

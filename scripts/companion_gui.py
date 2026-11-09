@@ -160,7 +160,7 @@ def lineas_ficha(fi):
 def trabajador(q):
     """El mismo bucle que companion.main, pero manda eventos a la ventana en vez de imprimir."""
     m, visto, fase_ant, real, archivo, ult, avisado, fallos = None, None, "inicio", None, None, 0, set(), 0
-    error = None
+    error = foto = None
     while True:
         fase = None  # si lcu() lanza, cuenta como cliente caído
         try:
@@ -174,13 +174,15 @@ def trabajador(q):
                     q.put(("draft", pos, recomendaciones(pos, [m.get(i) for i in ids])))
             elif fase != "ChampSelect": visto = None
             if jugando and time.time() - ult >= 30:
-                d = companion.vivo(); archivo, ult = companion.capturar(archivo, d), time.time()
+                d = companion.vivo(); archivo, ult = companion.capturar(archivo, d), time.time(); foto = d or foto
                 if mf := companion.meta_fase(d): q.put(("meta", mf))
                 for f in (companion.aviso_nivel, companion.aviso_minions, companion.aviso_muertes):
                     if f not in avisado and (txt := f(d)):
                         q.put(aviso(txt, "consejo", int((((d or {}).get("gameData") or {}).get("gameTime") or 0) // 60))); avisado.add(f)
             elif not jugando: archivo, avisado = None, set()
-            if fase in FIN and real not in FIN: post_partida(q); m = None
+            if fase in FIN and real not in FIN:
+                if r := companion.resumen_fin(foto): q.put(("fin", r))  # sin key, esto es todo lo que hay al terminar
+                foto = None; post_partida(q); m = None
             error = None
         except Exception:
             txt = "Error: " + traceback.format_exc(limit=1).strip().splitlines()[-1]
@@ -199,7 +201,7 @@ F, MONO = "Segoe UI", "Consolas"
 class App:
     def __init__(self, root):
         import tkinter as tk
-        self.tk, self.root, self.fase, self.pendiente = tk, root, None, None
+        self.tk, self.root, self.fase, self.pendiente, self.fin = tk, root, None, None, None
         root.title("Plan Challenger · Companion"); root.configure(bg=BG); root.geometry("420x760"); root.minsize(380, 560)
         cab = tk.Frame(root, bg=BG); cab.pack(fill="x", padx=16, pady=(14, 12))
         tk.Label(cab, text="PC", bg=ACENTO, fg=BG, font=(F, 10, "bold"), width=3, height=1).pack(side="left")
@@ -239,7 +241,11 @@ class App:
 
     # vistas
     def espera(self, texto):
-        self.limpiar(); t = self.tarjeta()
+        self.limpiar()
+        if self.fin:  # la línea de la última foto en vivo, hasta que llegue la revisión o el próximo champ select
+            t = self.tarjeta(ACENTO); self.etiqueta(t, "Al terminar (foto en vivo)", ACENTO)
+            self.tk.Label(t, text=self.fin, bg=PANEL, fg=TXT, font=(F, 10, "bold"), wraplength=340, justify="left").pack(anchor="w", pady=(6, 0))
+        t = self.tarjeta()
         self.tk.Label(t, text=texto, bg=PANEL, fg=TXT, font=(F, 10), wraplength=340, justify="left").pack(anchor="w")
         self.reglas()
 
@@ -319,7 +325,7 @@ class App:
             self.pill.config(text=FASES.get(fase, fase or "Cliente cerrado"), bg=ACENTO if fase in ("ChampSelect", "InProgress") else BORDE,
                                           fg=BG if fase in ("ChampSelect", "InProgress") else TXT)
             if fase is None: self.espera("Cliente cerrado: espero a que lo abras.")
-            elif fase == "ChampSelect": self.espera("Champ select: espero a que tu rival de línea elija.")
+            elif fase == "ChampSelect": self.fin = None; self.espera("Champ select: espero a que tu rival de línea elija.")
             elif fase == "InProgress":
                 if self.pendiente: self.vista_revision(self.pendiente); self.pendiente = None
                 else: self.espera("En partida: guardo una foto en vivo cada 30 s en datos/vivo/.")
@@ -327,10 +333,11 @@ class App:
             self.fase = fase
         elif tipo == "meta": self.sub.config(text=texto_meta(e[1]))  # Lobby la devuelve a perfil()
         elif tipo == "draft": self.vista_draft(e[1], e[2])
+        elif tipo == "fin": self.fin = companion.linea_fin(e[1]); self.espera("Partida terminada: espero a Riot para la revisión completa.")
         elif self.fase in ("ChampSelect", "InProgress") and tipo == "post_espera": pass  # la post-partida va en otro hilo: no tapa el draft
         elif tipo == "post_espera": self.espera(e[1])
         elif tipo == "revision" and self.fase == "ChampSelect": self.pendiente = e[1]  # se ve al empezar la partida
-        elif tipo == "revision": self.vista_revision(e[1]); self.sub.config(text=perfil())
+        elif tipo == "revision": self.fin = None; self.vista_revision(e[1]); self.sub.config(text=perfil())
         elif tipo == "aviso":
             a = e[1]; self.aviso.config(text=a["texto"], bg=BIEN if a["tipo"] == "consejo" else MAL); self.aviso.pack(fill="x", after=self.sep)
 

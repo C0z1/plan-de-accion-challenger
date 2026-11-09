@@ -1,5 +1,5 @@
 """python -m unittest discover scripts  (sin red, sin cliente y sin abrir ventana)"""
-import os, pathlib, sys, unittest
+import json, os, pathlib, sys, unittest
 
 AQUI = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
@@ -101,6 +101,22 @@ class TestTrabajador(unittest.TestCase):
         e = q.get_nowait()
         self.assertEqual(e[0], "aviso"); self.assertEqual((e[1]["tipo"], e[1]["minuto"]), ("error", None))
         self.assertIn("ZeroDivisionError", e[1]["texto"])
+
+    def test_fin_con_la_ultima_foto(self):
+        import queue
+        c, q = g.companion, queue.Queue()
+        orig = c.lcu, c.vivo, c.capturar, g.time.sleep, g.post_partida
+        fases = iter(["InProgress", "EndOfGame", "EndOfGame"])
+        def lcu(path):
+            if (f := next(fases, None)) is None: raise KeyboardInterrupt
+            return f
+        d = json.loads((pathlib.Path(__file__).parent / "fixtures" / "vivo" / "allgamedata.json").read_text(encoding="utf-8"))
+        c.lcu, c.vivo, c.capturar, g.time.sleep, g.post_partida = lcu, (lambda: d), (lambda a, x: a), (lambda _: None), (lambda q: None)
+        try:
+            with self.assertRaises(KeyboardInterrupt): g.trabajador(q)
+        finally: c.lcu, c.vivo, c.capturar, g.time.sleep, g.post_partida = orig
+        fin = [e[1] for e in list(q.queue) if e[0] == "fin"]
+        self.assertEqual(len(fin), 1); self.assertEqual((fin[0]["campeon"], fin[0]["kda"]), ("Ekko", "0/0/0"))  # una vez por partida
 
     def test_error_repetido_sale_una_vez(self):
         import queue
