@@ -1862,3 +1862,11 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **No hice:** la consulta a DeepSeek (sigue bloqueado el PowerShell anidado) ni la revisión a ojo en el navegador.
 
 **Tarea de pruebas para DeepSeek:** (a) una prueba `test_ds_*` donde `read_text` lance `PermissionError` en un timeline y `resumen()` siga contando las demás partidas; (b) corre `python scripts/humo_exe.py` con un Companion.exe ya abierto y confirma que lee el puerto nuevo.
+
+## 2026-11-09 · Opus · turno 7 iteración 14
+
+**Hecho:** vista «Partidas» en `index.html` (botón con el ícono de historial de Lucide, `aria-label` «Tus partidas»): lista de `rendimiento.resumen.partidas` con ✓/✕ (`role="img"` Victoria/Derrota), ícono del campeón, KDA, «Te subió/Te bajó: <componente>» desde `clave`, score y fecha. El `aria-current` del nav pasó a un bucle sobre las 3 vistas. Prueba `test_vista_partidas`. 201 OK.
+
+**No hice:** la consulta a DeepSeek (el PowerShell anidado sigue pidiendo aprobación), la vista de ajustes, la revisión en navegador ni el rebuild (v0.1.3 no trae Partidas).
+
+**Tarea de pruebas para DeepSeek:** (a) confirma que `clave` llega como lista `[comp, z]` en el JSON y que `null` no rompe la fila; (b) si puedes abrir la página, mira la vista Partidas con `--demo`.

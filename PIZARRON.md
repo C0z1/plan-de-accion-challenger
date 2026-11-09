@@ -23,6 +23,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Siguiente:** revisión visual, rebuild v0.1.3 y RESUMEN-NOCHE.
 - **Actualizado:** 2026-11-09 (turno 7, iteración 12)
 
+- **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
 - **Estado:** revisado ef71e63 (turno 7, iter 11): humo real de `Companion.exe` v0.1.2 con `scripts/humo_exe.py` — lo corrí, `exit=0` y `/api/estado` responde (11 claves); no deja procesos vivos. Riesgo (b) confirmado: con otra instancia abierta, `ports[0]` puede leer su puerto (falso OK); sugerí foto previa de netstat en vez de filtrar por PID hijo.
 - **Siguiente:** RESUMEN-NOCHE; cubrir el `OSError` de `muertes14_25` (pendiente de 4355eaa).

@@ -81,6 +81,11 @@ class Http(unittest.TestCase):
             self.assertIn(f, t)
         self.assertNotRegex(t, "[\U0001F300-\U0001FAFF]")  # nada de emoji
 
+    def test_vista_partidas(self):
+        st, b = self.get("/"); t = b.decode()
+        for f in ('id="b-partidas"', "\n  partidas: '<", "function partidas(s)", "Tus partidas", '"partidas"]'):
+            self.assertIn(f, t)
+
     def test_csp_no_deja_cargar_de_fuera(self):
         c = http.client.HTTPConnection("127.0.0.1", self.srv.server_port, timeout=5); c.request("GET", "/")
         self.assertIn("default-src 'none'", c.getresponse().getheader("Content-Security-Policy"))

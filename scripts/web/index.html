@@ -66,6 +66,7 @@ details summary{cursor:pointer;color:#CACACA}
 <div style="height:42px"></div>
 <button id="b-companion" aria-label="Champ select y partida" aria-current="page" onclick="ver('companion')"></button>
 <button id="b-perfil" aria-label="Tu rendimiento" onclick="ver('perfil')"></button>
+<button id="b-partidas" aria-label="Tus partidas" onclick="ver('partidas')"></button>
 </nav>
 <main id="main"><h1>Plan Challenger</h1><p class="sub">Conectando…</p></main>
 <aside id="aside" hidden></aside>
@@ -92,6 +93,7 @@ const ICON = {
   flecha_abajo: '<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>',
   champselect: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
   perfil: '<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
+  partidas: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
   trofeo: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
 };
 // sin etiqueta: decorativo (aria-hidden); con etiqueta: significa algo (role="img")
@@ -274,6 +276,14 @@ function perfil(s) {  // ventana 2 del canvas: score, WR y muertes de las últim
     ${pool.map(([c, d]) => `<div class="fila" style="border-color:var(--line)"><span>${img("champion", c, "item", c)} <b>${esc(c)}</b></span><span>${pct(d.wr)} · ${d.n} partidas · score ${d.score}</span></div>`).join("")}</div>`;
 }
 
+function partidas(s) {  // última primero; la clave es el componente que más pesó en esa partida (si cuadra con el resultado)
+  const ps = s.rendimiento?.resumen?.partidas || [];
+  return `<div><h1>Tus partidas</h1><span class="sub">${ps.length ? `Últimas ${ps.length}` : "Sin partidas en disco."} · ${esc(s.perfil)}</span></div>
+  <div class="card" style="gap:0">${ps.map(p => `<div class="fila" style="border-color:var(--line)">
+    <span>${ic(p.win ? "ok" : "mal", 20, p.win ? "Victoria" : "Derrota")} ${img("champion", p.campeon, "item", p.campeon)} <b>${esc(p.campeon)}</b> ${esc(p.kda)}</span>
+    <span class="sub">${p.clave ? `${p.win ? "Te subió" : "Te bajó"}: ${esc(((COMP[p.clave[0]] || [p.clave[0]])[0]).toLowerCase())} · ` : ""}score ${p.score} · ${esc(p.fecha)}</span></div>`).join("")}</div>`;
+}
+
 let elegida = null, ultFase = null;  // vista que eligió el usuario; se olvida al cambiar de fase
 function ver(x) { elegida = x; v = -1; tick(); }
 
@@ -285,9 +295,8 @@ async function tick() {
       v = s.v;
       if (s.fase !== ultFase) { ultFase = s.fase; elegida = null; }
       const vista = elegida || (["ChampSelect", "InProgress", "PreEndOfGame", "EndOfGame"].includes(s.fase) || s.fin || s.revision ? "companion" : "perfil");
-      document.getElementById("b-companion").toggleAttribute("aria-current", vista === "companion");
-      document.getElementById("b-perfil").toggleAttribute("aria-current", vista === "perfil");
-      const [m, a] = vista === "perfil" ? [perfil(s), ""] : s.fase === "ChampSelect" && s.draft ? champSelect(s) : [otraFase(s), ""];
+      for (const b of ["companion", "perfil", "partidas"]) document.getElementById("b-" + b).toggleAttribute("aria-current", vista === b);
+      const [m, a] = vista === "perfil" ? [perfil(s), ""] : vista === "partidas" ? [partidas(s), ""] : s.fase === "ChampSelect" && s.draft ? champSelect(s) : [otraFase(s), ""];
       const av = s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "";
       document.getElementById("main").innerHTML = av + m;
       const as = document.getElementById("aside"); as.innerHTML = a; as.hidden = !a;
@@ -297,6 +306,7 @@ async function tick() {
 document.getElementById("logo").innerHTML = ic("trofeo", 40, "Plan Challenger");
 document.getElementById("b-companion").innerHTML = ic("champselect", 26);
 document.getElementById("b-perfil").innerHTML = ic("perfil", 26);
+document.getElementById("b-partidas").innerHTML = ic("partidas", 26);
 tick(); setInterval(tick, 2000);
 </script>
 </body>
