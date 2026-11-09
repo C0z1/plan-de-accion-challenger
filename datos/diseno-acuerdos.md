@@ -18,6 +18,11 @@ Sesión en vivo con el usuario, 2026-11-09. Canvas: https://claude.ai/artifact/R
 13. El acento y los frascos se adaptan a la paleta (nada de naranja fijo).
 14. **Qué está fallando**: barras divergentes desde el centro, escala ±0.35.
 15. Logo de la barra lateral: **casa** (Inicio), no escudo.
+16. **Reglas, no números**: Perfil «Qué cambiar» (4 reglas), Selección «Tu plan» (3), En vivo «Tus reglas en esta partida» (estado en vivo), Home «Tu regla de hoy»; siempre con «Cumples N/20».
+17. **10 pantallas en Vino** (Home, Draft, Selección, En vivo, Perfil, Partidas, Campeones, Errores, Ajustes + referencia de minions) y barra lateral con todas.
+18. **Animaciones**: frascos (métricas), anillos (campeones), ítems con marco vivo + core sutil, «Hasta el nivel 6», medallones de nivel, minion vino diminuto (CS), tachas rojas (muertes). Todo quieto con reducir movimiento.
+19. **Ajustes sin key de Riot** (producción); paleta Vino oscuro / Vino claro (claro sin diseñar).
+20. Minion: dibujo vectorial propio basado en el Ranged Minion de Order (no el modelo de Riot).
 
 ## Sigue abierto
 - «All-in con su definitiva» y «Ese minuto juega bajo torre» no salen de ningún dato. Hay que quitarlas o escribirlas en `datos/matchups-notas.json`.

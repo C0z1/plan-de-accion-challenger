@@ -1,1 +1,99 @@
-{"v":3,"attachments":{},"boards":{"Perfil.dc.html":{"h":1024,"title":"Base LOL","w":1440,"x":0,"y":0},"ChampSelect.dc.html":{"h":1024,"title":"Base LOL · Selección de campeón","w":1440,"x":1520,"y":0},"Navy3.dc.html":{"h":1024,"title":"Paleta 3 · Navy + negro","w":1440,"x":0,"y":1144},"Inv1.dc.html":{"h":1024,"title":"Paleta 3A · Vino + negro","w":1440,"x":1520,"y":1144},"Inv5.dc.html":{"h":1024,"title":"Paleta 3E · Pizarra + negro","w":1440,"x":3040,"y":1144},"ChampSelect_Paleta3E.dc.html":{"h":1024,"title":"Base LOL · Selección · Paleta 3E","w":1440,"x":4560,"y":1144}},"createdOnFiles":{"at":"2026-11-08T21:50:00Z","v":1},"designSystems":[],"launch":{"view":"canvas"},"notes":{},"order":["Perfil.dc.html","ChampSelect.dc.html","Navy3.dc.html","Inv1.dc.html","Inv5.dc.html","ChampSelect_Paleta3E.dc.html"],"pages":[],"title":"Base LOL"}
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Ajustes_Vino.dc.html": {
+      "h": 1024,
+      "title": "Ajustes · Vino",
+      "w": 1440,
+      "x": 13680,
+      "y": -1144
+    },
+    "Campeones_Vino.dc.html": {
+      "h": 1024,
+      "title": "Campeones · Vino",
+      "w": 1440,
+      "x": 10640,
+      "y": -1144
+    },
+    "Draft_Vino.dc.html": {
+      "h": 1024,
+      "title": "Draft · Vino",
+      "w": 1440,
+      "x": 7600,
+      "y": -1144
+    },
+    "EnPartida_Vino.dc.html": {
+      "h": 1024,
+      "title": "En partida · Vino + negro",
+      "w": 1440,
+      "x": 6080,
+      "y": -1144
+    },
+    "Errores_Vino.dc.html": {
+      "h": 1024,
+      "title": "Tus errores · Vino",
+      "w": 1440,
+      "x": 15200,
+      "y": -1144
+    },
+    "Home_Vino.dc.html": {
+      "h": 1024,
+      "title": "Home · Vino",
+      "w": 1440,
+      "x": 12160,
+      "y": -1144
+    },
+    "Partidas_Vino.dc.html": {
+      "h": 1024,
+      "title": "Partidas · Vino",
+      "w": 1440,
+      "x": 9120,
+      "y": -1144
+    },
+    "Perfil_Vino.dc.html": {
+      "h": 1024,
+      "title": "Tu rendimiento · Vino + negro",
+      "w": 1440,
+      "x": 3040,
+      "y": -1144
+    },
+    "Seleccion_Vino.dc.html": {
+      "h": 1024,
+      "title": "Selección de campeón · Vino + negro",
+      "w": 1440,
+      "x": 4560,
+      "y": -1144
+    },
+    "Minions_Variantes.dc.html": {
+      "h": 1024,
+      "w": 1440,
+      "x": 6080,
+      "y": -2288,
+      "title": "Minion caster · variantes"
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-08T21:50:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {},
+  "order": [
+    "Perfil_Vino.dc.html",
+    "Seleccion_Vino.dc.html",
+    "EnPartida_Vino.dc.html",
+    "Draft_Vino.dc.html",
+    "Partidas_Vino.dc.html",
+    "Campeones_Vino.dc.html",
+    "Home_Vino.dc.html",
+    "Ajustes_Vino.dc.html",
+    "Errores_Vino.dc.html",
+    "Minions_Variantes.dc.html"
+  ],
+  "pages": [],
+  "title": "Base LOL"
+}

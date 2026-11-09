@@ -2014,3 +2014,36 @@ Las cifras entre [corchetes] en los artboards son de ejemplo. Lo que no tenga da
 - Ojo con los números: «morir sin objetivo» sale en 16/20 y «no ir a la pelea» en 16/20; son definiciones del Diseñador, quizá demasiado amplias.
 
 **Tareas para DeepSeek:** (a) ¿las 3 definiciones de error en `vistas.errores` miden lo que dicen? Revisa en 3 timelines reales que `killerTeamId` de ELITE_MONSTER_KILL y `teamId` de BUILDING_KILL signifiquen lo que asumo (BUILDING_KILL.teamId = dueño de la torre) y propone umbrales si 16/20 es demasiado; (b) prueba de `vistas.cumple` con None y con regla sin campo; (c) prueba de que `evento(("pos", "TOP"))` actualiza `ESTADO["pos"]` y que `("fase", "ChampSelect")` lo resetea; (d) revisa `do_POST` (Content-Length grande, cuerpo no JSON, Host ajeno).
+- **En partida, tarjetas CS y Muertes con el estilo de la interfaz** (el minion ilustrado desentonaba): **CS** = ícono de caster en trazo fino (como los de la barra lateral) con su cristal rosa que brilla, dentro de un anillo verde que se dibuja hasta 71/69. **Muertes** = un círculo por muerte con **tacha roja** que se traza al entrar, y el que queda vacío y punteado, latiendo; leyenda «UNA MÁS Y BAJAS A 43%». El artboard `Minions_Variantes` queda solo como referencia.
+- **CS al 10: vuelve el minion vino, diminuto** (62 px) dentro del anillo verde de 71/69, con su animación (flota, cristal que late).
+
+## 2026-11-09 · Diseñador · ENTREGA FINAL a Opus (builder): primera build en Vino
+
+Todo lo de hoy, consolidado. Fuente de verdad: `datos/diseno/canvas/project/` (bajado del canvas, versión 104) + canvas https://claude.ai/artifact/RPTLnjKqhMnuVGkFm7riX7. Acuerdos: `datos/diseno-acuerdos.md` (12–20).
+
+**Pantallas vigentes (10)** — todas 1440×1024, paleta Vino, barra lateral con las 9 ventanas:
+| Archivo | Ventana | Lo esencial |
+|---|---|---|
+| `Home_Vino` | Inicio | Estado del cliente, partidas de hoy + tilt, tu regla del día, rango con frasco a la meta 60%, atajos |
+| `Draft_Vino` | Draft (bans) | Banea (peor récord en el rol) + tu pool con **anillos** animados + rivales frecuentes |
+| `Seleccion_Vino` | Selección | 3 tarjetas (récord vs rival, tu WR, **Hasta el nivel 6** con luz que viaja), «Tu plan con <pick>» = 3 reglas con «Cumples N/20», build con **core** sutil e ítems animados, estimado + «Si te toca contra…» |
+| `EnPartida_Vino` | En vivo | Nivel = medallones con anillo de XP; CS = **minion vino diminuto** en anillo 71/69; Muertes = **círculos con tacha roja**; «Tus reglas en esta partida» con estado en vivo; panel: KDA, build, **Tu rival**, **Objetivos** |
+| `Perfil_Vino` | Tu rendimiento | Score / Win rate / Errores (botón «Ver cuáles»), «Qué cambiar» = 4 reglas, «Tus campeones ahora» (forma + matchup) |
+| `Partidas_Vino` | Partidas | Historial con ✓/✕ por regla, **MVP / peor del equipo**, error con minuto; partida seleccionada con MVP de tu equipo, tú en tu equipo y 3 cosas a mejorar |
+| `Campeones_Vino` | Campeones | Pool con anillos, forma, mejor/peor vs; panel con build (core), su regla, counters |
+| `Errores_Vino` | Errores | 3 errores repetidos, «cómo verlo» y botones a cada momento del replay; «Cómo los cuento» |
+| `Ajustes_Vino` | Ajustes | Riot ID, recargar partidas, avisos on/off, paleta Vino oscuro / Vino claro, reducir movimiento. **Sin key de Riot** (va a producción) |
+| `Minions_Variantes` | referencia | El caster vectorial en 4 colores; solo referencia (el vino es el que va) |
+`Tubos_Kit` sigue siendo la especificación del frasco. **No usar** los viejos `Inv1`, `Inv5`, `Navy3`, `Perfil`, `ChampSelect*`.
+
+**Componentes a construir una vez y reutilizar:** frasco (vertical/horizontal), anillo de retrato, ítem con marco animado (+ core), tarjeta con elevación + encabezado con luz, chip, fila de regla «Cumples N/20». Todas las animaciones respetan `prefers-reduced-motion`.
+
+**Datos que faltan (lo nuevo que piden las pantallas):**
+1. Por regla: cuántas de las últimas 20 la cumplen (Perfil, Selección, Home).
+2. Los 3 errores desde el timeline con su minuto: muerte 14–25 sin objetivo en el minuto siguiente; pelea en el min 6 con nivel abajo; pelea 14+ con 3+ muertes sin tu KP.
+3. Puesto en tu equipo por score (MVP / peor) y el MVP de tu equipo por partida.
+4. «Tus campeones ahora»: forma (últimas 5) y mejor/peor vs.
+5. En vivo: nivel/KDA/CS del rival e ítems, timers de dragón/heraldo/barón, kills y torres (Live Client Data API).
+6. Estado en vivo de cada regla (ahora / cumplida / fallada + minuto).
+
+**Imágenes:** los artboards usan `/_blob/…` del canvas; en la app van los íconos de Data Dragon (campeones, ítems, runas). Las cifras entre [corchetes] son de ejemplo.

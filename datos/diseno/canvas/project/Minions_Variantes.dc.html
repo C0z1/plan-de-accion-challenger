@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Minions · variantes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+:root{--bg:#24111A;--text:#F2F4F7;--muted:#D2BAC4;--muted2:#AE95A0}
+@keyframes flotaM{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes sombra{0%,100%{transform:scaleX(1);opacity:.45}50%{transform:scaleX(.86);opacity:.3}}
+@keyframes respira{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.018)}}
+@keyframes baston{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(2deg)}}
+@keyframes orbe{0%,100%{opacity:.65;transform:scale(.9)}50%{opacity:1;transform:scale(1.18)}}
+@keyframes cristal{0%,100%{filter:drop-shadow(0 0 2px rgba(255,255,255,.5))}50%{filter:drop-shadow(0 0 8px rgba(120,230,255,.95))}}
+@keyframes onda{0%{transform:scale(.4);opacity:0}15%{opacity:.9}100%{transform:scale(2.6);opacity:0}}
+@keyframes part{0%{transform:translate(0,0);opacity:0}20%{opacity:1}100%{transform:translate(var(--x),-22px);opacity:0}}
+@keyframes parpadeo{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+.minion{animation:flotaM 3.2s ease-in-out infinite}
+.sombra{transform-box:fill-box;transform-origin:center;animation:sombra 3.2s ease-in-out infinite}
+.respira{transform-box:fill-box;transform-origin:50% 100%;animation:respira 3.2s ease-in-out infinite}
+.baston{transform-box:view-box;transform-origin:33px 66px;animation:baston 3.2s ease-in-out infinite}
+.orbe{transform-box:fill-box;transform-origin:center;animation:orbe 2.2s ease-in-out infinite}
+.cristal{animation:cristal 2.2s ease-in-out infinite}
+.onda{transform-box:fill-box;transform-origin:center;animation:onda 3s ease-out infinite}
+.part{animation:part 2.4s ease-out infinite}.p1{--x:-4px}.p2{--x:3px;animation-delay:.6s}.p3{--x:-2px;animation-delay:1.2s}.p4{--x:5px;animation-delay:1.8s}
+.ojos{transform-box:fill-box;transform-origin:center;animation:parpadeo 4.5s infinite}
+@media (prefers-reduced-motion: reduce){.minion,.sombra,.respira,.baston,.orbe,.cristal,.onda,.part,.ojos{animation:none}.onda,.part{display:none}}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1024px; box-sizing: border-box; padding: 44px 50px; border-radius: 40px; background: radial-gradient(120% 80% at 20% 0%, #3A1A2A, #1E0E16 70%); font-family: Mulish, 'Segoe UI', sans-serif; color: var(--text); display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 6px"><h1 style="margin: 0; font-size: 28px">Minion caster · basado en el modelo (Ranged Minion · Order)</h1><span style="font-size: 15px; color: var(--muted)">Dibujo vectorial propio a partir de la referencia: cristal facetado, capucha alta con costuras, máscara de piedra, placa hexagonal, escudo con runa y túnica rasgada.</span></div>
+<div style="flex-grow: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px">
+<div style="box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 12px 32px rgba(0,0,0,.35); padding: 22px; display: flex; flex-direction: column; align-items: center; gap: 10px">
+<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center"><svg role="img" aria-label="Minion caster" width="300" height="300" viewBox="0 0 120 120" style="overflow: visible">
+<defs>
+<linearGradient id="Tr1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3E9BE0"></stop><stop offset="1" stop-color="#1C4F9A"></stop></linearGradient>
+<linearGradient id="Pr1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8EEF5"></stop><stop offset=".55" stop-color="#AFC0D2"></stop><stop offset="1" stop-color="#6F8296"></stop></linearGradient>
+<linearGradient id="Cr1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C98E5A"></stop><stop offset="1" stop-color="#8A5A30"></stop></linearGradient>
+<linearGradient id="Rr1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E6FDFF"></stop><stop offset=".45" stop-color="#3FE0FF"></stop><stop offset="1" stop-color="#0A8FD1"></stop></linearGradient>
+<linearGradient id="Lr1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F28DB0" stop-opacity="0"></stop><stop offset=".65" stop-color="#F28DB0" stop-opacity="0"></stop><stop offset="1" stop-color="#F8C3D6" stop-opacity=".9"></stop></linearGradient>
+<radialGradient id="Ar1"><stop offset="0" stop-color="#3FE0FF" stop-opacity=".9"></stop><stop offset=".5" stop-color="#3FE0FF" stop-opacity=".3"></stop><stop offset="1" stop-color="#3FE0FF" stop-opacity="0"></stop></radialGradient>
+<radialGradient id="Or1" cx=".5" cy=".1" r=".7"><stop offset="0" stop-color="#000" stop-opacity=".6"></stop><stop offset="1" stop-color="#000" stop-opacity="0"></stop></radialGradient>
+</defs>
+<ellipse class="sombra" cx="62" cy="116" rx="38" ry="4.5" fill="rgba(0,0,0,.45)"></ellipse>
+<g class="minion">
+<g class="respira">
+<!-- túnica rasgada con borde de cuero -->
+<path d="M30 112 L36 82 Q44 66 62 64 Q80 64 90 82 L96 112 L87 106 L80 114 L71 106 L62 114 L53 106 L45 114 L38 106 Z" fill="url(#Tr1)" stroke="url(#Lr1)" stroke-width="1.6"></path>
+<path d="M38 106 L45 114 L53 106 L62 114 L71 106 L80 114 L87 106" stroke="url(#Cr1)" stroke-width="3" fill="none" stroke-linejoin="round"></path>
+<path d="M48 104 Q48 88 54 76 M76 104 Q78 90 72 76" stroke="#12336A" stroke-opacity=".6" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+<!-- capucha alta -->
+<path d="M42 66 Q40 34 58 20 Q64 15 70 22 Q86 38 84 66 Z" fill="url(#Tr1)" stroke="url(#Lr1)" stroke-width="1.6"></path>
+<path d="M58 20 Q64 15 70 22 Q66 26 62 24 Z" fill="#3E9BE0" opacity=".6"></path>
+<path d="M50 34 l4 4 M54 34 l-4 4 M70 30 l4 4 M74 30 l-4 4" stroke="#12336A" stroke-width="1.6" stroke-linecap="round"></path>
+<ellipse cx="62" cy="46" rx="16" ry="7" fill="url(#Or1)"></ellipse>
+<!-- correa de cuero con runas -->
+<path d="M32 66 Q62 56 92 66 L94 76 Q62 66 30 76 Z" fill="url(#Cr1)" stroke="#5E3A1C" stroke-width=".8"></path>
+<path d="M36 70 q3 -3 5 0 M84 70 q-3 -3 -5 0" stroke="#5E3A1C" stroke-width="1.4" fill="none"></path>
+<path d="M33 68 Q62 59 91 68" stroke="#fff" stroke-opacity=".25" stroke-width="1" fill="none"></path>
+<!-- máscara de piedra -->
+<path d="M47 44 L77 44 L79 60 L63 76 L45 60 Z" fill="url(#Pr1)" stroke="#6F8296" stroke-width=".8"></path>
+<path d="M47 44 L77 44 L76 48 L48 48 Z" fill="#fff" opacity=".3"></path>
+<path d="M63 76 L79 60 L77 44" stroke="#000" stroke-opacity=".15" stroke-width="3" fill="none"></path>
+<g class="ojos"><path d="M50 53 L60 57 L51 59 Z M76 53 L66 57 L75 59 Z" fill="#0B1630"></path><path d="M52 55 l5 2 M74 55 l-5 2" stroke="#3FE0FF" stroke-width="1" opacity=".9"></path></g>
+<path d="M62 45 L60 50 L63 53" stroke="#6F8296" stroke-width=".9" fill="none"></path>
+<!-- placa hexagonal del pecho -->
+<path d="M62 74 L75 81 L75 95 L62 102 L49 95 L49 81 Z" fill="url(#Pr1)" stroke="#6F8296" stroke-width="1"></path>
+<path d="M62 74 L75 81 L62 88 L49 81 Z" fill="#fff" opacity=".22"></path>
+<path d="M56 83 h7 q5 0 5 5 q0 5 -5 5 h-7 M59 86 h3 q2 0 2 2 q0 2 -2 2 h-3" stroke="#6F8296" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+<!-- escudo de piedra -->
+<path d="M86 70 L106 74 L104 100 L90 104 L82 86 Z" fill="url(#Pr1)" stroke="#6F8296" stroke-width="1"></path>
+<path d="M86 70 L106 74 L105 79 L86 76 Z" fill="#fff" opacity=".25"></path>
+<path d="M106 74 L104 100 L90 104" stroke="url(#Lr1)" stroke-width="1.8" fill="none"></path>
+<path d="M90 80 l4 8 l4 -6 l4 8 M92 94 q5 -3 9 0" stroke="#6F8296" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<circle cx="104" cy="88" r="4.5" fill="#3A5CC8"></circle>
+</g>
+<!-- bastón con cristal -->
+<g class="baston">
+<path d="M28 44 L35 112" stroke="url(#Cr1)" stroke-width="6" stroke-linecap="round"></path>
+<path d="M29 54 l5 -1 M30 62 l5 -1 M31 70 l5 -1" stroke="#5E3A1C" stroke-width="1.3"></path>
+<path d="M20 36 L36 34 L38 44 L22 46 Z" fill="url(#Pr1)" stroke="#6F8296" stroke-width=".8"></path>
+<path d="M20 36 L24 30 L28 36 M28 35 L32 29 L36 34" fill="url(#Pr1)" stroke="#6F8296" stroke-width=".8"></path>
+<circle cx="33" cy="66" r="5" fill="#3A5CC8"></circle>
+<circle class="onda" cx="28" cy="18" r="11" fill="none" stroke="#E6FDFF" stroke-width="1.2"></circle>
+<circle class="orbe" cx="28" cy="18" r="22" fill="url(#Ar1)"></circle>
+<g class="cristal">
+<path d="M28 -6 L40 4 L38 26 L28 34 L18 26 L16 4 Z" fill="url(#Rr1)"></path>
+<path d="M28 -6 L40 4 L28 10 L16 4 Z" fill="#E6FDFF" opacity=".9"></path>
+<path d="M16 4 L28 10 L28 34 L18 26 Z" fill="#0A8FD1" opacity=".35"></path>
+<path d="M28 10 L40 4 L38 26 L28 34 Z" fill="#fff" opacity=".12"></path>
+<path d="M14 14 L18 10 L20 22 L16 26 Z" fill="url(#Rr1)" opacity=".9"></path>
+<path d="M40 12 L45 16 L42 26 L38 24 Z" fill="url(#Rr1)" opacity=".85"></path>
+<path d="M21 3 L25 -2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".95"></path>
+</g>
+<g class="parts"><circle class="part p1" cx="22" cy="12" r="1.4" fill="#E6FDFF"></circle><circle class="part p2" cx="34" cy="6" r="1.1" fill="#fff"></circle><circle class="part p3" cx="28" cy="22" r="1.2" fill="#E6FDFF"></circle><circle class="part p4" cx="38" cy="16" r="1" fill="#fff"></circle></g>
+</g>
+</g></svg></div>
+<b style="font-size: 18px; align-self: flex-start">Azul (como el modelo)</b><span style="font-size: 13px; color: var(--muted); align-self: flex-start">Colores del Ranged Minion de Order.</span></div>
+<div style="box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 12px 32px rgba(0,0,0,.35); padding: 22px; display: flex; flex-direction: column; align-items: center; gap: 10px">
+<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center"><svg role="img" aria-label="Minion caster" width="300" height="300" viewBox="0 0 120 120" style="overflow: visible">
+<defs>
+<linearGradient id="Tr2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2F6CC0"></stop><stop offset="1" stop-color="#0F2A5C"></stop></linearGradient>
+<linearGradient id="Pr2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8EEF5"></stop><stop offset=".55" stop-color="#AFC0D2"></stop><stop offset="1" stop-color="#6F8296"></stop></linearGradient>
+<linearGradient id="Cr2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C98E5A"></stop><stop offset="1" stop-color="#8A5A30"></stop></linearGradient>
+<linearGradient id="Rr2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E6FDFF"></stop><stop offset=".45" stop-color="#3FE0FF"></stop><stop offset="1" stop-color="#0A8FD1"></stop></linearGradient>
+<linearGradient id="Lr2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F28DB0" stop-opacity="0"></stop><stop offset=".65" stop-color="#F28DB0" stop-opacity="0"></stop><stop offset="1" stop-color="#F8C3D6" stop-opacity=".9"></stop></linearGradient>
+<radialGradient id="Ar2"><stop offset="0" stop-color="#3FE0FF" stop-opacity=".9"></stop><stop offset=".5" stop-color="#3FE0FF" stop-opacity=".3"></stop><stop offset="1" stop-color="#3FE0FF" stop-opacity="0"></stop></radialGradient>
+<radialGradient id="Or2" cx=".5" cy=".1" r=".7"><stop offset="0" stop-color="#000" stop-opacity=".6"></stop><stop offset="1" stop-color="#000" stop-opacity="0"></stop></radialGradient>
+</defs>
+<ellipse class="sombra" cx="62" cy="116" rx="38" ry="4.5" fill="rgba(0,0,0,.45)"></ellipse>
+<g class="minion">
+<g class="respira">
+<!-- túnica rasgada con borde de cuero -->
+<path d="M30 112 L36 82 Q44 66 62 64 Q80 64 90 82 L96 112 L87 106 L80 114 L71 106 L62 114 L53 106 L45 114 L38 106 Z" fill="url(#Tr2)" stroke="url(#Lr2)" stroke-width="1.6"></path>
+<path d="M38 106 L45 114 L53 106 L62 114 L71 106 L80 114 L87 106" stroke="url(#Cr2)" stroke-width="3" fill="none" stroke-linejoin="round"></path>
+<path d="M48 104 Q48 88 54 76 M76 104 Q78 90 72 76" stroke="#0A1C40" stroke-opacity=".6" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+<!-- capucha alta -->
+<path d="M42 66 Q40 34 58 20 Q64 15 70 22 Q86 38 84 66 Z" fill="url(#Tr2)" stroke="url(#Lr2)" stroke-width="1.6"></path>
+<path d="M58 20 Q64 15 70 22 Q66 26 62 24 Z" fill="#2F6CC0" opacity=".6"></path>
+<path d="M50 34 l4 4 M54 34 l-4 4 M70 30 l4 4 M74 30 l-4 4" stroke="#0A1C40" stroke-width="1.6" stroke-linecap="round"></path>
+<ellipse cx="62" cy="46" rx="16" ry="7" fill="url(#Or2)"></ellipse>
+<!-- correa de cuero con runas -->
+<path d="M32 66 Q62 56 92 66 L94 76 Q62 66 30 76 Z" fill="url(#Cr2)" stroke="#5E3A1C" stroke-width=".8"></path>
+<path d="M36 70 q3 -3 5 0 M84 70 q-3 -3 -5 0" stroke="#5E3A1C" stroke-width="1.4" fill="none"></path>
+<path d="M33 68 Q62 59 91 68" stroke="#fff" stroke-opacity=".25" stroke-width="1" fill="none"></path>
+<!-- máscara de piedra -->
+<path d="M47 44 L77 44 L79 60 L63 76 L45 60 Z" fill="url(#Pr2)" stroke="#6F8296" stroke-width=".8"></path>
+<path d="M47 44 L77 44 L76 48 L48 48 Z" fill="#fff" opacity=".3"></path>
+<path d="M63 76 L79 60 L77 44" stroke="#000" stroke-opacity=".15" stroke-width="3" fill="none"></path>
+<g class="ojos"><path d="M50 53 L60 57 L51 59 Z M76 53 L66 57 L75 59 Z" fill="#0B1630"></path><path d="M52 55 l5 2 M74 55 l-5 2" stroke="#3FE0FF" stroke-width="1" opacity=".9"></path></g>
+<path d="M62 45 L60 50 L63 53" stroke="#6F8296" stroke-width=".9" fill="none"></path>
+<!-- placa hexagonal del pecho -->
+<path d="M62 74 L75 81 L75 95 L62 102 L49 95 L49 81 Z" fill="url(#Pr2)" stroke="#6F8296" stroke-width="1"></path>
+<path d="M62 74 L75 81 L62 88 L49 81 Z" fill="#fff" opacity=".22"></path>
+<path d="M56 83 h7 q5 0 5 5 q0 5 -5 5 h-7 M59 86 h3 q2 0 2 2 q0 2 -2 2 h-3" stroke="#6F8296" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+<!-- escudo de piedra -->
+<path d="M86 70 L106 74 L104 100 L90 104 L82 86 Z" fill="url(#Pr2)" stroke="#6F8296" stroke-width="1"></path>
+<path d="M86 70 L106 74 L105 79 L86 76 Z" fill="#fff" opacity=".25"></path>
+<path d="M106 74 L104 100 L90 104" stroke="url(#Lr2)" stroke-width="1.8" fill="none"></path>
+<path d="M90 80 l4 8 l4 -6 l4 8 M92 94 q5 -3 9 0" stroke="#6F8296" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<circle cx="104" cy="88" r="4.5" fill="#3A5CC8"></circle>
+</g>
+<!-- bastón con cristal -->
+<g class="baston">
+<path d="M28 44 L35 112" stroke="url(#Cr2)" stroke-width="6" stroke-linecap="round"></path>
+<path d="M29 54 l5 -1 M30 62 l5 -1 M31 70 l5 -1" stroke="#5E3A1C" stroke-width="1.3"></path>
+<path d="M20 36 L36 34 L38 44 L22 46 Z" fill="url(#Pr2)" stroke="#6F8296" stroke-width=".8"></path>
+<path d="M20 36 L24 30 L28 36 M28 35 L32 29 L36 34" fill="url(#Pr2)" stroke="#6F8296" stroke-width=".8"></path>
+<circle cx="33" cy="66" r="5" fill="#3A5CC8"></circle>
+<circle class="onda" cx="28" cy="18" r="11" fill="none" stroke="#E6FDFF" stroke-width="1.2"></circle>
+<circle class="orbe" cx="28" cy="18" r="22" fill="url(#Ar2)"></circle>
+<g class="cristal">
+<path d="M28 -6 L40 4 L38 26 L28 34 L18 26 L16 4 Z" fill="url(#Rr2)"></path>
+<path d="M28 -6 L40 4 L28 10 L16 4 Z" fill="#E6FDFF" opacity=".9"></path>
+<path d="M16 4 L28 10 L28 34 L18 26 Z" fill="#0A8FD1" opacity=".35"></path>
+<path d="M28 10 L40 4 L38 26 L28 34 Z" fill="#fff" opacity=".12"></path>
+<path d="M14 14 L18 10 L20 22 L16 26 Z" fill="url(#Rr2)" opacity=".9"></path>
+<path d="M40 12 L45 16 L42 26 L38 24 Z" fill="url(#Rr2)" opacity=".85"></path>
+<path d="M21 3 L25 -2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".95"></path>
+</g>
+<g class="parts"><circle class="part p1" cx="22" cy="12" r="1.4" fill="#E6FDFF"></circle><circle class="part p2" cx="34" cy="6" r="1.1" fill="#fff"></circle><circle class="part p3" cx="28" cy="22" r="1.2" fill="#E6FDFF"></circle><circle class="part p4" cx="38" cy="16" r="1" fill="#fff"></circle></g>
+</g>
+</g></svg></div>
+<b style="font-size: 18px; align-self: flex-start">Azul noche</b><span style="font-size: 13px; color: var(--muted); align-self: flex-start">Más profundo; resalta el cristal.</span></div>
+<div style="box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 12px 32px rgba(0,0,0,.35); padding: 22px; display: flex; flex-direction: column; align-items: center; gap: 10px">
+<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center"><svg role="img" aria-label="Minion caster" width="300" height="300" viewBox="0 0 120 120" style="overflow: visible">
+<defs>
+<linearGradient id="Tr3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C25A85"></stop><stop offset="1" stop-color="#5E2440"></stop></linearGradient>
+<linearGradient id="Pr3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8EEF5"></stop><stop offset=".55" stop-color="#AFC0D2"></stop><stop offset="1" stop-color="#6F8296"></stop></linearGradient>
+<linearGradient id="Cr3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C98E5A"></stop><stop offset="1" stop-color="#8A5A30"></stop></linearGradient>
+<linearGradient id="Rr3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE6F0"></stop><stop offset=".45" stop-color="#F28DB0"></stop><stop offset="1" stop-color="#A33A63"></stop></linearGradient>
+<linearGradient id="Lr3" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F28DB0" stop-opacity="0"></stop><stop offset=".65" stop-color="#F28DB0" stop-opacity="0"></stop><stop offset="1" stop-color="#F8C3D6" stop-opacity=".9"></stop></linearGradient>
+<radialGradient id="Ar3"><stop offset="0" stop-color="#F28DB0" stop-opacity=".9"></stop><stop offset=".5" stop-color="#F28DB0" stop-opacity=".3"></stop><stop offset="1" stop-color="#F28DB0" stop-opacity="0"></stop></radialGradient>
+<radialGradient id="Or3" cx=".5" cy=".1" r=".7"><stop offset="0" stop-color="#000" stop-opacity=".6"></stop><stop offset="1" stop-color="#000" stop-opacity="0"></stop></radialGradient>
+</defs>
+<ellipse class="sombra" cx="62" cy="116" rx="38" ry="4.5" fill="rgba(0,0,0,.45)"></ellipse>
+<g class="minion">
+<g class="respira">
+<!-- túnica rasgada con borde de cuero -->
+<path d="M30 112 L36 82 Q44 66 62 64 Q80 64 90 82 L96 112 L87 106 L80 114 L71 106 L62 114 L53 106 L45 114 L38 106 Z" fill="url(#Tr3)" stroke="url(#Lr3)" stroke-width="1.6"></path>
+<path d="M38 106 L45 114 L53 106 L62 114 L71 106 L80 114 L87 106" stroke="url(#Cr3)" stroke-width="3" fill="none" stroke-linejoin="round"></path>
+<path d="M48 104 Q48 88 54 76 M76 104 Q78 90 72 76" stroke="#3A1426" stroke-opacity=".6" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+<!-- capucha alta -->
+<path d="M42 66 Q40 34 58 20 Q64 15 70 22 Q86 38 84 66 Z" fill="url(#Tr3)" stroke="url(#Lr3)" stroke-width="1.6"></path>
+<path d="M58 20 Q64 15 70 22 Q66 26 62 24 Z" fill="#C25A85" opacity=".6"></path>
+<path d="M50 34 l4 4 M54 34 l-4 4 M70 30 l4 4 M74 30 l-4 4" stroke="#3A1426" stroke-width="1.6" stroke-linecap="round"></path>
+<ellipse cx="62" cy="46" rx="16" ry="7" fill="url(#Or3)"></ellipse>
+<!-- correa de cuero con runas -->
+<path d="M32 66 Q62 56 92 66 L94 76 Q62 66 30 76 Z" fill="url(#Cr3)" stroke="#5E3A1C" stroke-width=".8"></path>
+<path d="M36 70 q3 -3 5 0 M84 70 q-3 -3 -5 0" stroke="#5E3A1C" stroke-width="1.4" fill="none"></path>
+<path d="M33 68 Q62 59 91 68" stroke="#fff" stroke-opacity=".25" stroke-width="1" fill="none"></path>
+<!-- máscara de piedra -->
+<path d="M47 44 L77 44 L79 60 L63 76 L45 60 Z" fill="url(#Pr3)" stroke="#6F8296" stroke-width=".8"></path>
+<path d="M47 44 L77 44 L76 48 L48 48 Z" fill="#fff" opacity=".3"></path>
+<path d="M63 76 L79 60 L77 44" stroke="#000" stroke-opacity=".15" stroke-width="3" fill="none"></path>
+<g class="ojos"><path d="M50 53 L60 57 L51 59 Z M76 53 L66 57 L75 59 Z" fill="#0B1630"></path><path d="M52 55 l5 2 M74 55 l-5 2" stroke="#F28DB0" stroke-width="1" opacity=".9"></path></g>
+<path d="M62 45 L60 50 L63 53" stroke="#6F8296" stroke-width=".9" fill="none"></path>
+<!-- placa hexagonal del pecho -->
+<path d="M62 74 L75 81 L75 95 L62 102 L49 95 L49 81 Z" fill="url(#Pr3)" stroke="#6F8296" stroke-width="1"></path>
+<path d="M62 74 L75 81 L62 88 L49 81 Z" fill="#fff" opacity=".22"></path>
+<path d="M56 83 h7 q5 0 5 5 q0 5 -5 5 h-7 M59 86 h3 q2 0 2 2 q0 2 -2 2 h-3" stroke="#6F8296" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+<!-- escudo de piedra -->
+<path d="M86 70 L106 74 L104 100 L90 104 L82 86 Z" fill="url(#Pr3)" stroke="#6F8296" stroke-width="1"></path>
+<path d="M86 70 L106 74 L105 79 L86 76 Z" fill="#fff" opacity=".25"></path>
+<path d="M106 74 L104 100 L90 104" stroke="url(#Lr3)" stroke-width="1.8" fill="none"></path>
+<path d="M90 80 l4 8 l4 -6 l4 8 M92 94 q5 -3 9 0" stroke="#6F8296" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<circle cx="104" cy="88" r="4.5" fill="#7A2E52"></circle>
+</g>
+<!-- bastón con cristal -->
+<g class="baston">
+<path d="M28 44 L35 112" stroke="url(#Cr3)" stroke-width="6" stroke-linecap="round"></path>
+<path d="M29 54 l5 -1 M30 62 l5 -1 M31 70 l5 -1" stroke="#5E3A1C" stroke-width="1.3"></path>
+<path d="M20 36 L36 34 L38 44 L22 46 Z" fill="url(#Pr3)" stroke="#6F8296" stroke-width=".8"></path>
+<path d="M20 36 L24 30 L28 36 M28 35 L32 29 L36 34" fill="url(#Pr3)" stroke="#6F8296" stroke-width=".8"></path>
+<circle cx="33" cy="66" r="5" fill="#7A2E52"></circle>
+<circle class="onda" cx="28" cy="18" r="11" fill="none" stroke="#FFE6F0" stroke-width="1.2"></circle>
+<circle class="orbe" cx="28" cy="18" r="22" fill="url(#Ar3)"></circle>
+<g class="cristal">
+<path d="M28 -6 L40 4 L38 26 L28 34 L18 26 L16 4 Z" fill="url(#Rr3)"></path>
+<path d="M28 -6 L40 4 L28 10 L16 4 Z" fill="#FFE6F0" opacity=".9"></path>
+<path d="M16 4 L28 10 L28 34 L18 26 Z" fill="#A33A63" opacity=".35"></path>
+<path d="M28 10 L40 4 L38 26 L28 34 Z" fill="#fff" opacity=".12"></path>
+<path d="M14 14 L18 10 L20 22 L16 26 Z" fill="url(#Rr3)" opacity=".9"></path>
+<path d="M40 12 L45 16 L42 26 L38 24 Z" fill="url(#Rr3)" opacity=".85"></path>
+<path d="M21 3 L25 -2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".95"></path>
+</g>
+<g class="parts"><circle class="part p1" cx="22" cy="12" r="1.4" fill="#FFE6F0"></circle><circle class="part p2" cx="34" cy="6" r="1.1" fill="#fff"></circle><circle class="part p3" cx="28" cy="22" r="1.2" fill="#FFE6F0"></circle><circle class="part p4" cx="38" cy="16" r="1" fill="#fff"></circle></g>
+</g>
+</g></svg></div>
+<b style="font-size: 18px; align-self: flex-start">Vino</b><span style="font-size: 13px; color: var(--muted); align-self: flex-start">Túnica en la paleta de la app, cristal rosa.</span></div>
+<div style="box-sizing: border-box; background: linear-gradient(180deg, #44203A, #36192A); border-radius: 16px; box-shadow: 0 1px 0 rgba(255,255,255,.08) inset, 0 12px 32px rgba(0,0,0,.35); padding: 22px; display: flex; flex-direction: column; align-items: center; gap: 10px">
+<div style="flex-grow: 1; display: flex; align-items: center; justify-content: center"><svg role="img" aria-label="Minion caster" width="300" height="300" viewBox="0 0 120 120" style="overflow: visible">
+<defs>
+<linearGradient id="Tr4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A4250"></stop><stop offset="1" stop-color="#151820"></stop></linearGradient>
+<linearGradient id="Pr4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F0DFB2"></stop><stop offset=".55" stop-color="#C2A35E"></stop><stop offset="1" stop-color="#7A6230"></stop></linearGradient>
+<linearGradient id="Cr4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C98E5A"></stop><stop offset="1" stop-color="#8A5A30"></stop></linearGradient>
+<linearGradient id="Rr4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E6FFFB"></stop><stop offset=".45" stop-color="#2FE0CF"></stop><stop offset="1" stop-color="#0F8E86"></stop></linearGradient>
+<linearGradient id="Lr4" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F28DB0" stop-opacity="0"></stop><stop offset=".65" stop-color="#F28DB0" stop-opacity="0"></stop><stop offset="1" stop-color="#F8C3D6" stop-opacity=".9"></stop></linearGradient>
+<radialGradient id="Ar4"><stop offset="0" stop-color="#2FE0CF" stop-opacity=".9"></stop><stop offset=".5" stop-color="#2FE0CF" stop-opacity=".3"></stop><stop offset="1" stop-color="#2FE0CF" stop-opacity="0"></stop></radialGradient>
+<radialGradient id="Or4" cx=".5" cy=".1" r=".7"><stop offset="0" stop-color="#000" stop-opacity=".6"></stop><stop offset="1" stop-color="#000" stop-opacity="0"></stop></radialGradient>
+</defs>
+<ellipse class="sombra" cx="62" cy="116" rx="38" ry="4.5" fill="rgba(0,0,0,.45)"></ellipse>
+<g class="minion">
+<g class="respira">
+<!-- túnica rasgada con borde de cuero -->
+<path d="M30 112 L36 82 Q44 66 62 64 Q80 64 90 82 L96 112 L87 106 L80 114 L71 106 L62 114 L53 106 L45 114 L38 106 Z" fill="url(#Tr4)" stroke="url(#Lr4)" stroke-width="1.6"></path>
+<path d="M38 106 L45 114 L53 106 L62 114 L71 106 L80 114 L87 106" stroke="url(#Cr4)" stroke-width="3" fill="none" stroke-linejoin="round"></path>
+<path d="M48 104 Q48 88 54 76 M76 104 Q78 90 72 76" stroke="#0B0D12" stroke-opacity=".6" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+<!-- capucha alta -->
+<path d="M42 66 Q40 34 58 20 Q64 15 70 22 Q86 38 84 66 Z" fill="url(#Tr4)" stroke="url(#Lr4)" stroke-width="1.6"></path>
+<path d="M58 20 Q64 15 70 22 Q66 26 62 24 Z" fill="#3A4250" opacity=".6"></path>
+<path d="M50 34 l4 4 M54 34 l-4 4 M70 30 l4 4 M74 30 l-4 4" stroke="#0B0D12" stroke-width="1.6" stroke-linecap="round"></path>
+<ellipse cx="62" cy="46" rx="16" ry="7" fill="url(#Or4)"></ellipse>
+<!-- correa de cuero con runas -->
+<path d="M32 66 Q62 56 92 66 L94 76 Q62 66 30 76 Z" fill="url(#Cr4)" stroke="#5E3A1C" stroke-width=".8"></path>
+<path d="M36 70 q3 -3 5 0 M84 70 q-3 -3 -5 0" stroke="#5E3A1C" stroke-width="1.4" fill="none"></path>
+<path d="M33 68 Q62 59 91 68" stroke="#fff" stroke-opacity=".25" stroke-width="1" fill="none"></path>
+<!-- máscara de piedra -->
+<path d="M47 44 L77 44 L79 60 L63 76 L45 60 Z" fill="url(#Pr4)" stroke="#7A6230" stroke-width=".8"></path>
+<path d="M47 44 L77 44 L76 48 L48 48 Z" fill="#fff" opacity=".3"></path>
+<path d="M63 76 L79 60 L77 44" stroke="#000" stroke-opacity=".15" stroke-width="3" fill="none"></path>
+<g class="ojos"><path d="M50 53 L60 57 L51 59 Z M76 53 L66 57 L75 59 Z" fill="#0B1630"></path><path d="M52 55 l5 2 M74 55 l-5 2" stroke="#2FE0CF" stroke-width="1" opacity=".9"></path></g>
+<path d="M62 45 L60 50 L63 53" stroke="#7A6230" stroke-width=".9" fill="none"></path>
+<!-- placa hexagonal del pecho -->
+<path d="M62 74 L75 81 L75 95 L62 102 L49 95 L49 81 Z" fill="url(#Pr4)" stroke="#7A6230" stroke-width="1"></path>
+<path d="M62 74 L75 81 L62 88 L49 81 Z" fill="#fff" opacity=".22"></path>
+<path d="M56 83 h7 q5 0 5 5 q0 5 -5 5 h-7 M59 86 h3 q2 0 2 2 q0 2 -2 2 h-3" stroke="#7A6230" stroke-width="1.6" fill="none" stroke-linecap="round"></path>
+<!-- escudo de piedra -->
+<path d="M86 70 L106 74 L104 100 L90 104 L82 86 Z" fill="url(#Pr4)" stroke="#7A6230" stroke-width="1"></path>
+<path d="M86 70 L106 74 L105 79 L86 76 Z" fill="#fff" opacity=".25"></path>
+<path d="M106 74 L104 100 L90 104" stroke="url(#Lr4)" stroke-width="1.8" fill="none"></path>
+<path d="M90 80 l4 8 l4 -6 l4 8 M92 94 q5 -3 9 0" stroke="#7A6230" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path>
+<circle cx="104" cy="88" r="4.5" fill="#2A3140"></circle>
+</g>
+<!-- bastón con cristal -->
+<g class="baston">
+<path d="M28 44 L35 112" stroke="url(#Cr4)" stroke-width="6" stroke-linecap="round"></path>
+<path d="M29 54 l5 -1 M30 62 l5 -1 M31 70 l5 -1" stroke="#5E3A1C" stroke-width="1.3"></path>
+<path d="M20 36 L36 34 L38 44 L22 46 Z" fill="url(#Pr4)" stroke="#7A6230" stroke-width=".8"></path>
+<path d="M20 36 L24 30 L28 36 M28 35 L32 29 L36 34" fill="url(#Pr4)" stroke="#7A6230" stroke-width=".8"></path>
+<circle cx="33" cy="66" r="5" fill="#2A3140"></circle>
+<circle class="onda" cx="28" cy="18" r="11" fill="none" stroke="#E6FFFB" stroke-width="1.2"></circle>
+<circle class="orbe" cx="28" cy="18" r="22" fill="url(#Ar4)"></circle>
+<g class="cristal">
+<path d="M28 -6 L40 4 L38 26 L28 34 L18 26 L16 4 Z" fill="url(#Rr4)"></path>
+<path d="M28 -6 L40 4 L28 10 L16 4 Z" fill="#E6FFFB" opacity=".9"></path>
+<path d="M16 4 L28 10 L28 34 L18 26 Z" fill="#0F8E86" opacity=".35"></path>
+<path d="M28 10 L40 4 L38 26 L28 34 Z" fill="#fff" opacity=".12"></path>
+<path d="M14 14 L18 10 L20 22 L16 26 Z" fill="url(#Rr4)" opacity=".9"></path>
+<path d="M40 12 L45 16 L42 26 L38 24 Z" fill="url(#Rr4)" opacity=".85"></path>
+<path d="M21 3 L25 -2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".95"></path>
+</g>
+<g class="parts"><circle class="part p1" cx="22" cy="12" r="1.4" fill="#E6FFFB"></circle><circle class="part p2" cx="34" cy="6" r="1.1" fill="#fff"></circle><circle class="part p3" cx="28" cy="22" r="1.2" fill="#E6FFFB"></circle><circle class="part p4" cx="38" cy="16" r="1" fill="#fff"></circle></g>
+</g>
+</g></svg></div>
+<b style="font-size: 18px; align-self: flex-start">Hextech</b><span style="font-size: 13px; color: var(--muted); align-self: flex-start">Oscuro con piedra dorada y cristal turquesa.</span></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1024}}'>
+class Component extends DCLogic {
+renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

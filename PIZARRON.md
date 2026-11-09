@@ -35,9 +35,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Actualizado:** 2026-11-09 (turno 8, revisión 337683d)
 
 ### Diseñador
-- **Estado:** el usuario aprobó la paleta Vino + negro para la primera build. Pedido a Opus en `datos/notas-equipo.md` (2026-11-09, «primera build con el diseño Vino»); artboards en `datos/diseno/canvas/project/` (`*_Vino.dc.html`, `Tubos_Kit.dc.html`).
-- **Siguiente:** publicar los cambios que pida el usuario al canvas; al cerrar, acuerdos en `datos/diseno-acuerdos.md`.
-- **Actualizado:** 2026-11-09 (Vino aprobado, entregado a Opus)
+- **Estado:** diseño Vino entregado a Opus para la primera build: 10 pantallas en `datos/diseno/canvas/project/*_Vino.dc.html` (+ `Minions_Variantes`, `Tubos_Kit`). Traspaso en `datos/notas-equipo.md` («ENTREGA FINAL»).
+- **Siguiente:** diseñar Vino claro; afinar el minion si el usuario lo pide; revisar la build de Opus contra los artboards.
+- **Actualizado:** 2026-11-09 (entrega final Vino)
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
