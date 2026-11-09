@@ -10,13 +10,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 
 ### Opus · constructor
 - **Estado:** turno 7, iteración 3: la app web tiene la ventana 2, «Tu rendimiento» (Perfil), con `score.resumen(20)` y `tilt()`: score y WR de las últimas 20, tendencia por bloques, los 3 componentes más bajos, tilt hoy, cuenta (WR contra meta 60%) y campeones. El nav alterna Companion/Perfil; fuera de champ select y partida se ve Perfil. Se recalcula en un hilo al arrancar y tras cada revisión. 189 OK.
-- **Siguiente:** build v0.1.0 (PyInstaller con `--add-data` de `scripts/web`), tag y RESUMEN-NOCHE.
-- **Actualizado:** 2026-11-09 (turno 7, iteración 3)
+- **Iteración 4:** primera build `Companion.exe` v0.1.0 (entrada `companion_web.py`, `--add-data scripts/web;web`); arranca con `--demo`, sirve la página y el JSON (fase InProgress, Perfil con datos). Tag `v0.1.0`. 189 OK.
+- **Siguiente:** paleta (crema de base, variantes en `config.json` si sale barato), quitar `lineas` de `draft_json`, tarjeta «Muertes 14–25» de Perfil; RESUMEN-NOCHE en la última iteración.
+- **Actualizado:** 2026-11-09 (turno 7, iteración 4)
 
 ### DeepSeek · revisor
-- **Estado:** revisado f8f7c13 (iteración 12, `anticipa.py`): correcto. Solo muertes6 anticipa (r 0.28 LOO n=155, 0.37 temporal n=77); aguanta 4+ anteriores (r 0.34–0.40) y permutar por campeón no lo explica (p 0.002→0.004). Escribí `test_ds_anticipa.py` (3) → 166 OK. Menor: los p no se reproducen entre corridas (set sin ordenar en `anticipa.py`).
-- **Siguiente:** cotejar `VictimName` con la primera partida real en `datos/vivo/`; pendiente menor de e705b0c: `minions10()` con dict sin `campeon`/`minimo` sigue dando KeyError en `aviso_minions` (GUI).
-- **Actualizado:** 2026-11-08 22:47
+- **Estado:** revisado c74d0c0 (turno 7, iters 1-2, app web local): los 3 requisitos se cumplen (escucha solo 127.0.0.1, nada escribe en el cliente, la UI muestra `ficha()` real). `node --check` pasa el JS; suite 189 OK; `test_ds_web.py` (15) cubre los 8 casos borde que dejó Opus. Menor: `draft_json` manda `lineas` que la página no lee.
+- **Siguiente:** revisar iteración 3 (vista Perfil con `score.resumen`/`tilt`).
+- **Actualizado:** 2026-11-09 (turno 7, revisión c74d0c0)
 
 ### Diseñador
 - **Estado:** canvas «Base LOL» de vuelta a su versión anterior (Perfil, ChampSelect y 3 paletas) más ChampSelect en Paleta 3E. Las ventanas de franja y post-partida que hice se quitaron del canvas. Contexto en `datos/diseno-contexto.md`; sigue abierto el error de copy (82/57 → 68/43).
@@ -195,8 +196,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: de tu media contra un rival, solo las muertes antes del 6 anticipan la próxima partida contra él (r 0.37 temporal, n=77, p×5 = 0.01); oro/CS/XP al 14 y nivel al 6 por rival predicen peor que tu media del rol (`anticipa.py`).
 - 2026-11-08 · DeepSeek: permutación leave-one-out confirma `corte6.py` (nivel6 por rival: 14% vs 13%, p=0.96) y mide `muertes6` por rival: corte media ≥1 → muero <6 en 69% vs 46%, p=0.13 (pista débil, no da para subirlo). Menor sin arreglar de e705b0c: `minions10()` con dict sin `campeon`/`minimo` da KeyError en `aviso_minions` (GUI).
 - 2026-11-08 · DeepSeek: `anticipa.py` (f8f7c13) correcto y robusto: muertes6 aguanta 4+ anteriores (r 0.34–0.40) y el control por campeón no lo explica (p 0.002→0.004). Menor: los p no se reproducen entre corridas porque itera un set sin ordenar (`for pos in {g["pos"] …}`); r y n sí estables. Sugerencia: `sorted(...)`.
+- 2026-11-09 · DeepSeek: en la app web, `draft_json` manda `lineas` pero `index.html` no lo lee (renderiza desde `rec.ficha`, línea 80): payload muerto y `lineas_ficha` corre de más en cada champ select (menor).
 
 ## Decisiones
+- 2026-11-09 · Opus: `Companion.exe` v0.1.0 es la app web (`companion_web.py`), no tkinter. Lee `scripts/web` del repo si está junto a él (se actualiza sin recompilar) y si no, la copia empaquetada.
 - 2026-11-09 · Opus: la franja en partida y la línea al terminar de la app web usan las tarjetas del canvas de ChampSelect (6 / 10 / 14+), porque el Diseñador quitó del canvas sus ventanas de franja y post-partida. Si el usuario aprueba otro diseño, se cambia solo `index.html`.
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
 - 2026-11-07 · Opus: el pick se recomienda con un estimado encogido (M=10) hacia tu WR del campeón, no con el récord crudo contra el rival.

@@ -75,14 +75,16 @@ python scripts/companion_gui.py           # con el cliente abierto
 python scripts/companion_gui.py --demo    # vista de ejemplo, sin cliente
 ```
 
-**Ejecutable para Windows** (no lo sube git; se compila en un paso):
+**App web (v0.1.0):** `scripts/companion_web.py` es el companion con el diseño nuevo (champ select, franja en partida, línea al terminar y «Tu rendimiento»), servido en 127.0.0.1 y abierto como ventana de Edge. `--demo` recorre las tres fases sin cliente. `companion_gui.py` (tkinter) queda de respaldo.
+
+**Ejecutable para Windows, v0.1.0** (no lo sube git; se compila en un paso):
 
 ```bash
 pip install pyinstaller
-python -m PyInstaller --onefile --windowed --name Companion --distpath . scripts/companion_gui.py
+python -m PyInstaller --onefile --windowed --name Companion --distpath . --add-data "scripts/web;web" --paths scripts scripts/companion_web.py
 ```
 
-Deja `Companion.exe` en la raíz del repo y ábrelo con doble clic. El `.exe` solo trae Python: lee los scripts y tus datos de la carpeta del repo, así que los cambios en `scripts/` no necesitan recompilar. La key se lee de `RIOT_KEY` (`setx RIOT_KEY <key>`).
+Deja `Companion.exe` en la raíz del repo y ábrelo con doble clic (`Companion.exe --demo` para probarlo). Si el `.exe` está lejos del repo, usa la página que trae empaquetada. El `.exe` solo trae Python: lee los scripts y tus datos de la carpeta del repo, así que los cambios en `scripts/` no necesitan recompilar. La key se lee de `RIOT_KEY` (`setx RIOT_KEY <key>`).
 
 ---
 

@@ -11,6 +11,7 @@ import companion_gui as gui  # noqa: E402  (trae REPO, sys.path del .exe y el tr
 from companion_gui import companion
 
 WEB = gui.REPO / "scripts" / "web"
+if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  # el .exe lejos del repo usa la copia empaquetada
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,

@@ -1681,3 +1681,11 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 189 OK.
 
 **Tarea de pruebas para DeepSeek:** (a) `rendimiento()` con `perfil.json` sin `account` → None; (b) que `refrescar()` sube `v`; (c) si puedes, `node --check` del `<script>` de `index.html`; (d) revisa el texto «20 partidas mueven el WR ±11 puntos por azar» (1 error estándar con p=0.5): ¿es honesto o conviene decir el IC 95% (±22)?
+
+## 2026-11-09 · Opus · turno 7 iteración 4
+
+**Hecho:** la primera build, `Companion.exe` v0.1.0: `python -m PyInstaller --onefile --windowed --name Companion --distpath . --add-data "scripts/web;web" --paths scripts scripts/companion_web.py` (también va en el README). Borré `build/` y `Companion.spec`. `companion_web.WEB` usa `scripts/web` del repo si existe y si no, `_MEIPASS/web`. Humo: `Companion.exe --demo --no-abrir` escucha en 127.0.0.1, `/` sirve el HTML (22 KB), `/api/estado` llega a `InProgress` con draft, meta y rendimiento. Luego lo maté. Tag `v0.1.0`. 189 OK.
+
+**DeepSeek (plan):** no lo pude consultar; el harness sigue bloqueando el PowerShell anidado del asesor.
+
+**Tarea de pruebas para DeepSeek:** (a) con `gui.REPO` simulado sin `scripts/web` y `sys._MEIPASS` puesto, `WEB` apunta a `_MEIPASS/web` (recarga el módulo); (b) si puedes, corre `Companion.exe --demo --no-abrir` y confirma que pasa a `EndOfGame` a los ~16 s.
