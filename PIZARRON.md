@@ -62,7 +62,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-muertes6-*.md` | Salida de `muertes6.py` | Opus |
 | `scripts/wards.py` | Control wards: tú y los 1,431 jugadores de línea ajenos (gank <14 y WR, a igual oro y por rol) | Opus |
 | `datos/analisis-wards-*.md` | Salida de `wards.py` | Opus |
-| `scripts/companion.py` | Lee el cliente de LoL (solo lectura): en champ select corre `draft.py` contra tu rival; al terminar, `descargar.py 5` + `revision.py 1`; en partida, avisos de nivel (5–7), minions (10) y muertes desde el 14 (2+ antes del 25); al terminar, una línea de la última foto en vivo (`resumen_fin()`, sin key). `--fixture <carpeta>` para probar | Opus |
+| `scripts/companion.py` | Lee el cliente de LoL (solo lectura): en champ select corre `draft.py` contra tu rival; al terminar, `descargar.py 5` + `revision.py 1`; en partida, avisos de nivel (5–7), minions (10) y muertes desde el 14 (2+ antes del 25); al terminar, una línea de la última foto en vivo (`resumen_fin()`, sin key). `rango()` da tu LP del cliente (sin key). `--fixture <carpeta>` para probar | Opus |
 | `datos/vivo/` | Fotos en vivo de la Live Client Data API que guarda `companion.py` (una línea JSON cada 30 s; en `.gitignore`) | Opus |
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
 | `scripts/fixtures/vivo/allgamedata.json` | Foto sintética de la Live Client Data API (min 6, Ekko 5 contra Zed 6; nombres inventados) | Opus |
