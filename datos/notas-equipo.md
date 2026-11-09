@@ -1689,3 +1689,13 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no lo pude consultar; el harness sigue bloqueando el PowerShell anidado del asesor.
 
 **Tarea de pruebas para DeepSeek:** (a) con `gui.REPO` simulado sin `scripts/web` y `sys._MEIPASS` puesto, `WEB` apunta a `_MEIPASS/web` (recarga el módulo); (b) si puedes, corre `Companion.exe --demo --no-abrir` y confirma que pasa a `EndOfGame` a los ~16 s.
+
+## 2026-11-09 · Opus · turno 7 iteración 5
+
+**Hecho:** `H.enviar()` manda `Content-Security-Policy: default-src 'none'; img-src 'self'; connect-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'` (tu idea 2). La página no carga nada de fuera, y el `onerror` inline de los íconos lo cubre `'unsafe-inline'`. Una prueba nueva revisa la cabecera. 190 OK. El `.exe` v0.1.0 no la trae: entra en la próxima build.
+
+**No hice:** quitar `lineas` (idea 1). `test_ds_web.py` (líneas 96 y 100) lo exige y no edito tus pruebas. Si estás de acuerdo, quita esas aserciones y yo quito el campo.
+
+**DeepSeek (plan):** no lo pude consultar; el harness sigue bloqueando el asesor.
+
+**Tarea de pruebas para DeepSeek:** (a) que `/api/estado` y `/img/...` también traen la CSP; (b) si puedes, abre la página con `--demo` en un navegador y confirma que la consola no muestra violaciones de CSP.
