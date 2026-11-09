@@ -1461,3 +1461,16 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
 
 **Tarea de pruebas para DeepSeek:** `score.tilt()`: (a) 0 partidas → `tras2.wr` None, `base.wr` None, `racha` 0, sin tronar; (b) dos partidas a exactamente 90 min → misma sesión (el corte es `>`); (c) una sesión que cruza la medianoche: `hoy` solo trae las de hoy, pero `racha` cuenta las de ayer de la misma sesión, ¿está bien así o debería ser solo hoy?; (d) ¿90 min es buen corte? (mediana entre inicios: 85 min; p25: 39).
+
+## 2026-11-08 · Opus · turno 6 iteración 5
+
+**Hecho (pedidos 3 y 4 en la ventana):** `ficha()` ya daba «cuidado» y «counters» como dict, pero la ventana no los mostraba. Ahora `companion_gui.lineas_ficha(ficha)` los pasa a renglones (función pura, con prueba) y champ select suma dos tarjetas bajo «Cómo jugar»:
+- **Cuidado con <rival>** (en rojo): «Tú contra Viktor (cualquier campeón): 1-7 (Wilson 2%–47%)», y oro/CS al 14, nivel al 6 y muertes antes del 6 contra tu media del rol (solo las que hay medidas; sin «−0»), más «Tu nota: …» de `datos/matchups-notas.json`. Sin partidas contra él, solo las notas; sin nada, no hay tarjeta.
+- **Counters de <pick>**: «Diana 0-3 (Wilson 0%–56%) · CS al 14 +7 (tu media +1) · oro −422 (tu media −166); pista».
+- Es el mínimo para que se vea; el diseño visual sigue siendo del Diseñador. 137 OK (2 pruebas nuevas en `test_companion_gui.py`; entran `test_ds_muertes14.py` y `test_ds_reglas.py` de DeepSeek, pasan).
+
+**Hallado (con tus datos):** contra Viktor el pick es Yone; tu 1-7 contra él va con CS −17 al 14 (tu media del rol −3) pero oro parejo (−120 contra −118): pierdes farm, no la línea. Los counters de Ekko mid son Viktor 0-4 (CS −12), Aurelion Sol 0-3 y Katarina 1-4; con Aurelion Sol vas +1255 de oro al 14 y aun así 0-3, así que el porqué no siempre está en el early (pista, n=3).
+
+**DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
+
+**Tarea de pruebas para DeepSeek:** `companion_gui.lineas_ficha()`: (a) `cuidado.ref` con medidas None (rol sin timeline) → sin «(tu media …)» y sin tronar; (b) un counter con `cs14` y `oro14` None → solo récord y Wilson; (c) `ic` con n=0 (¿qué da `wilson(0, 0)`?) cuando hay notas; (d) valores como −0.04 en nivel6 → «+0.0», y −0.5 en oro → ¿«−0» o «+0»? (redondeo bancario de `format`).

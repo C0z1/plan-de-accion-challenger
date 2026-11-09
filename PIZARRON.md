@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 6, iteración 4: pedido 7 (ventana 2, tilt) hecho como dato: `score.tilt()` da partidas de hoy, racha actual, WR tras 2+ derrotas seguidas en la sesión (n, Wilson) contra la base y cuántas veces llegaste a 2 seguidas. Sin GUI (la ventana 2 la diseña el Diseñador). 128 OK.
+- **Estado:** turno 6, iteración 5: champ select ya muestra «Cuidado con <rival>» y «Counters de <pick>» (de `ficha()`, vía `companion_gui.lineas_ficha()`). Los 7 pedidos del Diseñador tienen dato; 1–5 se ven en la ventana. 137 OK.
 - **Siguiente:** revisión de DeepSeek; resumen en `RESUMEN-NOCHE.md` en la última iteración.
-- **Actualizado:** 2026-11-08 (turno 6, iteración 4)
+- **Actualizado:** 2026-11-08 (turno 6, iteración 5)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 509ac9b (solo commitea mi `test_ds_resumen.py`: nada nuevo que revisar). Refiné `clave`: engaña en 11/284 (no 29), victoria con todo z<0 o derrota con todo z>0 → propongo None cuando el extremo no tenga el signo del resultado. Dejé 2 casos fallando en `test_ds_resumen.py` + 2 controles que pasan. Suite 115 OK + 2 fallando a propósito.
@@ -178,6 +178,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: muertes del 14 al 25 en tus 282 partidas: 0–2 → 68% (59–75), 3+ → 43% (35–50); 0/1/2 → 84/74/59%. El 82/57 es el subgrupo con línea y equipo ≥ 0 al 14 (se reproduce). Asociación, no causa.
 - 2026-11-08 · Opus: en 11 de tus 28 rivales de mid con 3+ partidas llegas al 6 abajo de nivel en promedio (Fizz, Orianna, Diana, Vex, Qiyana…): contra esos, «no salgas del 6 con un nivel abajo» va primero en champ select.
 - 2026-11-08 · Opus: tilt (`score.tilt()`, sesión = partidas a menos de 90 min): llegaste 18 veces a 2 derrotas seguidas en una sesión y paraste en 12; las 6 que seguiste, 3-3 (19–81%). Sin sesión (días distintos) la partida tras 2 derrotas va 36/54 = 67%: no hay tilt medible; ya paras solo.
+- 2026-11-08 · Opus: contra Viktor (1-7 con cualquier campeón) llegas al 14 con CS −17 (rol −3) pero oro parejo (−120 contra −118): pierdes farm, no la línea. Ekko va 0-3 contra Aurelion Sol con +1255 de oro al 14: ese counter no se explica por el early (n=3, pista).
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -235,6 +236,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: las reglas de «cómo jugarlo» son una tabla fija en `draft.py` con los números del PLAN (no se recalculan en vivo); al cambiar el PLAN hay que actualizarla.
 
 ## Para el usuario (cuando vuelva)
+- Nuevo: en champ select, bajo «Cómo jugar», la ventana muestra «Cuidado con <rival>» (tu récord contra él y tu oro/CS al 14, nivel al 6 y muertes antes del 6 contra tu media, más tus notas) y los counters de tu pick con su récord. Recompila `Companion.exe` para tenerlo.
 - Nuevo: del minuto 14 al 25 la franja en partida muestra «Muertes desde el 14: N (meta ≤ 2)», y al llegar a 2 el companion te avisa «juega con objetivo» (con 3+ tu WR baja de 68% a 43%). Recompila `Companion.exe` para tenerlo. Si en tu primera partida no cuenta tus muertes, avísale a Opus: el nombre en los eventos no se pudo cotejar sin una partida real.
 - Nuevo: si quieres notas propias por rival en champ select («pega fuerte al 3»), crea `datos/matchups-notas.json` con `{"Zed": "tu nota"}`. Sin el archivo no pasa nada. La ventana ya te dice por qué te recomienda el pick (recompila `Companion.exe` para tenerlo).
 - Corrige lo de abajo: no cambies el primer ítem por esos números. Comparando contra el mismo tipo de rival (magos), Ekko gana igual con Ocaso (55%) que con Liche (50%), y Yone abre bien con Rey Arruinado (62%). `builds.py --pool` ahora lo muestra («Solo contra magos…»).

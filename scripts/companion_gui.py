@@ -128,6 +128,35 @@ def texto_meta(mf):
     return " · ".join(t)
 
 
+def _dif(m, ref, k, nombre, fmt):
+    """«CS al 14 −17 (tu media −3)» o None si no hay medida."""
+    def f(v):
+        s = format(v, fmt)
+        return format(0.0, fmt) if float(s) == 0 else s  # sin «−0»
+    if m.get(k) is None: return None
+    r = f" (tu media {f(ref[k])})" if ref.get(k) is not None else ""
+    return f"{nombre} {f(m[k])}{r}".replace("-", "−")
+
+
+def lineas_ficha(fi):
+    """(cuidado, counters): renglones de texto de draft.ficha() para la ventana (pedidos 3 y 4 del Diseñador).
+    Solo lo medido; [] si no hay nada que decir."""
+    if not fi: return [], []
+    c, ref = fi["cuidado"], fi["cuidado"]["ref"]
+    cuidado = []
+    if c["n"]:
+        difs = [_dif(c, ref, k, n, f) for k, n, f in [("oro14", "Oro al 14", "+.0f"), ("cs14", "CS al 14", "+.0f"),
+                                                       ("nivel6", "Nivel al 6", "+.1f"), ("muertes6", "Muertes antes del 6", ".1f")]]
+        cuidado = [f"Tú contra {c['rival']} (cualquier campeón): {c['v']}-{c['n'] - c['v']} (Wilson {c['ic'][0]:.0%}–{c['ic'][1]:.0%})"
+                   + ("; pocas partidas, pista" if c["pocas"] else "")] + [d for d in difs if d]
+    cuidado += [f"Tu nota: {n}" for n in c["notas"]]
+    ref = fi["counters"]["ref"]
+    counters = [f"{x['rival']} {x['v']}-{x['n'] - x['v']} (Wilson {x['ic'][0]:.0%}–{x['ic'][1]:.0%})"
+                + "".join(f" · {d}" for d in [_dif(x, ref, "cs14", "CS al 14", "+.0f"), _dif(x, ref, "oro14", "oro", "+.0f")] if d)
+                + ("; pista" if x["pocas"] else "") for x in fi["counters"]["lista"]]
+    return cuidado, counters
+
+
 def trabajador(q):
     """El mismo bucle que companion.main, pero manda eventos a la ventana en vez de imprimir."""
     m, visto, fase_ant, real, archivo, ult, avisado, fallos = None, None, "inicio", None, None, 0, set(), 0
@@ -255,6 +284,9 @@ class App:
         rs = (d.get("ficha") or {}).get("reglas")
         self.reglas(f"Cómo jugar {mejor['champ']}", [f"{r['texto']} ({r.get('contra') or r['numero']}{'; pista' if r['pista'] else ''})"
                                                     for r in rs]) if rs else self.reglas()
+        cuidado, counters = lineas_ficha(d.get("ficha"))
+        if cuidado: self.reglas(f"Cuidado con {d['ficha']['rival']}", cuidado, MAL, MAL)
+        if counters: self.reglas(f"Counters de {mejor['champ']}", counters)
 
     def vista_revision(self, r):
         self.limpiar(); t = self.tarjeta()

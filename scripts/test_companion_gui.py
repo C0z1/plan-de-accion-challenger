@@ -24,6 +24,30 @@ class TestParsear(unittest.TestCase):
         self.assertIsNone(g.parsear_revision("nada"))
 
 
+class TestLineasFicha(unittest.TestCase):
+    REF = dict(n=50, oro14=-118, cs14=-3, xp14=-50, nivel6=0.0, muertes6=0.6)
+
+    def ficha(self, n=8, notas=(), lista=()):
+        c = dict(rival="Viktor", n=n, v=1 if n else 0, ic=[0.02, 0.47], pocas=n < 5, oro14=-120 if n else None, cs14=-17 if n else None,
+                 xp14=None, nivel6=-0.04 if n else None, muertes6=None, ref=self.REF, notas=list(notas))
+        return dict(rival="Viktor", cuidado=c, counters=dict(lista=list(lista), ref=self.REF))
+
+    def test_cuidado_y_counters(self):
+        x = dict(rival="Diana", n=3, v=0, ic=[0, 0.56], pocas=True, cs14=7, oro14=None)
+        cu, co = g.lineas_ficha(self.ficha(notas=["pega al 3"], lista=[x]))
+        self.assertEqual(cu[0], "Tú contra Viktor (cualquier campeón): 1-7 (Wilson 2%–47%)")
+        self.assertIn("CS al 14 −17 (tu media −3)", cu)
+        self.assertIn("Nivel al 6 +0.0 (tu media +0.0)", cu)  # sin «−0.0»
+        self.assertFalse(any("Muertes" in l for l in cu))  # sin medida, sin renglón
+        self.assertEqual(cu[-1], "Tu nota: pega al 3")
+        self.assertEqual(co, ["Diana 0-3 (Wilson 0%–56%) · CS al 14 +7 (tu media −3); pista"])
+
+    def test_sin_partidas_ni_ficha(self):
+        self.assertEqual(g.lineas_ficha(self.ficha(n=0)), ([], []))
+        self.assertEqual(g.lineas_ficha(self.ficha(n=0, notas=["x"]))[0], ["Tu nota: x"])
+        self.assertEqual(g.lineas_ficha(None), ([], []))
+
+
 class TestTrabajador(unittest.TestCase):
     def test_banner_de_nivel_una_vez(self):
         import json, queue
