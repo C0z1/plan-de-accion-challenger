@@ -111,11 +111,21 @@ def partidas(raw=None):
         zs = z_partida(info)
         me = next((p for p in info["participants"] if p["puuid"] == yo), None)
         if zs and me: gs.append(dict(t=info["gameCreation"], win=me["win"], champ=me["championName"], rol=me["teamPosition"],
-                                     kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", zs=zs))
+                                     kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", zs=zs, f=f, pid=me["participantId"]))
     gs.sort(key=lambda g: g["t"])
     med = medias_rol((g["zs"] for g in gs), yo)
     for g in gs: g.update(de(g["zs"], yo, med))
     return gs, med, yo
+
+
+def muertes14_25(g):
+    """Tus muertes del 14:00 al 25:00 (como revision.py) desde datos/raw/timeline/<archivo>; None sin timeline."""
+    if "f" not in g: return None
+    tf = g["f"].parent / "timeline" / g["f"].name
+    if not tf.exists(): return None
+    fr = json.loads(tf.read_text())["info"]["frames"]
+    return sum(14 * 60000 <= e["timestamp"] < 25 * 60000 for x in fr for e in x["events"]
+               if e["type"] == "CHAMPION_KILL" and e["victimId"] == g["pid"])
 
 
 def resumen(n=10, raw=None):
@@ -135,7 +145,7 @@ def resumen(n=10, raw=None):
     return dict(partidas=[dict(fecha=datetime.fromtimestamp(g["t"] / 1000).strftime("%m-%d %H:%M"), campeon=g["champ"],
                                win=g["win"], kda=g["kda"], score=round(g["score"], 1), puesto=g["puesto"],
                                puesto_eq=g["puesto_eq"], linea=g["linea"], comp={c: round(v, 2) for c, v in g["comp"].items()},
-                               clave=clave(g))
+                               clave=clave(g), muertes14_25=muertes14_25(g))
                           for g in reversed(gs[-n:])],
                 media=m(gs), ultimas20=m(gs[-20:]), anteriores=m(gs[:-20]),
                 tendencia=[m(gs[i:i + 20]) for i in range(0, len(gs), 20)],

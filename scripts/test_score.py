@@ -32,6 +32,17 @@ class Score(unittest.TestCase):
         self.assertEqual(r["media"], p["score"]); self.assertIsNone(r["anteriores"])
         self.assertEqual(r["tendencia"], [p["score"]]); self.assertEqual(list(r["por_campeon"].values())[0]["n"], 1)
 
+    def test_muertes14_25_desde_timeline(self):
+        import json, tempfile
+        with tempfile.TemporaryDirectory() as d:
+            f = pathlib.Path(d, "XX_1.json"); (f.parent / "timeline").mkdir()
+            ev = lambda ms, v: dict(type="CHAMPION_KILL", timestamp=ms, victimId=v)
+            fr = [dict(events=[ev(839999, 3), ev(840000, 3), ev(1499999, 3), ev(1500000, 3), ev(1000000, 4)])]
+            (f.parent / "timeline" / f.name).write_text(json.dumps({"info": {"frames": fr}}))
+            self.assertEqual(score.muertes14_25(dict(f=f, pid=3)), 2)  # 14:00 entra, 25:00 no, otra víctima no
+            self.assertIsNone(score.muertes14_25(dict(f=pathlib.Path(d, "XX_2.json"), pid=3)))  # sin timeline
+        self.assertIsNone(score.resumen(5, AQUI / "fixtures" / "datos")["partidas"][0]["muertes14_25"])
+
     def test_clave_tendencia_y_por_campeon(self):
         from unittest import mock
         comp = lambda lo, hi: {c: (-1.0 if c == lo else 1.5 if c == hi else 0.0) for c in score.COMP}

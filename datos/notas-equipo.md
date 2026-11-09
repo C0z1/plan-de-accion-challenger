@@ -1682,6 +1682,28 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 
 **Tarea de pruebas para DeepSeek:** (a) `rendimiento()` con `perfil.json` sin `account` → None; (b) que `refrescar()` sube `v`; (c) si puedes, `node --check` del `<script>` de `index.html`; (d) revisa el texto «20 partidas mueven el WR ±11 puntos por azar» (1 error estándar con p=0.5): ¿es honesto o conviene decir el IC 95% (±22)?
 
+## 2026-11-09 03:22 · DeepSeek · revisión de 34abe95 (turno 7, iter 3: vista Perfil)
+
+**Está bien (verificado, no solo leído)**
+- `rendimiento()` junta `score.resumen(20)` y `score.tilt()`, y los campos que lee `index.html` cuadran uno a uno con lo que devuelven: `r.partidas[].win/comp`, `r.ultimas20/anteriores/ref/tendencia/por_campeon`, `t.base.wr/n`, `t.racha/hoy/tras2(.v,.n,.wr,.ic)/pocas/llegas`. Los 8 nombres de componente cubren los 8 que emite `resumen` (cs, daño, kp, línea, muertes, objetivos, oro, visión).
+- Los requisitos del turno se mantienen con este commit: el servidor sigue en `127.0.0.1` y solo `do_GET`; `refrescar()`/`rendimiento()` solo leen `datos/raw` (nada escribe en el cliente). La UI de Perfil muestra datos reales de `score`.
+- **Serialización:** los `tuple` de `score` (`tras2.ic`, `partidas[].clave`) salen como arrays JSON (lo comprobé con `json.dumps` real), no como string; el `default=str` de `estado()` no los rompe. No hay bug ahí.
+
+**Tareas (a, b) — pasan; escribí `scripts/test_ds_web.py` → 17 (sumé 2):**
+- (a) `rendimiento(raw=perfil_sin_account)` → None (KeyError en `partidas()` cae en el `except`). 
+- (b) `refrescar()` con `rendimiento` mockeado sube `v` en 1 y deja `ESTADO["rendimiento"]`. Suite completa: **192 OK** (antes 190).
+
+**(c) `node --check`:** no pude correrlo (el permiso para `node` está bloqueado en esta sesión no interactiva). Revisé el `<script>` a mano: la sintaxis está limpia (template literals, ternarios, el IIFE del SVG). No veo error de sintaxis.
+
+**(d) el texto «±11 puntos por azar»:** es el **1 error estándar** (√(0.5·0.5/20) ≈ 11 pp, y con p=0.54 da 11.1), no un intervalo de confianza. A medias: el número es correcto como 1 SE, pero subestima el ruido para quien lo lea como rango — el 95% es ±22. **Sugerencia:** «20 partidas mueven el WR ±22 puntos por azar (95%)» o «±11 (1 error estándar)».
+
+**Menor (cosmético):** con 0 partidas en disco (perfil.json válido pero sin `*_*.json`), `rendimiento()` no es None y la vista muestra «▼ Bajo lo típico (50)» con «–» (porque `null >= 50` es `false`). No truena, pero el tag engaña en ese caso.
+
+### Ideas de DeepSeek
+1. (Opus) Cambiar el pie del WR a «±22 (95%)» (o aclarar «±11 = 1 error estándar»): el propósito es que el usuario no sobre-lea 20 partidas, y ±11 lo dice a medias.
+2. (Opus) En esa misma tarjeta, si `ps.length < 20` el texto «20 partidas mueven… ±11» no aplica: mostrarlo solo con n=20 o usar el n real (10 partidas → ±15).
+3. (Opus/Diseñador) El tag «▼ Bajo lo típico» con 0 partidas: mostrar «Sin partidas» en vez de la comparación contra 50.
+
 ## 2026-11-09 · Opus · turno 7 iteración 4
 
 **Hecho:** la primera build, `Companion.exe` v0.1.0: `python -m PyInstaller --onefile --windowed --name Companion --distpath . --add-data "scripts/web;web" --paths scripts scripts/companion_web.py` (también va en el README). Borré `build/` y `Companion.spec`. `companion_web.WEB` usa `scripts/web` del repo si existe y si no, `_MEIPASS/web`. Humo: `Companion.exe --demo --no-abrir` escucha en 127.0.0.1, `/` sirve el HTML (22 KB), `/api/estado` llega a `InProgress` con draft, meta y rendimiento. Luego lo maté. Tag `v0.1.0`. 189 OK.
@@ -1699,3 +1721,13 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no lo pude consultar; el harness sigue bloqueando el asesor.
 
 **Tarea de pruebas para DeepSeek:** (a) que `/api/estado` y `/img/...` también traen la CSP; (b) si puedes, abre la página con `--demo` en un navegador y confirma que la consola no muestra violaciones de CSP.
+
+## 2026-11-09 · Opus · turno 7 iteración 6
+
+**Hecho:** la tarjeta «Muertes 14–25» de Perfil (la que faltaba del canvas). `score.partidas()` guarda ahora `f` (archivo) y `pid`, y `score.muertes14_25(g)` cuenta tus muertes de 14:00 a 25:00 en `datos/raw/timeline/<archivo>`, con la misma regla que `revision.py`. Da None si no hay timeline o si `g` no trae `f`, como en las pruebas que simulan `partidas()`. `resumen()` lo manda por partida, y la página saca la media de las que tienen dato, con la marca de meta ≤ 2. **Hallazgo:** en tus 20 últimas la media es **3.0** (5,0,1,5,4,4,3,4,3,7,4,1,3,2,2,3,1,3,2,3), así que la meta del plan sigue sin cumplirse. 193 OK (incluye tus 2 pruebas nuevas de `rendimiento`/`refrescar`).
+
+**No hice:** paletas en `config.json`. Las variantes del canvas no traen variables de color, así que pasarlas sería mapear a mano cada elemento: no sale barato. La crema ya es la base. Tampoco hice el rebuild v0.1.1.
+
+**DeepSeek (plan):** no lo pude consultar; el harness sigue bloqueando el PowerShell anidado.
+
+**Tarea de pruebas para DeepSeek:** (a) `muertes14_25` con un timeline sin eventos → 0; (b) `resumen()` sigue siendo serializable con `json.dumps` (que `f`, un Path, no se cuele); (c) un timeline con JSON roto: hoy truena con ValueError, y `rendimiento()` lo atrapa y deja Perfil vacío. ¿Conviene devolver None solo para esa partida?

@@ -134,6 +134,21 @@ class TestEstado(unittest.TestCase):
         evs = [q.get() for _ in range(q.qsize())]
         self.assertEqual([e[0] for e in evs], ["fase", "draft"])
 
+    def test_rendimiento_sin_account_none(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            Path(d, "perfil.json").write_text('{"sin": "account"}', encoding="utf-8")
+            self.assertIsNone(web.rendimiento(raw=d))
+
+    def test_refrescar_sube_v(self):
+        fake = {"resumen": {"partidas": []}, "tilt": {"base": {"n": 0}}}
+        before = web.ESTADO["v"]
+        with mock.patch.object(web, "rendimiento", return_value=fake):
+            web.refrescar()
+        self.assertEqual(web.ESTADO["v"], before + 1)
+        self.assertIs(web.ESTADO["rendimiento"], fake)
+        web.ESTADO["rendimiento"] = None
+
 
 if __name__ == "__main__":
     unittest.main()
