@@ -86,6 +86,54 @@ class Draft(unittest.TestCase):
         self.assertIn("No tienes partidas en ese rol", self.correr([g("Ekko", True)], "Zed", "TOP"))
 
 
+class Ficha(unittest.TestCase):  # draft.ficha(): pedidos 1, 3 y 4 del Diseñador, como dict
+    def ficha(self, juegos, rival, champ=None, notas=None):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(draft, "games", juegos), mock.patch.object(draft, "base", .5), \
+                mock.patch.object(draft, "NOTAS", pathlib.Path(tmp) / "notas.json"):
+            if notas is not None: draft.NOTAS.write_text(notas, encoding="utf-8")
+            return draft.ficha(rival, "MIDDLE", champ)
+
+    def juegos(self):
+        js = [g("Ekko", i < 3, "Viktor", gd14=-500) for i in range(4)] + [g("Ekko", i < 9) for i in range(12)]
+        js += [g("Ekko", False, "Fizz") for _ in range(3)] + [g("Ekko", True, "Ahri") for _ in range(3)]
+        js += [g("Yone", i < 3) for i in range(6)]
+        for j in js[16:19]: j.update(cs14=-10, xp14=-200, nivel6=0, muertes6=1)  # las de Fizz; las demás sin timeline
+        return js
+
+    def test_por_que_con_record(self):
+        f = self.ficha(self.juegos(), "Viktor")
+        p = f["por_que"]
+        self.assertEqual((f["champ"], p["v"], p["n"], p["oro14"], p["pocas"]), ("Ekko", 3, 4, -500, True))
+        self.assertIn("Ekko va 3-1 contra Viktor (oro @14 -500)", p["frase"])
+        self.assertIn("por encima de Yone", p["frase"])
+
+    def test_por_que_sin_partidas_y_pick_elegido_peor(self):
+        p = self.ficha(self.juegos(), "Lux", champ="yone")["por_que"]
+        self.assertEqual((p["champ"], p["n"], p["alternativa"]["champ"]), ("Yone", 0, "Ekko"))
+        self.assertTrue(p["frase"].startswith("Sin partidas de Yone contra Lux: "))
+        self.assertIn("por debajo de Ekko", p["frase"])
+
+    def test_counters_solo_los_que_bajan_con_su_porque(self):
+        c = self.ficha(self.juegos(), "Viktor")["counters"]
+        self.assertEqual([x["rival"] for x in c["lista"]], ["Fizz"])  # Ahri 3-0 y Viktor 3-1 no te bajan; Zed tiene 12 (y no baja)
+        fz = c["lista"][0]
+        self.assertEqual((fz["v"], fz["n"], fz["cs14"], fz["xp14"], fz["pocas"]), (0, 3, -10, -200, True))
+        self.assertEqual(c["ref"]["n"], 22)
+
+    def test_cuidado_y_notas_a_mano(self):
+        js = self.juegos()
+        c = self.ficha(js, "Fizz", notas='{"fizz": "pega fuerte al 3", "Zed": ["x"]}')["cuidado"]
+        self.assertEqual((c["n"], c["v"], c["cs14"], c["muertes6"], c["notas"]), (3, 0, -10, 1, ["pega fuerte al 3"]))
+        self.assertEqual(c["ref"]["n"], 28)
+        self.assertEqual(self.ficha(js, "Fizz")["cuidado"]["notas"], [])            # sin tabla
+        self.assertEqual(self.ficha(js, "Fizz", notas="{roto")["cuidado"]["notas"], [])  # tabla rota: no truena
+        self.assertEqual(self.ficha(js, "Fizz", notas="[1]")["cuidado"]["notas"], [])
+
+    def test_sin_partidas_en_el_rol(self):
+        self.assertIsNone(self.ficha([g("Ekko", True, pos="TOP")], "Zed"))
+
+
 @unittest.skipUnless(HAY_DATOS, "sin datos/raw")
 class Revision(unittest.TestCase):  # revision.py corre al importarse: se prueba como proceso sobre datos/raw
     def test_revision_1_corre(self):

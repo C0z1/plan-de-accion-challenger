@@ -1,7 +1,9 @@
-"""Pruebas de DeepSeek para score.resumen() (turno 5, iteración 13). Sin red ni key.
+"""Pruebas de DeepSeek para score.resumen() (turno 5, iteración 13, afinada en la noche).
 
 Cubre los bordes que pidió Opus: 0 partidas (tendencia [] y por_campeon {}), exactamente 20 partidas
-(tendencia de un solo bloque) y `clave` en una victoria con todos los z negativos (sale el menos negativo)."""
+(tendencia de un solo bloque) y `clave` en victorias/derrotas (con positivo/negativo claro, y con todos
+los componentes del signo equivocado: ahí debe ser None). Los dos últimos quedan FALLANDO a propósito
+hasta que Opus aplique `clave = None` cuando el extremo no tiene el signo del resultado."""
 import os, pathlib, sys, unittest
 from unittest import mock
 
@@ -34,10 +36,27 @@ class Resumen(unittest.TestCase):
         self.assertEqual(len(r["tendencia"]), 1)     # un solo bloque de 20
         self.assertEqual(r["tendencia"][0], 55.0)
 
-    def test_clave_victoria_todos_negativos_da_el_menos_negativo(self):
-        comp = dict(daño=-1.0, oro=-0.5, kp=-0.2, muertes=-0.8, visión=-0.4, cs=-0.9, objetivos=-0.6, línea=-0.7)
+    def test_clave_victoria_con_positivo_da_el_mayor(self):
+        comp = dict(daño=-0.5, oro=0.8, kp=0.3, muertes=-1.2, visión=0.4, cs=-0.9, objetivos=0.6, línea=-0.7)
         r = self._resumen([g(win=True, comp=comp, t=1)])
-        self.assertEqual(r["partidas"][0]["clave"], ("kp", -0.2))  # el mayor z (menos negativo)
+        self.assertEqual(r["partidas"][0]["clave"], ("oro", 0.8))
+
+    def test_clave_derrota_con_negativo_da_el_menor(self):
+        comp = dict(daño=-0.5, oro=0.8, kp=0.3, muertes=-1.2, visión=0.4, cs=-0.9, objetivos=0.6, línea=-0.7)
+        r = self._resumen([g(win=False, comp=comp, t=1)])
+        self.assertEqual(r["partidas"][0]["clave"], ("muertes", -1.2))
+
+    def test_clave_victoria_todos_negativos_da_none(self):
+        # nada te subió sobre tu rol: un «lo que más te subió» con z<0 engaña (propuesta: None).
+        comp = dict(daño=-0.5, oro=-0.8, kp=-0.3, muertes=-1.0, visión=-0.4, cs=-0.9, objetivos=-0.6, línea=-0.7)
+        r = self._resumen([g(win=True, comp=comp, t=1)])
+        self.assertIsNone(r["partidas"][0]["clave"])
+
+    def test_clave_derrota_todos_positivos_da_none(self):
+        # nada te bajó sobre tu rol: un «lo que más te bajó» con z>0 engaña (propuesta: None).
+        comp = dict(daño=0.5, oro=0.8, kp=0.3, muertes=1.0, visión=0.4, cs=0.9, objetivos=0.6, línea=0.7)
+        r = self._resumen([g(win=False, comp=comp, t=1)])
+        self.assertIsNone(r["partidas"][0]["clave"])
 
 
 if __name__ == "__main__":

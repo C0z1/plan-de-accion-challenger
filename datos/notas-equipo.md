@@ -1353,3 +1353,65 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 - Revisa el commit: ¿`clave` con empate (dos componentes con el mismo z) da uno estable? ¿Una partida con todos los z en 0 (todos iguales) da una `clave` engañosa (p. ej. («daño», 0.0) en una derrota)? Si sí, propón None cuando |z| < 0.25.
 - Tarea de pruebas: escribe `scripts/test_ds_resumen.py` con 3 casos: (1) 0 partidas → `tendencia` [] y `por_campeon` {}; (2) exactamente 20 partidas → `tendencia` de un solo valor; (3) `clave` en una victoria con todos los z negativos → sale el menos negativo.
 - Corrección: `test_ds_por_clase.py` también llegó durante la iteración y entró en dffb70f; pasa sin cambios. Suite: 111 OK.
+
+## 2026-11-08 15:27 · DeepSeek · revisión de cd0c2f9 (por_primer) + dffb70f/4959d83 (score.resumen)
+
+**por_primer (cd0c2f9) — está bien**
+- `builds.por_primer()` reproduce `builds.py --pool` tal cual: Ekko Ocaso 17/35 = 49% (33–64), Liche 14/23 = 61% (41–78), Cinturón 7/12 = 58%; Yone Rey Arruinado 14/27 = 52% (34–69), Filo de la Tormenta 7/10 = 70% (40–89); Sylas Cinturón 34/62 = 55%; Mordekaiser Agrietador 11/15 = 73%. Wilson verificado a mano.
+- `core[0]` es el primer legendario comprado (botas/componentes fuera) y `tuyas()` ya filtra remakes y rol: el cálculo no se contamina. Sin key funciona (`informe()` atrapa `SinKey`/`URLError` y `por_primer` sale solo de tus partidas).
+
+**¿El primer ítem depende del rival? (it. 11) — sí, en parte (coincide con tu it. 12)**
+- Por rival exacto no se puede medir: Ekko tiene 39 rivales, casi todos n = 1–4. Por clase (tu `por_clase`): contra magos Ocaso 11/20 = 55% (34–74) y Liche 8/16 = 50% (28–72): la ventaja 61/49 **se invierte**. El «61% de Liche» venía de 6/7 = 86% contra no-magos. Confusión de matchup, no de ítem. Correcto no cambiar el primer ítem por estos números.
+
+**`tags[0]` como clase (it. 12) — gruesa pero sirve**
+- `tags[0]` mete en «Fighter» a Diana, Yasuo, Irelia, Aatrox y Yone, que para Ekko son líneas muy distintas (AP diver vs AD skirmisher vs AD bruiser). Comparar por rival exacto sería más fiel, pero con n=70 y 39 rivales no hay poder. La clase es la corrección barata correcta; usarla como pantalla (pista), no como regla.
+
+**score.resumen (dffb70f) — está bien, con un borde engañoso**
+- `tendencia` (bloques de 20, el más viejo primero, el último corto) y `por_campeon` (más jugado primero) correctos. Con los datos: 284 partidas → 15 bloques (50.7 … 46.5); top3 Sylas (92, 52%, 48.2), Ekko (72, 53%, 51.2), Yone (66, 58%, 51.1).
+- **Empate en `clave`:** `min`/`max` con `key` devuelven el primero en el orden de `comp` (COMP) ante empate exacto: estable. En los datos hay 0 empates exactos (sin redondear).
+- **Todos los z ≈ 0 sí da una `clave` engañosa:** en 29/284 partidas (10%) el extremo tiene |z| < 0.25. Ejemplo real: una victoria de Mordekaiser con todos los componentes negativos da `clave = («kp», −0.17)`, que se lee «kp fue lo que más te subió» cuando en realidad nada te subió (es el menos negativo de todos negativos). **Propongo `clave = None` cuando el z elegido tenga |z| < 0.25** (la GUI muestra «sin componente destacado»). No es bug de números, es de lectura.
+
+**Tareas de pruebas:** `test_ds_por_primer.py` (3), `test_ds_por_clase.py` (3) y `test_ds_resumen.py` (3) escritos y pasando. Suite completa 114 OK.
+
+### Ideas de DeepSeek
+1. (Opus) `clave = None` si |z| < 0.25, y que el Diseñador pinte «sin componente destacado» en vez de un componente falso.
+2. (Diseñador) En «Post», mostrar `clave` siempre con el rótulo «lo que más pesó en el score, no la causa del resultado» (ya está en el docstring; conviene que el usuario lo vea).
+
+## 2026-11-08 15:32 · DeepSeek · revisión de 509ac9b
+
+**509ac9b** solo commitea mi `test_ds_resumen.py` (ya revisado): nada nuevo de Opus que revisar.
+
+**Refino mi propuesta de `clave`:** con |z| < 0.25 salían 29/284, pero ~18 tienen el signo correcto («visión −0.06» en una derrota *sí* es lo que más te bajó, solo que poco). El caso engañoso real es el **signo equivocado**: victoria con todo z<0 (6/284) o derrota con todo z>0 (5/284) = **11/284**; ahí `clave` dice «lo que más te subió» con un z negativo (o al revés). **Propongo `clave = None` cuando el extremo no tenga el signo del resultado** (victoria → si max z < 0; derrota → si min z > 0). Más correcto y más simple que el umbral |z| < 0.25.
+
+**Prueba:** dejé en `test_ds_resumen.py` 2 casos fallando a propósito (victoria todo negativo → None; derrota todo positivo → None) y 2 controles que ya pasan (victoria con positivo → el mayor; derrota con negativo → el menor). Suite: 115 OK + 2 fallando esperando el fix.
+
+### Ideas de DeepSeek
+1. (Opus) Una línea en el lambda de `clave`: `None` si `(g["win"] and z < 0) or (not g["win"] and z > 0)`.
+2. (Diseñador) Cuando `clave is None`, pintar «sin componente destacado» en vez de un componente falso.
+
+## 2026-11-08 · Diseñador · pedidos a Opus (sesión en vivo con el usuario)
+
+Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ select → franja en partida → una línea al terminar); score, tendencia e historial van después a una ventana aparte de feedback. Champ select gira en torno al **pick recomendado**. Pedidos, en orden de prioridad:
+
+1. **Por qué este pick**, aunque tu WR general con él sea bajo: una frase con el dato que lo justifica (récord contra el rival, oro al 14 en el matchup, estimado encogido contra WR general).
+2. **Cómo jugarlo contra este rival**: 2–3 reglas del PLAN que apliquen a ese campeón y rol (p. ej. Sylas: 69+ minions al 10; no salir del 6 con nivel abajo; ≤ 2 muertes del 14 al 25), cada una con su número.
+3. **Cuidado con el rival**: lo medible del matchup en tus partidas (muertes antes del 6 contra él, CS/XP/oro al 14, nivel al 6). Lo cualitativo («a qué nivel pega», «por qué es counter») no está en los datos: hace falta una fuente (tabla escrita a mano por matchup u otra); decide tú.
+4. **Counters de tu pick**: los rivales contra los que peor te va con ese campeón (récord y Wilson) y el **porqué** medido (p. ej. Sylas: Viktor −28, Yasuo −26, Qiyana −20 de CS al 14).
+5. **Aviso nuevo en partida (mid game)**: muertes del 14 al 25 (con 3+ el WR baja de 82% a 57%), p. ej. «2 muertes desde el 14: juega con objetivo». El que más pesa de todos.
+6. Todo como dict para la GUI (no texto), con `n` para marcar «pocas partidas».
+
+## 2026-11-08 · Opus · turno 6 iteración 1
+
+**Hecho (pedidos 1, 3, 4 y 6 del Diseñador):** `draft.ficha(rival, pos, champ=None)` da el champ select en torno al pick (por defecto el recomendado) como dict:
+- `por_que`: {champ, est, n_rol, wr_rol, v, n (contra el rival), oro14, alternativa {champ, est}, frase, pocas}. La frase cita el récord contra el rival si hay 3+ partidas; si no, dice que el estimado sale de tu WR con el campeón en el rol y lo compara con la alternativa («por encima/debajo de»).
+- `cuidado`: tus partidas contra ese rival en el rol (cualquier campeón tuyo): n, v, wr, ic (Wilson), oro14, cs14, xp14, nivel6 (diferencias contra él), muertes6 (tuyas antes del 6), `ref` = lo mismo en todo el rol, `notas` de la tabla a mano opcional `datos/matchups-notas.json` (`{"Zed": "texto" | ["...", ...]}`; sin archivo, roto o con otra forma = []), pocas = n < 5.
+- `counters`: hasta 3 rivales de línea con 3+ partidas cuyo estimado encogido (M=10, hacia tu WR con ese campeón) queda **bajo** ese WR, el peor primero, con récord, Wilson y las mismas medidas; `ref` = tus medias con ese campeón.
+- `draft.py` ahora carga del timeline cs14, xp14, nivel6 y muertes antes del 6 por partida (antes solo gd14).
+- GUI (mínimo): `recomendaciones()` agrega `ficha` y la tarjeta de recomendación muestra la frase de `por_que` en vez del texto fijo. El resto lo pinta el Diseñador.
+- `score.resumen()`: `clave = None` cuando el extremo tiene el signo contrario al resultado (propuesta de DeepSeek; sus 2 pruebas pasan). 122 OK.
+
+**Hallado:** con Sylas mid tus counters medidos son Fizz 1-2, Viktor 1-2 (CS −28, XP −313 al 14) y Qiyana 2-3 (CS −20, 1.4 muertes antes del 6), contra tu media con Sylas de CS −7.6 y 0.6 muertes antes del 6: cuadra con lo de DeepSeek (rivales que niegan farm). Contra Viktor (cualquier campeón tuyo) 1-7 con CS −17 contra −3 del rol. Todo n ≤ 8: pista.
+
+**DeepSeek (plan):** avisó del ruido con n chico y pidió n ≥ 5 para récords/counters; dejé el corte en 3 (con 5 casi no quedan counters) y marqué `pocas` con n < 5 para que la GUI lo diga.
+
+**Tarea de pruebas para DeepSeek:** `draft.ficha()` con (a) rival con alias o apóstrofo (`"wukong"`, `"Kai'Sa"`) en las notas y en `rival`; (b) un `champ` fuera de tu pool del rol (debe caer al recomendado); (c) partidas sin timeline mezcladas con otras con timeline (las medias solo con las que tienen). ¿Los counters reales de Ekko/Yone/Sylas cuadran con `datos/analisis-matchups-*`?

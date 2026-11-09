@@ -50,9 +50,15 @@ for f in RAW.glob("*_*.json"):
     tf = RAW / "timeline" / f.name
     if opp and tf.exists():
         fr = json.loads(tf.read_text())["info"]["frames"]
+        yo, el = str(me["participantId"]), str(opp["participantId"])
+        dif = lambda i, f: f(fr[i]["participantFrames"][yo]) - f(fr[i]["participantFrames"][el])
         if len(fr) > 14:
-            pf = fr[14]["participantFrames"]
-            g["gd14"] = pf[str(me["participantId"])]["totalGold"] - pf[str(opp["participantId"])]["totalGold"]
+            g["gd14"] = dif(14, lambda p: p["totalGold"])
+            g["xp14"] = dif(14, lambda p: p["xp"])
+            g["cs14"] = dif(14, lambda p: p["minionsKilled"] + p["jungleMinionsKilled"])
+        if len(fr) > 6: g["nivel6"] = dif(6, lambda p: p["level"])
+        g["muertes6"] = sum(e.get("type") == "CHAMPION_KILL" and e.get("victimId") == me["participantId"] and e["timestamp"] < 360000
+                            for f in fr for e in f["events"])
     games.append(g)
 assert games, "sin partidas"
 base = sum(g["win"] for g in games) / len(games)
@@ -142,6 +148,70 @@ def avisos(filas, nombre, pos):
         out.append(f"{b['champ']} va {b['vd']} contra {nombre}: aun en el mejor caso queda bajo tu WR base (counter duro). "
                    + (f"Alternativa: {alt['champ']} ({alt['est']:.0%})." if alt else "Ningún otro de tu pool lo evita."))
     return out
+
+
+MEDIDAS = {"oro14": "gd14", "cs14": "cs14", "xp14": "xp14", "nivel6": "nivel6", "muertes6": "muertes6"}  # contra tu rival de línea; muertes6 = tuyas antes del 6
+NOTAS = RAW.parent / "matchups-notas.json"  # opcional, a mano: {"Zed": "pega fuerte al 6", ...}
+
+
+def medidas(rs):
+    out = {"n": len(rs)}
+    for k, campo in MEDIDAS.items():
+        v = [r[campo] for r in rs if r.get(campo) is not None]
+        out[k] = round(st.mean(v), 1) if v else None
+    return out
+
+
+def notas(rival):
+    try: t = json.loads(NOTAS.read_text(encoding="utf-8"))
+    except (OSError, ValueError): return []  # sin tabla o rota: no hay notas, el draft sigue
+    if not isinstance(t, dict): return []
+    v = next((v for k, v in t.items() if key(k) == key(rival)), [])
+    v = [v] if isinstance(v, str) else v if isinstance(v, list) else []
+    return [x for x in v if isinstance(x, str)]
+
+
+def ficha(rival, pos, champ=None):
+    """Champ select en torno a un pick (por defecto el recomendado), como dict para la GUI (pedidos 1, 3 y 4 del Diseñador).
+    por_que: el dato que justifica el pick; cuidado: tus partidas contra ese rival en el rol (cualquier campeón tuyo) contra
+    tu media del rol, más notas a mano; counters: rivales de línea con peor estimado para ese campeón (3+ partidas).
+    Las medidas son diferencias contra tu rival de línea; pocas = n < 5 (pista)."""
+    d = datos_draft(rival, pos)
+    if not d["filas"]: return None
+    f = next((x for x in d["filas"] if key(x["champ"]) == key(champ)), d["filas"][0]) if champ else d["filas"][0]
+    c, nombre, vs = f["champ"], d["nombre"], d["vs"]
+    mv = [r for r in vs if r["champ"] == c]
+    v = sum(r["win"] for r in mv)
+    otro = next((x for x in d["filas"] if x is not f), None)
+    rol = [g for g in games if g["pos"] == pos]
+    mias = [g for g in rol if g["champ"] == c]
+    p0 = shrink(sum(r["win"] for r in mias), len(mias), base)
+    wr_rol = sum(r["win"] for r in mias) / len(mias)
+    if len(mv) >= 3:
+        frase = f"{c} va {v}-{len(mv) - v} contra {nombre} (oro @14 {gd(mv)}): estimado {f['est']:.0%}"
+    else:
+        frase = (f"{'Sin' if not mv else 'Casi sin'} partidas de {c} contra {nombre}"
+                 f"{f' ({v}-{len(mv) - v})' if mv else ''}: el estimado {f['est']:.0%} sale de tu {wr_rol:.0%} con {c} "
+                 f"en el rol ({f['n']} partidas)")
+    if otro: frase += f", {'por encima' if f['est'] >= otro['est'] else 'por debajo'} de {otro['champ']} ({otro['est']:.0%})."
+    por_que = dict(champ=c, est=round(f["est"], 3), n_rol=f["n"], wr_rol=round(wr_rol, 3), v=v, n=len(mv),
+                   oro14=medidas(mv)["oro14"], alternativa=dict(champ=otro["champ"], est=round(otro["est"], 3)) if otro else None,
+                   frase=frase, pocas=len(mv) < 5)
+    k = sum(r["win"] for r in vs)
+    cuidado = dict(rival=nombre, v=k, wr=round(k / len(vs), 3) if vs else None, ic=[round(x, 3) for x in wilson(k, len(vs))],
+                   **medidas(vs), ref=medidas(rol), notas=notas(nombre), pocas=len(vs) < 5)
+    por = defaultdict(list)
+    for g in mias:
+        if g["opp"] != "?": por[g["opp"]].append(g)
+    cs = []
+    for o, rs in por.items():
+        w = sum(r["win"] for r in rs)
+        if len(rs) < 3 or shrink(w, len(rs), p0) >= p0: continue  # solo los que te bajan del WR con ese campeón
+        cs.append(dict(rival=o, v=w, wr=round(w / len(rs), 3), ic=[round(x, 3) for x in wilson(w, len(rs))],
+                       est=round(shrink(w, len(rs), p0), 3), **medidas(rs), pocas=len(rs) < 5))
+    cs.sort(key=lambda x: x["est"])
+    return dict(champ=c, rival=nombre, pos=pos, por_que=por_que, cuidado=cuidado,
+                counters=dict(lista=cs[:3], ref=medidas(mias)))
 
 
 def draft(rival, pos):

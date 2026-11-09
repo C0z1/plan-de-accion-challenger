@@ -123,10 +123,13 @@ def resumen(n=10, raw=None):
     {partidas: [{fecha, campeon, win, kda, score, puesto, puesto_eq, linea, comp, clave}], media, ultimas20, anteriores,
      tendencia [score medio por bloque de 20, el más viejo primero], por_campeon {campeón: {n, wr, score}} (más jugado primero),
      ref: 50}. clave = (componente, z) que más te bajó en una derrota o más te subió en una victoria: lo que más pesó
-    en el score, no la causa del resultado."""
+    en el score, no la causa del resultado; None si ese extremo tiene el signo contrario (victoria sin nada arriba de tu rol)."""
     gs = partidas(raw)[0]
     m = lambda rs: round(st.mean(g["score"] for g in rs), 1) if rs else None
-    clave = lambda g: (min if not g["win"] else max)(((c, round(v, 2)) for c, v in g["comp"].items()), key=lambda x: x[1])
+
+    def clave(g):
+        c, z = (max if g["win"] else min)(((c, round(v, 2)) for c, v in g["comp"].items()), key=lambda x: x[1])
+        return None if (z < 0 if g["win"] else z > 0) else (c, z)
     champs = defaultdict(list)
     for g in gs: champs[g["champ"]].append(g)
     return dict(partidas=[dict(fecha=datetime.fromtimestamp(g["t"] / 1000).strftime("%m-%d %H:%M"), campeon=g["champ"],

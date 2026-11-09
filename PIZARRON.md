@@ -9,18 +9,18 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 5, iteración 13: `score.resumen()` da `clave` por partida (lo que más bajó/subió el score), `tendencia` por bloques de 20 y `por_campeon` (pendiente del Diseñador). Entran `test_ds_por_primer.py` y `test_ds_por_clase.py` de DeepSeek (pasan sin cambios). 111 OK.
-- **Siguiente:** revisión de DeepSeek (`test_ds_resumen.py`); resumen del turno en `RESUMEN-NOCHE.md` si es la última iteración.
-- **Actualizado:** 2026-11-08 (turno 5, iteración 13)
+- **Estado:** turno 6, iteración 1: `draft.ficha()` da por qué el pick, cuidado con el rival (con notas a mano opcionales) y counters del pick como dict (pedidos 1, 3, 4 y 6); la ventana muestra la frase «por qué». `clave = None` con el signo contrario (DeepSeek). 122 OK.
+- **Siguiente:** pedido 5 (aviso en vivo de muertes 14–25, verificando el 82/57) y pedido 2 (reglas del PLAN por campeón y rol).
+- **Actualizado:** 2026-11-08 (turno 6, iteración 1)
 
 ### DeepSeek · revisor
-- **Estado:** revisados 0c67ab0 (duelo de score.py: 124/284=44%, justo — la corrección de rol se cancela; `individualPosition` 0/284 difieren; `test_ds_duelo.py` 3 casos) y 971463f (avisos como dict: sin `q.put(("aviso", str))` sueltos, minuto correcto, 429 ya no da UnboundLocalError; `test_ds_aviso_dict.py` 3 casos). Suite 90 OK.
-- **Siguiente:** revisar 7ab000d (iteración 7) → `test_ds_primer.py`.
-- **Actualizado:** 2026-11-08 15:12
+- **Estado:** revisado 509ac9b (solo commitea mi `test_ds_resumen.py`: nada nuevo que revisar). Refiné `clave`: engaña en 11/284 (no 29), victoria con todo z<0 o derrota con todo z>0 → propongo None cuando el extremo no tenga el signo del resultado. Dejé 2 casos fallando en `test_ds_resumen.py` + 2 controles que pasan. Suite 115 OK + 2 fallando a propósito.
+- **Siguiente:** que Opus aplique `clave = None` (o diga por qué no).
+- **Actualizado:** 2026-11-08 15:32
 
 ### Diseñador
-- **Estado:** iteración 3: `datos/diseno/mockup.html` listo (3 pantallas, acento cian/ámbar alternable). DeepSeek sigue bloqueado por permisos.
-- **Siguiente:** esperar al usuario; si sobra turno, pulir el mockup con sus respuestas.
+- **Estado:** sesión en vivo con el usuario sobre el canvas de Claude Design (3 pantallas); preguntas P1–P10 de una en una.
+- **Siguiente:** aplicar sus cambios al canvas; al cerrar, acuerdos en `datos/diseno-acuerdos.md`.
 - **Actualizado:** 2026-11-08 (turno 5, iteración 3)
 
 ## Mapa del repo
@@ -30,7 +30,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/descargar.py` | Baja partidas y timelines de la Riot API a `datos/raw/` | Opus |
 | `scripts/analizar.py` | Estadísticas agregadas → `datos/analisis-*.md` | Opus |
 | `scripts/timeline.py` | Análisis de timeline (muertes, oro por minuto) | Opus |
-| `scripts/draft.py` | Guía de matchups (sin args) o recomendación de pick: `draft.py <rival> [rol]` | Opus |
+| `scripts/draft.py` | Guía de matchups (sin args) o recomendación de pick: `draft.py <rival> [rol]`; `ficha()` da por qué el pick, cuidado con el rival y counters como dict | Opus |
+| `datos/matchups-notas.json` | Opcional, a mano: `{"Rival": "nota" o ["…"]}`; sale en `ficha()["cuidado"]["notas"]` (si no existe, nada) | Usuario |
 | `datos/analisis-matchups-*.md` | Guía de matchups y bans generada por `draft.py` | Opus |
 | `scripts/revision.py` | Últimas N partidas contra las metas del plan (✅/❌), racha de oro < 0 al 14 (3+ de las últimas 5) con 2 sugerencias, y tabla por partida: `revision.py [N]` | Opus |
 | `datos/analisis-revision-*.md` | Salida de `revision.py 20` | Opus |
@@ -171,6 +172,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: tu WR por primer ítem: Ekko Ocaso 49% (33–64, n=35) contra Liche 61% (41–78, n=23); Yone Rey Arruinado 52% (n=27) contra Filo de la Tormenta 70% (n=10). Intervalos cruzados y puede ser matchup: pista.
 - 2026-11-08 · Opus: era matchup: contra magos, Ekko Ocaso 55% (11/20) y Liche 50% (8/16); la ventaja de Liche venía de luchadores (5/5). Yone contra magos: Rey Arruinado 62% (13/21); el 70% de Filo viene de asesinos/tanques (n=6).
 - 2026-11-08 · Opus: en tus derrotas lo que más baja tu score es muertes (34 de 130), línea (34) y KP (32); en victorias lo que más sube, muertes (58) y línea (47).
+- 2026-11-08 · DeepSeek: `clave` de `score.resumen()` engaña en 11/284 (victoria con todo z<0: 6; derrota con todo z>0: 5): «lo que más te subió/bajó» con el signo equivocado. Propongo `clave = None` cuando el extremo no tenga el signo del resultado (más correcto que |z|<0.25, que pillaba 29 incluyendo 18 con signo correcto).
+- 2026-11-08 · Opus: counters medidos de Sylas mid: Fizz 1-2, Viktor 1-2 (CS −28 al 14) y Qiyana 2-3 (CS −20, 1.4 muertes antes del 6) contra tu media con Sylas de CS −7.6 y 0.6 muertes. Contra Viktor con cualquiera, 1-7 y CS −17 (rol −3). n ≤ 8: pista.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -223,8 +226,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: el duelo de `score.py` sigue con `teamPosition` (rol asignado), no `individualPosition`: cambiaría 0/284 partidas y Riot a veces trae «Invalid».
 - 2026-11-08 · Opus: el WR por primer ítem se muestra también contra la clase más común del rival (`tags[0]` de Data Dragon), no por rival exacto (n por rival es de 1–3).
 - 2026-11-08 · Opus: la «clave» de cada partida en `score.resumen()` es el componente que más pesó en tu score, no la causa del resultado; la GUI debe decirlo así.
+- 2026-11-08 · Opus: un counter del pick = rival con 3+ partidas cuyo estimado encogido (M=10) queda bajo tu WR con ese campeón; se marca `pocas` con n < 5 (DeepSeek pedía n ≥ 5, pero con eso casi no quedan). Lo cualitativo del matchup no se infiere: sale solo de `datos/matchups-notas.json`, que llenas tú.
 
 ## Para el usuario (cuando vuelva)
+- Nuevo: si quieres notas propias por rival en champ select («pega fuerte al 3»), crea `datos/matchups-notas.json` con `{"Zed": "tu nota"}`. Sin el archivo no pasa nada. La ventana ya te dice por qué te recomienda el pick (recompila `Companion.exe` para tenerlo).
 - Corrige lo de abajo: no cambies el primer ítem por esos números. Comparando contra el mismo tipo de rival (magos), Ekko gana igual con Ocaso (55%) que con Liche (50%), y Yone abre bien con Rey Arruinado (62%). `builds.py --pool` ahora lo muestra («Solo contra magos…»).
 - Nuevo: `builds.py --pool` (sin key) te da tu WR por primer ítem con cada campeón. Con Ekko abres más con Ocaso y Alba (49%) que con Liche (61%); con Yone, Rey Arruinado 52% contra Filo de la Tormenta 70% (10 partidas). Pista, no causa: puede depender del rival.
 - Nuevo: en partida, la ventana del companion muestra arriba tu nivel contra el de tu rival y tu CS (con la meta al 10 si juegas Sylas), cada 30 s. Y la etiqueta «key ok / falta RIOT_KEY» se actualiza sola tras `setx`. Recompila `Companion.exe` para tenerlo.

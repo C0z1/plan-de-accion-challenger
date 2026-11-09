@@ -86,7 +86,7 @@ def hay_key():
 def recomendaciones(pos, rivales):
     """[(rival, datos_draft | None)] usando draft.py (lo recarga si hay partidas nuevas)."""
     import draft
-    with DRAFT: return [(r, draft.datos_draft(r, pos) if r else None) for r in rivales]
+    with DRAFT: return [(r, dict(draft.datos_draft(r, pos), ficha=draft.ficha(r, pos)) if r else None) for r in rivales]
 
 
 DRAFT = threading.Lock()  # el reload de draft (hilo post-partida) no debe pisar un datos_draft a medias
@@ -245,7 +245,8 @@ class App:
             c = self.tk.Canvas(t, height=6, bg=BG, highlightthickness=0); c.pack(fill="x", pady=(4, 0))
             c.bind("<Configure>", lambda e, c=c, est=f["est"], col=ACENTO if i == 0 else BARRA:
                    (c.delete("all"), c.create_rectangle(0, 0, e.width * est, 6, fill=col, width=0)))
-        self.tk.Label(t, text="Tu récord contra el rival, mezclado con tu WR del campeón en el rol.", bg=PANEL, fg=MUTED,
+        por_que = (d.get("ficha") or {}).get("por_que", {}).get("frase", "Tu récord contra el rival, mezclado con tu WR del campeón en el rol.")
+        self.tk.Label(t, text=por_que, bg=PANEL, fg=MUTED,
                       font=(F, 8), wraplength=340, justify="left").pack(anchor="w", pady=(10, 0))
         for a in d.get("avisos", []):
             self.tk.Label(t, text=a, bg=PANEL, fg=MAL, font=(F, 9, "bold"), wraplength=340, justify="left").pack(anchor="w", pady=(8, 0))
