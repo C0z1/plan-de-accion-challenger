@@ -92,6 +92,7 @@ class H(http.server.BaseHTTPRequestHandler):
 
     def enviar(self, code, cuerpo, tipo):
         self.send_response(code); self.send_header("Content-Type", tipo); self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Security-Policy", "default-src 'none'; img-src 'self'; connect-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'")
         self.end_headers(); self.wfile.write(cuerpo)
 
     def do_GET(self):
