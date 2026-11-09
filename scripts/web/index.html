@@ -53,7 +53,8 @@ details summary{cursor:pointer;color:#CACACA}
 <nav aria-label="Secciones">
 <svg role="img" aria-label="Companion" width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="#D08726" stroke-width="3"><circle cx="20" cy="20" r="16"></circle><path d="M12 20h16M20 12v16"></path></svg>
 <div style="height:42px"></div>
-<button aria-label="Companion" aria-current="page"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2"><path d="M4 4l11 11M20 4L9 15M13 17l4 4M11 17l-4 4M15 13l4-1M9 13l-4-1"></path></svg></button>
+<button id="b-companion" aria-label="Companion" aria-current="page" onclick="ver('companion')"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2"><path d="M4 4l11 11M20 4L9 15M13 17l4 4M11 17l-4 4M15 13l4-1M9 13l-4-1"></path></svg></button>
+<button id="b-perfil" aria-label="Tu rendimiento" onclick="ver('perfil')"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#818181" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg></button>
 </nav>
 <main id="main"><h1>Plan Challenger</h1><p class="sub">Conectando…</p></main>
 <aside id="aside" hidden></aside>
@@ -164,13 +165,67 @@ function otraFase(s) {  // en partida, al terminar y esperando
   return bloques.join("");
 }
 
+const COMP = {"daño": "Daño", oro: "Oro", kp: "KP", muertes: "Muertes", "visión": "Visión", cs: "CS", objetivos: "Objetivos", "línea": "Línea"};
+function perfil(s) {  // ventana 2 del canvas: score, WR y muertes de las últimas 20, qué falla, tilt, cuenta y campeones
+  const R = s.rendimiento;
+  if (!R) return `<div><h1>Tu rendimiento</h1><span class="sub">${esc(s.perfil)}</span></div><div class="card"><span class="sub">Sin partidas en disco (o calculando…).</span></div>`;
+  const r = R.resumen, t = R.tilt, ps = r.partidas, v = ps.filter(p => p.win).length, wr = ps.length ? v / ps.length : null;
+  const dif = r.ultimas20 != null && r.anteriores != null ? r.ultimas20 - r.anteriores : null;
+  const media = {};  // media de cada componente (z contra tu rol) en estas partidas; las 3 peores
+  ps.forEach(p => Object.entries(p.comp).forEach(([c, z]) => media[c] = (media[c] || 0) + z / ps.length));
+  const peores = Object.entries(media).sort((a, b) => a[1] - b[1]).slice(0, 3);
+  const base = t.base.wr, x = w => Math.max(0, Math.min(100, (w - .45) / .2 * 100));  // escala 45–65%
+  const pool = Object.entries(r.por_campeon).slice(0, 5);
+  return `
+  <div><h1>Tu rendimiento</h1><span class="sub">Últimas ${ps.length} partidas · ${esc(s.perfil)}</span></div>
+  <div class="tres">
+    <div class="card"><b>Score</b><div class="big"><b>${r.ultimas20 ?? "–"}</b><span>/ 100</span></div>
+      <span class="tag ${r.ultimas20 >= r.ref ? "ok" : "amber"}">${r.ultimas20 >= r.ref ? "▲ Sobre" : "▼ Bajo"} lo típico de tu rol (${r.ref})</span>
+      <span class="pie">${dif != null ? `Antes ${r.anteriores}: <b>${signo(dif, 1)}</b>.` : ""} 50 = un jugador típico de tu rol en esa partida.</span></div>
+    <div class="card"><b>Win rate</b><div class="big"><b>${wr != null ? pct(wr) : "–"}</b><span>${v} de ${ps.length}</span></div>
+      ${wr != null && base != null ? `<span class="tag ${wr >= base ? "ok" : "red"}">${wr >= base ? "▲" : "▼"} Tu temporada: ${pct(base)}</span>` : ""}
+      <span class="pie">20 partidas mueven el WR ±11 puntos por azar: mira la tendencia.</span></div>
+    <div class="card"><b>Tendencia</b><div class="big"><b>${r.tendencia.length ? r.tendencia[r.tendencia.length - 1] : "–"}</b><span>score del último bloque</span></div>
+      <svg role="img" aria-label="Score medio por bloque de 20 partidas" viewBox="0 0 100 40" style="width:100%;height:60px">${(() => {
+        const ts = r.tendencia.filter(z => z != null), lo = Math.min(...ts, 45), hi = Math.max(...ts, 55);
+        const pt = ts.map((z, i) => `${ts.length > 1 ? i / (ts.length - 1) * 100 : 50},${40 - (z - lo) / (hi - lo) * 40}`).join(" ");
+        return `<line x1="0" x2="100" y1="${40 - (50 - lo) / (hi - lo) * 40}" y2="${40 - (50 - lo) / (hi - lo) * 40}" stroke="#E8E7E7"/><polyline points="${pt}" fill="none" stroke="#478F96" stroke-width="2"/>`;
+      })()}</svg><span class="pie">Score medio por bloque de 20 partidas, la más vieja a la izquierda; la raya es 50.</span></div>
+  </div>
+  <div class="card"><div style="display:flex;justify-content:space-between"><h2>Qué está fallando</h2><span class="sub" style="font-size:12px">Últimas ${ps.length}</span></div>
+    <span class="sub" style="font-size:14px">Media de cada componente contra tu rol (desviaciones; 0 = típico). Los 3 más bajos:</span>
+    ${peores.map(([c, z]) => `<div class="regla"><span style="width:90px"><b>${esc(COMP[c] || c)}</b></span>
+      <div style="flex:1;height:14px;background:#F1F1F1;border-radius:7px"><div style="width:${Math.min(100, Math.abs(z) / 1.5 * 100)}%;height:14px;border-radius:7px;background:${z < 0 ? "var(--red)" : "var(--teal)"}"></div></div>
+      <span style="width:50px;text-align:right">${signo(z, 2)}</span></div>`).join("")}
+    <span class="pie">Lo que más pesó en tu score, no la causa de perder.</span></div>
+  <div class="tres" style="grid-template-columns:1fr 1fr">
+    <div class="card"><b>Tilt hoy</b>
+      <div class="big"><b>${t.racha}</b><span>derrota${t.racha === 1 ? "" : "s"} seguida${t.racha === 1 ? "" : "s"}</span></div>
+      ${t.racha >= 2 ? '<span class="tag red">✕ Para: descansa 15 min</span>' : `<span class="tag ok">${t.hoy.length} partida${t.hoy.length === 1 ? "" : "s"} hoy</span>`}
+      <span class="pie">Tras 2 derrotas seguidas en una sesión: ${t.tras2.v}-${t.tras2.n - t.tras2.v}${t.tras2.wr != null ? ` (${pct(t.tras2.wr)}, Wilson ${pct(t.tras2.ic[0])}–${pct(t.tras2.ic[1])})` : ""}${t.pocas ? " · pista: pocas partidas" : ""}. Llegaste a 2 seguidas ${t.llegas} veces.</span></div>
+    <div class="card"><b>Tu cuenta</b><span class="sub">${esc(s.perfil)}</span>
+      <div class="big"><b>${base != null ? pct(base) : "–"}</b><span>${t.base.n} partidas · meta 60%</span></div>
+      ${base != null ? `<div class="barra"><div class="punto" style="left:${x(base)}%"></div><div class="marca" style="left:${x(.6)}%"></div></div>
+      <div class="escala" style="color:var(--muted)"><span>45</span><span>50</span><span>55</span><span>60</span><span>65</span></div>` : ""}</div>
+  </div>
+  <div class="card"><h2>Tus campeones</h2>
+    ${pool.map(([c, d]) => `<div class="fila" style="border-color:var(--line)"><span>${img("champion", c, "item", c)} <b>${esc(c)}</b></span><span>${pct(d.wr)} · ${d.n} partidas · score ${d.score}</span></div>`).join("")}</div>`;
+}
+
+let elegida = null, ultFase = null;  // vista que eligió el usuario; se olvida al cambiar de fase
+function ver(x) { elegida = x; v = -1; tick(); }
+
 let v = -1;
 async function tick() {
   try {
     const s = await (await fetch("/api/estado")).json();
     if (s.v !== v) {
       v = s.v;
-      const [m, a] = s.fase === "ChampSelect" && s.draft ? champSelect(s) : [otraFase(s), ""];
+      if (s.fase !== ultFase) { ultFase = s.fase; elegida = null; }
+      const vista = elegida || (["ChampSelect", "InProgress", "PreEndOfGame", "EndOfGame"].includes(s.fase) || s.fin || s.revision ? "companion" : "perfil");
+      document.getElementById("b-companion").toggleAttribute("aria-current", vista === "companion");
+      document.getElementById("b-perfil").toggleAttribute("aria-current", vista === "perfil");
+      const [m, a] = vista === "perfil" ? [perfil(s), ""] : s.fase === "ChampSelect" && s.draft ? champSelect(s) : [otraFase(s), ""];
       const av = s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "";
       document.getElementById("main").innerHTML = av + m;
       const as = document.getElementById("aside"); as.innerHTML = a; as.hidden = !a;

@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 7, iteración 2: la app web ya cambia sola de fase. En partida: franja 6 / 10 / 14+ (nivel contra el rival, CS y meta al 10, muertes desde el 14 / 2); al terminar, las mismas tres con ✓/✕ y el KDA. `--demo` recorre champ select → partida → fin con la fixture en vivo. `minions10()` exige `campeon` y `minimo` (pedido de DeepSeek). 182 OK.
-- **Siguiente:** Perfil (`score.resumen()`, `tilt()`); luego la build v0.1.0.
-- **Actualizado:** 2026-11-09 (turno 7, iteración 2)
+- **Estado:** turno 7, iteración 3: la app web tiene la ventana 2, «Tu rendimiento» (Perfil), con `score.resumen(20)` y `tilt()`: score y WR de las últimas 20, tendencia por bloques, los 3 componentes más bajos, tilt hoy, cuenta (WR contra meta 60%) y campeones. El nav alterna Companion/Perfil; fuera de champ select y partida se ve Perfil. Se recalcula en un hilo al arrancar y tras cada revisión. 189 OK.
+- **Siguiente:** build v0.1.0 (PyInstaller con `--add-data` de `scripts/web`), tag y RESUMEN-NOCHE.
+- **Actualizado:** 2026-11-09 (turno 7, iteración 3)
 
 ### DeepSeek · revisor
 - **Estado:** revisado f8f7c13 (iteración 12, `anticipa.py`): correcto. Solo muertes6 anticipa (r 0.28 LOO n=155, 0.37 temporal n=77); aguanta 4+ anteriores (r 0.34–0.40) y permutar por campeón no lo explica (p 0.002→0.004). Escribí `test_ds_anticipa.py` (3) → 166 OK. Menor: los p no se reproducen entre corridas (set sin ordenar en `anticipa.py`).

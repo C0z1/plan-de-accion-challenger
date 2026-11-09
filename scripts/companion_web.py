@@ -14,7 +14,7 @@ WEB = gui.REPO / "scripts" / "web"
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "v": 0}
+          "aviso": None, "espera": None, "rango": None, "rendimiento": None, "v": 0}
 VIVO = [time.time()]  # último GET de la ventana
 
 
@@ -41,14 +41,28 @@ def evento(e):
     elif tipo == "meta": s = {"meta": {**e[1], "texto": gui.texto_meta(e[1])}}
     elif tipo == "fin": s = {"fin": {**e[1], "texto": companion.linea_fin(e[1])}}
     elif tipo == "post_espera": s = {"espera": e[1]}
-    elif tipo == "revision": s = {"revision": e[1], "fin": None, "espera": None, "perfil": gui.perfil(ESTADO["rango"])}
+    elif tipo == "revision":
+        s = {"revision": e[1], "fin": None, "espera": None, "perfil": gui.perfil(ESTADO["rango"])}
+        threading.Thread(target=refrescar, daemon=True).start()
     elif tipo == "rango": s = {"rango": e[1] or ESTADO["rango"]}; s["perfil"] = gui.perfil(s["rango"])
     elif tipo == "aviso": s = {"aviso": e[1]}
     with LOCK: ESTADO.update(s, v=ESTADO["v"] + 1)
 
 
+def rendimiento(raw=None):
+    """Ventana 2 (Perfil): score.resumen(20) y score.tilt(); None si no hay partidas en disco."""
+    import score
+    try: return {"resumen": score.resumen(20, raw), "tilt": score.tilt(raw)}
+    except (OSError, ValueError, KeyError, StopIteration): return None
+
+
 def bombear(q):
     while True: evento(q.get())
+
+
+def refrescar():  # lee ~300 JSON: en su hilo, para no frenar la cola
+    r = rendimiento()
+    with LOCK: ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1)
 
 
 def estado():
@@ -114,6 +128,7 @@ def main(argv=None):
     srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H); url = f"http://127.0.0.1:{srv.server_port}/"
     q = queue.Queue()
     threading.Thread(target=bombear, args=(q,), daemon=True).start()
+    threading.Thread(target=refrescar, daemon=True).start()
     threading.Thread(target=demo if "--demo" in argv else gui.trabajador, args=(q,), daemon=True).start()
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     print(url, flush=True)

@@ -1,7 +1,8 @@
 """Pruebas de companion_web.py (Turno 7): el servidor local escucha solo en 127.0.0.1 y sirve
 el estado de la página sin red ni ventanas. No toca el cliente de LoL ni descarga imágenes."""
-import http.server, json, threading, unittest, urllib.error, urllib.request
+import http.server, json, queue, threading, unittest, urllib.error, urllib.request
 from pathlib import Path
+from unittest import mock
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -66,6 +67,10 @@ class TestServidor(unittest.TestCase):
         code, _, _ = self.s.get("/no-existe")
         self.assertEqual(code, 404)
 
+    def test_imagen_nombre_muy_largo_404(self):
+        code, _, _ = self.s.get("/img/champion/" + "a" * 41 + ".png")
+        self.assertEqual(code, 404)
+
 
 class TestEstado(unittest.TestCase):
     def test_evento_fase_resetea_draft(self):
@@ -89,6 +94,45 @@ class TestEstado(unittest.TestCase):
         self.assertEqual(r["v"], 1)
         self.assertEqual(r["n"], 2)
         self.assertEqual(r["lineas"], {"cuidado": [], "counters": []})
+
+    def test_draft_json_ficha_none_no_truena(self):
+        d = web.draft_json("MIDDLE", [("Zed", {"conocido": True, "vs": [], "en": [], "filas": [], "ficha": None})])
+        self.assertEqual(d["recs"][0]["lineas"], {"cuidado": [], "counters": []})
+
+    def test_evento_rango_none_conserva_el_anterior(self):
+        r = {"tier": "DIAMOND", "division": "II", "lp": 30, "wins": 100, "losses": 100, "n": 200, "wr": 50}
+        web.ESTADO["rango"] = r
+        web.evento(("rango", None))
+        self.assertIs(web.ESTADO["rango"], r)
+        self.assertIn("Diamond II", web.ESTADO["perfil"])
+
+    def test_evento_fin_muertes_none_serializable(self):
+        web.evento(("fin", {"minuto": 12, "campeon": "Ekko", "kda": "1/0/2", "cs": 80,
+                            "rival": "Zed", "cotejo": None, "muertes14_25": None}))
+        d = json.loads(web.estado())
+        self.assertIsNone(d["fin"]["muertes14_25"])
+        self.assertIsInstance(d["fin"]["texto"], str)
+
+    def test_minions10_vacio_o_json_roto_es_none(self):
+        for cfg in ('{"minions10": []}', "{no es json"):
+            with mock.patch.object(web.companion, "CFG") as f:
+                f.exists.return_value = True
+                f.read_text.return_value = cfg
+                self.assertIsNone(web.companion.minions10(), cfg)
+
+    def test_imagen_campeon_desconocido_sin_red(self):
+        import builds
+        with mock.patch.object(builds, "ddragon", return_value=({}, {}, {})):
+            self.assertIsNone(web.imagen("champion", "NoExiste"))
+
+    def test_demo_sin_foto_vivo_solo_champselect(self):
+        q = queue.Queue()
+        with mock.patch.object(web.gui, "REPO", Path("__no_repo__")), \
+             mock.patch.object(web.companion, "nombres", return_value={}), \
+             mock.patch.object(web.gui, "recomendaciones", return_value=[("Zed", {"ficha": None})]):
+            web.demo(q)
+        evs = [q.get() for _ in range(q.qsize())]
+        self.assertEqual([e[0] for e in evs], ["fase", "draft"])
 
 
 if __name__ == "__main__":
