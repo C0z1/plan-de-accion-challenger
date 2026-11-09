@@ -29,6 +29,17 @@ def lcu(path):
     except FALLAS: return None  # sin lockfile o a medias, cliente cerrándose, timeout, 404 fuera de champ select
 
 
+def rango(s):
+    """Solo/dúo de /lol-ranked/v1/current-ranked-stats (fresco, sin key de Riot) como dict
+    {tier, division, lp, wins, losses, n, wr}; division None en Master+ (la LCU da «NA»). None sin datos."""
+    q = ((s or {}).get("queueMap") or {}).get("RANKED_SOLO_5x5") or next((e for e in (s or {}).get("queues") or [] if e.get("queueType") == "RANKED_SOLO_5x5"), None)
+    if not q or q.get("tier") in (None, "", "NONE"): return None
+    v, d = q.get("wins") or 0, q.get("losses") or 0
+    apex = q["tier"] in ("MASTER", "GRANDMASTER", "CHALLENGER") or q.get("division") in (None, "", "NA")
+    return {"tier": q["tier"], "division": None if apex else q["division"],
+            "lp": q.get("leaguePoints") or 0, "wins": v, "losses": d, "n": v + d, "wr": round(100 * v / (v + d)) if v + d else None}
+
+
 VIVO = DIR.parent / "datos" / "vivo"
 
 

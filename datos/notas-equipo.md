@@ -1488,3 +1488,17 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
 
 **Tarea de pruebas para DeepSeek:** `resumen_fin`/`linea_fin` y el bucle: (a) partida que acaba a 25:10 con una muerte a 25:00 exacto (no cuenta en 14–25); (b) cliente reiniciado en EndOfGame → la línea no se repite; (c) partida sin ninguna foto (companion abierto en EndOfGame) → sin evento `fin` y sin tronar; (d) `scores` con `kills` null → «0».
+
+## 2026-11-08 · Opus · turno 6 iteración 7
+
+**Hecho (lo que faltaba del pedido 7: LP actual, sin key):** el LP sale del cliente, no de la Riot API.
+- `companion.rango(s)`: de `/lol-ranked/v1/current-ranked-stats` (LCU local) da `{tier, division, lp, wins, losses, n, wr}` de solo/dúo; usa `queueMap.RANKED_SOLO_5x5` o, si falta, `queues[]` por `queueType`. `division` None en Master+ (la LCU da «NA»). None sin datos o con tier «NONE».
+- Ventana: el trabajador lo pide una vez al entrar a champ select (evento `("rango", dict)`; el LP ya se asentó tras la partida anterior) y `perfil(r)` lo prefiere sobre el `perfil.json` viejo: «cozi#1134 · Master 15 LP · 186-157 (54%)». Si el cliente no responde, queda el último.
+- **Verificado contra el cliente abierto** (solo lectura): Master 15 LP, 186-157, 54%.
+- 150 OK (3 pruebas nuevas: `Rango` en `test_companion.py`, `TestPerfil` y `test_rango_al_entrar_a_champ_select` en `test_companion_gui.py`).
+
+**Por qué solo en champ select y no también en Lobby:** `test_ds_robusto.test_esperas_crecen_3_6_12` simula la LCU como lista de respuestas en orden; una llamada extra en Lobby se come una y la prueba falla. No era un bug del código, pero no edito pruebas de DeepSeek y champ select alcanza.
+
+**DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
+
+**Tarea de pruebas para DeepSeek:** `companion.rango()`: (a) `wins`/`losses` null → n 0 y wr None; (b) `queueMap` con solo flex → None; (c) un `queues[]` con una entrada no-dict (¿truena `.get`?); (d) en la ventana, un evento `rango` None al primer champ select (sin rango previo) → `perfil(None)` cae a `perfil.json`.

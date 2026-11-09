@@ -24,6 +24,21 @@ class TestParsear(unittest.TestCase):
         self.assertIsNone(g.parsear_revision("nada"))
 
 
+class TestPerfil(unittest.TestCase):
+    def test_rango_del_cliente_gana_al_perfil_viejo(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as t:
+            orig, g.RAW = g.RAW, pathlib.Path(t)
+            try:
+                (g.RAW / "perfil.json").write_text(json.dumps({"account": {"gameName": "Jugador", "tagLine": "LAN"},
+                    "league": [{"queueType": "RANKED_SOLO_5x5", "tier": "MASTER", "rank": "I", "leaguePoints": 15}]}))
+                self.assertEqual(g.perfil(), "Jugador#LAN · Master 15 LP")
+                r = {"tier": "MASTER", "division": None, "lp": 42, "wins": 120, "losses": 100, "n": 220, "wr": 55}
+                self.assertEqual(g.perfil(r), "Jugador#LAN · Master 42 LP · 120-100 (55%)")
+                self.assertEqual(g.perfil({**r, "tier": "DIAMOND", "division": "II", "n": 0}), "Jugador#LAN · Diamond II 42 LP")
+            finally: g.RAW = orig
+
+
 class TestLineasFicha(unittest.TestCase):
     REF = dict(n=50, oro14=-118, cs14=-3, xp14=-50, nivel6=0.0, muertes6=0.6)
 
@@ -69,6 +84,23 @@ class TestTrabajador(unittest.TestCase):
         self.assertEqual((avisos[0]["tipo"], avisos[0]["minuto"]), ("consejo", int(d["gameData"]["gameTime"] // 60)))
         metas = [e[1] for e in list(q.queue) if e[0] == "meta"]
         self.assertTrue(metas); self.assertEqual((metas[0]["nivel"], metas[0]["nivel_rival"], metas[0]["rival"]), (5, 6, "Zed"))
+
+    def test_rango_al_entrar_a_champ_select(self):
+        import queue
+        c = g.companion
+        orig = c.lcu, g.time.sleep
+        vueltas = iter(range(2))
+        def dormir(_):
+            if next(vueltas, None) is None: raise KeyboardInterrupt
+        stats = {"queueMap": {"RANKED_SOLO_5x5": {"tier": "MASTER", "division": "NA", "leaguePoints": 42, "wins": 1, "losses": 1}}}
+        c.lcu = lambda path: stats if "ranked" in path else (None if "session" in path else "ChampSelect")
+        g.time.sleep = dormir
+        q = queue.Queue()
+        try:
+            with self.assertRaises(KeyboardInterrupt): g.trabajador(q)
+        finally: c.lcu, g.time.sleep = orig
+        rangos = [e[1] for e in list(q.queue) if e[0] == "rango"]
+        self.assertEqual([r["lp"] for r in rangos], [42])  # una vez al entrar, no en cada vuelta
 
     def test_meta_fase_y_texto(self):
         import json, copy

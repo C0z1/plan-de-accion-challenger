@@ -67,11 +67,13 @@ def ultima_partida():
     except (OSError, ValueError, KeyError, StopIteration): return {}
 
 
-def perfil():
+def perfil(r=None):
+    """«gameName#tag · Master 15 LP · 120-100 (55%)»: el rango r (companion.rango, fresco del cliente) si lo hay; si no, el de perfil.json."""
     try:
         d = json.loads((RAW / "perfil.json").read_text()); a = d["account"]
         solo = next((e for e in d["league"] if e["queueType"] == "RANKED_SOLO_5x5"), None)
         rango = f"{solo['tier'].title()} {solo.get('rank', '') if solo['tier'] not in ('MASTER', 'GRANDMASTER', 'CHALLENGER') else ''} {solo['leaguePoints']} LP".replace("  ", " ") if solo else "sin rango"
+        if r: rango = " ".join(x for x in (r["tier"].title(), r["division"], f"{r['lp']} LP") if x) + (f" · {r['wins']}-{r['losses']} ({r['wr']}%)" if r["n"] else "")
         return f"{a['gameName']}#{a['tagLine']} · {rango}"
     except (OSError, ValueError, KeyError): return "sin datos: corre descargar.py"
 
@@ -165,6 +167,8 @@ def trabajador(q):
         fase = None  # si lcu() lanza, cuenta como cliente caído
         try:
             fase = companion.lcu("/lol-gameflow/v1/gameflow-phase")
+            if fase != fase_ant and fase == "ChampSelect":  # LP fresco del cliente (sin key); ya asentado tras la partida anterior
+                q.put(("rango", companion.rango(companion.lcu("/lol-ranked/v1/current-ranked-stats"))))
             if fase != fase_ant: q.put(("fase", fase))
             jugando = (fase or real) == "InProgress"  # cliente reiniciándose a media partida: la partida sigue
             if fase == "ChampSelect" and (s := companion.lcu("/lol-champ-select/v1/session")):
@@ -201,7 +205,7 @@ F, MONO = "Segoe UI", "Consolas"
 class App:
     def __init__(self, root):
         import tkinter as tk
-        self.tk, self.root, self.fase, self.pendiente, self.fin = tk, root, None, None, None
+        self.tk, self.root, self.fase, self.pendiente, self.fin, self.rango = tk, root, None, None, None, None
         root.title("Plan Challenger · Companion"); root.configure(bg=BG); root.geometry("420x760"); root.minsize(380, 560)
         cab = tk.Frame(root, bg=BG); cab.pack(fill="x", padx=16, pady=(14, 12))
         tk.Label(cab, text="PC", bg=ACENTO, fg=BG, font=(F, 10, "bold"), width=3, height=1).pack(side="left")
@@ -329,7 +333,7 @@ class App:
             elif fase == "InProgress":
                 if self.pendiente: self.vista_revision(self.pendiente); self.pendiente = None
                 else: self.espera("En partida: guardo una foto en vivo cada 30 s en datos/vivo/.")
-            elif fase in ("Lobby", "Matchmaking", "ReadyCheck"): self.aviso.pack_forget(); self.sub.config(text=perfil())
+            elif fase in ("Lobby", "Matchmaking", "ReadyCheck"): self.aviso.pack_forget(); self.sub.config(text=perfil(self.rango))
             self.fase = fase
         elif tipo == "meta": self.sub.config(text=texto_meta(e[1]))  # Lobby la devuelve a perfil()
         elif tipo == "draft": self.vista_draft(e[1], e[2])
@@ -337,7 +341,8 @@ class App:
         elif self.fase in ("ChampSelect", "InProgress") and tipo == "post_espera": pass  # la post-partida va en otro hilo: no tapa el draft
         elif tipo == "post_espera": self.espera(e[1])
         elif tipo == "revision" and self.fase == "ChampSelect": self.pendiente = e[1]  # se ve al empezar la partida
-        elif tipo == "revision": self.fin = None; self.vista_revision(e[1]); self.sub.config(text=perfil())
+        elif tipo == "rango": self.rango = e[1] or self.rango; self.sub.config(text=perfil(self.rango))  # sin respuesta: queda el último
+        elif tipo == "revision": self.fin = None; self.vista_revision(e[1]); self.sub.config(text=perfil(self.rango))
         elif tipo == "aviso":
             a = e[1]; self.aviso.config(text=a["texto"], bg=BIEN if a["tipo"] == "consejo" else MAL); self.aviso.pack(fill="x", after=self.sep)
 

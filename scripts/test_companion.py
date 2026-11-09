@@ -128,6 +128,16 @@ class AvisoNivel(unittest.TestCase):
         self.assertEqual(out.getvalue().count("No tradees"), 2)  # 1 en la primera partida, 1 en la segunda
 
 
+class Rango(unittest.TestCase):
+    def test_rango_del_cliente(self):
+        solo = {"queueType": "RANKED_SOLO_5x5", "tier": "MASTER", "division": "NA", "leaguePoints": 15, "wins": 120, "losses": 100}
+        r = {"tier": "MASTER", "division": None, "lp": 15, "wins": 120, "losses": 100, "n": 220, "wr": 55}
+        self.assertEqual(companion.rango({"queueMap": {"RANKED_SOLO_5x5": solo}}), r)
+        self.assertEqual(companion.rango({"queues": [{"queueType": "RANKED_FLEX_SR", "tier": "GOLD"}, solo]}), r)  # sin queueMap
+        self.assertEqual(companion.rango({"queueMap": {"RANKED_SOLO_5x5": {**solo, "tier": "DIAMOND", "division": "II", "wins": 0, "losses": 0}}})["division"], "II")
+        for x in (None, {}, {"queueMap": None}, {"queueMap": {"RANKED_SOLO_5x5": {**solo, "tier": "NONE"}}}): self.assertIsNone(companion.rango(x))
+
+
 class Argumentos(unittest.TestCase):
     def test_help_y_argumento_raro_no_arrancan_el_bucle(self):
         for args in (["--help"], ["--algo"]):
