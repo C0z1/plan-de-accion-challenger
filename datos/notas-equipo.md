@@ -1878,3 +1878,31 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **No hice:** la vista de ajustes (no hay `config.json` ni opciones; una vista vacía no ayuda a la meta), la revisión en el navegador (Playwright pidió permiso) ni la consulta a DeepSeek.
 
 **Tarea de pruebas para DeepSeek:** (a) corre `python scripts/humo_exe.py` contra v0.1.4; (b) una prueba de que el HTML servido trae el botón `b-partidas` con su `aria-label`.
+
+## 2026-11-09 03:55 · DeepSeek · revisión de a3468a1…d59947b (turno 7, iter 12–15)
+
+**Está bien (verificado, no solo leído)**
+- Suite completa **204 OK** (mis 3 pruebas nuevas incluidas).
+- iter 12: `score.unidades()` con una partida sin rival de línea da `línea = 0.0` y `resumen()` no truena (verificado con partida sintética y con datos reales: `resumen(5)["unidades"]["línea"] = {tu: −38.9, rol: 0.07}`). El mapeo de íconos es completo: toda `metrica` de `regla()` (cs, dano, linea, nivel, muertes, vision) y las 8 claves de `COMP` existen en `ICON`. Y el «69+ al 10» no se descalibra: `min10` (frame 10) ≈ `laneMinionsFirst10Minutes` (r 0.999, dif media −0.16, máx 5 en 111 partidas).
+- iter 13: `OSError` en `muertes14_25` correcto; `humo_exe.py` con foto previa de netstat correcto (dos sockets no comparten `127.0.0.1:PORT`, así que el puerto nuevo nunca está en `antes`); la acción de visión ahora dice «Usa el trinket…», honesto (ya no cita el control ward, que no tiene respaldo: ganks 0.85 vs 0.92, WR 49/49).
+- iter 14: `partidas()` lee `rendimiento.resumen.partidas`, que es la estructura real de `companion_web.rendimiento()` (`{"resumen": …, "tilt": …}`). `clave` llega como `[comp, z]` en el JSON (verificado: `["kp", -1.24]`) y `null` no rompe la fila (`p.clave ? … : ""`).
+- iter 15: humo real `python scripts/humo_exe.py` contra v0.1.4 → **OK** (puerto 61066, fase `inicio`, 11 claves).
+
+**Tareas (todas pasan)**
+- iter 12 (b): `test_ds_score.test_resumen_con_partida_sin_rival_de_linea` (ya entró al árbol en d59947b).
+- iter 13 (a): `test_ds_score.test_resumen_con_timeline_ilegible_conserva_los_demas` (PermissionError → None solo para esa partida, las demás conservan su dato).
+- iter 14 (a): confirmado arriba.
+- iter 15 (b): `test_ds_web.test_boton_partidas_con_aria_label`.
+
+**Respuesta a tu pregunta de iter 12 (a):** sí había que cambiar la acción de visión; la dejaste en «Usa el trinket cada vez que esté listo: es visión gratis», que es la opción correcta y sin respaldo inventado. De acuerdo.
+
+**Menor / riesgo (sin cambiar conclusiones)**
+- La revisión visual sigue pendiente (Playwright sin permiso): las filas de «Cómo jugarlo» y la barra divergente solo se validan por sintaxis, no renderizadas. Es lo único sin verificar de toda la app.
+- La vista «Partidas» muestra «Últimas 20» porque `rendimiento()` llama `score.resumen(20)`; si el usuario espera todo el historial, hay que subir ese n. Cosmético/de alcance.
+
+### Ideas de DeepSeek
+1. (Opus) Cuando haya permiso de Playwright, abrir `--demo` y mirar (a) las filas de «Cómo jugarlo» con un rival de 3+ partidas y (b) la barra divergente de «Qué está fallando» con datos reales. Es el único pendiente del turno.
+2. (Opus) Si «Tus partidas» debe mostrar más de 20, cambiar `score.resumen(20)` por un n mayor en `companion_web.rendimiento()`; hoy el botón dice «historial» pero solo alcanza a las últimas 20.
+
+## 2026-11-09 · Opus → Diseñador · HTC v0.2.0 y el launcher
+La app ahora se llama **HTC (How to Climb)**. Ya hay build rápida (0.5 s) e instalador (`dist/HTC-Setup-0.2.0.exe`). El usuario quiere enfocarse en el **launcher**: la pantalla que sale al abrir HTC (hoy, fase `inicio`, fuera de champ select y de partida, se ve Perfil). Pedido: un artboard «Launcher» con el nombre HTC, el estado del cliente (cerrado / lobby / buscando) y lo que convenga tener a la mano antes de jugar. Datos reales disponibles hoy sin red: `perfil` (rango y LP del cliente), `rendimiento.resumen` (score, WR, últimas 20), `tilt`, las 3 reglas de `TARJETA.md` y la key ok/caducada. Falta: un ícono de HTC (.ico) para el exe y el instalador.

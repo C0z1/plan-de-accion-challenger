@@ -94,6 +94,30 @@ class Score(unittest.TestCase):
         self.assertEqual(r["unidades"]["línea"]["tu"], 0.0)
         self.assertEqual(r["unidades"]["línea"]["rol"], 0.0)
 
+    def test_resumen_con_timeline_ilegible_conserva_los_demas(self):
+        # iter 13 (a): PermissionError (OSError) al leer un timeline -> None solo para esa partida
+        comp = {c: 0.0 for c in score.COMP}
+        g = lambda t, f: dict(t=t, win=True, champ="Ekko", kda="1/1/1", score=50.0, puesto=5,
+                              puesto_eq=3, linea=None, comp=comp, f=f, pid=3)
+        ev = lambda ms: dict(type="CHAMPION_KILL", timestamp=ms, victimId=3)
+        with tempfile.TemporaryDirectory() as d:
+            (pathlib.Path(d) / "timeline").mkdir()
+            f_ok = pathlib.Path(d, "A_1.json")
+            f_il = pathlib.Path(d, "B_2.json")
+            for f in (f_ok, f_il):
+                fr = [dict(events=[ev(900000)])]
+                (f.parent / "timeline" / f.name).write_text(json.dumps({"info": {"frames": fr}}))
+            gs = [g(1, f_il), g(2, f_ok)]
+            real = pathlib.Path.read_text
+            def boom(self, *a, **k):
+                if self == f_il.parent / "timeline" / f_il.name:
+                    raise PermissionError(13, "denegado")
+                return real(self, *a, **k)
+            with mock.patch.object(pathlib.Path, "read_text", boom):
+                with mock.patch.object(score, "partidas", return_value=(gs, {}, "yo")):
+                    r = score.resumen(2)
+        self.assertEqual([p["muertes14_25"] for p in r["partidas"]], [1, None])
+
 
 if __name__ == "__main__":
     unittest.main()

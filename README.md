@@ -77,14 +77,14 @@ python scripts/companion_gui.py --demo    # vista de ejemplo, sin cliente
 
 **App web (v0.1.4):** `scripts/companion_web.py` es el companion con el diseño nuevo (champ select, franja en partida, línea al terminar y «Tu rendimiento»), servido en 127.0.0.1 y abierto como ventana de Edge. `--demo` recorre las tres fases sin cliente. `companion_gui.py` (tkinter) queda de respaldo.
 
-**Ejecutable para Windows, v0.1.4** (no lo sube git; se compila en un paso):
+**HTC (How to Climb) v0.2.0 para Windows** (no lo sube git; se compila en un paso):
 
-```bash
-pip install pyinstaller
-python -m PyInstaller --onefile --windowed --name Companion --distpath . --add-data "scripts/web;web" --paths scripts scripts/companion_web.py
+```powershell
+pip install pyinstaller; winget install JRSoftware.InnoSetup
+powershell -File instalador/build.ps1
 ```
 
-Deja `Companion.exe` en la raíz del repo y ábrelo con doble clic (`Companion.exe --demo` para probarlo). Si el `.exe` está lejos del repo, usa la página que trae empaquetada. El `.exe` solo trae Python: lee los scripts y tus datos de la carpeta del repo, así que los cambios en `scripts/` no necesitan recompilar. La key se lee de `RIOT_KEY` (`setx RIOT_KEY <key>`).
+Deja `dist/HTC/HTC.exe` (corre sin instalar y usa los datos de este repo) y `dist/HTC-Setup-0.2.0.exe`, un instalador por usuario (sin admin) que lo pone en `%LOCALAPPDATA%\Programs\HTC` con sus propios `datos/`. Es `--onedir`: no se desempaca en cada arranque (responde en ~0.5 s; antes, en 1.1–1.4 s). «Tu rendimiento» sale de la caché `datos/cache/rendimiento.json` mientras no cambien tus partidas (27 ms; antes, 1 s). La key se lee de `RIOT_KEY` (`setx RIOT_KEY <key>`).
 
 ---
 

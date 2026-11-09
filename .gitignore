@@ -5,3 +5,7 @@ __pycache__/
 datos/vivo/
 datos/meta/
 Companion.exe
+datos/cache/
+dist/
+build/
+*.spec

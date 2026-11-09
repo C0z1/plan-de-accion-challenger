@@ -11,7 +11,8 @@ try: import winreg  # noqa: F401
 except ImportError: winreg = None
 
 if getattr(sys, "frozen", False):  # el .exe trae solo Python: carga los scripts del repo junto a él (se actualizan sin recompilar)
-    REPO = pathlib.Path(sys.executable).resolve().parent
+    _exe = pathlib.Path(sys.executable).resolve().parent  # instalado: scripts/ junto al exe; build en dist/HTC/: el repo dos arriba
+    REPO = next((p for p in (_exe, *_exe.parents) if (p / "scripts").is_dir()), _exe)
     sys.path.insert(0, str(REPO / "scripts"))
 else:
     REPO = pathlib.Path(__file__).resolve().parent.parent

@@ -16,6 +16,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "espera": None, "rango": None, "rendimiento": None, "v": 0}
+VERSION = "0.2.0"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 
 
@@ -57,12 +58,41 @@ def rendimiento(raw=None):
     except (OSError, ValueError, KeyError, StopIteration): return None
 
 
+CACHE = gui.REPO / "datos" / "cache" / "rendimiento.json"
+
+
+def firma(raw):
+    """(n, mtime máx, bytes) de las partidas y timelines: si cambia alguno, la caché ya no vale."""
+    fs = [f.stat() for f in pathlib.Path(raw).rglob("*.json")]
+    return [len(fs), max((s.st_mtime_ns for s in fs), default=0), sum(s.st_size for s in fs)]
+
+
+def rendimiento_rapido(raw=None, cache=None):
+    """rendimiento() desde la caché en disco si las partidas no cambiaron (abre al instante); si no, lo calcula y la reescribe."""
+    import score, os
+    raw = pathlib.Path(raw or os.environ.get("DATOS_DIR") or gui.REPO / "datos" / "raw"); cache = pathlib.Path(cache or CACHE)
+    try: f = firma(raw)
+    except OSError: return rendimiento(raw)
+    try:
+        c = json.loads(cache.read_text(encoding="utf-8"))
+        if c.get("firma") == f and c.get("version") == VERSION: return c["datos"]
+    except (OSError, ValueError, KeyError, AttributeError): pass
+    r = rendimiento(raw)
+    if r is not None:
+        try:  # escritura atómica: dos instancias a la vez no dejan un JSON a medias
+            cache.parent.mkdir(parents=True, exist_ok=True); tmp = cache.with_suffix(f".{os.getpid()}.tmp")
+            tmp.write_text(json.dumps({"version": VERSION, "firma": f, "datos": r}, ensure_ascii=False, default=str), encoding="utf-8")
+            os.replace(tmp, cache)
+        except OSError: pass
+    return json.loads(json.dumps(r, ensure_ascii=False, default=str)) if r is not None else None  # misma forma que desde la caché
+
+
 def bombear(q):
     while True: evento(q.get())
 
 
-def refrescar():  # lee ~300 JSON: en su hilo, para no frenar la cola
-    r = rendimiento()
+def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la cola
+    r = rendimiento_rapido()
     with LOCK: ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1)
 
 

@@ -1,40 +1,38 @@
 # Contexto de diseño del companion (sesión en vivo)
 
-Actualizado 2026-11-09 por el Diseñador. Canvas: https://claude.ai/artifact/RPTLnjKqhMnuVGkFm7riX7 («Base LOL», índice v3, 5 artboards). Propuesta de base: `datos/diseno-propuesta.md`; auditoría: `datos/diseno-auditoria.md`.
+Actualizado 2026-11-09 por el Diseñador (al retomar). Canvas «Base LOL»: https://claude.ai/artifact/RPTLnjKqhMnuVGkFm7riX7 (versión publicada 1794218119-d920). Base: `datos/diseno-propuesta.md`. Acuerdos: `datos/diseno-acuerdos.md`.
 
 ## Decisiones tomadas (con el usuario)
-- **Una sola ventana** que cambia sola por fase: champ select → franja compacta en partida → una línea al terminar. Score, tendencia y tilt van a una **ventana 2** aparte (perfil). Fuente: `datos/notas-equipo.md` línea 1394.
-- **Champ select gira en torno al pick recomendado**: por qué ese pick, cómo jugarlo (reglas con número), cuidado con el rival, counters y build.
-- **Todo número lleva su referencia** (n, tu media, Wilson). Lo cualitativo no se inventa: sale solo de `datos/matchups-notas.json`, que escribe el usuario.
-- **Datos ya construidos por Opus** (dict para la GUI): `draft.ficha()`, `companion.meta_fase()`, `companion.resumen_fin()`, `score.tilt()`, `score.resumen()`, `builds.guardado()`.
+- **Una sola ventana** que cambia por fase: champ select → franja en partida → una línea al terminar. Score, tendencia y tilt van a la **ventana 2** (Perfil).
+- **Champ select gira en torno al pick**: por qué, cómo jugarlo (metas 6 / 10 / 14+ con número), cuidado con el rival, counters, build.
+- **Todo número con su referencia** (n, tu media, Wilson). Lo cualitativo solo de `datos/matchups-notas.json` (lo escribe el usuario).
+- **Paleta 3E pizarra + negro** (`#2B323D`, acento `#FF8A3D`), Mulish, nav lateral, aside oscuro «Pickea». En el canvas publicado ya solo quedan los dos artboards en 3E.
+- **Copy 14+**: «con 3+ bajas de 68% a 43%» (no 82/57). Ya corregido.
+- «Cómo jugarlo» = 3 tarjetas de stat con ícono y ✓/✕; Perfil tiene «Qué está fallando» en filas. [Corchetes] = ejemplo.
+- Franja en partida y post-partida: descartadas del canvas; Opus las pinta con las tarjetas de ChampSelect (PIZARRON, nota del 2026-11-09).
 
-## Qué es cada artboard (`project/canvas.json`)
+## Qué es cada artboard (publicado)
 | Artboard | Marco | Qué muestra |
 |---|---|---|
-| `Perfil.dc.html` «Base LOL» | 1440×1024 en (0,0) | Ventana 2: «Tu rendimiento». Base de la paleta crema `#FFFCF8` con aside oscuro `#282828` y nav lateral. |
-| `ChampSelect.dc.html` «Selección de campeón» | 1440×1024 en (1520,0) | Champ select de Sylas contra Ahri (mid). Izquierda: 3 tarjetas (rival, tu pick, cuidado), «Cómo jugarlo» con metas 6 / 10 / 14+, fila de build. Derecha, aside «Pickea»: estimado 58%, la línea de tu WR, y 3 counters con CS al 14. |
-| `Navy3.dc.html` «Paleta 3 · Navy + negro» | 1440×1024 en (0,1144) | Variante de Perfil con fondo `#1B2B4B` y acento `#E0A43A`. |
-| `Inv1.dc.html` «Paleta 3A · Vino + negro» | 1440×1024 en (1520,1144) | Variante de Perfil con fondo `#4A1D2A` y acento `#E0A43A`. |
-| `Inv5.dc.html` «Paleta 3E · Pizarra + negro» | 1440×1024 en (3040,1144) | Variante de Perfil con fondo `#2B323D` y acento `#FF8A3D`. |
+| `Inv5.dc.html` «Paleta 3E · Pizarra + negro» | 1440×1024 en (3040,1144) | Perfil (ventana 2): score 49.2, WR 20 partidas, muertes 14–25, «Qué está fallando» (KP, muertes, línea), tilt hoy, tu cuenta (Master 15 LP, WR temporada vs meta 60%), pool. |
+| `ChampSelect_Paleta3E.dc.html` «Base LOL · Selección · Paleta 3E» | 1440×1024 en (4560,1144) | Sylas contra Ahri mid: 3 tarjetas (contra Ahri, tu Sylas, cuidado), «Cómo jugarlo» (Nv 6, minions 10, muertes 14–25), build; aside «Pickea» con 58% estimado y counters Viktor/Yasuo/Qiyana. |
 
-Tipografía en el canvas: Mulish (Google Fonts). La propuesta decía Segoe UI. Ninguna pantalla usa aún el cian `#4FD1C5` de la propuesta; ChampSelect usa ámbar `#D08726` con tintes teal.
+Copias locales en `datos/diseno/canvas/project/` (lo que lee Opus) aún tienen además Perfil, ChampSelect, Navy3 e Inv1 (crema/navy/vino), ya fuera del canvas publicado. Inv1, Inv5 y Navy3 locales tienen cambios sin commit.
 
-## Preguntas abiertas (para ti)
-1. **Paleta:** ¿Perfil (crema), Navy3, Inv1 (vino) o Inv5 (pizarra)? ¿Probamos el cian de la propuesta o te quedas con el ámbar?
-2. **Tamaño:** el canvas está en 1440×1024, pero la ventana real de la propuesta es 420×760 (o ~560 de ancho). ¿Cuál vale?
-3. **Texto sin fuente:** «All-in con su definitiva» y «Ese minuto juega bajo torre» (tarjeta Cuidado) no salen de ningún dato. ¿Lo quitamos o lo escribes tú en `datos/matchups-notas.json`?
-4. **Cifras de ejemplo:** Ahri 4-1, Sylas 48% en 92 partidas, 58% estimado y el reloj 0:24 son de muestra. ¿Cuáles son tuyas de verdad? (Sí son tuyas: −28 / −26 / −20 de CS con Viktor, Yasuo y Qiyana, y 69+ minions al 10 con 74% contra 32%.)
-5. **Build:** ¿iconos de Data Dragon o iniciales ([1] [2] [3] [b] hoy son placeholders)?
-6. **Error de copy a corregir:** en «Máximo 2 muertes del 14 al 25» la tarjeta dice «Con 3+ bajas de 82% a 57%». El 82/57 vale solo con línea y equipo arriba al 14. El aviso en vivo cita 68% → 43% (todas tus partidas), y así lo acordamos en Opus. Propongo cambiarlo a 68 → 43.
+## Lo que Opus ya construyó (Turno 6–7)
+- `draft.ficha()` (por qué, cuidado, counters, reglas), aviso en vivo de muertes 14–25, `score.tilt()`, `resumen_fin()`, LP del cliente.
+- App web / Companion.exe v0.1.4 con vista «Partidas», íconos Lucide, «Cómo jugarlo» con tu media real y «Qué está fallando» con los 8 componentes.
+
+## Preguntas abiertas
+1. ¿Paleta 3E es la final? (acuerdos aún la listan abierta). ¿Borramos las copias locales crema/navy/vino?
+2. «All-in con su definitiva» / «Ese minuto juega bajo torre»: sin dato. ¿Quitar o pasar a `matchups-notas.json`?
+3. Build: íconos de Data Dragon (la app ya los usa) o iniciales.
+4. Tamaño real de la ventana: 1440×1024 como el canvas o la compacta 420×760 de la propuesta.
+5. Cifras de ejemplo (Ahri 4-1, Sylas 48%/92, 58%, 0:24): ¿reemplazar por las tuyas reales?
+6. Perfil «Qué está fallando» muestra 3 filas; la app ya pinta los 8 componentes. ¿Alinear el canvas a 8?
 
 ## Lo próximo
-- Cuando digas «mueve esto», publico el cambio al momento en el canvas (cambios chicos, respuesta de una línea).
-- Vigilar los comentarios del canvas con `ArtifactComments`.
-- Corrección 6 (82 → 68 / 43): la publico si la confirmas.
-- Acuerdos finales a `datos/diseno-acuerdos.md`. Aún no existe; se crea con el primer acuerdo.
-- Pendiente de Opus: nada bloqueante. Los datos de la ventana ya están en dict. No hubo consulta a DeepSeek en esta sesión.
-
-## 2026-11-09 04:05 · cambios al canvas hechos por la sesión principal (para el Diseñador)
-- Simplifiqué al estilo del Figma «Cómo jugarlo» (ChampSelect y ChampSelect_Paleta3E: 3 tarjetas de stat, Nivel al 6 / Minions al 10 / Muertes 14–25, cada una con su ícono) y «Qué está fallando» (Perfil, Navy3, Inv1 e Inv5: 3 filas con ícono, tú contra lo típico y etiqueta). Los valores entre [corchetes] son ejemplo.
-- La gráfica vieja de barras quedó oculta (`hidden`) dentro de esas tarjetas: bórrala si ya no sirve.
-- Desde aquí el diseño es solo tuyo; la sesión principal se dedica a construir la app. Guarda cada artboard acordado en `datos/diseno/canvas/project/`, que es lo que lee Opus.
+- Cambios chicos en vivo al canvas a pedido («mueve esto»), respuesta en una línea.
+- Vigilar comentarios con `ArtifactComments`.
+- Cada acuerdo a `datos/diseno-acuerdos.md`; guardar el artboard acordado en `datos/diseno/canvas/project/`.
+- Para Opus (pendiente): ícono de campeón con `'` o espacio (Kai'Sa, Nunu & Willump).

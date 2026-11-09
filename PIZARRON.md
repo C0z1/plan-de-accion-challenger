@@ -22,19 +22,20 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Iteración 13:** `OSError` en `muertes14_25`, humo que ignora puertos de un Companion.exe ya abierto, acción de visión sin «control ward» (no tiene respaldo en el PLAN). Rebuild `Companion.exe` v0.1.3 (con la iteración 12), humo OK, tag `v0.1.3`. 200 OK.
 - **Iteración 14:** vista «Partidas» (historial con ✓/✕, KDA, componente clave, score). 201 OK.
 - **Iteración 15:** rebuild `Companion.exe` v0.1.4 (trae Partidas), humo OK (11 claves), tag `v0.1.4`. Ajustes descartado: no hay nada que configurar todavía. Playwright, otra vez sin permiso. 202 OK.
-- **Siguiente:** revisión visual en el navegador (necesita permiso de Playwright) y RESUMEN-NOCHE.
-- **Actualizado:** 2026-11-09 (turno 7, iteración 12)
+- **Turno 8 (2026-11-09, con el usuario):** la app se llama **HTC (How to Climb)** v0.2.0. Build `--onedir` (`instalador/build.ps1`): responde en 0.54 s (antes 1.1–1.4). Caché de «Tu rendimiento» en `datos/cache/` (27 ms; antes 1 s), que se invalida si cambian las partidas. Instalador Inno Setup por usuario (`dist/HTC-Setup-0.2.0.exe`), probado instalando en silencio + humo + desinstalar. 205 OK.
+- **Siguiente:** el launcher (pantalla de inicio de HTC) con el Diseñador; revisión visual en el navegador.
+- **Actualizado:** 2026-11-09 (turno 8)
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
-- **Estado:** revisado ef71e63 (turno 7, iter 11): humo real de `Companion.exe` v0.1.2 con `scripts/humo_exe.py` — lo corrí, `exit=0` y `/api/estado` responde (11 claves); no deja procesos vivos. Riesgo (b) confirmado: con otra instancia abierta, `ports[0]` puede leer su puerto (falso OK); sugerí foto previa de netstat en vez de filtrar por PID hijo.
-- **Siguiente:** RESUMEN-NOCHE; cubrir el `OSError` de `muertes14_25` (pendiente de 4355eaa).
-- **Actualizado:** 2026-11-09 03:41 (turno 7, revisión ef71e63)
+- **Estado:** revisado a3468a1…d59947b (iter 12–15): `unidades()` sin rival de línea → 0; mapeo de íconos completo; `OSError` de `muertes14_25` y foto previa de netstat en `humo_exe.py` correctos; visión ya no cita «control ward» (sin respaldo); vista Partidas lee `rendimiento.resumen.partidas` y `clave` serializa `[comp, z]`. Humo v0.1.4 OK. Suite 204 OK (sumé 3 pruebas: rival de línea, PermissionError y aria-label de Partidas).
+- **Siguiente:** revisión visual en navegador (Playwright) cuando haya permiso; RESUMEN-NOCHE.
+- **Actualizado:** 2026-11-09 03:55 (turno 7, revisión iter 12–15)
 
 ### Diseñador
-- **Estado:** canvas «Base LOL» de vuelta a su versión anterior (Perfil, ChampSelect y 3 paletas) más ChampSelect en Paleta 3E. Las ventanas de franja y post-partida que hice se quitaron del canvas. Contexto en `datos/diseno-contexto.md`; sigue abierto el error de copy (82/57 → 68/43).
+- **Estado:** retomé la sesión en vivo. El canvas publicado tiene solo 2 artboards en Paleta 3E (Inv5 = Perfil, ChampSelect_Paleta3E). Contexto al día en `datos/diseno-contexto.md`; vigilo comentarios del canvas.
 - **Siguiente:** publicar los cambios que pida el usuario al canvas; al cerrar, acuerdos en `datos/diseno-acuerdos.md`.
-- **Actualizado:** 2026-11-09 (revierte franja/post y agrega ChampSelect 3E)
+- **Actualizado:** 2026-11-09 (retomo sesión en vivo)
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |

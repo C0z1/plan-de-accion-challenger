@@ -101,5 +101,20 @@ class Http(unittest.TestCase):
             self.assertEqual(im.call_count, 1)
 
 
+class CacheRendimiento(unittest.TestCase):
+    def test_usa_cache_y_la_invalida_al_cambiar_partidas(self):
+        import pathlib, tempfile
+        with tempfile.TemporaryDirectory() as d:
+            raw, cache = pathlib.Path(d, "raw"), pathlib.Path(d, "c.json"); raw.mkdir()
+            (raw / "LA1_1.json").write_text("{}")
+            with mock.patch.object(w, "rendimiento", return_value={"x": 1}) as r:
+                self.assertEqual(w.rendimiento_rapido(raw, cache), {"x": 1})
+                self.assertEqual(w.rendimiento_rapido(raw, cache), {"x": 1})
+                self.assertEqual(r.call_count, 1)  # la segunda sale de la caché
+                (raw / "LA1_2.json").write_text("{}")
+                w.rendimiento_rapido(raw, cache)
+                self.assertEqual(r.call_count, 2)  # partida nueva: se recalcula
+
+
 if __name__ == "__main__":
     unittest.main()

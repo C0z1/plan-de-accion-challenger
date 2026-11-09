@@ -85,6 +85,10 @@ class TestServidor(unittest.TestCase):
         code, _, _ = self.s.get("/img/champion/" + "a" * 41 + ".png")
         self.assertEqual(code, 404)
 
+    def test_boton_partidas_con_aria_label(self):  # iter 15 (b): el nav trae la vista Partidas etiquetada
+        _, _, cuerpo = self.s.get("/")
+        self.assertIn(b'id="b-partidas" aria-label="Tus partidas"', cuerpo)
+
 
 class TestEstado(unittest.TestCase):
     def test_evento_fase_resetea_draft(self):
@@ -157,7 +161,7 @@ class TestEstado(unittest.TestCase):
     def test_refrescar_sube_v(self):
         fake = {"resumen": {"partidas": []}, "tilt": {"base": {"n": 0}}}
         before = web.ESTADO["v"]
-        with mock.patch.object(web, "rendimiento", return_value=fake):
+        with mock.patch.object(web, "rendimiento_rapido", return_value=fake):
             web.refrescar()
         self.assertEqual(web.ESTADO["v"], before + 1)
         self.assertIs(web.ESTADO["rendimiento"], fake)
