@@ -46,7 +46,7 @@ En Master se ganan y pierden unos 18–20 LP por partida (estimado; depende de t
 - **Mordekaiser top:** 22 partidas, 68% (47–84%), aunque pierde la línea (−428 al 14).
 - **Ekko gana la línea:** +177 al 14 y llega arriba en el 56% de sus partidas (Yone y Sylas, 41–43%). **Y sí convierte:** con la línea ganada gana 60% (45–74%), igual que el resto (62%).
 - **Kills en solitario:** 2.1 por partida (2.5 en victorias). Mecánicamente le ganas a tu rival.
-- **No hay patrón de tilt:** después de una derrota tienes 55% WR.
+- **No hay patrón de tilt:** después de una derrota tienes 55% WR. En la misma sesión (partidas a menos de 90 min) llegaste 18 veces a 2 derrotas seguidas y paraste en 12; las 6 que seguiste: 3-3 (pista). Sigue así: tras 2 seguidas, para (`score.tilt()`).
 
 ## Defectos (con datos)
 1. **Pierdes la línea por farm y XP:** en las derrotas llegas al 14 con −452 de oro, −8 de CS y −335 de XP. Además, mueres 2.2 veces antes del 14 (la mitad por gank) y 3.06 veces del 14 al 25 en las derrotas.

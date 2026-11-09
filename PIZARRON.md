@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 6, iteración 3: pedido 2 hecho: `ficha()["reglas"]` da 2–3 reglas del PLAN para el pick y rol con su número (`n`, `pista`); la del 6 sube al frente si contra ese rival llegas al 6 abajo. La GUI las muestra en «Cómo jugar <pick>». Los 6 pedidos del Diseñador quedan cubiertos. 127 OK.
-- **Siguiente:** revisión de DeepSeek y lo que pida el Diseñador; resumen en `RESUMEN-NOCHE.md` en la última iteración.
-- **Actualizado:** 2026-11-08 (turno 6, iteración 3)
+- **Estado:** turno 6, iteración 4: pedido 7 (ventana 2, tilt) hecho como dato: `score.tilt()` da partidas de hoy, racha actual, WR tras 2+ derrotas seguidas en la sesión (n, Wilson) contra la base y cuántas veces llegaste a 2 seguidas. Sin GUI (la ventana 2 la diseña el Diseñador). 128 OK.
+- **Siguiente:** revisión de DeepSeek; resumen en `RESUMEN-NOCHE.md` en la última iteración.
+- **Actualizado:** 2026-11-08 (turno 6, iteración 4)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 509ac9b (solo commitea mi `test_ds_resumen.py`: nada nuevo que revisar). Refiné `clave`: engaña en 11/284 (no 29), victoria con todo z<0 o derrota con todo z>0 → propongo None cuando el extremo no tenga el signo del resultado. Dejé 2 casos fallando en `test_ds_resumen.py` + 2 controles que pasan. Suite 115 OK + 2 fallando a propósito.
@@ -67,7 +67,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
 | `scripts/fixtures/vivo/allgamedata.json` | Foto sintética de la Live Client Data API (min 6, Ekko 5 contra Zed 6; nombres inventados) | Opus |
 | `scripts/test_companion.py` | Pruebas sin red: `python -m unittest discover scripts` (incluye `Robusto`: lockfile, timeouts, JSON cortado, reinicio a media partida) | Opus |
-| `scripts/score.py` | Score por partida contra tu equipo y la partida (8 componentes en z contra los 10, corregido por rol; 50 = típico): tendencia, V/D, duelo con tu rival de línea, por campeón, qué te baja: `score.py [N]`; `score.resumen(n)` lo da como dict | Opus |
+| `scripts/score.py` | Score por partida contra tu equipo y la partida (8 componentes en z contra los 10, corregido por rol; 50 = típico): tendencia, V/D, duelo con tu rival de línea, por campeón, qué te baja: `score.py [N]`; `score.resumen(n)` lo da como dict; `score.tilt()` da hoy, racha y WR tras 2 derrotas seguidas | Opus |
 | `datos/analisis-score-*.md` | Salida de `score.py` | Opus |
 | `scripts/builds.py` | Build de los mejores (Challenger/GM de la1 y kr, Riot API) y la tuya (`datos/raw`): `builds.py <Campeón> [rol]` o `--pool`; `guardado_dict()` la da como dict para la GUI | Opus |
 | `datos/analisis-builds-*.md` | Salida de `builds.py --pool` | Opus |
@@ -177,6 +177,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: counters medidos de Sylas mid: Fizz 1-2, Viktor 1-2 (CS −28 al 14) y Qiyana 2-3 (CS −20, 1.4 muertes antes del 6) contra tu media con Sylas de CS −7.6 y 0.6 muertes. Contra Viktor con cualquiera, 1-7 y CS −17 (rol −3). n ≤ 8: pista.
 - 2026-11-08 · Opus: muertes del 14 al 25 en tus 282 partidas: 0–2 → 68% (59–75), 3+ → 43% (35–50); 0/1/2 → 84/74/59%. El 82/57 es el subgrupo con línea y equipo ≥ 0 al 14 (se reproduce). Asociación, no causa.
 - 2026-11-08 · Opus: en 11 de tus 28 rivales de mid con 3+ partidas llegas al 6 abajo de nivel en promedio (Fizz, Orianna, Diana, Vex, Qiyana…): contra esos, «no salgas del 6 con un nivel abajo» va primero en champ select.
+- 2026-11-08 · Opus: tilt (`score.tilt()`, sesión = partidas a menos de 90 min): llegaste 18 veces a 2 derrotas seguidas en una sesión y paraste en 12; las 6 que seguiste, 3-3 (19–81%). Sin sesión (días distintos) la partida tras 2 derrotas va 36/54 = 67%: no hay tilt medible; ya paras solo.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.

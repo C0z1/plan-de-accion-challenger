@@ -144,6 +144,40 @@ def resumen(n=10, raw=None):
                 ref=50)
 
 
+def wilson(k, n, z=1.96):  # misma que draft.py
+    if not n: return (0.0, 0.0)
+    p, d = k / n, 1 + z * z / n
+    c, r = (p + z * z / (2 * n)) / d, z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
+    return (round(c - r, 2), round(c + r, 2))
+
+
+SESION = 90 * 60 * 1000  # ms entre inicios de partida; más que esto = otra sesión
+
+
+def tilt(raw=None, hoy=None):
+    """Para la ventana 2 (pedido 7 del Diseñador): dict {hoy: [{fecha, campeon, win, score}] (en orden),
+    racha: derrotas seguidas al final de tu última sesión si fue hoy (si no, 0), tras2: {n, v, wr, ic} = la partida que sigue a 2+ derrotas
+    seguidas en la misma sesión (partidas a menos de 90 min), llegas: veces que llegaste a 2 seguidas, base: {n, v, wr} = todas, pocas: tras2 n < 20}.
+    hoy = date local (por defecto la de hoy)."""
+    gs = partidas(raw)[0]
+    hoy = hoy or datetime.now().date()
+    d = lambda g: datetime.fromtimestamp(g["t"] / 1000)
+    sig, perdidas, llegas = [], 0, 0  # perdidas = derrotas seguidas dentro de la sesión antes de esta partida
+    for a, g in zip([None] + gs, gs):
+        if a is None or g["t"] - a["t"] > SESION: perdidas = 0
+        if perdidas >= 2: sig.append(g["win"])
+        perdidas = 0 if g["win"] else perdidas + 1
+        llegas += perdidas == 2
+    v, vb = sum(sig), sum(g["win"] for g in gs)
+    return dict(hoy=[dict(fecha=f"{d(g):%H:%M}", campeon=g["champ"], win=g["win"], score=round(g["score"], 1))
+                     for g in gs if d(g).date() == hoy],
+                racha=perdidas if gs and d(gs[-1]).date() == hoy else 0,
+                tras2=dict(n=len(sig), v=v, wr=round(v / len(sig), 2) if sig else None, ic=wilson(v, len(sig))),
+                llegas=llegas,  # veces que llegaste a 2 derrotas seguidas en una sesión (las que no siguieron = paraste)
+                base=dict(n=len(gs), v=vb, wr=round(vb / len(gs), 2) if gs else None),
+                pocas=len(sig) < 20)
+
+
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     n_tabla = int(sys.argv[1]) if len(sys.argv) > 1 else 10

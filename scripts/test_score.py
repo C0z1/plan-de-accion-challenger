@@ -44,6 +44,21 @@ class Score(unittest.TestCase):
         self.assertEqual(list(r["por_campeon"]), ["Ekko", "Yone"])
         self.assertEqual(r["por_campeon"]["Yone"], dict(n=15, wr=0.53, score=49.3))
 
+    def test_tilt(self):
+        from unittest import mock
+        from datetime import datetime, timedelta
+        t0, m = datetime(2026, 11, 8, 12, 0), lambda x: (t0 + timedelta(minutes=x)).timestamp() * 1000
+        # sesión 1: D D D V D; 3 h después, sesión 2: D D (la racha no se suma con la D final de la sesión 1)
+        ts, ws = [0, 40, 80, 120, 160, 340, 380], [0, 0, 0, 1, 0, 0, 0]
+        gs = [dict(t=m(t), win=bool(w), champ="Ekko", score=50.0) for t, w in zip(ts, ws)]
+        with mock.patch.object(score, "partidas", return_value=(gs, {}, "yo")):
+            r = score.tilt(hoy=t0.date())
+            otro = score.tilt(hoy=(t0 + timedelta(days=1)).date())
+        self.assertEqual(r["tras2"], dict(n=2, v=1, wr=0.5, ic=score.wilson(1, 2)))  # la 3.ª D y la V de la sesión 1
+        self.assertEqual((r["racha"], r["llegas"], len(r["hoy"]), r["base"]["n"]), (2, 2, 7, 7))
+        self.assertEqual(r["hoy"][0], dict(fecha="12:00", campeon="Ekko", win=False, score=50.0))
+        self.assertEqual((otro["racha"], otro["hoy"]), (0, []))  # la última sesión no fue hoy
+
     def test_remake_y_ajeno(self):
         self.assertEqual(score.z_partida(dict(mapId=11, gameDuration=200, participants=[])), [])
         self.assertIsNone(score.de([], "yo", {}))

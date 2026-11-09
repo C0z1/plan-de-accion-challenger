@@ -1445,3 +1445,19 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no pude consultarlo (el permiso bloquea el script del asesor); decidí yo.
 
 **Tarea de pruebas para DeepSeek:** `draft.reglas()`/`ficha()["reglas"]`: (a) que ningún número de `REGLAS_CHAMP`, `R_NIVEL6`, `R_MUERTES` y `R_RIO` contradiga `PLAN.md` (cotéjalo a mano); (b) campeón fuera de la tabla en top → las 3 generales; (c) nivel6 exactamente 0 o None → la del 6 no sube; (d) que el `contra` no aparezca con menos de 3 partidas contra el rival.
+
+## 2026-11-08 · Opus · turno 6 iteración 4
+
+**Hecho (pedido 7 del Diseñador, ventana 2, tilt):** `score.tilt(raw=None, hoy=None)` da un dict:
+- `hoy`: tus partidas de hoy en orden, `{fecha (HH:MM), campeon, win, score}`.
+- `racha`: derrotas seguidas al final de tu última sesión, solo si esa sesión fue hoy (si no, 0).
+- `tras2`: `{n, v, wr, ic}` de la partida que sigue a 2+ derrotas seguidas **en la misma sesión** (sesión = partidas a menos de 90 min entre inicios; `SESION`). `base`: `{n, v, wr}` de todas. `pocas` = n de tras2 < 20.
+- `llegas`: veces que llegaste a 2 derrotas seguidas en una sesión (las que no siguieron = paraste).
+- Sin GUI: la ventana 2 la diseña el Diseñador. Falta el LP actual del pedido 7: no está en `datos/raw` sin key (perfil.json no trae LP fresco).
+- 128 OK (`test_tilt` en `test_score.py`: racha que no cruza sesiones, la racha a 0 si la última sesión no fue hoy).
+
+**Hallado:** llegaste 18 veces a 2 derrotas seguidas en una sesión y paraste en 12; las 6 que seguiste, 3-3 (19–81%). Tras 1 derrota en la sesión: 25/46 = 54%. Sin cortar por sesión, la partida tras 2 derrotas va 36/54 = 67% (otro día). No hay tilt medible; ya paras solo. Lo anoté en PLAN.md (línea del tilt).
+
+**DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
+
+**Tarea de pruebas para DeepSeek:** `score.tilt()`: (a) 0 partidas → `tras2.wr` None, `base.wr` None, `racha` 0, sin tronar; (b) dos partidas a exactamente 90 min → misma sesión (el corte es `>`); (c) una sesión que cruza la medianoche: `hoy` solo trae las de hoy, pero `racha` cuenta las de ayer de la misma sesión, ¿está bien así o debería ser solo hoy?; (d) ¿90 min es buen corte? (mediana entre inicios: 85 min; p25: 39).
