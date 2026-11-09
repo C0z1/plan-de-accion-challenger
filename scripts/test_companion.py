@@ -115,6 +115,9 @@ class AvisoNivel(unittest.TestCase):
         self.assertEqual(companion.muertes14(d), 0)
         d["events"]["Events"].append(kill(960, "Jugador#LAN"))
         self.assertEqual(companion.muertes14(d), 1)
+        d["allPlayers"][1]["riotId"] = "Otro2#KR"; me["summonerName"] = "Jugador"
+        d["allPlayers"][1]["summonerName"] = "Jugador"  # homónimo solo por summonerName: tampoco cuenta
+        self.assertEqual(companion.muertes14(d), 1)
         self.assertIsNone(companion.rango({"queues": [None, "x", {"queueType": "RANKED_SOLO_5x5", "tier": "MASTER"}]})["division"])
 
     def test_el_bucle_da_la_linea_al_terminar(self):

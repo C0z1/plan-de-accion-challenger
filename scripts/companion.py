@@ -100,11 +100,12 @@ def muertes14(d, me=None, hasta=float("inf")):
 
 def muertes_en(d, me, desde=0, hasta=float("inf")):
     """Tus eventos ChampionKill de la foto con desde <= EventTime < hasta. VictimName sin cotejar con una partida real
-    (¿con o sin #tag?): se acepta el nombre sin tag solo si nadie más en la partida lo comparte."""
+    (¿con o sin #tag?): el riotId completo siempre vale; los demás nombres (summonerName incluido, que puede venir
+    sin tag) solo si nadie más en la partida usa ese mismo nombre en cualquiera de sus campos."""
     otros = [p for p in (d or {}).get("allPlayers") or [] if p is not me]
-    nom = lambda p: {p.get("riotIdGameName"), (p.get("riotId") or "").split("#")[0]}
+    nom = lambda p: {p.get("riotIdGameName"), p.get("summonerName"), (p.get("riotId") or "").split("#")[0]}
     corto = nom(me) - set().union(*map(nom, otros)) if otros else nom(me)
-    ids = ({me.get("riotId"), me.get("summonerName")} | corto) - {None, ""}
+    ids = ({me.get("riotId")} | corto) - {None, ""}
     evs = (((d or {}).get("events") or {}).get("Events")) or []
     return sum(1 for e in evs if e.get("EventName") == "ChampionKill" and e.get("VictimName") in ids and desde <= (e.get("EventTime") or 0) < hasta)
 

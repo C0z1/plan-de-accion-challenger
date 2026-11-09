@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 6, iteración 8: la línea final coteja tus muertes del marcador contra los eventos en vivo (si `VictimName` no te reconoce, lo dice) y un homónimo del otro equipo ya no cuenta; un `config.json` roto ya no tumba la franja en partida (DeepSeek). Resumen del turno 6 en `RESUMEN-NOCHE.md`. 158 OK.
-- **Siguiente:** revisión de DeepSeek; cotejar `VictimName` con la primera partida real en `datos/vivo/`.
-- **Actualizado:** 2026-11-08 (turno 6, iteración 8)
+- **Estado:** turno 6, iteración 9: el homónimo del otro equipo ya no cuenta como tus muertes 14–25 tampoco por `summonerName`. Una prueba de DeepSeek (`test_mismo_nombre_de_juego_sin_tag_se_confunde`) queda roja porque afirmaba el bug: le pedí invertirla. 157/158.
+- **Siguiente:** que DeepSeek invierta su prueba; cotejar `VictimName` con la primera partida real en `datos/vivo/`.
+- **Actualizado:** 2026-11-08 (turno 6, iteración 9)
 
 ### DeepSeek · revisor
 - **Estado:** revisado c344309 (iteración 6, «línea al terminar»): correcto, 156 OK. Escribí `test_ds_linea_fin.py` (6 casos: 840 in / 1500 out, reinicio EndOfGame no repite, sin foto no truena, kills null, corte ✓/✕). Hallazgo menor: `resumen_fin()` lee `config.json`; malformado → en consola se salta `post_partida()` (descarga + revisión) en silencio.
@@ -181,6 +181,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: contra Viktor (1-7 con cualquier campeón) llegas al 14 con CS −17 (rol −3) pero oro parejo (−120 contra −118): pierdes farm, no la línea. Ekko va 0-3 contra Aurelion Sol con +1255 de oro al 14: ese counter no se explica por el early (n=3, pista).- 2026-11-08 · Opus: el cliente (LCU `/lol-ranked/v1/current-ranked-stats`) da el LP fresco sin key: Master 15 LP, 186-157 (54%) en solo/dúo. La división de Master+ viene como «NA».
 - 2026-11-08 · DeepSeek: `resumen_fin()` (iteración 6) lee `config.json` vía `meta_fase()`; un config malformado hace que, en consola, el companion se salte `post_partida()` (descarga + revisión) en silencio al terminar. Menor.
 - 2026-11-08 · Opus: el nombre sin #tag en los eventos en vivo contaba las muertes de un homónimo del otro equipo como tuyas; ahora solo vale si nadie más lo comparte.
+- 2026-11-08 · Opus: `summonerName` en la Live Client Data puede venir sin #tag; meterlo siempre en tus nombres dejaba contar las muertes de un homónimo. Ahora solo el riotId completo vale siempre.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -238,6 +239,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: las reglas de «cómo jugarlo» son una tabla fija en `draft.py` con los números del PLAN (no se recalculan en vivo); al cambiar el PLAN hay que actualizarla.
 - 2026-11-08 · Opus: «una línea al terminar» sale de la última foto en vivo (hasta 30 s antes del final), no de la Riot API: así funciona con la key caducada; la revisión completa la reemplaza cuando llega.- 2026-11-08 · Opus: el LP de la ventana sale del cliente (se lee al entrar a champ select), no de `perfil.json`; sin cliente cae a `perfil.json`.
 - 2026-11-08 · Opus: el cotejo de muertes solo marca el caso «0 eventos tuyos con muertes en el marcador» (formato de nombre desconocido), no exige igualdad exacta.
+- 2026-11-08 · Opus: ante un homónimo en la partida, el aviso de muertes 14–25 prefiere no contarte (el cotejo de la línea final lo dice) a contar muertes ajenas.
 
 ## Para el usuario (cuando vuelva)
 - Nuevo: si en tu primera partida la línea al terminar dice «no cuadran tus muertes con los eventos», el aviso del 14 al 25 no te está contando: avísale a Opus. Resumen de la noche en `RESUMEN-NOCHE.md` (Turno 6).

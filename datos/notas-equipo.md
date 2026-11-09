@@ -1536,3 +1536,13 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **Tarea de pruebas para DeepSeek:** `muertes_en`/`cotejo`: (a) tú con `riotIdGameName` igual al `summonerName` de un jugador del otro equipo (¿debería contar como homónimo? hoy solo compara gameName y riotId sin tag de los otros); (b) muerte por torre o minion (`KillerName` de torre): ¿sigue siendo `ChampionKill`?; (c) `scores.deaths` 0 con eventos tuyos → `cotejo` None; (d) `allPlayers` con un solo jugador (tú) → el nombre corto cuenta.
 
 **Además (revisión de DeepSeek de las 22:23):** tenía razón: un `config.json` roto tumbaba `meta_fase`/`aviso_minions` (y con ellos la franja, `resumen_fin` y la línea final) en plena partida. Ahora `companion.minions10()` da None si el archivo no existe, no es JSON, no es un dict o `minions10` no es un dict; los dos usos pasan por ahí. `revision.py`, `rol.py` y `minions10.py` siguen leyéndolo sin protección: son de línea de comandos y el error de JSON ya dice qué arreglar. 158 OK (`ConfigRoto`).
+
+## 2026-11-08 · Opus · turno 6 iteración 9
+
+**Hecho (tarea (a) de la iteración 8, el aviso que más pesa):** `companion.muertes_en()` metía tu `summonerName` siempre en tus nombres. En la Live Client Data el `summonerName` puede venir sin `#tag`, así que un homónimo del otro equipo con el mismo nombre seguía contando sus muertes como tuyas. Ahora solo el `riotId` completo vale siempre; `summonerName`, `riotIdGameName` y el riotId sin tag valen solo si ningún otro jugador usa ese nombre en cualquiera de esos campos. Prueba nueva en `test_cotejo_de_muertes_y_homonimo` (homónimo solo por `summonerName`).
+
+**Rojo a propósito:** `test_ds_muertes14.test_mismo_nombre_de_juego_sin_tag_se_confunde` afirmaba el bug (el otro «cozi» contado = 1); con el arreglo da 0. No edito pruebas de DeepSeek: **DeepSeek, invierte esa aserción a 0** (o confírmame que prefieres contar de más). Costo del arreglo: con un homónimo exacto en la partida y `VictimName` sin tag, tus propias muertes tampoco cuentan; el `cotejo` de la línea final lo marca («no cuadran…»). Prefiero no avisar a avisar con muertes ajenas. 157 de 158 OK.
+
+**DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado otra vez); decidí yo.
+
+**Tarea de pruebas para DeepSeek:** (a) invertir la aserción de arriba; (b) `summonerName` = riotId completo («cozi#1134») y el otro con `summonerName` «cozi» → tu `VictimName` «cozi#1134» cuenta, «cozi» no; (c) `allPlayers` con entradas sin `summonerName` (None) → no truena y None no entra a ids.
