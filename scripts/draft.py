@@ -151,6 +151,9 @@ def avisos(filas, nombre, pos):
 
 
 MEDIDAS = {"oro14": "gd14", "cs14": "cs14", "xp14": "xp14", "nivel6": "nivel6", "muertes6": "muertes6"}  # contra tu rival de línea; muertes6 = tuyas antes del 6
+# Medidas cuya media contra un rival anticipa la próxima partida contra él (anticipa.py: muertes6 r 0.28–0.37, p×5 ≤ 0.03;
+# oro, CS, XP y nivel al 6 predicen peor que tu media del rol). shortcut: fijo a mano, al rehacer anticipa.py revisarlo.
+ANTICIPA = ("muertes6",)
 NOTAS = RAW.parent / "matchups-notas.json"  # opcional, a mano: {"Zed": "pega fuerte al 6", ...}
 
 
@@ -229,7 +232,7 @@ def ficha(rival, pos, champ=None):
                    frase=frase, pocas=len(mv) < 5)
     k = sum(r["win"] for r in vs)
     cuidado = dict(rival=nombre, v=k, wr=round(k / len(vs), 3) if vs else None, ic=[round(x, 3) for x in wilson(k, len(vs))],
-                   **medidas(vs), ref=medidas(rol), notas=notas(nombre), pocas=len(vs) < 5)
+                   **medidas(vs), ref=medidas(rol), notas=notas(nombre), pocas=len(vs) < 5, anticipa=list(ANTICIPA))
     por = defaultdict(list)
     for g in mias:
         if g["opp"] != "?": por[g["opp"]].append(g)

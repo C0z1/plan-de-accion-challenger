@@ -147,10 +147,13 @@ def lineas_ficha(fi):
     c, ref = fi["cuidado"], fi["cuidado"]["ref"]
     cuidado = []
     if c["n"]:
-        difs = [_dif(c, ref, k, n, f) for k, n, f in [("oro14", "Oro al 14", "+.0f"), ("cs14", "CS al 14", "+.0f"),
-                                                       ("nivel6", "Nivel al 6", "+.1f"), ("muertes6", "Muertes antes del 6", ".1f")]]
-        cuidado = [f"Tú contra {c['rival']} (cualquier campeón): {c['v']}-{c['n'] - c['v']} (Wilson {c['ic'][0]:.0%}–{c['ic'][1]:.0%})"
-                   + ("; pocas partidas, pista" if c["pocas"] else "")] + [d for d in difs if d]
+        ant = c.get("anticipa") or ()  # las que anticipan la próxima partida (anticipa.py) van solas; el resto, juntas y marcadas
+        difs = [(k in ant, _dif(c, ref, k, n, f)) for k, n, f in [("muertes6", "Muertes antes del 6", ".1f"), ("oro14", "Oro al 14", "+.0f"),
+                                                                ("cs14", "CS al 14", "+.0f"), ("nivel6", "Nivel al 6", "+.1f")]]
+        resto = " · ".join(d for a, d in difs if d and not a)
+        cuidado = ([f"Tú contra {c['rival']} (cualquier campeón): {c['v']}-{c['n'] - c['v']} (Wilson {c['ic'][0]:.0%}–{c['ic'][1]:.0%})"
+                    + ("; pocas partidas, pista" if c["pocas"] else "")] + [f"{d}; esta sí tiende a repetirse contra él" for a, d in difs if d and a]
+                   + ([f"{resto}; no se repite de una partida a la siguiente"] if resto else []))
     cuidado += [f"Tu nota: {n}" for n in c["notas"]]
     ref = fi["counters"]["ref"]
     counters = [f"{x['rival']} {x['v']}-{x['n'] - x['v']} (Wilson {x['ic'][0]:.0%}–{x['ic'][1]:.0%})"

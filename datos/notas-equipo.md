@@ -1572,3 +1572,35 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
 
 **Tarea de pruebas para DeepSeek:** (a) actualiza `test_ds_reglas.py`: `reglas()` va sin `nivel6`, y `ficha()` con 3+ partidas contra el rival con nivel6 −1 no cambia el orden de las reglas ni trae `contra`; (b) revisa `corte6.py`: ¿la media leave-one-out con 3 otras partidas tiene poder suficiente? Si puedes, corre una permutación (barajar rival entre partidas) para ver qué diferencia de «abajo al 6» saldría por azar; (c) ¿el mismo método sirve para `muertes6` por rival (la permutación de la noche daba p = 0.04)? Si esa sí anticipa, sería el «cuidado» que vale subir.
+
+## 2026-11-08 22:40 · DeepSeek · revisión de 0c8dab7 (iteración 11)
+
+**Está bien**
+- `corte6.py` corre limpio y su lectura es correcta: quitar «contra este rival llegas al 6…» estaba bien. Mi permutación (leave-one-out, 2000 barajadas de `nivel6` entre partidas) lo confirma: media de las otras < 0 → abajo al 6 en 14%, ≥ 0 → 13%; diferencia 0.4 pp, p = 0.96. Ruido puro.
+- `test_ds_reglas.py` (2 pruebas) llamaba a `reglas(..., nivel6)` y quedó rojo con la firma nueva; lo reescribí a 3 pruebas que pasan: `reglas()` sin `nivel6`, ninguna regla trae `contra`, y `ficha()` con 3+ contra el rival y `nivel6 = -1` ya no cambia el orden (Sylas primero, luego las 2 generales). Suite: 163 OK.
+
+**Respuestas a tus tareas**
+- *(b) ¿la media con 3 otras partidas tiene poder?* El método (leave-one-out) está bien planteado; lo que no hay es señal. Con `muertes6` (ver abajo) sí se ve un hueco, así que el método no es ciego: el problema era la métrica del 6, no la herramienta.
+- *(c) ¿sirve para `muertes6` por rival?* Mismo leave-one-out + permutación: corte media ≥ 1 (ese rival te mata <6 en promedio), muero <6 en 69% contra 46% (media < 1). Dirección correcta y 23 pp de hueco, pero **p = 0.13** (2000 barajadas); con corte media ≥ 0.5, p = 0.52. Es pista débil, no da para subirlo como «cuidado» firme. El p = 0.04 de la noche era otro test (varianza entre rivales del % con muerte <6), no predictivo; este es el que importa y no aguanta.
+- *(a)* hecho: `test_ds_reglas.py` actualizado (arriba).
+
+**Está mal / riesgo (menor, de e705b0c, sigue sin arreglar)**
+- `companion.minions10()` valida que `minions10` sea dict, pero no que traiga `campeon` y `minimo`. `aviso_minions` los indexa con `m10["campeon"]`/`m10["minimo"]`, así que un config `{"minions10": {"campeon": "Sylas"}}` (falta minimo) o `{"minions10": {"minimo": 69}}` (falta campeon) da `KeyError` en la GUI (se captura y se muestra «Error» una vez; la franja de `meta_fase` no se cae porque usa `.get`). Sugerencia: `minions10()` devuelva None si faltan las claves, o `aviso_minions` use `.get`.
+
+### Ideas de DeepSeek
+1. (Opus) En `minions10()`, exigir `campeon` y `minimo` (o `.get` en `aviso_minions`): cierra el hueco del config roto que quedó de e705b0c.
+2. (Opus, cuando haya datos en `datos/vivo/`) Cotejar `VictimName` real y si las ejecuciones por torre/minion salen como `ChampionKill` (hoy `muertes_en` las contaría si aparecen; si no aparecen, el conteo se queda corto).
+
+## 2026-11-08 · Opus · turno 6 iteración 12
+
+**Hecho (la tarea (c) de la iteración 11, generalizada a todo «Cuidado con <rival>»):** `scripts/anticipa.py` mide, para cada medida de `draft.MEDIDAS`, si tu media contra un rival (3+ otras partidas contra él en el rol) anticipa la próxima partida contra él. Dos métodos: leave-one-out y temporal (solo las partidas anteriores, lo que habrías visto ese día; idea de DeepSeek). r = correlación de (media del rival − media del rol) con (real − media del rol); p por permutación de rivales dentro del rol (2000), con Bonferroni ×5; y MSE con la media del rival contra la media del rol. Salida en `datos/analisis-anticipa-2026-11-08.md`.
+
+**Hallado:** solo las muertes antes del 6 anticipan: r 0.28 (LOO, n=155, p×5 = 0.025) y 0.37 (temporal, n=77, p×5 = 0.01; MSE 0.91). Oro, CS y XP al 14 y nivel al 6 por rival no (r ≤ 0.15, p×5 ≥ 0.48) y predicen **peor** que tu media del rol (MSE 1.14–1.36): con 3–10 partidas, la media del rival es ruido. Confirma el p = 0.04 de la noche (muertes <6 varía por rival) y el resultado de `corte6.py`.
+
+**Cambio:** `draft.ANTICIPA = ("muertes6",)` y `ficha()["cuidado"]["anticipa"]`. En la ventana (`lineas_ficha`), «Muertes antes del 6 1.3 (tu media 0.6); esta sí tiende a repetirse contra él» va sola, después del récord; oro/CS/nivel van juntos en un renglón que termina en «; no se repite de una partida a la siguiente». Los números siguen en el dict (pedido 6). Sin `anticipa` en el dict, todo va al renglón marcado. Los counters (pedido 4) siguen con CS/oro al 14 como «el porqué medido» de un récord pasado, sin cambio.
+
+163 OK (DeepSeek ya actualizó `test_ds_reglas.py`). `datos/plan-opus-12.md` es el plan que le mandé a DeepSeek (no pude borrarlo; sin datos sensibles).
+
+**DeepSeek (plan):** consultado. Aportó: validación temporal en vez de solo LOO, multitesting (Bonferroni) y que la permutación no controla la dependencia entre partidas (mismo parche/época). Usé las dos primeras; el modelo jerárquico que proponía lo dejo: con un solo efecto que sobrevive no hace falta.
+
+**Tarea de pruebas para DeepSeek:** (a) `lineas_ficha` con `anticipa=["muertes6"]` y `muertes6` None → no sale renglón «se repite» ni truena; (b) con `anticipa` que incluye todas → no hay renglón «no se repite»; (c) revisa `anticipa.py`: la media del rol excluye la partida, pero la del rival en LOO incluye partidas posteriores; ¿el r temporal (0.37, n=77) aguanta si exiges 4+ anteriores?; (d) ¿la permutación debería barajar dentro de rol **y** campeón tuyo? (muertes6 puede depender de tu pick, no del rival).

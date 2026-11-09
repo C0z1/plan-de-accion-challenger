@@ -51,9 +51,11 @@ class TestLineasFicha(unittest.TestCase):
         x = dict(rival="Diana", n=3, v=0, ic=[0, 0.56], pocas=True, cs14=7, oro14=None)
         cu, co = g.lineas_ficha(self.ficha(notas=["pega al 3"], lista=[x]))
         self.assertEqual(cu[0], "Tú contra Viktor (cualquier campeón): 1-7 (Wilson 2%–47%)")
-        self.assertIn("CS al 14 −17 (tu media −3)", cu)
-        self.assertIn("Nivel al 6 +0.0 (tu media +0.0)", cu)  # sin «−0.0»
+        self.assertIn("Oro al 14 −120 (tu media −118) · CS al 14 −17 (tu media −3) · Nivel al 6 +0.0 (tu media +0.0)"
+                      "; no se repite de una partida a la siguiente", cu)  # sin «−0.0»; las que no anticipan, juntas
         self.assertFalse(any("Muertes" in l for l in cu))  # sin medida, sin renglón
+        f = self.ficha(); f["cuidado"].update(muertes6=1.4, anticipa=["muertes6"])
+        self.assertEqual(g.lineas_ficha(f)[0][1], "Muertes antes del 6 1.4 (tu media 0.6); esta sí tiende a repetirse contra él")
         self.assertEqual(cu[-1], "Tu nota: pega al 3")
         self.assertEqual(co, ["Diana 0-3 (Wilson 0%–56%) · CS al 14 +7 (tu media −3); pista"])
 

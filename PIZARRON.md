@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 6, iteración 11: medí el corte de la regla del 6 (`corte6.py`): tu media contra un rival no anticipa ir abajo al 6 (14% contra 13%); quité el «contra este rival llegas al 6…» de champ select. 162/164 (2 de DeepSeek por la firma de `reglas()`).
-- **Siguiente:** cotejar `VictimName` con la primera partida real en `datos/vivo/`; medir si `muertes6` por rival sí anticipa (leave-one-out).
-- **Actualizado:** 2026-11-08 (turno 6, iteración 11)
+- **Estado:** turno 6, iteración 12: `anticipa.py`: de «Cuidado con el rival» solo las muertes antes del 6 anticipan la próxima partida (r 0.28–0.37); oro/CS/XP/nivel por rival son ruido. La ventana lo dice. 163 OK.
+- **Siguiente:** cotejar `VictimName` con la primera partida real en `datos/vivo/`; ¿muertes6 por rival aguanta controlando tu campeón?
+- **Actualizado:** 2026-11-08 (turno 6, iteración 12)
 
 ### DeepSeek · revisor
-- **Estado:** revisado c344309 (iteración 6, «línea al terminar»): correcto, 156 OK. Escribí `test_ds_linea_fin.py` (6 casos: 840 in / 1500 out, reinicio EndOfGame no repite, sin foto no truena, kills null, corte ✓/✕). Hallazgo menor: `resumen_fin()` lee `config.json`; malformado → en consola se salta `post_partida()` (descarga + revisión) en silencio.
-- **Siguiente:** que Opus proteja el `json.loads` de `config.json` (en `meta_fase`/`aviso_minions`); revisar df3902c (iteración 7, `rango()`) en el próximo turno.
-- **Actualizado:** 2026-11-08 22:23
+- **Estado:** revisado 0c8dab7 (iteración 11, `corte6.py`): correcto. Arreglé `test_ds_reglas.py` (firma nueva de `reglas()` sin `nivel6`) → 163 OK. Permutación leave-one-out: nivel6 por rival 14% vs 13% (p=0.96, ruido; confirma quitar «contra»); muertes6 por rival (corte media ≥1) 69% vs 46% (p=0.13, pista débil: no subirlo).
+- **Siguiente:** cotejar `VictimName` con la primera partida real en `datos/vivo/`; pendiente menor de e705b0c: `minions10()` con dict sin `campeon`/`minimo` sigue dando KeyError en `aviso_minions` (GUI).
+- **Actualizado:** 2026-11-08 22:40
 
 ### Diseñador
 - **Estado:** sesión en vivo con el usuario sobre el canvas de Claude Design (3 pantallas); preguntas P1–P10 de una en una.
@@ -34,6 +34,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/recorrido_ficha.py` | Champ select en texto contra tus N rivales más frecuentes de un rol, para revisar lo que ve el usuario: `recorrido_ficha.py [rol] [N]` | Opus |
 | `scripts/corte6.py` | ¿Tu media de nivel al 6 contra un rival anticipa la siguiente partida contra él? (leave-one-out, cortes 0 a −0.5) | Opus |
 | `datos/analisis-corte6-*.md` | Salida de `corte6.py` | Opus |
+| `scripts/anticipa.py` | ¿Cada medida de «Cuidado con el rival» anticipa la próxima partida contra él? (LOO y temporal, permutación, MSE) | Opus |
+| `datos/analisis-anticipa-*.md` | Salida de `anticipa.py` | Opus |
 | `datos/matchups-notas.json` | Opcional, a mano: `{"Rival": "nota" o ["…"]}`; sale en `ficha()["cuidado"]["notas"]` (si no existe, nada) | Usuario |
 | `datos/analisis-aviso-muertes-*.md` | Verificación del aviso de muertes 14–25 (WR por número de muertes, con y sin equipo arriba) | Opus |
 | `datos/analisis-matchups-*.md` | Guía de matchups y bans generada por `draft.py` | Opus |
@@ -187,6 +189,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: `summonerName` en la Live Client Data puede venir sin #tag; meterlo siempre en tus nombres dejaba contar las muertes de un homónimo. Ahora solo el riotId completo vale siempre.
 - 2026-11-08 · Opus: en 6 de tus 10 rivales de mid más frecuentes el pick recomendado y la alternativa quedan a < 2 puntos de estimado: ahí el draft no separa tus picks.
 - 2026-11-08 · Opus: tu media de nivel al 6 contra un rival (3+ partidas) no anticipa la siguiente: leave-one-out en 155 partidas, media < 0 → abajo al 6 14%, ≥ 0 → 13%; con < −0.2, 0% contra 17%. Corrige el «11 de 28 rivales… va primero».
+- 2026-11-08 · Opus: de tu media contra un rival, solo las muertes antes del 6 anticipan la próxima partida contra él (r 0.37 temporal, n=77, p×5 = 0.01); oro/CS/XP al 14 y nivel al 6 por rival predicen peor que tu media del rol (`anticipa.py`).
+- 2026-11-08 · DeepSeek: permutación leave-one-out confirma `corte6.py` (nivel6 por rival: 14% vs 13%, p=0.96) y mide `muertes6` por rival: corte media ≥1 → muero <6 en 69% vs 46%, p=0.13 (pista débil, no da para subirlo). Menor sin arreglar de e705b0c: `minions10()` con dict sin `campeon`/`minimo` da KeyError en `aviso_minions` (GUI).
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -246,8 +250,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: el cotejo de muertes solo marca el caso «0 eventos tuyos con muertes en el marcador» (formato de nombre desconocido), no exige igualdad exacta.
 - 2026-11-08 · Opus: ante un homónimo en la partida, el aviso de muertes 14–25 prefiere no contarte (el cotejo de la línea final lo dice) a contar muertes ajenas.
 - 2026-11-08 · Opus: la regla del 6 ya no sube al frente por rival en champ select (era ruido, `corte6.py`); queda como regla general con su número.
+- 2026-11-08 · Opus: en «Cuidado con el rival», las muertes antes del 6 van solas («tiende a repetirse contra él»); oro/CS/nivel juntos y marcados «no se repite». `draft.ANTICIPA` fijo a mano.
 
 ## Para el usuario (cuando vuelva)
+- Cambio: en champ select, «Cuidado con <rival>» ahora separa lo que sí se repite contra ese rival (tus muertes antes del 6) de lo que no (oro, CS y nivel: varían de partida a partida). Si ves muertes antes del 6 por encima de tu media, juega el nivel 1–6 con más cuidado. Recompila `Companion.exe`.
 - Cambio: champ select ya no dice «contra este rival llegas al 6 con −0.3 niveles»; ese promedio no anticipaba nada. Recompila `Companion.exe`.
 - Nuevo: si champ select dice «casi igual que Ekko (54%): cualquiera de los dos», tus picks no se separan contra ese rival (pasa con 6 de tus 10 rivales de mid más frecuentes): elige el que mejor manejes. Recompila `Companion.exe`.
 - Nuevo: si en tu primera partida la línea al terminar dice «no cuadran tus muertes con los eventos», el aviso del 14 al 25 no te está contando: avísale a Opus. Resumen de la noche en `RESUMEN-NOCHE.md` (Turno 6).
