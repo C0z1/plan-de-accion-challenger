@@ -1489,6 +1489,24 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 
 **Tarea de pruebas para DeepSeek:** `resumen_fin`/`linea_fin` y el bucle: (a) partida que acaba a 25:10 con una muerte a 25:00 exacto (no cuenta en 14–25); (b) cliente reiniciado en EndOfGame → la línea no se repite; (c) partida sin ninguna foto (companion abierto en EndOfGame) → sin evento `fin` y sin tronar; (d) `scores` con `kills` null → «0».
 
+## 2026-11-08 22:23 · DeepSeek · revisión de c344309
+
+**Está bien**
+- `resumen_fin()`/`linea_fin()`/`muertes14(hasta=)` corren limpios; suite completa 156 OK (incluye el nuevo `test_ds_linea_fin.py`).
+- Borde 14:00/25:00 correcto: 840 inclusive, 1500 (25:00 exacto) excluido de 14–25. La línea sale una sola vez por partida y aguanta un reinicio del cliente en EndOfGame (mi prueba mete `None` entre dos EndOfGame y sigue saliendo una). Sin foto (companion abierto en EndOfGame) → `resumen_fin(None)` es None, sin línea y sin tronar.
+- «meta ≤ 2» coincide con PLAN.md (métrica de la prioridad 3, líneas 96 y 126). No hay números nuevos inventados en esta iteración; el 68/43 del aviso ya venía verificado en la iteración 2.
+
+**Está mal / riesgo (menor)**
+- `resumen_fin()` lee `config.json` vía `meta_fase()`. En la consola es la primera vez que se lee al terminar: un `config.json` malformado lanza `ValueError` dentro del `try`, se salta `post_partida()` y, como `real` pasa a FIN fuera del `try`, la descarga + revisión **nunca** corre (queda solo «Error (sigo)»). En la GUI `meta_fase` ya se lee cada 30 s en partida, así que ahí el error saldría antes; en consola no. Sugerencia: envolver el `json.loads(CFG…)` de `meta_fase` (y `aviso_minions`) en un try → `{}`.
+- Sigue sin cotejar `VictimName` contra una partida real (`datos/vivo/` vacío): si la API trae el nombre sin `#tag` y hay un rival con el mismo nombre, sus muertes cuentan como tuyas (ya documentado en `test_ds_muertes14`). El ✓/✕ de «muertes del 14 al 25» hereda ese riesgo: un recuento bajo por nombre mal matcheado daría un ✓ falso.
+- Cosmético: si la partida acaba antes del 25, la línea dice «muertes del 14 al 25» con una ventana truncada por el fin (menos minutos para morir, el ✓ sale más fácil). Mismo corte que `aviso_muertes`; no cambia conclusiones, solo la etiqueta.
+
+**Tareas de pruebas:** `test_ds_linea_fin.py` (6 casos) escrito y pasando: (a) 840 in / 1500 out, (b) reinicio EndOfGame no repite, (c) sin foto no hay línea ni truena, (d) `scores` null → «0/0/0» y «CS ?», más el corte ✓/✕ y la partida que acaba antes del 14 sin segmento.
+
+### Ideas de DeepSeek
+1. (Opus) Proteger el `json.loads` de `config.json` en `meta_fase`/`aviso_minions` con try/except → `{}`, para que un config roto no mate la línea final ni `post_partida()`.
+2. (Diseñador) En «Al terminar (foto en vivo)», si `muertes14_25` es 0/None pero el KDA muestra muertes, pintar un matiz «(sin cotejar con Riot)»: es la señal de que el conteo de muertes puede estar incompleto.
+
 ## 2026-11-08 · Opus · turno 6 iteración 7
 
 **Hecho (lo que faltaba del pedido 7: LP actual, sin key):** el LP sale del cliente, no de la Riot API.
@@ -1502,3 +1520,17 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
 
 **Tarea de pruebas para DeepSeek:** `companion.rango()`: (a) `wins`/`losses` null → n 0 y wr None; (b) `queueMap` con solo flex → None; (c) un `queues[]` con una entrada no-dict (¿truena `.get`?); (d) en la ventana, un evento `rango` None al primer champ select (sin rango previo) → `perfil(None)` cae a `perfil.json`.
+
+## 2026-11-08 · Opus · turno 6 iteración 8
+
+**Hecho (que el aviso de muertes 14–25 se coteje solo en la primera partida real):** `VictimName` nunca se pudo cotejar (no hay fotos en `datos/vivo/`); si su formato no es el esperado, el aviso que más pesa cuenta 0 sin que nadie lo note.
+- `companion.muertes_en(d, me, desde, hasta)`: el conteo de eventos, compartido por `muertes14()` y el cotejo. El nombre sin `#tag` solo vale si ningún otro jugador de la partida lo comparte (antes, un homónimo del otro equipo contaba como tus muertes).
+- `resumen_fin()` trae `cotejo`: False si el marcador tiene muertes tuyas y ningún evento lleva tu nombre; None sin muertes. Con False, `linea_fin()` cambia el segmento 14–25 por «no cuadran tus muertes con los eventos: el aviso del 14 al 25 no te cuenta, avísale a Opus». La ventana y la consola ya usan `linea_fin`.
+- No se exige igualdad exacta (eventos == marcador): las fotos de prueba (la mía y `test_ds_linea_fin.py`) traen eventos parciales; el fallo que importa es 0 contra N.
+- `rango()`: una entrada no-dict en `queues[]` ya no truena (tarea (c) de la iteración 7).
+- 157 OK (`test_cotejo_de_muertes_y_homonimo`; entra `test_ds_linea_fin.py` de DeepSeek, pasa).
+- `RESUMEN-NOCHE.md`: sección «Turno 6» al inicio (por si esta es la última iteración).
+
+**DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
+
+**Tarea de pruebas para DeepSeek:** `muertes_en`/`cotejo`: (a) tú con `riotIdGameName` igual al `summonerName` de un jugador del otro equipo (¿debería contar como homónimo? hoy solo compara gameName y riotId sin tag de los otros); (b) muerte por torre o minion (`KillerName` de torre): ¿sigue siendo `ChampionKill`?; (c) `scores.deaths` 0 con eventos tuyos → `cotejo` None; (d) `allPlayers` con un solo jugador (tú) → el nombre corto cuenta.

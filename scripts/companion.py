@@ -32,7 +32,7 @@ def lcu(path):
 def rango(s):
     """Solo/dúo de /lol-ranked/v1/current-ranked-stats (fresco, sin key de Riot) como dict
     {tier, division, lp, wins, losses, n, wr}; division None en Master+ (la LCU da «NA»). None sin datos."""
-    q = ((s or {}).get("queueMap") or {}).get("RANKED_SOLO_5x5") or next((e for e in (s or {}).get("queues") or [] if e.get("queueType") == "RANKED_SOLO_5x5"), None)
+    q = ((s or {}).get("queueMap") or {}).get("RANKED_SOLO_5x5") or next((e for e in (s or {}).get("queues") or [] if isinstance(e, dict) and e.get("queueType") == "RANKED_SOLO_5x5"), None)
     if not q or q.get("tier") in (None, "", "NONE"): return None
     v, d = q.get("wins") or 0, q.get("losses") or 0
     apex = q["tier"] in ("MASTER", "GRANDMASTER", "CHALLENGER") or q.get("division") in (None, "", "NA")
@@ -95,24 +95,37 @@ def muertes14(d, me=None, hasta=float("inf")):
     """Tus muertes desde el 14:00 hasta `hasta` s (eventos ChampionKill de la foto en vivo); None antes del 14 o sin tu jugador."""
     if me is None: me, _ = yo_rival(d)
     if not me or (((d or {}).get("gameData") or {}).get("gameTime") or 0) < 840: return None
-    ids = {me.get("riotId"), me.get("summonerName"), me.get("riotIdGameName"), (me.get("riotId") or "").split("#")[0]} - {None, ""}
-    evs = (((d or {}).get("events") or {}).get("Events")) or []  # VictimName: sin cotejar con una partida real (¿con o sin #tag?)
-    return sum(1 for e in evs if e.get("EventName") == "ChampionKill" and e.get("VictimName") in ids and 840 <= (e.get("EventTime") or 0) < hasta)
+    return muertes_en(d, me, 840, hasta)
+
+
+def muertes_en(d, me, desde=0, hasta=float("inf")):
+    """Tus eventos ChampionKill de la foto con desde <= EventTime < hasta. VictimName sin cotejar con una partida real
+    (¿con o sin #tag?): se acepta el nombre sin tag solo si nadie más en la partida lo comparte."""
+    otros = [p for p in (d or {}).get("allPlayers") or [] if p is not me]
+    nom = lambda p: {p.get("riotIdGameName"), (p.get("riotId") or "").split("#")[0]}
+    corto = nom(me) - set().union(*map(nom, otros)) if otros else nom(me)
+    ids = ({me.get("riotId"), me.get("summonerName")} | corto) - {None, ""}
+    evs = (((d or {}).get("events") or {}).get("Events")) or []
+    return sum(1 for e in evs if e.get("EventName") == "ChampionKill" and e.get("VictimName") in ids and desde <= (e.get("EventTime") or 0) < hasta)
 
 
 def resumen_fin(d):
     """«Una línea al terminar» sin key de Riot, de la última foto en vivo (hasta 30 s antes del final): meta_fase() más
     kda y muertes14_25 (tus muertes del 14:00 al 25:00; None si acabó antes del 14). None sin foto o sin tu jugador."""
     if not (mf := meta_fase(d)): return None
-    s = (yo_rival(d)[0].get("scores") or {})
-    return {**mf, "kda": f"{s.get('kills') or 0}/{s.get('deaths') or 0}/{s.get('assists') or 0}", "muertes14_25": muertes14(d, hasta=1500)}
+    me = yo_rival(d)[0]; s = me.get("scores") or {}
+    # cotejo: con muertes en el marcador y ningún evento con tu nombre, el formato de VictimName no es el esperado
+    # y el aviso 14–25 no te cuenta (no se exige igualdad: las fotos de prueba traen eventos parciales)
+    cotejo = None if not s.get("deaths") else muertes_en(d, me) > 0
+    return {**mf, "kda": f"{s.get('kills') or 0}/{s.get('deaths') or 0}/{s.get('assists') or 0}", "muertes14_25": muertes14(d, hasta=1500), "cotejo": cotejo}
 
 
 def linea_fin(r):
     """«Min 31 · Sylas 5/4/7 contra Zed · CS 245 · muertes del 14 al 25: 3 (meta ≤ 2) ✕» o None."""
     if not r: return None
     t = [f"Min {r['minuto']}", f"{r['campeon'] or '?'} {r['kda']}" + (f" contra {r['rival']}" if r["rival"] else ""), f"CS {r['cs'] if r['cs'] is not None else '?'}"]
-    if r["muertes14_25"] is not None: t.append(f"muertes del 14 al 25: {r['muertes14_25']} (meta ≤ 2) {'✓' if r['muertes14_25'] <= 2 else '✕'}")
+    if r.get("cotejo") is False: t.append("no cuadran tus muertes con los eventos: el aviso del 14 al 25 no te cuenta, avísale a Opus")
+    elif r["muertes14_25"] is not None: t.append(f"muertes del 14 al 25: {r['muertes14_25']} (meta ≤ 2) {'✓' if r['muertes14_25'] <= 2 else '✕'}")
     return " · ".join(t)
 
 

@@ -9,14 +9,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 6, iteración 7: LP actual sin key: `companion.rango()` lo lee del cliente (LCU) y la ventana lo pone en la línea de perfil al entrar a champ select (verificado en vivo: Master 15 LP, 186-157). 150 OK.
-- **Siguiente:** revisión de DeepSeek; resumen en `RESUMEN-NOCHE.md` en la última iteración.
-- **Actualizado:** 2026-11-08 (turno 6, iteración 7)
+- **Estado:** turno 6, iteración 8: la línea final coteja tus muertes del marcador contra los eventos en vivo (si `VictimName` no te reconoce, lo dice) y un homónimo del otro equipo ya no cuenta. Resumen del turno 6 en `RESUMEN-NOCHE.md`. 157 OK.
+- **Siguiente:** revisión de DeepSeek; cotejar `VictimName` con la primera partida real en `datos/vivo/`.
+- **Actualizado:** 2026-11-08 (turno 6, iteración 8)
 
 ### DeepSeek · revisor
-- **Estado:** revisado 509ac9b (solo commitea mi `test_ds_resumen.py`: nada nuevo que revisar). Refiné `clave`: engaña en 11/284 (no 29), victoria con todo z<0 o derrota con todo z>0 → propongo None cuando el extremo no tenga el signo del resultado. Dejé 2 casos fallando en `test_ds_resumen.py` + 2 controles que pasan. Suite 115 OK + 2 fallando a propósito.
-- **Siguiente:** que Opus aplique `clave = None` (o diga por qué no).
-- **Actualizado:** 2026-11-08 15:32
+- **Estado:** revisado c344309 (iteración 6, «línea al terminar»): correcto, 156 OK. Escribí `test_ds_linea_fin.py` (6 casos: 840 in / 1500 out, reinicio EndOfGame no repite, sin foto no truena, kills null, corte ✓/✕). Hallazgo menor: `resumen_fin()` lee `config.json`; malformado → en consola se salta `post_partida()` (descarga + revisión) en silencio.
+- **Siguiente:** que Opus proteja el `json.loads` de `config.json` (en `meta_fase`/`aviso_minions`); revisar df3902c (iteración 7, `rango()`) en el próximo turno.
+- **Actualizado:** 2026-11-08 22:23
 
 ### Diseñador
 - **Estado:** sesión en vivo con el usuario sobre el canvas de Claude Design (3 pantallas); preguntas P1–P10 de una en una.
@@ -179,6 +179,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: en 11 de tus 28 rivales de mid con 3+ partidas llegas al 6 abajo de nivel en promedio (Fizz, Orianna, Diana, Vex, Qiyana…): contra esos, «no salgas del 6 con un nivel abajo» va primero en champ select.
 - 2026-11-08 · Opus: tilt (`score.tilt()`, sesión = partidas a menos de 90 min): llegaste 18 veces a 2 derrotas seguidas en una sesión y paraste en 12; las 6 que seguiste, 3-3 (19–81%). Sin sesión (días distintos) la partida tras 2 derrotas va 36/54 = 67%: no hay tilt medible; ya paras solo.
 - 2026-11-08 · Opus: contra Viktor (1-7 con cualquier campeón) llegas al 14 con CS −17 (rol −3) pero oro parejo (−120 contra −118): pierdes farm, no la línea. Ekko va 0-3 contra Aurelion Sol con +1255 de oro al 14: ese counter no se explica por el early (n=3, pista).- 2026-11-08 · Opus: el cliente (LCU `/lol-ranked/v1/current-ranked-stats`) da el LP fresco sin key: Master 15 LP, 186-157 (54%) en solo/dúo. La división de Master+ viene como «NA».
+- 2026-11-08 · DeepSeek: `resumen_fin()` (iteración 6) lee `config.json` vía `meta_fase()`; un config malformado hace que, en consola, el companion se salte `post_partida()` (descarga + revisión) en silencio al terminar. Menor.
+- 2026-11-08 · Opus: el nombre sin #tag en los eventos en vivo contaba las muertes de un homónimo del otro equipo como tuyas; ahora solo vale si nadie más lo comparte.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -235,8 +237,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: el aviso de muertes 14–25 salta con 2 (antes de la 3.ª, que es la que pesa), una vez, y cita el 68/43 de todas tus partidas, no el 82/57 (solo vale con línea y equipo arriba). Cuenta eventos `ChampionKill` de la foto, sin estado; `VictimName` sin cotejar con una partida real.
 - 2026-11-08 · Opus: las reglas de «cómo jugarlo» son una tabla fija en `draft.py` con los números del PLAN (no se recalculan en vivo); al cambiar el PLAN hay que actualizarla.
 - 2026-11-08 · Opus: «una línea al terminar» sale de la última foto en vivo (hasta 30 s antes del final), no de la Riot API: así funciona con la key caducada; la revisión completa la reemplaza cuando llega.- 2026-11-08 · Opus: el LP de la ventana sale del cliente (se lee al entrar a champ select), no de `perfil.json`; sin cliente cae a `perfil.json`.
+- 2026-11-08 · Opus: el cotejo de muertes solo marca el caso «0 eventos tuyos con muertes en el marcador» (formato de nombre desconocido), no exige igualdad exacta.
 
 ## Para el usuario (cuando vuelva)
+- Nuevo: si en tu primera partida la línea al terminar dice «no cuadran tus muertes con los eventos», el aviso del 14 al 25 no te está contando: avísale a Opus. Resumen de la noche en `RESUMEN-NOCHE.md` (Turno 6).
 - Nuevo: la ventana muestra tu LP real aunque la key haya caducado («cozi#1134 · Master 15 LP · 186-157 (54%)»), leído del cliente al entrar a champ select. Recompila `Companion.exe`.
 - Nuevo: al terminar la partida, la ventana (y la consola) da una línea aunque la key haya caducado: «Min 31 · Sylas 5/4/7 contra Zed · CS 245 · muertes del 14 al 25: 3 (meta ≤ 2) ✕». Recompila `Companion.exe`.
 - Nuevo: en champ select, bajo «Cómo jugar», la ventana muestra «Cuidado con <rival>» (tu récord contra él y tu oro/CS al 14, nivel al 6 y muertes antes del 6 contra tu media, más tus notas) y los counters de tu pick con su récord. Recompila `Companion.exe` para tenerlo.

@@ -102,6 +102,21 @@ class AvisoNivel(unittest.TestCase):
         self.assertEqual(companion.linea_fin(companion.resumen_fin(d)), "Min 11 · Ekko 0/0/0 contra Zed · CS ?")
         for x in (None, {}): self.assertIsNone(companion.linea_fin(companion.resumen_fin(x)))
 
+    def test_cotejo_de_muertes_y_homonimo(self):
+        d = foto(); d["gameData"]["gameTime"] = 1860; me = d["allPlayers"][0]
+        me["riotId"] = "Jugador#LAN"; me["scores"] = {"deaths": 2}
+        kill = lambda t, v: {"EventName": "ChampionKill", "EventTime": t, "VictimName": v}
+        d["events"]["Events"] += [kill(900, "Otro"), kill(1000, "Otro")]  # VictimName en un formato que no reconoce
+        r = companion.resumen_fin(d)
+        self.assertIs(r["cotejo"], False); self.assertIn("no cuadran tus muertes", companion.linea_fin(r))
+        d["events"]["Events"] += [kill(950, "Jugador")]  # sin #tag y nadie más lo comparte: cuenta
+        self.assertTrue(companion.resumen_fin(d)["cotejo"])
+        d["allPlayers"][1]["riotId"] = "Jugador#KR"  # homónimo en el otro equipo: el nombre corto ya no cuenta
+        self.assertEqual(companion.muertes14(d), 0)
+        d["events"]["Events"].append(kill(960, "Jugador#LAN"))
+        self.assertEqual(companion.muertes14(d), 1)
+        self.assertIsNone(companion.rango({"queues": [None, "x", {"queueType": "RANKED_SOLO_5x5", "tier": "MASTER"}]})["division"])
+
     def test_el_bucle_da_la_linea_al_terminar(self):
         orig = companion.lcu, companion.vivo, companion.capturar, companion.time.sleep, companion.post_partida
         fases = iter(["InProgress", "InProgress", "EndOfGame", "EndOfGame"])

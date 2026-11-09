@@ -1,3 +1,28 @@
+# Turno 6 · 2026-11-08 (noche)
+
+## Qué quedó de los pedidos del Diseñador (los 6, más el 7)
+1. **Por qué este pick**: una frase con el dato (tu récord contra el rival con 3+ partidas, o tu WR con el campeón en el rol contra la alternativa). ✓ en la ventana.
+2. **Cómo jugarlo**: 2–3 reglas del PLAN con su número (Sylas 69+ minions al 10; no salir del 6 con un nivel abajo; ≤ 2 muertes del 14 al 25…). Si contra ese rival sueles llegar al 6 abajo, esa regla va primero. ✓
+3. **Cuidado con el rival**: tu récord contra él (Wilson), oro/CS al 14, nivel al 6 y muertes antes del 6 contra tu media. Lo cualitativo no se inventa: `datos/matchups-notas.json` (`{"Zed": "tu nota"}`), opcional. ✓
+4. **Counters de tu pick**: récord, Wilson y CS/oro al 14 contra tu media. ✓
+5. **Aviso de muertes del 14 al 25** (el que más pesa): al llegar a 2 te avisa «juega con objetivo» (en tus 282 partidas: 0–2 → 68%, 3+ → 43%; el 82/57 es con línea y equipo arriba, y se reproduce). ✓
+6. Todo como dict con `n` (`draft.ficha()`, `companion.meta_fase()`, `resumen_fin()`, `rango()`, `score.tilt()`). ✓
+7. Tilt (`score.tilt()`, aún sin pantalla: va en la ventana 2) y tu LP leído del cliente. ✓
+
+## Cómo se ve
+- **Champ select**: tu LP real arriba («Master 15 LP · 186-157»), el pick y por qué, «Cómo jugar <pick>», «Cuidado con <rival>» (en rojo) y «Counters de <pick>».
+- **En partida**: la franja da tu nivel contra el rival, CS (y la meta al 10 con Sylas) y, del 14 al 25, «Muertes desde el 14: N (meta ≤ 2)».
+- **Al terminar**: una línea aunque la key haya caducado: «Min 31 · Sylas 5/4/7 contra Zed · CS 245 · muertes del 14 al 25: 3 (meta ≤ 2) ✕».
+
+## Hallazgos
+- Contra Viktor vas 1-7 con cualquier campeón: CS −17 al 14 pero oro parejo (pierdes farm, no la línea).
+- No hay tilt medible: llegaste 18 veces a 2 derrotas seguidas en una sesión y paraste en 12; ya paras solo.
+
+## Qué falta
+- **Tu primera partida con el companion**: el conteo de muertes usa el nombre de los eventos en vivo, que nunca se cotejó con una partida real. Si la línea final dice «no cuadran tus muertes…», avísale a Opus.
+- Recompila `Companion.exe` para tener todo esto. El rediseño visual espera tu sesión con el Diseñador.
+- Una `RIOT_KEY` nueva para bajar partidas y la build de los mejores. Sigue pendiente `git rm -r --cached scripts/__pycache__` antes del push.
+
 # Turno 5 · 2026-11-08 (tarde)
 
 ## Qué se construyó
