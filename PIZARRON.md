@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 6, iteración 12: `anticipa.py`: de «Cuidado con el rival» solo las muertes antes del 6 anticipan la próxima partida (r 0.28–0.37); oro/CS/XP/nivel por rival son ruido. La ventana lo dice. 163 OK.
-- **Siguiente:** cotejar `VictimName` con la primera partida real en `datos/vivo/`; ¿muertes6 por rival aguanta controlando tu campeón?
-- **Actualizado:** 2026-11-08 (turno 6, iteración 12)
+- **Estado:** turno 7, iteración 1: app web local (`companion_web.py` + `web/index.html`) con champ select del canvas y datos reales de `ficha()`. 172 OK.
+- **Siguiente:** franja en partida y línea al terminar; luego Perfil (`score.resumen()`, `tilt()`); build v0.1.0.
+- **Actualizado:** 2026-11-09 (turno 7, iteración 1)
 
 ### DeepSeek · revisor
 - **Estado:** revisado f8f7c13 (iteración 12, `anticipa.py`): correcto. Solo muertes6 anticipa (r 0.28 LOO n=155, 0.37 temporal n=77); aguanta 4+ anteriores (r 0.34–0.40) y permutar por campeón no lo explica (p 0.002→0.004). Escribí `test_ds_anticipa.py` (3) → 166 OK. Menor: los p no se reproducen entre corridas (set sin ordenar en `anticipa.py`).
@@ -19,9 +19,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Actualizado:** 2026-11-08 22:47
 
 ### Diseñador
-- **Estado:** sesión en vivo con el usuario sobre el canvas de Claude Design (3 pantallas); preguntas P1–P10 de una en una.
-- **Siguiente:** aplicar sus cambios al canvas; al cerrar, acuerdos en `datos/diseno-acuerdos.md`.
-- **Actualizado:** 2026-11-08 (turno 5, iteración 3)
+- **Estado:** retomo la sesión en vivo sobre el canvas «Base LOL» (5 artboards: Perfil, ChampSelect y 3 paletas). Contexto en `datos/diseno-contexto.md`; 6 preguntas abiertas, incluido un error de copy (82/57 → 68/43).
+- **Siguiente:** publicar los cambios que pida el usuario al canvas; al cerrar, acuerdos en `datos/diseno-acuerdos.md`.
+- **Actualizado:** 2026-11-09 (retomo sesión)
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -68,6 +68,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/wards.py` | Control wards: tú y los 1,431 jugadores de línea ajenos (gank <14 y WR, a igual oro y por rol) | Opus |
 | `datos/analisis-wards-*.md` | Salida de `wards.py` | Opus |
 | `scripts/companion.py` | Lee el cliente de LoL (solo lectura): en champ select corre `draft.py` contra tu rival; al terminar, `descargar.py 5` + `revision.py 1`; en partida, avisos de nivel (5–7), minions (10) y muertes desde el 14 (2+ antes del 25); al terminar, una línea de la última foto en vivo (`resumen_fin()`, sin key). `rango()` da tu LP del cliente (sin key). `--fixture <carpeta>` para probar | Opus |
+| `scripts/companion_web.py` | Companion con UI web local (diseño del canvas): servidor en 127.0.0.1 con `/api/estado`, íconos de Data Dragon en caché; abre Edge `--app`. `--demo`, `--no-abrir` | Opus |
+| `scripts/web/index.html` | La página del companion (champ select del canvas; polling a `/api/estado`) | Opus |
+| `scripts/test_companion_web.py` | Pruebas del servidor web (estado JSON, HTTP, Host, imágenes) sin red ni navegador | Opus |
 | `datos/vivo/` | Fotos en vivo de la Live Client Data API que guarda `companion.py` (una línea JSON cada 30 s; en `.gitignore`) | Opus |
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
 | `scripts/fixtures/vivo/allgamedata.json` | Foto sintética de la Live Client Data API (min 6, Ekko 5 contra Zed 6; nombres inventados) | Opus |
@@ -252,6 +255,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: ante un homónimo en la partida, el aviso de muertes 14–25 prefiere no contarte (el cotejo de la línea final lo dice) a contar muertes ajenas.
 - 2026-11-08 · Opus: la regla del 6 ya no sube al frente por rival en champ select (era ruido, `corte6.py`); queda como regla general con su número.
 - 2026-11-08 · Opus: en «Cuidado con el rival», las muertes antes del 6 van solas («tiende a repetirse contra él»); oro/CS/nivel juntos y marcados «no se repite». `draft.ANTICIPA` fijo a mano.
+- 2026-11-09 · Opus: la app nueva es web local (`http.server` en 127.0.0.1 + HTML del canvas, abierta con Edge `--app`), reutiliza el `trabajador` de `companion_gui.py`; tkinter queda de respaldo. Valida `Host` y se cierra sola sin la ventana (DeepSeek).
 
 ## Para el usuario (cuando vuelva)
 - Cambio: en champ select, «Cuidado con <rival>» ahora separa lo que sí se repite contra ese rival (tus muertes antes del 6) de lo que no (oro, CS y nivel: varían de partida a partida). Si ves muertes antes del 6 por encima de tu media, juega el nivel 1–6 con más cuidado. Recompila `Companion.exe`.

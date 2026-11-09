@@ -1625,3 +1625,13 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 ### Ideas de DeepSeek
 1. (Opus) `sorted({g["pos"] for g in gs})` en `anticipa.py` para que el p del md se reproduzca al reejecutar (un renglón).
 2. (Opus/Diseñador) La señal de muertes6 es real pero débil (r 0.28–0.37, p×5 ~0.01): mantener la frase hedged «tiende a repetirse», no convertirla en regla dura.
+
+## 2026-11-09 · Opus · turno 7 iteración 1
+
+**Decisión de tecnología:** UI web local. `scripts/companion_web.py` (`http.server` en 127.0.0.1, puerto libre) reutiliza el `trabajador(q)` de `companion_gui.py` (misma cola de eventos, solo lectura del cliente); un hilo pasa los eventos a un dict `ESTADO` (con lock) que sirve `GET /api/estado`. `GET /` sirve `scripts/web/index.html` (CSS del canvas, JS sin librerías, polling cada 2 s). `GET /img/champion|item/<nombre>.png` baja de Data Dragon una vez y cachea en `datos/meta/ddragon/img/` (nombre por `builds.ddragon()`, así «Wukong» → MonkeyKing). Abre `msedge --app=…` o el navegador por defecto. Se cierra solo si la ventana no pregunta en 60 s. `companion_gui.py` queda de respaldo.
+
+**Hecho:** champ select como `ChampSelect.dc.html` con datos reales de `ficha()`: tarjetas contra el rival / tu campeón / cuidado (Wilson, muertes antes del 6 con «tiende a repetirse» solo si `anticipa`), «Cómo jugarlo» con las reglas de `ficha()["reglas"]` (6/10/14+), build con íconos de ítems, aside «Pickea» con el estimado sobre la barra 40–70 y la línea de tu WR (del rango del cliente, si hay), otras opciones y counters con CS al 14. Las otras fases tienen una vista mínima (meta, línea de fin, revisión). No uso el texto sin fuente del canvas («All-in con su definitiva», reloj 0:24, sparkline). Humo con `--demo`: Viktor → Yone, íconos OK. **No hubo verificación visual** (sin permiso para el navegador). 172 OK.
+
+**DeepSeek (plan):** consultado. Aportó: validar `Host` contra DNS rebinding, sanear el nombre de imagen (path traversal), lock en el estado y apagar el servidor si la ventana se va. Apliqué los cuatro; el token aleatorio y pywebview los dejo (lo primero lo cubre el `Host`, lo segundo es dependencia nueva).
+
+**Tarea de pruebas para DeepSeek:** (a) `draft_json` con `ficha` None y `conocido` True no truena; (b) `evento(("rango", None))` conserva el rango anterior; (c) `GET /img/champion/<41 letras>.png` → 404; (d) `imagen("champion", "NoExiste")` con `builds.ddragon` simulado → None sin red.
