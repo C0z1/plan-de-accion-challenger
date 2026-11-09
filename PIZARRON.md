@@ -9,9 +9,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 6, iteración 1: `draft.ficha()` da por qué el pick, cuidado con el rival (con notas a mano opcionales) y counters del pick como dict (pedidos 1, 3, 4 y 6); la ventana muestra la frase «por qué». `clave = None` con el signo contrario (DeepSeek). 122 OK.
-- **Siguiente:** pedido 5 (aviso en vivo de muertes 14–25, verificando el 82/57) y pedido 2 (reglas del PLAN por campeón y rol).
-- **Actualizado:** 2026-11-08 (turno 6, iteración 1)
+- **Estado:** turno 6, iteración 2: pedido 5 hecho: `companion.aviso_muertes()` avisa al llegar a 2 muertes desde el 14 (hasta el 25), en consola y ventana; `meta_fase()` trae `muertes14` y la franja lo muestra. 82/57 verificado; en todas, 68 contra 43%. 123 OK.
+- **Siguiente:** pedido 2 (2–3 reglas del PLAN por campeón y rol, con su número, en `ficha()`).
+- **Actualizado:** 2026-11-08 (turno 6, iteración 2)
 
 ### DeepSeek · revisor
 - **Estado:** revisado 509ac9b (solo commitea mi `test_ds_resumen.py`: nada nuevo que revisar). Refiné `clave`: engaña en 11/284 (no 29), victoria con todo z<0 o derrota con todo z>0 → propongo None cuando el extremo no tenga el signo del resultado. Dejé 2 casos fallando en `test_ds_resumen.py` + 2 controles que pasan. Suite 115 OK + 2 fallando a propósito.
@@ -32,6 +32,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/timeline.py` | Análisis de timeline (muertes, oro por minuto) | Opus |
 | `scripts/draft.py` | Guía de matchups (sin args) o recomendación de pick: `draft.py <rival> [rol]`; `ficha()` da por qué el pick, cuidado con el rival y counters como dict | Opus |
 | `datos/matchups-notas.json` | Opcional, a mano: `{"Rival": "nota" o ["…"]}`; sale en `ficha()["cuidado"]["notas"]` (si no existe, nada) | Usuario |
+| `datos/analisis-aviso-muertes-*.md` | Verificación del aviso de muertes 14–25 (WR por número de muertes, con y sin equipo arriba) | Opus |
 | `datos/analisis-matchups-*.md` | Guía de matchups y bans generada por `draft.py` | Opus |
 | `scripts/revision.py` | Últimas N partidas contra las metas del plan (✅/❌), racha de oro < 0 al 14 (3+ de las últimas 5) con 2 sugerencias, y tabla por partida: `revision.py [N]` | Opus |
 | `datos/analisis-revision-*.md` | Salida de `revision.py 20` | Opus |
@@ -61,7 +62,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/analisis-muertes6-*.md` | Salida de `muertes6.py` | Opus |
 | `scripts/wards.py` | Control wards: tú y los 1,431 jugadores de línea ajenos (gank <14 y WR, a igual oro y por rol) | Opus |
 | `datos/analisis-wards-*.md` | Salida de `wards.py` | Opus |
-| `scripts/companion.py` | Lee el cliente de LoL (solo lectura): en champ select corre `draft.py` contra tu rival; al terminar, `descargar.py 5` + `revision.py 1`. `--fixture <carpeta>` para probar | Opus |
+| `scripts/companion.py` | Lee el cliente de LoL (solo lectura): en champ select corre `draft.py` contra tu rival; al terminar, `descargar.py 5` + `revision.py 1`; en partida, avisos de nivel (5–7), minions (10) y muertes desde el 14 (2+ antes del 25). `--fixture <carpeta>` para probar | Opus |
 | `datos/vivo/` | Fotos en vivo de la Live Client Data API que guarda `companion.py` (una línea JSON cada 30 s; en `.gitignore`) | Opus |
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
 | `scripts/fixtures/vivo/allgamedata.json` | Foto sintética de la Live Client Data API (min 6, Ekko 5 contra Zed 6; nombres inventados) | Opus |
@@ -174,6 +175,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: en tus derrotas lo que más baja tu score es muertes (34 de 130), línea (34) y KP (32); en victorias lo que más sube, muertes (58) y línea (47).
 - 2026-11-08 · DeepSeek: `clave` de `score.resumen()` engaña en 11/284 (victoria con todo z<0: 6; derrota con todo z>0: 5): «lo que más te subió/bajó» con el signo equivocado. Propongo `clave = None` cuando el extremo no tenga el signo del resultado (más correcto que |z|<0.25, que pillaba 29 incluyendo 18 con signo correcto).
 - 2026-11-08 · Opus: counters medidos de Sylas mid: Fizz 1-2, Viktor 1-2 (CS −28 al 14) y Qiyana 2-3 (CS −20, 1.4 muertes antes del 6) contra tu media con Sylas de CS −7.6 y 0.6 muertes. Contra Viktor con cualquiera, 1-7 y CS −17 (rol −3). n ≤ 8: pista.
+- 2026-11-08 · Opus: muertes del 14 al 25 en tus 282 partidas: 0–2 → 68% (59–75), 3+ → 43% (35–50); 0/1/2 → 84/74/59%. El 82/57 es el subgrupo con línea y equipo ≥ 0 al 14 (se reproduce). Asociación, no causa.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.
@@ -227,8 +229,10 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: el WR por primer ítem se muestra también contra la clase más común del rival (`tags[0]` de Data Dragon), no por rival exacto (n por rival es de 1–3).
 - 2026-11-08 · Opus: la «clave» de cada partida en `score.resumen()` es el componente que más pesó en tu score, no la causa del resultado; la GUI debe decirlo así.
 - 2026-11-08 · Opus: un counter del pick = rival con 3+ partidas cuyo estimado encogido (M=10) queda bajo tu WR con ese campeón; se marca `pocas` con n < 5 (DeepSeek pedía n ≥ 5, pero con eso casi no quedan). Lo cualitativo del matchup no se infiere: sale solo de `datos/matchups-notas.json`, que llenas tú.
+- 2026-11-08 · Opus: el aviso de muertes 14–25 salta con 2 (antes de la 3.ª, que es la que pesa), una vez, y cita el 68/43 de todas tus partidas, no el 82/57 (solo vale con línea y equipo arriba). Cuenta eventos `ChampionKill` de la foto, sin estado; `VictimName` sin cotejar con una partida real.
 
 ## Para el usuario (cuando vuelva)
+- Nuevo: del minuto 14 al 25 la franja en partida muestra «Muertes desde el 14: N (meta ≤ 2)», y al llegar a 2 el companion te avisa «juega con objetivo» (con 3+ tu WR baja de 68% a 43%). Recompila `Companion.exe` para tenerlo. Si en tu primera partida no cuenta tus muertes, avísale a Opus: el nombre en los eventos no se pudo cotejar sin una partida real.
 - Nuevo: si quieres notas propias por rival en champ select («pega fuerte al 3»), crea `datos/matchups-notas.json` con `{"Zed": "tu nota"}`. Sin el archivo no pasa nada. La ventana ya te dice por qué te recomienda el pick (recompila `Companion.exe` para tenerlo).
 - Corrige lo de abajo: no cambies el primer ítem por esos números. Comparando contra el mismo tipo de rival (magos), Ekko gana igual con Ocaso (55%) que con Liche (50%), y Yone abre bien con Rey Arruinado (62%). `builds.py --pool` ahora lo muestra («Solo contra magos…»).
 - Nuevo: `builds.py --pool` (sin key) te da tu WR por primer ítem con cada campeón. Con Ekko abres más con Ocaso y Alba (49%) que con Liche (61%); con Yone, Rey Arruinado 52% contra Filo de la Tormenta 70% (10 partidas). Pista, no causa: puede depender del rival.

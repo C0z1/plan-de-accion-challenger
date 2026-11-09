@@ -78,6 +78,19 @@ class AvisoNivel(unittest.TestCase):
         self.assertIsNone(companion.aviso_minions(d, {"campeon": "Sylas", "minimo": 69}))  # otro campeón
         for x in (None, {}): self.assertIsNone(companion.aviso_minions(x, m10))
 
+    def test_muertes_del_14_al_25(self):
+        d = foto(); d["gameData"]["gameTime"] = 1000
+        kill = lambda t, v: {"EventName": "ChampionKill", "EventTime": t, "VictimName": v, "KillerName": "Rival1"}
+        d["events"]["Events"] += [kill(500, "Jugador"), kill(900, "Jugador"), kill(950, "Rival1#LAN")]  # antes del 14 y la de otro no cuentan
+        self.assertEqual(companion.muertes14(d), 1); self.assertIsNone(companion.aviso_muertes(d))
+        d["events"]["Events"].append(kill(990, "Jugador#LAN"))  # con o sin #tag
+        self.assertIn("2 muertes desde el 14", companion.aviso_muertes(d))
+        self.assertEqual(companion.meta_fase(d, {})["muertes14"], 2)
+        for t in (839, 1500, None): d["gameData"]["gameTime"] = t; self.assertIsNone(companion.aviso_muertes(d))
+        d["gameData"]["gameTime"] = 600; self.assertIsNone(companion.meta_fase(d, {})["muertes14"])
+        d["gameData"]["gameTime"] = 1000; d["events"] = None; self.assertIsNone(companion.aviso_muertes(d))  # null no truena
+        for x in (None, {}): self.assertIsNone(companion.aviso_muertes(x))
+
     def test_el_bucle_avisa_una_vez_por_partida(self):
         orig = companion.lcu, companion.vivo, companion.capturar, companion.time.sleep, companion.time.time
         fases = iter(["InProgress"] * 3 + ["Lobby", "InProgress"])

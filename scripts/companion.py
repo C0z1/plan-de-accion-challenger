@@ -57,14 +57,15 @@ def yo_rival(d):
 
 
 def meta_fase(d, m10=None):
-    """La meta de la fase como números para la GUI: {minuto, campeon, nivel, rival, nivel_rival, cs, cs_meta}; None sin tu jugador.
+    """La meta de la fase como números para la GUI: {minuto, campeon, nivel, rival, nivel_rival, cs, cs_meta, muertes14}; None sin tu jugador.
+    muertes14: tus muertes desde el 14:00 (None antes del 14; meta ≤ 2 hasta el 25).
     cs_meta solo con el campeón de minions10 de config.json. La Live Client Data no trae el oro del rival: no hay «oro al 14»."""
     me, rival = yo_rival(d)
     if not me: return None
     if m10 is None: m10 = (json.loads(CFG.read_text(encoding="utf-8")) if CFG.exists() else {}).get("minions10")
     return {"minuto": int(((d.get("gameData") or {}).get("gameTime") or 0) // 60), "campeon": me.get("championName"),
             "nivel": me.get("level"), "rival": (rival or {}).get("championName"), "nivel_rival": (rival or {}).get("level"),
-            "cs": (me.get("scores") or {}).get("creepScore"),
+            "cs": (me.get("scores") or {}).get("creepScore"), "muertes14": muertes14(d, me),
             "cs_meta": m10.get("minimo") if m10 and me.get("championName") == m10.get("campeon") else None}
 
 
@@ -77,6 +78,24 @@ def aviso_nivel(d):
     if not rival or (n := (rival.get("level") or 0) - (me.get("level") or 0)) < 1: return None  # level puede venir null
     return (f"Min {int(t // 60)}: vas {n} nivel{'es' if n > 1 else ''} abajo de {rival.get('championName', 'tu rival')} "
             f"({me.get('level') or '?'} contra {rival.get('level') or '?'}). No tradees hasta igualar; quédate en rango de XP de cada oleada.")
+
+
+def muertes14(d, me=None):
+    """Tus muertes desde el 14:00 (eventos ChampionKill de la foto en vivo); None antes del 14 o sin tu jugador."""
+    if me is None: me, _ = yo_rival(d)
+    if not me or (((d or {}).get("gameData") or {}).get("gameTime") or 0) < 840: return None
+    ids = {me.get("riotId"), me.get("summonerName"), me.get("riotIdGameName"), (me.get("riotId") or "").split("#")[0]} - {None, ""}
+    evs = (((d or {}).get("events") or {}).get("Events")) or []  # VictimName: sin cotejar con una partida real (¿con o sin #tag?)
+    return sum(1 for e in evs if e.get("EventName") == "ChampionKill" and e.get("VictimName") in ids and (e.get("EventTime") or 0) >= 840)
+
+
+def aviso_muertes(d):
+    """Del 14 al 25, al llegar a 2 muertes desde el 14: el aviso; si no, None. 0–2 muertes del 14 al 25 → 68%, 3+ → 43%
+    en tus 282 partidas (datos/analisis-aviso-muertes-*.md; con línea y equipo ≥ 0 al 14, 82% contra 57%)."""
+    t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
+    if not 840 <= t < 1500 or (n := muertes14(d) or 0) < 2: return None
+    return (f"Min {int(t // 60)}: {n} muertes desde el 14. Juega con objetivo: no pelees si no sale un dragón, heraldo o torre; "
+            "con 3+ del 14 al 25 tu WR baja de 68% a 43%.")
 
 
 CFG = DIR.parent / "config.json"  # opcional, como en revision.py
@@ -163,8 +182,9 @@ def main(argv=None):
             elif fase != "ChampSelect": visto = None
             if jugando and get is lcu and time.time() - ult >= 30:
                 d = vivo(); archivo, ult = capturar(archivo, d), time.time()
-                if not avisado and (txt := aviso_nivel(d)): print(f"\n*** {txt} ***\n"); avisado = True
-            elif not jugando: archivo, avisado = None, False  # partida nueva, archivo y aviso nuevos
+                for f in (aviso_nivel, aviso_muertes):  # cada aviso, una vez por partida
+                    if f.__name__ not in avisado and (txt := f(d)): print(f"\n*** {txt} ***\n"); avisado.add(f.__name__)
+            elif not jugando: archivo, avisado = None, set()  # partida nueva, archivo y avisos nuevos
             if fase in FIN and real not in FIN and get is lcu: post_partida()  # real: un reinicio en EndOfGame no repite la descarga
         except Exception as e: print(f"Error (sigo): {e!r}")  # un JSON raro no tumba el companion
         fase_ant, real, fallos = fase or "cerrado", fase or real, 0 if fase else fallos + 1

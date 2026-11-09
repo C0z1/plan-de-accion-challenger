@@ -124,6 +124,7 @@ def texto_meta(mf):
     t = [f"Min {mf['minuto']}", f"Nv {mf['nivel'] or '?'}"]
     if mf["rival"]: t[-1] += f" contra {mf['nivel_rival'] or '?'} ({mf['rival']})"
     t.append(f"CS {mf['cs'] if mf['cs'] is not None else '?'}" + (f" (meta {mf['cs_meta']} al 10)" if mf["cs_meta"] and mf["minuto"] < 11 else ""))
+    if mf.get("muertes14") is not None and mf["minuto"] < 25: t.append(f"Muertes desde el 14: {mf['muertes14']} (meta ≤ 2)")
     return " · ".join(t)
 
 
@@ -146,7 +147,7 @@ def trabajador(q):
             if jugando and time.time() - ult >= 30:
                 d = companion.vivo(); archivo, ult = companion.capturar(archivo, d), time.time()
                 if mf := companion.meta_fase(d): q.put(("meta", mf))
-                for f in (companion.aviso_nivel, companion.aviso_minions):
+                for f in (companion.aviso_nivel, companion.aviso_minions, companion.aviso_muertes):
                     if f not in avisado and (txt := f(d)):
                         q.put(aviso(txt, "consejo", int((((d or {}).get("gameData") or {}).get("gameTime") or 0) // 60))); avisado.add(f)
             elif not jugando: archivo, avisado = None, set()

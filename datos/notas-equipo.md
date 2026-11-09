@@ -1415,3 +1415,18 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** avisó del ruido con n chico y pidió n ≥ 5 para récords/counters; dejé el corte en 3 (con 5 casi no quedan counters) y marqué `pocas` con n < 5 para que la GUI lo diga.
 
 **Tarea de pruebas para DeepSeek:** `draft.ficha()` con (a) rival con alias o apóstrofo (`"wukong"`, `"Kai'Sa"`) en las notas y en `rival`; (b) un `champ` fuera de tu pool del rol (debe caer al recomendado); (c) partidas sin timeline mezcladas con otras con timeline (las medias solo con las que tienen). ¿Los counters reales de Ekko/Yone/Sylas cuadran con `datos/analisis-matchups-*`?
+
+## 2026-11-08 · Opus · turno 6 iteración 2
+
+**Hecho (pedido 5 del Diseñador, el que más pesa):** aviso en vivo de muertes del 14 al 25.
+- `companion.muertes14(d)`: tus muertes desde el 14:00 contando los eventos `ChampionKill` de la foto en vivo (`events.Events`, sin estado). `VictimName` se compara con riotId, summonerName, riotIdGameName y el riotId sin `#tag` (no lo pude cotejar con una partida real: `datos/vivo/` está vacío). None antes del 14.
+- `companion.aviso_muertes(d)`: del 14:00 al 25:00, al llegar a 2 muertes desde el 14, una vez por partida: «Min X: 2 muertes desde el 14. Juega con objetivo: no pelees si no sale un dragón, heraldo o torre; con 3+ del 14 al 25 tu WR baja de 68% a 43%».
+- `meta_fase()` trae `muertes14` (dict para la franja) y `texto_meta()` lo muestra del 14 al 25: «Muertes desde el 14: 2 (meta ≤ 2)».
+- La consola (`companion.main`) ahora da también este aviso (antes solo el de nivel); los avisos van en un set por nombre, uno por partida. La GUI lo suma a su lista.
+- 123 OK (1 prueba nueva en `test_companion.py`, 2 líneas en `test_companion_gui.py`).
+
+**Hallado (verificado con `games` de `midgame.py`, `datos/analisis-aviso-muertes-2026-11-08.md`):** el 82/57 se reproduce (línea y equipo ≥ 0 al 14: 40/49 contra 28/49). En las 282 partidas: 0–2 muertes del 14 al 25 → 68% (59–75), 3+ → 43% (35–50), sin cruzarse. Por número: 0 → 84%, 1 → 74%, 2 → 59%. Es asociación (ir perdiendo también hace morir más), por eso el aviso pide jugar con objetivo y no promete un WR. El aviso cita el 68/43 (todas) y no el 82/57, que solo vale con línea y equipo arriba.
+
+**DeepSeek (plan):** no pude consultarlo (el permiso bloquea PowerShell anidado); decidí yo.
+
+**Tarea de pruebas para DeepSeek:** `companion.muertes14`/`aviso_muertes` con (a) eventos sin `EventTime` o `VictimName` null; (b) un jugador con el mismo nombre de juego en el otro equipo (¿cuenta sus muertes como tuyas al comparar sin `#tag`?); (c) la foto a 24:59 con 2 muertes (avisa) y a 25:00 (no); (d) que el bucle de consola no repita el aviso tras un reinicio del cliente. Si puedes, revisa en la doc de la Live Client Data API si `VictimName` trae el `#tag`.

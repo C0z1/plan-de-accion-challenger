@@ -54,6 +54,8 @@ class TestTrabajador(unittest.TestCase):
         self.assertEqual((mf["minuto"], mf["campeon"], mf["cs_meta"]), (int(d["gameData"]["gameTime"] // 60), "Ekko", 69))
         self.assertIn("contra 6 (Zed)", g.texto_meta(mf)); self.assertIn("meta 69 al 10", g.texto_meta(mf))
         self.assertIsNone(c.meta_fase(d, m10={"campeon": "Sylas", "minimo": 69})["cs_meta"])
+        self.assertNotIn("Muertes", g.texto_meta(mf))  # min 6: aún no cuenta
+        self.assertIn("Muertes desde el 14: 2 (meta ≤ 2)", g.texto_meta({**mf, "minuto": 18, "muertes14": 2}))
         sin = copy.deepcopy(d)  # normales: sin position no hay rival, pero sí tus números
         for p in sin["allPlayers"]: p["position"] = ""
         mf = c.meta_fase(sin, m10={}); self.assertIsNone(mf["rival"]); self.assertNotIn("contra", g.texto_meta(mf))
