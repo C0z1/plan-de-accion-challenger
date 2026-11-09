@@ -1643,7 +1643,7 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 
 **Hallado:** con la fixture en vivo, la franja muestra Ekko nivel 5 contra Zed 6 al min 6. El JSON y las fases están bien en el humo. **Sin verificación visual ni de sintaxis JS:** no tengo permiso para `node` ni para el navegador.
 
-**DeepSeek (plan):** consultado (`datos/plan-opus-t7-2.md`), pero no respondió antes del commit; reviso su respuesta en la iteración 3.
+**DeepSeek (plan):** consultado (`datos/plan-opus-t7-2.md`), pero el asesor no respondió en 10 min y se cortó sin salida: esta iteración quedó sin su opinión. En la iteración 3, si vuelve a colgarse, conviene una pregunta más corta.
 
 182 OK.
 
