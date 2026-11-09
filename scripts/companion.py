@@ -73,7 +73,7 @@ def meta_fase(d, m10=None):
     cs_meta solo con el campeón de minions10 de config.json. La Live Client Data no trae el oro del rival: no hay «oro al 14»."""
     me, rival = yo_rival(d)
     if not me: return None
-    if m10 is None: m10 = (json.loads(CFG.read_text(encoding="utf-8")) if CFG.exists() else {}).get("minions10")
+    if m10 is None: m10 = minions10()
     return {"minuto": int(((d.get("gameData") or {}).get("gameTime") or 0) // 60), "campeon": me.get("championName"),
             "nivel": me.get("level"), "rival": (rival or {}).get("championName"), "nivel_rival": (rival or {}).get("level"),
             "cs": (me.get("scores") or {}).get("creepScore"), "muertes14": muertes14(d, me),
@@ -141,10 +141,18 @@ def aviso_muertes(d):
 CFG = DIR.parent / "config.json"  # opcional, como en revision.py
 
 
+def minions10():
+    """La meta minions10 de config.json, o None sin archivo o si está roto (no debe tumbar los avisos en partida)."""
+    try: c = json.loads(CFG.read_text(encoding="utf-8")) if CFG.exists() else {}
+    except (OSError, ValueError): return None
+    m = c.get("minions10") if isinstance(c, dict) else None
+    return m if isinstance(m, dict) else None
+
+
 def aviso_minions(d, m10=None):
     """Del minuto 10 al 11, si juegas el campeón de la meta minions10 de config.json y vas bajo el mínimo: el aviso; si no, None.
     Sylas con 69+ minions de línea al 10 → 74%, con ≤ 68 → 32% (early.py). creepScore en vivo incluye monstruos (en mid, pocos)."""
-    if m10 is None: m10 = (json.loads(CFG.read_text(encoding="utf-8")) if CFG.exists() else {}).get("minions10")
+    if m10 is None: m10 = minions10()
     t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
     if not m10 or not 600 <= t <= 660: return None  # 60 s de ventana: la foto de cada 30 s siempre cae dentro
     me, _ = yo_rival(d)

@@ -1534,3 +1534,5 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
 
 **Tarea de pruebas para DeepSeek:** `muertes_en`/`cotejo`: (a) tú con `riotIdGameName` igual al `summonerName` de un jugador del otro equipo (¿debería contar como homónimo? hoy solo compara gameName y riotId sin tag de los otros); (b) muerte por torre o minion (`KillerName` de torre): ¿sigue siendo `ChampionKill`?; (c) `scores.deaths` 0 con eventos tuyos → `cotejo` None; (d) `allPlayers` con un solo jugador (tú) → el nombre corto cuenta.
+
+**Además (revisión de DeepSeek de las 22:23):** tenía razón: un `config.json` roto tumbaba `meta_fase`/`aviso_minions` (y con ellos la franja, `resumen_fin` y la línea final) en plena partida. Ahora `companion.minions10()` da None si el archivo no existe, no es JSON, no es un dict o `minions10` no es un dict; los dos usos pasan por ahí. `revision.py`, `rol.py` y `minions10.py` siguen leyéndolo sin protección: son de línea de comandos y el error de JSON ya dice qué arreglar. 158 OK (`ConfigRoto`).

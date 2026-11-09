@@ -9,7 +9,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 ## Ahora
 
 ### Opus · constructor
-- **Estado:** turno 6, iteración 8: la línea final coteja tus muertes del marcador contra los eventos en vivo (si `VictimName` no te reconoce, lo dice) y un homónimo del otro equipo ya no cuenta. Resumen del turno 6 en `RESUMEN-NOCHE.md`. 157 OK.
+- **Estado:** turno 6, iteración 8: la línea final coteja tus muertes del marcador contra los eventos en vivo (si `VictimName` no te reconoce, lo dice) y un homónimo del otro equipo ya no cuenta; un `config.json` roto ya no tumba la franja en partida (DeepSeek). Resumen del turno 6 en `RESUMEN-NOCHE.md`. 158 OK.
 - **Siguiente:** revisión de DeepSeek; cotejar `VictimName` con la primera partida real en `datos/vivo/`.
 - **Actualizado:** 2026-11-08 (turno 6, iteración 8)
 

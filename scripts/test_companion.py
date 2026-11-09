@@ -153,6 +153,22 @@ class Rango(unittest.TestCase):
         for x in (None, {}, {"queueMap": None}, {"queueMap": {"RANKED_SOLO_5x5": {**solo, "tier": "NONE"}}}): self.assertIsNone(companion.rango(x))
 
 
+class ConfigRoto(unittest.TestCase):
+    def test_config_roto_no_tumba_la_partida(self):
+        import tempfile
+        orig = companion.CFG
+        with tempfile.TemporaryDirectory() as t:
+            companion.CFG = pathlib.Path(t) / "config.json"
+            try:
+                for txt in ('{"minions10": ', "[1]", '{"minions10": 5}'):
+                    companion.CFG.write_text(txt, encoding="utf-8")
+                    self.assertIsNone(companion.minions10())
+                    self.assertIsNotNone(companion.meta_fase(foto())); self.assertIsNone(companion.aviso_minions(foto()))
+                companion.CFG.write_text('{"minions10": {"campeon": "Ekko", "minimo": 69}}', encoding="utf-8")
+                self.assertEqual(companion.meta_fase(foto())["cs_meta"], 69)
+            finally: companion.CFG = orig
+
+
 class Argumentos(unittest.TestCase):
     def test_help_y_argumento_raro_no_arrancan_el_bucle(self):
         for args in (["--help"], ["--algo"]):
