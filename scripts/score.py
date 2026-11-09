@@ -25,6 +25,28 @@ from datetime import datetime
 COMP = ("daño", "oro", "kp", "muertes", "visión", "cs", "objetivos", "línea")
 
 
+def unidades(info):
+    """[(puuid, rol, {componente: valor en unidades legibles})] de los 10: daño/oro/kp/objetivos como fracción del equipo,
+    muertes por partida, visión y CS por minuto, línea en oro por minuto contra tu rival. Para la GUI («KP 41% contra 52%»)."""
+    ps, mins = info["participants"], info["gameDuration"] / 60
+    tot = defaultdict(lambda: defaultdict(float))
+    for p in ps:
+        t = tot[p["teamId"]]
+        t["daño"] += p["totalDamageDealtToChampions"]; t["oro"] += p["goldEarned"]
+        t["kills"] += p["kills"]; t["obj"] += p["damageDealtToObjectives"]
+    out = []
+    for p in ps:
+        t = tot[p["teamId"]]
+        opp = next((q for q in ps if p["teamPosition"] and q["teamPosition"] == p["teamPosition"] and q["teamId"] != p["teamId"]), None)
+        out.append((p["puuid"], p["teamPosition"], {
+            "daño": p["totalDamageDealtToChampions"] / (t["daño"] or 1), "oro": p["goldEarned"] / (t["oro"] or 1),
+            "kp": (p["kills"] + p["assists"]) / (t["kills"] or 1), "muertes": p["deaths"],
+            "visión": p["visionScore"] / mins, "cs": (p["totalMinionsKilled"] + p["neutralMinionsKilled"]) / mins,
+            "objetivos": p["damageDealtToObjectives"] / (t["obj"] or 1),
+            "línea": (p["goldEarned"] - opp["goldEarned"]) / mins if opp else 0.0}))
+    return out
+
+
 def z_partida(info):
     """[(puuid, rol, equipo, win, {componente: z})] de los 10 jugadores, o [] si no es la Grieta o es remake."""
     if info.get("mapId") != 11 or info["gameDuration"] < 300: return []
@@ -111,7 +133,8 @@ def partidas(raw=None):
         zs = z_partida(info)
         me = next((p for p in info["participants"] if p["puuid"] == yo), None)
         if zs and me: gs.append(dict(t=info["gameCreation"], win=me["win"], champ=me["championName"], rol=me["teamPosition"],
-                                     kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", zs=zs, f=f, pid=me["participantId"]))
+                                     kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", zs=zs, f=f, pid=me["participantId"],
+                                     u=unidades(info)))
     gs.sort(key=lambda g: g["t"])
     med = medias_rol((g["zs"] for g in gs), yo)
     for g in gs: g.update(de(g["zs"], yo, med))
@@ -135,10 +158,20 @@ def resumen(n=10, raw=None):
     """Para la GUI (pedido del Diseñador): dict con tus últimas n partidas (la más reciente primero) y la tendencia.
     {partidas: [{fecha, campeon, win, kda, score, puesto, puesto_eq, linea, comp, clave}], media, ultimas20, anteriores,
      tendencia [score medio por bloque de 20, el más viejo primero], por_campeon {campeón: {n, wr, score}} (más jugado primero),
-     ref: 50}. clave = (componente, z) que más te bajó en una derrota o más te subió en una victoria: lo que más pesó
+     ref: 50, unidades {componente: {tu, rol}} (media de tus últimas n y lo típico de tu rol en esas partidas)}. clave = (componente, z) que más te bajó en una derrota o más te subió en una victoria: lo que más pesó
     en el score, no la causa del resultado; None si ese extremo tiene el signo contrario (victoria sin nada arriba de tu rol)."""
-    gs = partidas(raw)[0]
+    gs, _, yo = partidas(raw)
     m = lambda rs: round(st.mean(g["score"] for g in rs), 1) if rs else None
+    rol_u = defaultdict(lambda: defaultdict(list))  # lo típico de cada rol en unidades, con los jugadores ajenos
+    for g in gs:
+        for puuid, rol, u in g.get("u", ()):
+            if puuid != yo:
+                for c in COMP: rol_u[rol][c].append(u[c])
+    rol_u = {r: {c: st.mean(v) for c, v in cs.items()} for r, cs in rol_u.items()}
+    ult = gs[-n:]
+    mio = lambda g: next(u for p, _, u in g["u"] if p == yo)
+    uds = {c: dict(tu=round(st.mean(mio(g)[c] for g in ult), 3),
+                   rol=round(st.mean(rol_u.get(g["rol"], {}).get(c, 0.0) for g in ult), 3)) for c in COMP} if ult and all("u" in g for g in ult) else {}
 
     def clave(g):
         c, z = (max if g["win"] else min)(((c, round(v, 2)) for c, v in g["comp"].items()), key=lambda x: x[1])
@@ -154,7 +187,7 @@ def resumen(n=10, raw=None):
                 tendencia=[m(gs[i:i + 20]) for i in range(0, len(gs), 20)],
                 por_campeon={c: dict(n=len(v), wr=round(sum(g["win"] for g in v) / len(v), 2), score=m(v))
                              for c, v in sorted(champs.items(), key=lambda x: -len(x[1]))},
-                ref=50)
+                ref=50, unidades=uds)
 
 
 def wilson(k, n, z=1.96):  # misma que draft.py

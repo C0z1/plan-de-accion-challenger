@@ -35,6 +35,15 @@ class Draft(unittest.TestCase):
             draft.draft(rival, pos)
         return out.getvalue()
 
+    def test_tu_regla_rival_luego_campeon_o_none(self):
+        r = draft.R("x", "y", 1, metrica="cs", meta="69+", campo="min10", ok=lambda v: v >= 69)
+        mv, mias = [dict(min10=70)] * 2, [dict(min10=70), dict(min10=60), dict(min10=69), dict(m25=1)]
+        t = draft.tu_regla(r, mv, mias, "Zed", "Sylas")
+        self.assertNotIn("ok", t); self.assertNotIn("campo", t)
+        self.assertEqual(t["tu"], dict(media=66.3, cumple=.67, n=3, de="con Sylas"))  # 2 contra Zed no alcanzan
+        self.assertEqual(draft.tu_regla(r, mias, [], "Zed", "Sylas")["tu"]["de"], "contra Zed")
+        self.assertIsNone(draft.tu_regla(draft.R("x", "y", 1), mias, mias, "Zed", "Sylas")["tu"])  # regla sin medida
+
     def test_recomienda_el_mejor_estimado(self):
         # Ekko gana en general pero pierde 0-4 contra Viktor; Yone va 3-1 contra Viktor
         js = [g("Ekko", True) for _ in range(8)] + [g("Ekko", False, "Viktor") for _ in range(4)]

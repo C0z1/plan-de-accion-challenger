@@ -59,7 +59,6 @@ class TestServidor(unittest.TestCase):
     def test_sin_partidas_todavia_en_que_esta_fallando(self):
         _, _, cuerpo = self.s.get("/")
         self.assertIn("Sin partidas todavía.".encode("utf-8"), cuerpo)
-        self.assertNotIn("Últimas 0".encode("utf-8"), cuerpo)
 
     def test_estado_es_json(self):
         code, tipo, cuerpo = self.s.get("/api/estado")

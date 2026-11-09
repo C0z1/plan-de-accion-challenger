@@ -18,13 +18,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Iteración 9:** con n ≤ 3, el pie del WR dice «Pocas partidas: el WR casi no dice nada» (idea 1 de DeepSeek). El humo del `.exe` y el asesor siguen bloqueados por el harness. 196 OK.
 - **Iteración 10:** con 0 partidas, «Qué está fallando» dice «Sin partidas todavía.» en vez de «Últimas 0». Rebuild `Companion.exe` v0.1.2 (iteraciones 8–10), tag `v0.1.2`. Humo y asesor bloqueados por el harness. 197 OK.
 - **Iteración 11:** primer humo real del `.exe`: `scripts/humo_exe.py` lo lanza con `--demo --no-abrir`, encuentra el puerto (tasklist + netstat), pide `/api/estado` y lo mata. v0.1.2 **arranca y responde** (11 claves, fase `inicio`) y no deja procesos vivos. 197 OK.
-- **Siguiente:** RESUMEN-NOCHE en la última iteración.
-- **Actualizado:** 2026-11-09 (turno 7, iteración 11)
+- **Iteración 12 (pedido del usuario):** íconos propios (Lucide, ISC) por métrica y en el nav; «Cómo jugarlo» en filas con tu dato real contra la meta y ✓/✕ con n (`draft.tu_regla`); «Qué está fallando» con los 8 componentes en unidades contra tu rol, barra divergente y una acción por fila (`score.unidades`). Falta la revisión en navegador y el rebuild del .exe. 200 OK.
+- **Siguiente:** revisión visual, rebuild v0.1.3 y RESUMEN-NOCHE.
+- **Actualizado:** 2026-11-09 (turno 7, iteración 12)
 
 ### DeepSeek · revisor
-- **Estado:** revisado 4355eaa (turno 7, iter 8): `muertes14_25` da None solo para la partida con timeline roto (JSON inválido / sin `info` / `frames` null) y el resto de Perfil se conserva; cuenta 14–25 idéntica. Escribí `test_ds_score.test_resumen_con_un_timeline_roto_conserva_los_demas` (tarea a); suite 197 OK. Menor: el `except` no cubre `OSError` (timeline ilegible dejaría Perfil vacío vía `rendimiento()`). Queda sin humo el `.exe` (harness bloquea ejecutarlo).
-- **Siguiente:** humo del `Companion.exe` v0.1.2 y RESUMEN-NOCHE; añadir `OSError` al `except` de `muertes14_25`.
-- **Actualizado:** 2026-11-09 (turno 7, revisión 4355eaa)
+- **Estado:** revisado ef71e63 (turno 7, iter 11): humo real de `Companion.exe` v0.1.2 con `scripts/humo_exe.py` — lo corrí, `exit=0` y `/api/estado` responde (11 claves); no deja procesos vivos. Riesgo (b) confirmado: con otra instancia abierta, `ports[0]` puede leer su puerto (falso OK); sugerí foto previa de netstat en vez de filtrar por PID hijo.
+- **Siguiente:** RESUMEN-NOCHE; cubrir el `OSError` de `muertes14_25` (pendiente de 4355eaa).
+- **Actualizado:** 2026-11-09 03:41 (turno 7, revisión ef71e63)
 
 ### Diseñador
 - **Estado:** canvas «Base LOL» de vuelta a su versión anterior (Perfil, ChampSelect y 3 paletas) más ChampSelect en Paleta 3E. Las ventanas de franja y post-partida que hice se quitaron del canvas. Contexto en `datos/diseno-contexto.md`; sigue abierto el error de copy (82/57 → 68/43).
@@ -208,6 +209,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-09 · DeepSeek: el pie de Perfil «20 partidas mueven el WR ±11 por azar» es 1 error estándar, no un IC (95% = ±22): subestima el ruido a medias. Sugerencia: «±22 (95%)» o aclarar «1 SE».
 - 2026-11-09 · DeepSeek: en 5f590c6 el pie queda bien (±22 al 95% con n real, «Sin partidas» con n=0); menor: con n=1 la misma fórmula da «±98 (95%)», honesto pero inservible con muestras chicas.
 - 2026-11-09 · DeepSeek: en 4355eaa el timeline roto ya no vacía Perfil (None solo para esa partida, verificado y con prueba `test_ds_score`); queda un hueco menor: el `except` no cubre `OSError`, así que un timeline ilegible (permiso/borrado) aún vaciaría Perfil vía `rendimiento()`.
+- 2026-11-09 · DeepSeek: el humo del `.exe` (ef71e63) sale 0 y el binario v0.1.2 responde `/api/estado`; único hueco: si hay otra instancia de `Companion.exe` abierta, `ports[0]` puede leer su puerto y dar un falso OK (una foto previa de netstat lo cubre).
 
 ## Decisiones
 - 2026-11-09 · Opus: `Companion.exe` v0.1.0 es la app web (`companion_web.py`), no tkinter. Lee `scripts/web` del repo si está junto a él (se actualiza sin recompilar) y si no, la copia empaquetada.

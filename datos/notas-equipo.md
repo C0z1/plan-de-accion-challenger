@@ -1811,3 +1811,46 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no lo consulté; el harness sigue bloqueando el PowerShell anidado.
 
 **Tarea de pruebas para DeepSeek:** (a) corre `python scripts/humo_exe.py` y confirma que sale con 0; (b) riesgo: si hay otro Companion.exe abierto (el del usuario), el humo podría leer su puerto. ¿Vale filtrar por el PID hijo?
+
+## 2026-11-09 03:38 · DeepSeek · revisión de 18ee63d (turno 7, iter 10: «Sin partidas todavía.»)
+
+**Está bien (verificado, no solo leído)**
+- El diff de `scripts/web/index.html` es solo la tarjeta «Qué está fallando»: con `ps.length` 0 el encabezado queda vacío (ya no «Últimas 0») y el texto pasa a «Sin partidas todavía.»; con partidas se conserva «Últimas N» y la descripción de siempre. La lista `peores.map(...)` ya salía vacía con n=0, así que no queda resto. Lógica del ternario correcta (`0` es falsy → rama else).
+- **Tarea (a) — pasa.** Escribí `test_ds_web.test_sin_partidas_todavia_en_que_esta_fallando`: el HTML servido trae «Sin partidas todavía.». Suite completa: **198 OK** (197 del commit + mi 1). Nota honesta: `/` devuelve el `index.html` crudo, así que la prueba afirma que el literal está en el JS servido, no que el navegador lo renderice con `ps=[]` (no tengo `node` para evaluarlo); el ternario se lee correcto a mano.
+
+**(b) — no pude:** `./Companion.exe --demo --no-abrir` pide aprobación en esta sesión no interactiva (igual que en las iteraciones anteriores). El binario v0.1.2 sigue sin humo: ya acumula las iteraciones 7–10 (pie ±22, n≤3, timeline roto y esto) sin comprobar que arranca.
+
+**Menor / riesgo**
+- El arreglo es cosmético y correcto; no toca `companion_web.py` ni los datos. Sin riesgo de datos.
+- Sigue abierto (de 4355eaa): añadir `OSError` al `except` de `muertes14_25`, para que un timeline ilegible quite solo esa partida y no todo Perfil.
+
+### Ideas de DeepSeek
+1. (Opus) Cuando el harness deje ejecutar binarios, humo del `Companion.exe` v0.1.2 antes de cerrar el turno: `--demo --no-abrir`, buscar el puerto con `netstat -ano` + PID y `curl /api/estado`. Es el único cambio sin verificar de toda la app web.
+2. (Opus) Aprovechar ese mismo humo para cubrir el `OSError` pendiente de `muertes14_25` (borrar un timeline entre el `exists()` y el `read_text()`), que sigue sin prueba.
+
+## 2026-11-09 03:41 · DeepSeek · revisión de ef71e63 (turno 7, iter 11: humo real del .exe)
+
+**Está bien (verificado, no solo leído)**
+- **Tarea (a) — pasa.** Corrí `python scripts/humo_exe.py` dos veces: `exit=0`, imprime `OK puerto … fase = … | claves: [aviso, draft, espera, fase, fin, meta, perfil, rango, rendimiento, revision, v]` (11 claves; en la primera corrida `fase = inicio`, en la segunda `ChampSelect`, el demo cicla). El binario **v0.1.2 arranca y responde `/api/estado`**.
+- La limpieza del `finally` funciona: tras la corrida, `tasklist` no deja ningún `Companion.exe` vivo (mata el árbol con `/F /T /PID p.pid`). Lo verifiqué aparte.
+- El filtro de `netstat` está bien para la app real: `companion_web.py` escucha en `("127.0.0.1", 0)` (solo IPv4), así que `127\.0\.0\.1:(\d+)…LISTENING…(\d+)` descarta las líneas IPv6 y coincide con lo que sirve. La petición lleva `Host: 127.0.0.1:PORT`, que pasa el filtro anti-rebinding (no 403).
+
+**Tarea (b) — sí vale, pero más barato que «filtrar por el PID hijo»**
+- El riesgo es real y de **falso positivo**, no de daño: si el usuario tiene su `Companion.exe` abierto, `pids` incluye sus procesos y `ports[0]` (orden de la tabla de netstat, no de arranque) puede ser el puerto de la instancia vieja. El humo leería su `/api/estado`, saldría 0 al instante y no detectaría si el .exe nuevo crasheó — mientras `taskkill /T /PID p.pid` deja la instancia del usuario intacta (correcto).
+- «Filtrar por el PID hijo» requiere saber el hijo: `wmic` ya no viene en Win11 24H2 (10.0.26200) y el PowerShell anidado está bloqueado aquí, así que es pesado. **Alternativa más barata con las mismas herramientas:** tomar una foto de `netstat -ano -p TCP` *antes* del `Popen` y solo aceptar puertos que no estén en esa línea base (dos sockets no pueden escuchar el mismo `127.0.0.1:PORT` a la vez, así que el puerto nuevo siempre es distinto). ~2 líneas y cubre justo ese caso.
+
+**Menor / riesgo**
+- Es un humo manual (no está en la suite `unittest`), así que no corre en CI: correcto, el CI no tiene el `.exe`.
+- `ports[0]` es el único hueco; el resto (timeout de 30 s, taskkill del árbol, exit code por `'fase' in d`) está bien.
+
+### Ideas de DeepSeek
+1. (Opus) En `humo_exe.py`, hacer una foto de netstat antes de lanzar y restar esos puertos: un solo `netstat` extra evita que una instancia del usuario deje pasar el humo en falso.
+2. (Opus) Cuando quede tiempo, cubrir el `OSError` de `muertes14_25` (pendiente de 4355eaa) con una prueba que borre un timeline entre `exists()` y `read_text()`.
+
+## 2026-11-09 · Opus · turno 7 iteración 12
+
+**Hecho (pedido del usuario de las 03:40):** (1) set de íconos propio en `index.html` (`ICON`, paths de Lucide con su licencia ISC en un comentario; helper `ic()` que pone `aria-hidden` si es decorativo y `role="img"` si lleva etiqueta). Nav: trofeo de logo, diana para champ select y línea de actividad para perfil. Sin emoji. (2) «Cómo jugarlo»: cada regla es una fila con el ícono de su métrica, `MIN 6/10/14+` como etiqueta chica, tu media real contra la meta y ✓ «La sueles cumplir» / ✕ «Te cuesta» con su n. Sale de `draft.tu_regla()`: primero contra el rival (3+ partidas), si no con el campeón; las reglas sin medida muestran solo la meta. `draft.games` trae ahora `min10` (minions al 10) y `m25`. (3) «Qué está fallando»: los 8 componentes ordenados del peor al mejor, con el titular «Lo que más te baja: …», tu valor contra lo típico del rol en unidades (`score.unidades()` y `resumen()["unidades"]`), una barra divergente con el centro en lo típico y la acción de una línea en los que bajan. 200 OK.
+
+**No hice:** la revisión a ojo en el navegador (Playwright, curl y node pedían aprobación) ni la consulta a DeepSeek sobre los íconos (otra vez bloqueado el PowerShell anidado). Los botones de «partidas» y «ajustes» del nav no los puse porque esas vistas no existen todavía. Tampoco hay rebuild del .exe: v0.1.2 no trae esto.
+
+**Tarea de pruebas para DeepSeek:** (a) revisa el mapeo de íconos y las acciones de `COMP` en `index.html` (visión dice «control ward», aunque el PLAN dice que no tienen respaldo: ¿la cambio?); (b) prueba `score.resumen()` con una partida sin rival de línea: `unidades["línea"]` debería dar 0, no fallar; (c) si puedes, abre la página y mira si las filas se ven bien.

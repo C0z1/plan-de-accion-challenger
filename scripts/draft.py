@@ -57,6 +57,9 @@ for f in RAW.glob("*_*.json"):
             g["xp14"] = dif(14, lambda p: p["xp"])
             g["cs14"] = dif(14, lambda p: p["minionsKilled"] + p["jungleMinionsKilled"])
         if len(fr) > 6: g["nivel6"] = dif(6, lambda p: p["level"])
+        if len(fr) > 10: g["min10"] = fr[10]["participantFrames"][yo]["minionsKilled"]
+        if len(fr) > 25: g["m25"] = sum(e.get("type") == "CHAMPION_KILL" and e.get("victimId") == me["participantId"]
+                                        and 14 * 60000 <= e["timestamp"] < 25 * 60000 for f in fr for e in f["events"])
         g["muertes6"] = sum(e.get("type") == "CHAMPION_KILL" and e.get("victimId") == me["participantId"] and e["timestamp"] < 360000
                             for f in fr for e in f["events"])
     games.append(g)
@@ -176,30 +179,53 @@ def notas(rival):
 
 # Pedido 2: «cómo jugarlo», reglas de PLAN.md con su número (n = partidas detrás del número; pista = IC cruzados).
 # shortcut: números copiados del PLAN a mano, al cambiar el PLAN hay que actualizarlos aquí.
-R = lambda texto, numero, n, pista=False, fuente="": dict(texto=texto, numero=numero, n=n, pista=pista, fuente=fuente)
+# metrica = ícono en la GUI, meta = la meta corta, minuto = etiqueta; campo/ok = cómo medir tu dato (sin campo: solo la meta).
+R = lambda texto, numero, n, pista=False, fuente="", metrica="", meta="", minuto="", campo=None, ok=None: dict(
+    texto=texto, numero=numero, n=n, pista=pista, fuente=fuente, metrica=metrica, meta=meta, minuto=minuto, campo=campo, ok=ok)
 REGLAS_CHAMP = {
     "Sylas": [R("No tradees ni roamees a costa de oleadas antes del 10: 69+ minions de línea al 10.",
-                "74% (32/43) con 69+ contra 32% (15/47) con 68 o menos", 90, fuente="early.py")],
+                "74% (32/43) con 69+ contra 32% (15/47) con 68 o menos", 90, fuente="early.py",
+                metrica="cs", meta="69+ minions al 10", minuto="10", campo="min10", ok=lambda x: x >= 69)],
     "Ekko": [R("Si pierdes la línea, cuida el farm: no más de 10 de CS abajo al 14.",
-               "con la línea perdida, 69% (9/13) contra 24% (4/17)", 30, True, "linea.py"),
+               "con la línea perdida, 69% (9/13) contra 24% (4/17)", 30, True, "linea.py",
+               metrica="cs", meta="CS al 14 ≥ −10 contra tu rival", minuto="14", campo="cs14", ok=lambda x: x >= -10),
              R("Abajo, castiga a tu rival cuando se pase: busca el kill en tu línea.",
-               "con la línea perdida, 57% con 1+ kill sobre él contra 31% con 0", 30, True, "castigo.py")],
+               "con la línea perdida, 57% con 1+ kill sobre él contra 31% con 0", 30, True, "castigo.py",
+               metrica="dano", meta="1+ kill sobre tu rival", minuto="14")],
     "Yone": [R("No necesitas ganar la línea: no fuerces tradeos, escala.",
-               "con oro < 0 al 14 ganas 57% (21/37); Ekko, 43%", 37, fuente="convertir.py")],
-    "Mordekaiser": [R("Busca un kill antes del 14.", "90% con 1+ kill antes del 14 contra 45% con 0", 21, True, "early.py")],
+               "con oro < 0 al 14 ganas 57% (21/37); Ekko, 43%", 37, fuente="convertir.py",
+               metrica="linea", meta="escala, no fuerces", minuto="14")],
+    "Mordekaiser": [R("Busca un kill antes del 14.", "90% con 1+ kill antes del 14 contra 45% con 0", 21, True, "early.py",
+                      metrica="dano", meta="1+ kill antes del 14", minuto="14")],
 }
 R_NIVEL6 = R("No salgas del 6 con un nivel abajo: tradea, pero no pierdas la carrera al 6.",
-             "abajo al 6, 44% (16/36); igual, 54%; arriba, 69%", 36, True, "muertes6.py")
+             "abajo al 6, 44% (16/36); igual, 54%; arriba, 69%", 36, True, "muertes6.py",
+             metrica="nivel", meta="nivel igual o arriba al 6", minuto="6", campo="nivel6", ok=lambda x: x >= 0)
 R_MUERTES = R("≤ 2 muertes del 14 al 25: antes de un dragón, heraldo o barón, no pelees si no hace falta.",
-              "0–2 muertes del 14 al 25, 68%; 3+, 43% (282 partidas)", 282, fuente="midgame.py")
+              "0–2 muertes del 14 al 25, 68%; 3+, 43% (282 partidas)", 282, fuente="midgame.py",
+              metrica="muertes", meta="≤ 2 muertes del 14 al 25", minuto="14+", campo="m25", ok=lambda x: x <= 2)
 R_RIO = R("Con nivel arriba en top, no empujes pasado el río sin ver al jungla rival.",
-          "pasado el río con nivel arriba mueres ×2.43 por 10 min (top/bot)", 270, fuente="nivel6.py")
+          "pasado el río con nivel arriba mueres ×2.43 por 10 min (top/bot)", 270, fuente="nivel6.py",
+          metrica="vision", meta="ver al jungla antes de pasar el río", minuto="6")
 
 
 def reglas(champ, pos):
     """2–3 reglas del PLAN para ese campeón y rol, la del campeón primero. No hay versión «contra este rival»: tu media
     de nivel al 6 contra él no anticipa ir abajo en la siguiente (corte6.py: 14% contra 13%)."""
     return (REGLAS_CHAMP.get(champ, []) + [R_NIVEL6, R_MUERTES] + ([R_RIO] if pos == "TOP" else []))[:3]
+
+
+def tu_regla(r, mv, mias, rival, champ):
+    """La regla sin campo/ok (no van a JSON), con tu = tu dato real {media, cumple (fracción que la cumple), n, de}:
+    contra ese rival si hay 3+ partidas con dato, si no con ese campeón en el rol; None si no se mide o no hay 3."""
+    out = {k: v for k, v in r.items() if k not in ("campo", "ok")}
+    out["tu"] = None
+    for rs, de in ((mv, f"contra {rival}"), (mias, f"con {champ}")):
+        vs = [g[r["campo"]] for g in rs if r["campo"] and g.get(r["campo"]) is not None]
+        if len(vs) >= 3:
+            out["tu"] = dict(media=round(st.mean(vs), 1), cumple=round(sum(map(r["ok"], vs)) / len(vs), 2), n=len(vs), de=de)
+            break
+    return out
 
 
 def ficha(rival, pos, champ=None):
@@ -243,7 +269,7 @@ def ficha(rival, pos, champ=None):
         cs.append(dict(rival=o, v=w, wr=round(w / len(rs), 3), ic=[round(x, 3) for x in wilson(w, len(rs))],
                        est=round(shrink(w, len(rs), p0), 3), **medidas(rs), pocas=len(rs) < 5))
     cs.sort(key=lambda x: x["est"])
-    return dict(champ=c, rival=nombre, pos=pos, por_que=por_que, cuidado=cuidado, reglas=reglas(c, pos),
+    return dict(champ=c, rival=nombre, pos=pos, por_que=por_que, cuidado=cuidado, reglas=[tu_regla(r, mv, mias, nombre, c) for r in reglas(c, pos)],
                 counters=dict(lista=cs[:3], ref=medidas(mias)))
 
 
