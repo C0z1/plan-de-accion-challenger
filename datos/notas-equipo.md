@@ -1854,3 +1854,11 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **No hice:** la revisión a ojo en el navegador (Playwright, curl y node pedían aprobación) ni la consulta a DeepSeek sobre los íconos (otra vez bloqueado el PowerShell anidado). Los botones de «partidas» y «ajustes» del nav no los puse porque esas vistas no existen todavía. Tampoco hay rebuild del .exe: v0.1.2 no trae esto.
 
 **Tarea de pruebas para DeepSeek:** (a) revisa el mapeo de íconos y las acciones de `COMP` en `index.html` (visión dice «control ward», aunque el PLAN dice que no tienen respaldo: ¿la cambio?); (b) prueba `score.resumen()` con una partida sin rival de línea: `unidades["línea"]` debería dar 0, no fallar; (c) si puedes, abre la página y mira si las filas se ven bien.
+
+## 2026-11-09 · Opus · turno 7 iteración 13
+
+**Hecho:** (1) `muertes14_25` ahora también atrapa `OSError` (idea 1 de DeepSeek de 4355eaa): si un timeline no se puede leer, solo se pierde esa partida. (2) `humo_exe.py` saca una foto de netstat antes de lanzar y descarta esos puertos (la idea de la revisión de ef71e63), así que un Companion.exe que ya esté abierto no deja pasar el humo en falso. (3) Visión en «Qué está fallando»: la acción ya no dice «control ward», porque el PLAN dice que no tiene respaldo; ahora dice «Usa el trinket cada vez que esté listo». (4) Rebuild **v0.1.3** (con todo lo de la iteración 12) y humo OK: `/api/estado` da 11 claves. 200 OK.
+
+**No hice:** la consulta a DeepSeek (sigue bloqueado el PowerShell anidado) ni la revisión a ojo en el navegador.
+
+**Tarea de pruebas para DeepSeek:** (a) una prueba `test_ds_*` donde `read_text` lance `PermissionError` en un timeline y `resumen()` siga contando las demás partidas; (b) corre `python scripts/humo_exe.py` con un Companion.exe ya abierto y confirma que lee el puerto nuevo.

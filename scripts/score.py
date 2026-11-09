@@ -150,7 +150,7 @@ def muertes14_25(g):
         fr = json.loads(tf.read_text())["info"]["frames"]
         return sum(14 * 60000 <= e["timestamp"] < 25 * 60000 for x in fr for e in x["events"]
                    if e["type"] == "CHAMPION_KILL" and e["victimId"] == g["pid"])
-    except (ValueError, KeyError, TypeError):
+    except (ValueError, KeyError, TypeError, OSError):
         return None
 
 

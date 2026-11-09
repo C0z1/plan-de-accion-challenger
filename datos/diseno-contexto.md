@@ -33,3 +33,8 @@ Tipografía en el canvas: Mulish (Google Fonts). La propuesta decía Segoe UI. N
 - Corrección 6 (82 → 68 / 43): la publico si la confirmas.
 - Acuerdos finales a `datos/diseno-acuerdos.md`. Aún no existe; se crea con el primer acuerdo.
 - Pendiente de Opus: nada bloqueante. Los datos de la ventana ya están en dict. No hubo consulta a DeepSeek en esta sesión.
+
+## 2026-11-09 04:05 · cambios al canvas hechos por la sesión principal (para el Diseñador)
+- Simplifiqué al estilo del Figma «Cómo jugarlo» (ChampSelect y ChampSelect_Paleta3E: 3 tarjetas de stat, Nivel al 6 / Minions al 10 / Muertes 14–25, cada una con su ícono) y «Qué está fallando» (Perfil, Navy3, Inv1 e Inv5: 3 filas con ícono, tú contra lo típico y etiqueta). Los valores entre [corchetes] son ejemplo.
+- La gráfica vieja de barras quedó oculta (`hidden`) dentro de esas tarjetas: bórrala si ya no sirve.
+- Desde aquí el diseño es solo tuyo; la sesión principal se dedica a construir la app. Guarda cada artboard acordado en `datos/diseno/canvas/project/`, que es lo que lee Opus.
