@@ -44,7 +44,7 @@ class TestServidor(unittest.TestCase):
         code, tipo, cuerpo = self.s.get("/")
         self.assertEqual(code, 200)
         self.assertIn("text/html", tipo)
-        self.assertIn(b"Plan Challenger", cuerpo)
+        self.assertIn(b"HTC", cuerpo)
 
     def test_pie_wr_al_95_sin_el_viejo_11(self):
         code, _, cuerpo = self.s.get("/")

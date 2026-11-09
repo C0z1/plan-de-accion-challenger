@@ -23,14 +23,15 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Iteración 14:** vista «Partidas» (historial con ✓/✕, KDA, componente clave, score). 201 OK.
 - **Iteración 15:** rebuild `Companion.exe` v0.1.4 (trae Partidas), humo OK (11 claves), tag `v0.1.4`. Ajustes descartado: no hay nada que configurar todavía. Playwright, otra vez sin permiso. 202 OK.
 - **Turno 8 (2026-11-09, con el usuario):** la app se llama **HTC (How to Climb)** v0.2.0. Build `--onedir` (`instalador/build.ps1`): responde en 0.54 s (antes 1.1–1.4). Caché de «Tu rendimiento» en `datos/cache/` (27 ms; antes 1 s), que se invalida si cambian las partidas. Instalador Inno Setup por usuario (`dist/HTC-Setup-0.2.0.exe`), probado instalando en silencio + humo + desinstalar. 205 OK.
-- **Siguiente:** el launcher (pantalla de inicio de HTC) con el Diseñador; revisión visual en el navegador.
+- **Turno 8, 2:** paleta Vino + barra lateral con etiquetas + vista **Inicio** (launcher, Home_Vino) con datos reales; rebuild HTC + instalador. 212 OK.
+- **Siguiente:** reglas «Cumples N/20» (datos nuevos), Perfil/Selección en Vino revisados en pantalla, ventanas nuevas.
 - **Actualizado:** 2026-11-09 (turno 8)
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
-- **Estado:** revisado 57ed203 (turno 8, HTC v0.2.0): caché invalida al bajar/borrar partida y con JSON corrupto (pruebas en `test_ds_cache.py`); rutas del exe OK (instalado / `dist/HTC` / sin `scripts/`); el instalador no filtra nada personal y la desinstalación conserva `datos/`; primera vez instalado no truena (`perfil()`, `rendimiento_rapido()`, `/api/estado`). **Bug:** la caché NO se invalida al cambiar `score.py` sin subir `VERSION` — dejado fallando en `test_ds_cache`.
-- **Siguiente:** meter el mtime de `score.py` en `firma()` (o regla dura de bump de `VERSION`); revisión visual (Playwright) si hay permiso.
-- **Actualizado:** 2026-11-09 15:11 (turno 8, revisión 57ed203)
+- **Estado:** revisado eb9bc53 (turno 8, fix de la firma): `firma()` incluye el mtime de `score.py` y `rendimiento_rapido` compara `firma == f`; el test que dejé fallando pasa. Suite completa **212 OK**. Caché cubierta en los 4 casos (bajar/borrar partida, JSON corrupto, editar `score.py`).
+- **Siguiente:** nada mío pendiente; revisión visual (Playwright) si llega el permiso.
+- **Actualizado:** 2026-11-09 (turno 8, revisión eb9bc53)
 
 ### Diseñador
 - **Estado:** el usuario aprobó la paleta Vino + negro para la primera build. Pedido a Opus en `datos/notas-equipo.md` (2026-11-09, «primera build con el diseño Vino»); artboards en `datos/diseno/canvas/project/` (`*_Vino.dc.html`, `Tubos_Kit.dc.html`).
@@ -216,6 +217,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-09 · DeepSeek: en 4355eaa el timeline roto ya no vacía Perfil (None solo para esa partida, verificado y con prueba `test_ds_score`); queda un hueco menor: el `except` no cubre `OSError`, así que un timeline ilegible (permiso/borrado) aún vaciaría Perfil vía `rendimiento()`.
 - 2026-11-09 · DeepSeek: el humo del `.exe` (ef71e63) sale 0 y el binario v0.1.2 responde `/api/estado`; único hueco: si hay otra instancia de `Companion.exe` abierta, `ports[0]` puede leer su puerto y dar un falso OK (una foto previa de netstat lo cubre).
 - 2026-11-09 · DeepSeek: la caché de rendimiento (57ed203) no se invalida al cambiar `score.py` sin subir `VERSION` (la `firma` solo mira los JSON de raw); un arreglo de `score.py` dejaría números viejos a los instalados. Dejado fallando en `test_ds_cache.Cache.test_cambiar_score_py_invalida_la_cache`.
+- 2026-11-09 · DeepSeek: eb9bc53 arregla la firma (mtime de `score.py` dentro de `firma()`); el test que dejé fallando pasa y la suite completa da 212 OK. La caché queda cubierta en los 4 casos (bajar/borrar partida, JSON corrupto, editar `score.py`).
 
 ## Decisiones
 - 2026-11-09 · Opus: `Companion.exe` v0.1.0 es la app web (`companion_web.py`), no tkinter. Lee `scripts/web` del repo si está junto a él (se actualiza sin recompilar) y si no, la copia empaquetada.

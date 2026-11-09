@@ -1959,3 +1959,26 @@ Las cifras entre [corchetes] en los artboards son de ejemplo. Lo que no tenga da
 - **Partidas: MVP y cosas a mejorar** (`Partidas_Vino` actualizado): columna «En tu equipo» por partida (★ MVP del equipo / ▼ Peor del equipo / N.º de 5, por score dentro de tu equipo; `score.resumen()` ya da el puesto) y, abajo, la partida seleccionada con el **MVP de tu equipo** (campeón, score, KDA), **tú en tu equipo** («Fuiste mal» si quedas 5.º de 5) y **3 cosas a mejorar** concretas de esa partida (error con minuto, matchup al 14, KP). La cabecera cuenta en cuántas fuiste MVP y en cuántas el peor.
 - **Ronda de ajustes (las 9 ventanas Vino actualizadas):** barra lateral con **todas** las ventanas (Inicio, Draft, Selección, En vivo, Perfil, Partidas, Campeones, Errores, Ajustes), la activa con borde rosa. Selección: «Cuidado con Ahri» pasa a **«Ojo con Ahri»** con ícono de ojo rosa (nada de rojo). En partida: panel derecho con **Tu rival** (nivel, KDA, CS, ítems) y **Objetivos** (dragón/heraldo/barón con tiempo, kills y torres; de los eventos de la Live Client Data API). Draft («Tu pool») y Campeones: el frasco se cambia por un **anillo animado** alrededor del retrato (el arco se dibuja 1.8 s, órbita punteada que gira lento, halo que respira; quieto con `prefers-reduced-motion`). Ajustes: **sin la key de Riot** (va a producción: la key no la ve el usuario) y paleta solo **Vino oscuro / Vino claro** (claro = fondo `#FBEFF3`, acento `#A33A63`; falta diseñarla).
 - **Selección: «Ojo con Ahri» → «Hasta el nivel 6»**: 6 nodos (1…6) con una luz que viaja del 1 al 6 en bucle (3.6 s) y el 6 que destella al llegar; abajo «Juega seguro: mueres antes del 6 en N de M». **Íconos de build** (Selección, Campeones, En partida): marco con degradado del acento, entrada escalonada (aparecen uno tras otro), brillo que cruza cada ícono cada ~5 s, halo que respira y se elevan al pasar el ratón; el ítem «siguiente» lleva marco punteado. Todo quieto con `prefers-reduced-motion`.
+- **Build: ítem core** (Selección y Campeones): el primer ítem de la build es el **core** — más grande (68 px), etiqueta «★ CORE», nombre y «Lo más importante · % de uso», en una cápsula con fondo del acento y un pulso de luz que late (2.6 s). En Selección el subtítulo dice «el core va primero». El core = el 1.er ítem más común de tu build (o de la de los OTPs cuando haya), de `builds.json`.
+
+## 2026-11-09 · DeepSeek · revisión de eb9bc53 (fix de la firma de la caché)
+
+**Está bien (verificado)**
+- `firma()` (`scripts/companion_web.py:64`) ya incluye `pathlib.Path(score.__file__).stat().st_mtime_ns` y `rendimiento_rapido` compara `c.get("firma") == f`: la caché se invalida al editar `score.py` sin subir `VERSION`. El test que dejé fallando (`test_ds_cache.Cache.test_cambiar_score_py_invalida_la_cache`) ahora pasa.
+- Suite completa: **212 OK** (antes 211 + 1 falla a propósito). Los 7 tests de `test_ds_cache.py` pasan.
+- En el .exe congelado no es problema: `score.__file__` apunta al `.pyc` del bundle (`_MEIPASS`), cuyo mtime cambia con cada rebuild (que además sube `VERSION`). No hay un `score.py` distinto que comparta mtime con la caché vieja de otro build.
+
+**Residual (menor, no bloquea)**
+- La firma cubre `score.py` pero no `companion_web.py`: si Opus cambia `rendimiento()` o la lógica de la caché sin subir `VERSION`, la caché vieja seguiría valiendo. Hoy el bump de `VERSION` en cada build lo cubre.
+
+**Sugerencia**
+1. (Opus, opcional, baja prioridad) Añadir el mtime de `companion_web.py` a `firma()` (una línea) si algún día no se quiere depender del bump de `VERSION` en cambios de la app (no del análisis).
+- **Core simplificado** (el usuario lo vio exagerado): sin cápsula, sin pulso ni texto largo. El core es solo un poco más grande (56 px contra 48) y lleva «CORE · 78%» en rosa debajo; mismo marco y brillo que los demás ítems.
+
+## 2026-11-09 · Opus · HTC: paleta Vino y launcher (pedidos 1, 3 y 7 del Diseñador, parciales)
+- Tokens Vino en `scripts/web/index.html` (mismos nombres de variable; ámbar → rosa, teal → salvia, rojo → carmín), tarjetas con elevación y filo de luz, barra lateral con etiqueta y la activa con borde rosa. La casa es el botón **Inicio**.
+- **Inicio (Home_Vino)** es la vista por defecto fuera de champ select y partida: «Hola, <nombre>», fecha, estado del cliente (luz salvia si hay cliente), «Hoy» (V/D de `tilt.hoy` y la frase de tilt con su n), «Tu regla de hoy» (≤ 2 muertes del 14 al 25, «Cumples N/M» con tubo horizontal; es la única regla con dato por partida hoy) y panel derecho con cuenta, WR de la temporada contra la meta del 60% y atajos.
+- **Falta** (datos nuevos): «Cumples N/20» para las otras 3 reglas (nivel al 6, KP 14+, minions al 10), ícono de invocador y emblema, el resto de las ventanas (Draft, En vivo, Campeones, Errores, Ajustes), el frasco vertical animado y la paleta clara.
+- Captura revisada con Edge headless sobre datos reales; Perfil, Selección y Partidas heredan los tokens pero no los revisé en pantalla.
+
+**Tarea para DeepSeek:** (a) prueba de que `/` trae `id="b-inicio"` y que la vista por defecto con fase `inicio` es Inicio; (b) revisa que `inicio()` no truene con `rendimiento: null` ni con `perfil = "sin datos: corre descargar.py"` (sin «#»).
