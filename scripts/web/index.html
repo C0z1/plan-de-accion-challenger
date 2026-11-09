@@ -362,7 +362,7 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
       <span class="tuboH" role="img" aria-label="Cumples ${ok} de ${d25.length}"><i style="width:${f * 100}%;background:linear-gradient(90deg,${f >= .5 ? "#3E7A62,#A8D8C0" : "#9A2E3A,#FF8A8A"})"></i></span>` : '<span class="sub">Sin partidas con timeline.</span>'}</div></div>`;
   const base = t && t.base.wr, x = w => Math.max(0, Math.min(100, (w - .45) / .2 * 100));
   const aside = `
-  <div><h2 style="font-size:24px">${esc(id || "Sin cuenta")}</h2><span class="sub">${esc(resto.join(" · ") || "Corre descargar.py para tus datos")}</span></div>
+  <div><h2 style="font-size:24px">${esc(nombre ? id : "Sin cuenta")}</h2><span class="sub">${esc(nombre ? resto.join(" · ") : "Corre descargar.py para tus datos")}</span></div>
   ${base != null ? `<div class="est"><span class="sub">Win rate de la temporada</span>
     <div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:28px">${pct(base)}</b><span class="sub">${t.base.n} partidas · meta 60%</span></div>
     <span class="tuboH" style="flex:none;width:100%" role="img" aria-label="Win rate ${pct(base)}, meta 60%"><i style="width:${x(base)}%;background:linear-gradient(90deg,#3E7A62,#A8D8C0)"></i><u style="left:${x(.6)}%"></u></span>
