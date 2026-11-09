@@ -181,11 +181,11 @@ function perfil(s) {  // ventana 2 del canvas: score, WR y muertes de las últim
   <div><h1>Tu rendimiento</h1><span class="sub">Últimas ${ps.length} partidas · ${esc(s.perfil)}</span></div>
   <div class="tres">
     <div class="card"><b>Score</b><div class="big"><b>${r.ultimas20 ?? "–"}</b><span>/ 100</span></div>
-      <span class="tag ${r.ultimas20 >= r.ref ? "ok" : "amber"}">${r.ultimas20 >= r.ref ? "▲ Sobre" : "▼ Bajo"} lo típico de tu rol (${r.ref})</span>
+      ${ps.length ? `<span class="tag ${r.ultimas20 >= r.ref ? "ok" : "amber"}">${r.ultimas20 >= r.ref ? "▲ Sobre" : "▼ Bajo"} lo típico de tu rol (${r.ref})</span>` : '<span class="tag amber">Sin partidas</span>'}
       <span class="pie">${dif != null ? `Antes ${r.anteriores}: <b>${signo(dif, 1)}</b>.` : ""} 50 = un jugador típico de tu rol en esa partida.</span></div>
     <div class="card"><b>Win rate</b><div class="big"><b>${wr != null ? pct(wr) : "–"}</b><span>${v} de ${ps.length}</span></div>
       ${wr != null && base != null ? `<span class="tag ${wr >= base ? "ok" : "red"}">${wr >= base ? "▲" : "▼"} Tu temporada: ${pct(base)}</span>` : ""}
-      <span class="pie">20 partidas mueven el WR ±11 puntos por azar: mira la tendencia.</span></div>
+      ${ps.length ? `<span class="pie">${ps.length} partidas mueven el WR ±${Math.round(196 * Math.sqrt(0.25 / ps.length))} puntos por azar (95%): mira la tendencia.</span>` : ""}</div>
     <div class="card"><b>Tendencia</b><div class="big"><b>${r.tendencia.length ? r.tendencia[r.tendencia.length - 1] : "–"}</b><span>score del último bloque</span></div>
       <svg role="img" aria-label="Score medio por bloque de 20 partidas" viewBox="0 0 100 40" style="width:100%;height:60px">${(() => {
         const ts = r.tendencia.filter(z => z != null), lo = Math.min(...ts, 45), hi = Math.max(...ts, 55);

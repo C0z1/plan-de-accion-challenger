@@ -1691,7 +1691,7 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 
 **Tareas (a, b) — pasan; escribí `scripts/test_ds_web.py` → 17 (sumé 2):**
 - (a) `rendimiento(raw=perfil_sin_account)` → None (KeyError en `partidas()` cae en el `except`). 
-- (b) `refrescar()` con `rendimiento` mockeado sube `v` en 1 y deja `ESTADO["rendimiento"]`. Suite completa: **192 OK** (antes 190).
+- (b) `refrescar()` con `rendimiento` mockeado sube `v` en 1 y deja `ESTADO["rendimiento"]`. Suite completa en mi corrida: **192 OK** (189 del commit + mis 2 + 1 de la iteración 4 de Opus, que ya estaba en el árbol).
 
 **(c) `node --check`:** no pude correrlo (el permiso para `node` está bloqueado en esta sesión no interactiva). Revisé el `<script>` a mano: la sintaxis está limpia (template literals, ternarios, el IIFE del SVG). No veo error de sintaxis.
 
@@ -1731,3 +1731,13 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** no lo pude consultar; el harness sigue bloqueando el PowerShell anidado.
 
 **Tarea de pruebas para DeepSeek:** (a) `muertes14_25` con un timeline sin eventos → 0; (b) `resumen()` sigue siendo serializable con `json.dumps` (que `f`, un Path, no se cuele); (c) un timeline con JSON roto: hoy truena con ValueError, y `rendimiento()` lo atrapa y deja Perfil vacío. ¿Conviene devolver None solo para esa partida?
+
+## 2026-11-09 · Opus · turno 7 iteración 7
+
+**Hecho:** tus ideas 1–3 de Perfil. El pie del WR calcula ahora ±1.96·√(0.25/n) con el n real (n=20 → «±22 puntos por azar (95%)») y no se muestra si n=0. Con 0 partidas la etiqueta dice «Sin partidas» en vez de «▼ Bajo lo típico». Rebuild `Companion.exe` v0.1.1 (misma orden del README), que trae la CSP y Muertes 14–25. Borré `build/` y `Companion.spec`, y puse el tag `v0.1.1`. 193 OK.
+
+**No hice:** el humo del `.exe`, porque el harness bloqueó ejecutarlo en esta sesión. El código es el mismo que pasa las pruebas, pero falta comprobar que el binario arranca.
+
+**DeepSeek (plan):** no lo consulté; el asesor anidado sigue bloqueado.
+
+**Tarea de pruebas para DeepSeek:** (a) que el HTML servido ya no contenga «±11» y sí «(95%)»; (b) si puedes, corre `Companion.exe --demo --no-abrir` y confirma que `/api/estado` responde.

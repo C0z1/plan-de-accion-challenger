@@ -13,13 +13,14 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Iteración 4:** primera build `Companion.exe` v0.1.0 (entrada `companion_web.py`, `--add-data scripts/web;web`); arranca con `--demo`, sirve la página y el JSON (fase InProgress, Perfil con datos). Tag `v0.1.0`. 189 OK.
 - **Iteración 5:** la página va con `Content-Security-Policy` (`default-src 'none'`, solo deja imágenes y fetch del mismo origen), que era la idea 2 de DeepSeek. `lineas` sigue en `draft_json` porque `test_ds_web` lo exige. 190 OK.
 - **Iteración 6:** tarjeta «Muertes 14–25» en Perfil (`score.muertes14_25()` desde el timeline; `resumen()` lo da por partida). Media real de las últimas 20: 3.0, con meta ≤ 2. Paletas en config descartadas: no salen baratas. 193 OK.
-- **Siguiente:** rebuild v0.1.1 (CSP + Muertes 14–25) y RESUMEN-NOCHE en la última iteración.
-- **Actualizado:** 2026-11-09 (turno 7, iteración 6)
+- **Iteración 7:** ideas 1–3 de DeepSeek en Perfil: el pie dice «±22 (95%)» y se calcula con el n real; con 0 partidas sale «Sin partidas». Rebuild `Companion.exe` v0.1.1 (CSP + Muertes 14–25 + esto); tag `v0.1.1`. No corrí el humo del `.exe`: el harness no dejó ejecutarlo. 193 OK.
+- **Siguiente:** humo del `.exe` v0.1.1 y RESUMEN-NOCHE en la última iteración.
+- **Actualizado:** 2026-11-09 (turno 7, iteración 7)
 
 ### DeepSeek · revisor
-- **Estado:** revisado c74d0c0 (turno 7, iters 1-2, app web local): los 3 requisitos se cumplen (escucha solo 127.0.0.1, nada escribe en el cliente, la UI muestra `ficha()` real). `node --check` pasa el JS; suite 189 OK; `test_ds_web.py` (15) cubre los 8 casos borde que dejó Opus. Menor: `draft_json` manda `lineas` que la página no lee.
-- **Siguiente:** revisar iteración 3 (vista Perfil con `score.resumen`/`tilt`).
-- **Actualizado:** 2026-11-09 (turno 7, revisión c74d0c0)
+- **Estado:** revisado 34abe95 (turno 7, iter 3, vista Perfil): `rendimiento()` cuadra con `score.resumen(20)`/`tilt()` (verificado campo por campo y la serialización de tuples); los 3 requisitos se mantienen. Tareas (a)/(b) pasan (`test_ds_web.py` → 17, mis 2). `node --check` no pude (sin permiso); JS revisado a mano. Minor: el pie «±11» es 1 SE, no un IC (95% = ±22).
+- **Siguiente:** revisar iteraciones 4–6 (CSP y «Muertes 14–25» en Perfil) cuando queden commiteadas.
+- **Actualizado:** 2026-11-09 (turno 7, revisión 34abe95)
 
 ### Diseñador
 - **Estado:** canvas «Base LOL» de vuelta a su versión anterior (Perfil, ChampSelect y 3 paletas) más ChampSelect en Paleta 3E. Las ventanas de franja y post-partida que hice se quitaron del canvas. Contexto en `datos/diseno-contexto.md`; sigue abierto el error de copy (82/57 → 68/43).
@@ -199,6 +200,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · DeepSeek: permutación leave-one-out confirma `corte6.py` (nivel6 por rival: 14% vs 13%, p=0.96) y mide `muertes6` por rival: corte media ≥1 → muero <6 en 69% vs 46%, p=0.13 (pista débil, no da para subirlo). Menor sin arreglar de e705b0c: `minions10()` con dict sin `campeon`/`minimo` da KeyError en `aviso_minions` (GUI).
 - 2026-11-08 · DeepSeek: `anticipa.py` (f8f7c13) correcto y robusto: muertes6 aguanta 4+ anteriores (r 0.34–0.40) y el control por campeón no lo explica (p 0.002→0.004). Menor: los p no se reproducen entre corridas porque itera un set sin ordenar (`for pos in {g["pos"] …}`); r y n sí estables. Sugerencia: `sorted(...)`.
 - 2026-11-09 · DeepSeek: en la app web, `draft_json` manda `lineas` pero `index.html` no lo lee (renderiza desde `rec.ficha`, línea 80): payload muerto y `lineas_ficha` corre de más en cada champ select (menor).
+- 2026-11-09 · DeepSeek: el pie de Perfil «20 partidas mueven el WR ±11 por azar» es 1 error estándar, no un IC (95% = ±22): subestima el ruido a medias. Sugerencia: «±22 (95%)» o aclarar «1 SE».
 
 ## Decisiones
 - 2026-11-09 · Opus: `Companion.exe` v0.1.0 es la app web (`companion_web.py`), no tkinter. Lee `scripts/web` del repo si está junto a él (se actualiza sin recompilar) y si no, la copia empaquetada.
