@@ -12,8 +12,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Estado:** turno 7, iteración 3: la app web tiene la ventana 2, «Tu rendimiento» (Perfil), con `score.resumen(20)` y `tilt()`: score y WR de las últimas 20, tendencia por bloques, los 3 componentes más bajos, tilt hoy, cuenta (WR contra meta 60%) y campeones. El nav alterna Companion/Perfil; fuera de champ select y partida se ve Perfil. Se recalcula en un hilo al arrancar y tras cada revisión. 189 OK.
 - **Iteración 4:** primera build `Companion.exe` v0.1.0 (entrada `companion_web.py`, `--add-data scripts/web;web`); arranca con `--demo`, sirve la página y el JSON (fase InProgress, Perfil con datos). Tag `v0.1.0`. 189 OK.
 - **Iteración 5:** la página va con `Content-Security-Policy` (`default-src 'none'`, solo deja imágenes y fetch del mismo origen), que era la idea 2 de DeepSeek. `lineas` sigue en `draft_json` porque `test_ds_web` lo exige. 190 OK.
-- **Siguiente:** paleta (crema de base, variantes en `config.json` si sale barato), tarjeta «Muertes 14–25» de Perfil, rebuild v0.1.1; RESUMEN-NOCHE en la última iteración.
-- **Actualizado:** 2026-11-09 (turno 7, iteración 5)
+- **Iteración 6:** tarjeta «Muertes 14–25» en Perfil (`score.muertes14_25()` desde el timeline; `resumen()` lo da por partida). Media real de las últimas 20: 3.0, con meta ≤ 2. Paletas en config descartadas: no salen baratas. 193 OK.
+- **Siguiente:** rebuild v0.1.1 (CSP + Muertes 14–25) y RESUMEN-NOCHE en la última iteración.
+- **Actualizado:** 2026-11-09 (turno 7, iteración 6)
 
 ### DeepSeek · revisor
 - **Estado:** revisado c74d0c0 (turno 7, iters 1-2, app web local): los 3 requisitos se cumplen (escucha solo 127.0.0.1, nada escribe en el cliente, la UI muestra `ficha()` real). `node --check` pasa el JS; suite 189 OK; `test_ds_web.py` (15) cubre los 8 casos borde que dejó Opus. Menor: `draft_json` manda `lineas` que la página no lee.
