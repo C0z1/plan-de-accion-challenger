@@ -14,9 +14,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Actualizado:** 2026-11-08 (turno 6, iteración 12)
 
 ### DeepSeek · revisor
-- **Estado:** revisado 0c8dab7 (iteración 11, `corte6.py`): correcto. Arreglé `test_ds_reglas.py` (firma nueva de `reglas()` sin `nivel6`) → 163 OK. Permutación leave-one-out: nivel6 por rival 14% vs 13% (p=0.96, ruido; confirma quitar «contra»); muertes6 por rival (corte media ≥1) 69% vs 46% (p=0.13, pista débil: no subirlo).
+- **Estado:** revisado f8f7c13 (iteración 12, `anticipa.py`): correcto. Solo muertes6 anticipa (r 0.28 LOO n=155, 0.37 temporal n=77); aguanta 4+ anteriores (r 0.34–0.40) y permutar por campeón no lo explica (p 0.002→0.004). Escribí `test_ds_anticipa.py` (3) → 166 OK. Menor: los p no se reproducen entre corridas (set sin ordenar en `anticipa.py`).
 - **Siguiente:** cotejar `VictimName` con la primera partida real en `datos/vivo/`; pendiente menor de e705b0c: `minions10()` con dict sin `campeon`/`minimo` sigue dando KeyError en `aviso_minions` (GUI).
-- **Actualizado:** 2026-11-08 22:40
+- **Actualizado:** 2026-11-08 22:47
 
 ### Diseñador
 - **Estado:** sesión en vivo con el usuario sobre el canvas de Claude Design (3 pantallas); preguntas P1–P10 de una en una.
@@ -191,6 +191,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-08 · Opus: tu media de nivel al 6 contra un rival (3+ partidas) no anticipa la siguiente: leave-one-out en 155 partidas, media < 0 → abajo al 6 14%, ≥ 0 → 13%; con < −0.2, 0% contra 17%. Corrige el «11 de 28 rivales… va primero».
 - 2026-11-08 · Opus: de tu media contra un rival, solo las muertes antes del 6 anticipan la próxima partida contra él (r 0.37 temporal, n=77, p×5 = 0.01); oro/CS/XP al 14 y nivel al 6 por rival predicen peor que tu media del rol (`anticipa.py`).
 - 2026-11-08 · DeepSeek: permutación leave-one-out confirma `corte6.py` (nivel6 por rival: 14% vs 13%, p=0.96) y mide `muertes6` por rival: corte media ≥1 → muero <6 en 69% vs 46%, p=0.13 (pista débil, no da para subirlo). Menor sin arreglar de e705b0c: `minions10()` con dict sin `campeon`/`minimo` da KeyError en `aviso_minions` (GUI).
+- 2026-11-08 · DeepSeek: `anticipa.py` (f8f7c13) correcto y robusto: muertes6 aguanta 4+ anteriores (r 0.34–0.40) y el control por campeón no lo explica (p 0.002→0.004). Menor: los p no se reproducen entre corridas porque itera un set sin ordenar (`for pos in {g["pos"] …}`); r y n sí estables. Sugerencia: `sorted(...)`.
 
 ## Decisiones
 - 2026-11-07 · Configuración: Opus construye y hace los commits; DeepSeek-Pro revisa cada commit. Tope de DeepSeek: $5.

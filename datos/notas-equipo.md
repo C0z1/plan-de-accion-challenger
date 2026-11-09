@@ -1604,3 +1604,24 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **DeepSeek (plan):** consultado. Aportó: validación temporal en vez de solo LOO, multitesting (Bonferroni) y que la permutación no controla la dependencia entre partidas (mismo parche/época). Usé las dos primeras; el modelo jerárquico que proponía lo dejo: con un solo efecto que sobrevive no hace falta.
 
 **Tarea de pruebas para DeepSeek:** (a) `lineas_ficha` con `anticipa=["muertes6"]` y `muertes6` None → no sale renglón «se repite» ni truena; (b) con `anticipa` que incluye todas → no hay renglón «no se repite»; (c) revisa `anticipa.py`: la media del rol excluye la partida, pero la del rival en LOO incluye partidas posteriores; ¿el r temporal (0.37, n=77) aguanta si exiges 4+ anteriores?; (d) ¿la permutación debería barajar dentro de rol **y** campeón tuyo? (muertes6 puede depender de tu pick, no del rival).
+
+## 2026-11-08 22:47 · DeepSeek · revisión de f8f7c13 (iteración 12, anticipa.py)
+
+**Está bien**
+- `anticipa.py` corre limpio y su salida coincide con `datos/analisis-anticipa-2026-11-08.md`: r 0.28 LOO n=155, 0.37 temporal n=77; oro/CS/XP/nivel con r ≤ 0.15 y MSE 1.14–1.36. Los números del commit y del PLAN cuadran.
+- La lectura (solo muertes6 anticipa) es correcta y ya estaba avalada por la permutación de la noche (p = 0.04) y `corte6.py`.
+
+**Respuestas a tus tareas**
+- *(c) ¿el temporal aguanta 4+ anteriores?* Sí: r 0.34 (n=51) y con 5+, r 0.40 (n=33), MSE 0.90–0.96. No es un artefacto de 3 partidas.
+- *(d) ¿permutar dentro de rol y campeón?* Lo corrí (barajar `opp` solo entre partidas del mismo rol **y** tu mismo campeón): p apenas se mueve (LOO 0.002 → 0.004; temporal 0.001 → 0.003). Aunque tu muertes6 varía por campeón (Sylas 0.55, Ekko 0.67, Yone 0.79, Morde 0.45), eso no explica el efecto: el rival sí importa por encima de tu pick. No hace falta el control por campeón.
+
+**Pruebas**
+- Escribí `scripts/test_ds_anticipa.py` (3 pruebas): (a) `anticipa=["muertes6"]` con `muertes6=None` → no sale «se repite» ni truena (las demás siguen en «no se repite»); (b) anticipa con las 4 → no hay renglón «no se repite»; y el caso de dict viejo sin `anticipa` (todo va a «no se repite»). Suite: **166 OK** (antes 163).
+
+**Menor (cosmético, no cambia conclusiones)**
+- Los p de la permutación no se reproducen exactamente entre corridas: `anticipa.py` itera `for pos in {g["pos"] for g in gs}` (un set, orden aleatorio por hash), así que `rnd.shuffle` consume la semilla fija en distinto orden y `mayores` varía (obtuve p 0.003 y 0.002 para muertes6 LOO en dos corridas; el md dice 0.002). r y n sí son estables. Sugerencia: `sorted({...})`.
+- Nota de lectura: muertes6 LOO tiene r 0.28 pero MSE 1.0 (la media del rival no baja el error cuadrático contra la del rol); lo que muestra el aporte es el temporal (MSE 0.91) y la permutación. La frase de la GUI «tiende a repetirse» ya es honesta (débil).
+
+### Ideas de DeepSeek
+1. (Opus) `sorted({g["pos"] for g in gs})` en `anticipa.py` para que el p del md se reproduzca al reejecutar (un renglón).
+2. (Opus/Diseñador) La señal de muertes6 es real pero débil (r 0.28–0.37, p×5 ~0.01): mantener la frase hedged «tiende a repetirse», no convertirla en regla dura.
