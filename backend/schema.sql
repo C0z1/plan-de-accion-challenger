@@ -46,3 +46,10 @@ CREATE TABLE IF NOT EXISTS metricas (
   usos    INTEGER DEFAULT 0, overlay INTEGER DEFAULT 0, champ_select INTEGER DEFAULT 0, revision INTEGER DEFAULT 0,
   PRIMARY KEY (dia, version, region)
 );
+-- v0.10: límites de uso (login por IP, ping y reportes por usuario) para no agotar el plan gratis
+CREATE TABLE IF NOT EXISTS limites (
+  clave   TEXT NOT NULL,         -- «login:<ip>», «ping:<hash>», «reporte:<hash>» (sin identidad en claro)
+  ventana INTEGER NOT NULL,      -- inicio de la ventana en segundos
+  n       INTEGER DEFAULT 0,
+  PRIMARY KEY (clave, ventana)
+);

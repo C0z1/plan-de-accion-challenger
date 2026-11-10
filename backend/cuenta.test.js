@@ -143,3 +143,17 @@ test("seguridad v0.8: cuerpo enorme, URL rota, invitado con nombre de admin y c�
   assert.equal((await worker.fetch(conCodigo("/v1/riot/americas/lol/match/v5/matches/LA1_9", "codigo-admin"), env, ctx)).status, 401);  // prefijo de un código
   assert.equal((await worker.fetch(conCodigo("/v1/riot/americas/lol/match/v5/matches/LA1_9", "codigo-admin12"), env, ctx)).status, 401);
 });
+
+test("límites: login por IP, reportes y ping por usuario; correo inválido al invitar", async () => {
+  const {env, ctx} = entorno({...ID, email: "eve@gmail.com"}); env.ACCESOS = "cozi:codigo-admin1,beto:codigo-beto1"; env.ADMINS = "cozi";
+  const login = () => { const r = req("/v1/login", {method: "POST", body: LOGIN}); r.headers.set("cf-connecting-ip", "1.2.3.4"); return worker.fetch(r, env, ctx); };
+  for (let i = 0; i < 10; i++) assert.equal((await login()).status, 403);  // no invitada, pero cuenta como intento
+  assert.equal((await login()).status, 429);
+  for (let i = 0; i < 10; i++) assert.equal((await worker.fetch(conCodigo("/v1/reporte", "codigo-beto1", {method: "POST", body: {texto: "x" + i}}), env, ctx)).status, 200);
+  assert.equal((await worker.fetch(conCodigo("/v1/reporte", "codigo-beto1", {method: "POST", body: {texto: "otro"}}), env, ctx)).status, 429);
+  assert.equal((await worker.fetch(conCodigo("/v1/reporte", "codigo-admin1", {method: "POST", body: {texto: "de otro"}}), env, ctx)).status, 200);  // el límite es por usuario
+  for (let i = 0; i < 5; i++) await worker.fetch(conCodigo("/v1/ping", "codigo-beto1", {method: "POST", body: {version: "0.9.0", region: "la1"}}), env, ctx);
+  const met = await (await worker.fetch(conCodigo("/v1/admin/metricas", "codigo-admin1"), env, ctx)).json();
+  assert.equal(met[0].usos, 3);  // los pings de más se ignoran sin error
+  for (const email of ["a@b", "sin-arroba", "x@y.c"]) assert.equal((await worker.fetch(conCodigo("/v1/admin/invitados", "codigo-admin1", {method: "POST", body: {nombre: "z" + email.length, email}}), env, ctx)).status, 400);
+});

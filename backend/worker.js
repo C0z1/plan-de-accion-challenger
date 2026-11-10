@@ -56,7 +56,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (Number(request.headers.get("content-length") || 0) > 65536) return json({error: "demasiado grande"}, 413);  // antes de parsear nada
-    // shortcut: sin rate-limit por IP en /v1/login ni en el proxy; agregarlo si alguien abusa del plan gratis
+    // shortcut: el proxy de Riot no tiene límite propio (lo frena el 429 de Riot y la caché); agregarlo si alguien abusa
     const c = await cuenta(request, env, url);  // /v1/login y /v1/yo… (cuenta en la nube)
     if (c) return c;
     const e = await extra(request, env, url, quienEs);  // builds, reportes, métricas y admin

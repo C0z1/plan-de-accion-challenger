@@ -1,14 +1,24 @@
 // Racha · v0.8 (todo gratis, D1): builds compartidas, invitaciones, reportes privados y métricas anónimas.
 // Admin = quien entra con un código cuyo nombre, o una sesión de Google cuyo correo, está en el secreto ADMINS.
 
-import {usuarioDeSesion} from "./cuenta.js";
+import {usuarioDeSesion, sha256} from "./cuenta.js";
 
 const json = (cuerpo, status = 200) => new Response(JSON.stringify(cuerpo), {status, headers: {"content-type": "application/json; charset=utf-8"}});
 const ahora = () => Math.floor(Date.now() / 1000);
 const lista = s => (s || "").split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
 const CLAVE = /^[A-Za-z' .&]{2,30}\|[A-Z]{3,7}$/;  // «Campeón|POSICIÓN»
 const NOMBRE = /^[a-z0-9_-]{2,24}$/;
-const EMAIL = /^[^@\s]{1,64}@[^@\s]{1,190}$/;
+const EMAIL = /^[a-z0-9._%+-]{1,64}@[a-z0-9-]{1,63}(\.[a-z0-9-]{1,63})*\.[a-z]{2,24}$/;  // con dominio y TLD: «a@b» no pasa
+
+export async function limite(env, clave, max, segundos) {
+  // true si `clave` ya pasó de `max` usos en la ventana actual de `segundos`; cuenta este uso
+  if (!env.DB) return false;
+  const ventana = Math.floor(Date.now() / 1000 / segundos) * segundos;
+  const f = await env.DB.prepare("INSERT INTO limites (clave, ventana, n) VALUES (?, ?, 1) ON CONFLICT(clave, ventana) DO UPDATE SET n = n + 1 RETURNING n")
+    .bind(clave, ventana).first();
+  if (Math.random() < .02) await env.DB.prepare("DELETE FROM limites WHERE ventana < ?").bind(ventana - 86400).run();  // limpieza ocasional
+  return !!f && f.n > max;
+}
 
 export async function codigoInvitado(token, env) {
   // nombre del invitado (D1) dueño de este código, o null
@@ -58,6 +68,9 @@ export async function extra(request, env, url, quienEs) {
     const f = CLAVE.test(clave) && await DB.prepare("SELECT datos, ts FROM builds WHERE clave = ?").bind(clave).first();
     return f ? json({clave, ts: f.ts, datos: JSON.parse(f.datos)}) : json({error: "sin build todavía"}, 404);
   }
+  const anon = (await sha256("racha:" + q.id)).slice(0, 16);  // para los límites: no se guarda quién es
+  if (ruta === "/v1/reporte" && m === "POST" && await limite(env, "reporte:" + anon, 10, 86400)) return json({error: "ya mandaste muchos reportes hoy"}, 429);
+  if (ruta === "/v1/ping" && m === "POST" && await limite(env, "ping:" + anon, 3, 3600)) return json({ok: true, ignorado: true});
   if (ruta === "/v1/reporte" && m === "POST") {  // privado: solo lo lee el admin; no guarda quién lo mandó
     const d = await cuerpo(request) || {};
     const s = v => String(v || "").slice(0, 40);

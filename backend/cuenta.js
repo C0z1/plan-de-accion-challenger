@@ -3,7 +3,7 @@
 // y lo manda aquí con el `verifier`. El Worker lo cambia por el id_token directo con Google (el secreto del cliente
 // vive solo aquí) y, si el correo está en GOOGLE_EMAILS, emite una sesión propia de 90 días.
 
-import {correoInvitado} from "./extra.js";
+import {correoInvitado, limite} from "./extra.js";
 
 const DIAS90 = 90 * 86400;
 const json = (cuerpo, status = 200) => new Response(JSON.stringify(cuerpo), {status, headers: {"content-type": "application/json; charset=utf-8"}});
@@ -60,7 +60,10 @@ async function login(request, env) {
 export async function cuenta(request, env, url) {
   // Rutas /v1/login y /v1/yo…; null si la ruta no es de cuenta (sigue el proxy de Riot)
   const ruta = url.pathname, m = request.method;
-  if (ruta === "/v1/login" && m === "POST") return login(request, env);
+  if (ruta === "/v1/login" && m === "POST") {
+    if (await limite(env, "login:" + (request.headers.get("cf-connecting-ip") || "?"), 10, 600)) return json({error: "Demasiados intentos: espera unos minutos."}, 429);
+    return login(request, env);
+  }
   if (ruta === "/v1/config" && m === "GET") return json({google_client_id: env.GOOGLE_CLIENT_ID || null});  // público, como en cualquier app
   if (!ruta.startsWith("/v1/yo")) return null;
   const sub = await usuarioDeSesion(request, env);
