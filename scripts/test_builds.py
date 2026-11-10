@@ -76,7 +76,7 @@ class Riot(unittest.TestCase):
 
     def test_mejores_con_api_simulada(self):
         ahora = time.time()
-        with mock.patch.dict(os.environ, RIOT_KEY="falsa"), mock.patch.object(builds.urllib.request, "urlopen", self.falso(ahora)):
+        with mock.patch.dict(os.environ, RIOT_KEY="falsa"), mock.patch.object(builds.urllib.request, "urlopen", self.falso(ahora)),                 mock.patch.object(builds, "REGIONES", {"la1": "americas", "kr": "asia"}):
             top = builds.mejores(777, "Yone", "MIDDLE", ahora=ahora)
             n = len(self.urls)
             otra = builds.mejores(777, "Yone", "MIDDLE", ahora=ahora)

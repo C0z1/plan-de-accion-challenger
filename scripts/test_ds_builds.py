@@ -3,7 +3,7 @@
 Cubre los bordes que pidió Opus: dos ITEM_UNDO seguidos del mismo ítem, una partida sin ningún
 legendario (core vacío), una región con la liga vacía, un legendario vendido (ITEM_SOLD, ya arreglado),
 botas vendidas y `guardado` sin la clave pedida."""
-import json, pathlib, sys, tempfile, unittest
+import json, pathlib, sys, tempfile, time, unittest
 from unittest import mock
 
 AQUI = pathlib.Path(__file__).resolve().parent
@@ -67,12 +67,31 @@ class Borde(unittest.TestCase):
                 return tl
             if url.endswith("/matches/KR_M1"):
                 return match
+            if "/top?count=1" in url: return []           # nadie del top lo tiene de más jugado: va al respaldo
             raise AssertionError(f"URL inesperada: {url}")
 
-        with mock.patch.object(builds, "get", fake_get):
+        with mock.patch.object(builds, "get", fake_get), mock.patch.object(builds, "REGIONES", {"la1": "americas", "kr": "asia"}):
             top = builds.mejores(777, "Yone", "MIDDLE", ahora=ahora)
         self.assertEqual([(m["metadata"]["matchId"], q) for m, _, _, q in top],
                          [("KR_M1", "Uno#KR1 (kr, 1000 LP)")])
+
+    def test_onetrick_del_top_con_su_puesto(self):  # pedido del usuario: Challenger del top cuyo campeón más jugado es este
+        ahora = time.time()
+        _, tl = mk(); match = {"metadata": {"matchId": "KR_9"}, "info": {"participants": [{"puuid": "rank1", "championName": "Yone", "teamPosition": "MIDDLE"}]}}
+        def fake_get(url, ttl=None, riot=False):
+            if "challengerleagues" in url:
+                return dict(entries=[dict(puuid="otro", leaguePoints=2100), dict(puuid="rank1", leaguePoints=2000)] if "kr." in url else [])
+            if "/by-puuid/otro/top?count=1" in url: return [dict(championId=1, lastPlayTime=ahora * 1000)]   # main de otro campeón
+            if "/by-puuid/rank1/top?count=1" in url: return [dict(championId=777, lastPlayTime=ahora * 1000)]
+            if "/accounts/by-puuid/rank1" in url: return dict(gameName="Faker", tagLine="KR1")
+            if "/matches/by-puuid/rank1/ids" in url: return ["KR_9"]
+            if url.endswith("/timeline"): return tl
+            if url.endswith("/matches/KR_9"): return match
+            raise AssertionError(f"URL inesperada: {url}")
+        with mock.patch.object(builds, "get", fake_get), mock.patch.object(builds, "REGIONES", {"la1": "americas", "kr": "asia"}):
+            top = builds.mejores(777, "Yone", "MIDDLE", ahora=ahora)
+        self.assertEqual([q for *_, q in top], ["Faker#KR1 (KR, #2 Challenger, 2000 LP)"])
+        self.assertFalse(builds.onetrick([dict(championId=777, lastPlayTime=0)], 777, ahora))  # no lo juega hace meses
 
     def test_item_sold_no_cuenta_en_core(self):
         # un legendario vendido sale del core (arreglado en bb6b9b8; antes quedaba ["3153", "6673"])

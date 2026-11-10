@@ -25,7 +25,7 @@ RAW = pathlib.Path(os.environ.get("DATOS_DIR") or BASE / "datos" / "raw")
 META = pathlib.Path(os.environ.get("META_DIR") or BASE / "datos" / "meta")
 ROLES = {"top": "TOP", "jungla": "JUNGLE", "jungle": "JUNGLE", "mid": "MIDDLE", "bot": "BOTTOM", "adc": "BOTTOM",
          "support": "UTILITY", "sup": "UTILITY"}
-REGIONES = {"la1": "americas", "kr": "asia"}
+REGIONES = {"la1": "americas", "kr": "asia", "euw1": "europe"}
 DIA = 86400
 SKILL = "QWER"
 
@@ -145,36 +145,61 @@ def lineas(r, quien):
             f"  Habilidades: {r['skills'][0]} ({r['skills'][1]:.0%})"]
 
 
-def mejores(cid, nombre, pos=None, por_region=2, partidas=20, ahora=None):
-    """[(match, timeline, puuid, "Nombre#TAG región")] de los mejores con ese campeón (Riot API). Lanza SinKey sin key."""
+def _partidas_de(e, plat, ruta, nombre, pos, partidas, quien):
+    """[(match, timeline, puuid, quien)] de las partidas recientes de ese jugador con el campeón (y rol)."""
+    out = []
+    ids = get(f"https://{ruta}.api.riotgames.com/lol/match/v5/matches/by-puuid/{e['puuid']}/ids?queue=420&count={partidas}",
+              ttl=DIA, riot=True) or []
+    for mid in ids:
+        mt = get(f"https://{ruta}.api.riotgames.com/lol/match/v5/matches/{mid}", riot=True)
+        p = mt and next((x for x in mt["info"]["participants"] if x["puuid"] == e["puuid"]), None)
+        if not p or p["championName"] != nombre or (pos and p["teamPosition"] != pos): continue
+        tl = get(f"https://{ruta}.api.riotgames.com/lol/match/v5/matches/{mid}/timeline", riot=True)
+        if tl: out.append((mt, tl, e["puuid"], quien))
+    return out
+
+
+def onetrick(top, cid, ahora, dias=14):
+    """True si el campeón es el MÁS jugado del jugador (primero de su maestría) y lo jugó en los últimos `dias`."""
+    t = (top or [None])[0]
+    return bool(t) and t.get("championId") == cid and ahora - (t.get("lastPlayTime") or 0) / 1000 <= dias * DIA
+
+
+def mejores(cid, nombre, pos=None, por_region=2, partidas=20, ahora=None, top_n=100):
+    """[(match, timeline, puuid, «Nombre#TAG (región, #puesto Challenger, LP)»)] de los Challenger del top del ladder
+    cuyo campeón MÁS jugado es este (pedido del usuario: onetricks de verdad, rank 1 primero). Si en el top no hay
+    ninguno, cae a Challenger/Grandmaster que lo jugaron hace poco. Lanza SinKey sin key."""
     ahora = ahora or time.time()
     out = []
     for plat, ruta in REGIONES.items():
+        chall = sorted((get(f"https://{plat}.api.riotgames.com/lol/league/v4/challengerleagues/by-queue/RANKED_SOLO_5x5", ttl=DIA, riot=True)
+                        or {}).get("entries", []), key=lambda e: -e["leaguePoints"])
+        hallados = 0
+        for puesto, e in enumerate(chall[:top_n], 1):  # la maestría top-1 de cada uno queda en caché un día: sirve a todos los campeones
+            top = get(f"https://{plat}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{e['puuid']}/top?count=1",
+                      ttl=DIA, riot=True)
+            if not onetrick(top, cid, ahora): continue
+            acc = get(f"https://{ruta}.api.riotgames.com/riot/account/v1/accounts/by-puuid/{e['puuid']}", ttl=7 * DIA, riot=True) or {}
+            quien = f"{acc.get('gameName', '?')}#{acc.get('tagLine', '?')} ({plat.upper()}, #{puesto} Challenger, {e['leaguePoints']} LP)"
+            ps = _partidas_de(e, plat, ruta, nombre, pos, partidas, quien)
+            out += ps; hallados += bool(ps)
+            if hallados >= por_region: break
+    if out: return out
+    for plat, ruta in REGIONES.items():  # respaldo: nadie del top lo tiene de más jugado
         lad = []
         for liga in ("challengerleagues", "grandmasterleagues"):
-            d = get(f"https://{plat}.api.riotgames.com/lol/league/v4/{liga}/by-queue/RANKED_SOLO_5x5", ttl=DIA, riot=True)
-            lad += (d or {}).get("entries", [])
+            lad += (get(f"https://{plat}.api.riotgames.com/lol/league/v4/{liga}/by-queue/RANKED_SOLO_5x5", ttl=DIA, riot=True) or {}).get("entries", [])
         lad.sort(key=lambda e: -e["leaguePoints"])
         hallados = 0
-        for e in lad[:60]:  # tope de llamadas: los 60 de más LP por región
-            m = get(f"https://{plat}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{e['puuid']}"
-                    f"/by-champion/{cid}", ttl=DIA, riot=True)
+        for e in lad[:60]:
+            m = get(f"https://{plat}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/{e['puuid']}/by-champion/{cid}", ttl=DIA, riot=True)
             if not m or ahora - m["lastPlayTime"] / 1000 > 14 * DIA: continue
             acc = get(f"https://{ruta}.api.riotgames.com/riot/account/v1/accounts/by-puuid/{e['puuid']}", ttl=7 * DIA, riot=True) or {}
             quien = f"{acc.get('gameName', '?')}#{acc.get('tagLine', '?')} ({plat}, {e['leaguePoints']} LP)"
-            ids = get(f"https://{ruta}.api.riotgames.com/lol/match/v5/matches/by-puuid/{e['puuid']}/ids?queue=420&count={partidas}",
-                      ttl=DIA, riot=True) or []
-            antes = len(out)
-            for mid in ids:
-                mt = get(f"https://{ruta}.api.riotgames.com/lol/match/v5/matches/{mid}", riot=True)
-                p = mt and next((x for x in mt["info"]["participants"] if x["puuid"] == e["puuid"]), None)
-                if not p or p["championName"] != nombre or (pos and p["teamPosition"] != pos): continue
-                tl = get(f"https://{ruta}.api.riotgames.com/lol/match/v5/matches/{mid}/timeline", riot=True)
-                if tl: out.append((mt, tl, e["puuid"], quien))
-            hallados += len(out) > antes
+            ps = _partidas_de(e, plat, ruta, nombre, pos, partidas, quien)
+            out += ps; hallados += bool(ps)
             if hallados >= por_region: break
     return out
-
 
 def tuyas(nombre, pos=None):
     """[(match, timeline, puuid)] de tus partidas en datos/raw con ese campeón (y rol), sin remakes."""
@@ -234,6 +259,7 @@ def informe(campeon, pos=None):
         top = mejores(cid, nombre, pos)
         jug = sorted({q for *_, q in top})
         rt = resumir([build_de(m, t, u, items) for m, t, u, _ in top], items, runas)
+        if rt: rt["jugadores"] = jug
         txt += ["Fuente: Riot API (match-v5 y timeline), " + (", ".join(jug) or "ningún Challenger/GM lo jugó en 14 días") + "\n"]
         txt += [l + "  " for l in lineas(rt, "Los mejores")]
     except (SinKey, urllib.error.URLError) as e:  # 429 sostenido o sin red: sale tu parte, el pool sigue
