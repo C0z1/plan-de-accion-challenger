@@ -149,11 +149,20 @@ class Ficha(unittest.TestCase):  # draft.ficha(): pedidos 1, 3 y 4 del Diseñado
         textos = lambda rs: [r["texto"][:12] for r in rs]
         r = self.ficha(self.juegos(), "Viktor")["reglas"]
         self.assertEqual(len(r), 3)
-        self.assertTrue(r[0]["texto"].startswith("Si pierdes la línea") and r[0]["pista"] and r[0]["n"] == 30)
+        self.assertTrue(r[0]["texto"].startswith("Si pierdes la línea") and isinstance(r[0]["n"], int))  # n y pista ahora salen de tus partidas (draft._numeros)
         antes, js = self.ficha(self.juegos(), "Fizz")["reglas"], self.juegos()
         for j in js[16:19]: j["nivel6"] = -1  # contra Fizz llegas al 6 abajo
         self.assertEqual(textos(self.ficha(js, "Fizz")["reglas"]), textos(antes))
         self.assertEqual(textos(draft.reglas("Zeri", "TOP")), textos([draft.R_NIVEL6, draft.R_MUERTES, draft.R_RIO]))
+
+    def test_cifras_de_las_reglas_salen_de_tus_partidas(self):  # nada de cifras fijas de la cuenta de ejemplo
+        js = [dict(g("Sylas", i % 3 == 0), min10=60) for i in range(12)] + [dict(g("Sylas", i % 4 != 0), min10=80) for i in range(12)]
+        draft._numeros(js)
+        r = draft.REGLAS_CHAMP["Sylas"][0]
+        self.assertEqual((r["n"], r["numero"]), (24, "Cumpliéndola ganas 75% (9/12); sin cumplirla, 33% (4/12)"))
+        draft._numeros(js[:3])
+        self.assertEqual(r["numero"], "Aún tienes pocas partidas para medirla.")
+        draft._numeros(draft.games)  # deja el módulo como estaba
 
     def test_sin_partidas_en_el_rol(self):
         self.assertIsNone(self.ficha([g("Ekko", True, pos="TOP")], "Zed"))

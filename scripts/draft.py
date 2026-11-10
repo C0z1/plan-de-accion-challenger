@@ -209,6 +209,25 @@ R_RIO = R("Con nivel arriba en top, no empujes pasado el río sin ver al jungla 
           metrica="vision", meta="ver al jungla antes de pasar el río", minuto="6")
 
 
+
+def _numeros(gs):
+    """Las cifras de cada regla con LAS PARTIDAS DE QUIEN USA LA APP (las de arriba son de la cuenta de ejemplo):
+    WR cumpliéndola contra WR sin cumplirla. Las reglas sin forma de medirse quedan como consejo, sin cifra."""
+    pc = lambda w: f"{round(100 * sum(w) / len(w))}% ({sum(w)}/{len(w)})"
+    for c, rs in [(None, [R_NIVEL6, R_MUERTES, R_RIO])] + list(REGLAS_CHAMP.items()):
+        for r in rs:
+            if not r["campo"]:
+                r.update(numero="Consejo del plan: todavía no se mide con tus partidas.", n=0, pista=True); continue
+            v = [(bool(r["ok"](g[r["campo"]])), g["win"]) for g in gs if (c is None or g["champ"] == c) and g.get(r["campo"]) is not None]
+            si, no = [w for o, w in v if o], [w for o, w in v if not o]
+            r.update(n=len(v), pista=min(len(si), len(no)) < 10,
+                     numero=f"Cumpliéndola ganas {pc(si)}; sin cumplirla, {pc(no)}" if si and no and len(v) >= 10
+                     else "Aún tienes pocas partidas para medirla.")
+
+
+_numeros(games)
+
+
 def reglas(champ, pos):
     """2–3 reglas del PLAN para ese campeón y rol, la del campeón primero. No hay versión «contra este rival»: tu media
     de nivel al 6 contra él no anticipa ir abajo en la siguiente (corte6.py: 14% contra 13%)."""

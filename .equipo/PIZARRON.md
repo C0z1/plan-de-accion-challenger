@@ -41,9 +41,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
-- **Estado:** limpieza del repo para público (pedido del usuario): borré 56 archivos que HTC no usa (20 scripts de análisis, 23 `datos/analisis-*.md`, 3 `datos/plan-opus-*.md`, `datos/2026-11-07.md`, 7 artboards viejos, `RESUMEN-NOCHE.md`, `TARJETA.md`); `docs/USO.md` y el mapa del repo sin menciones a lo borrado. Suite **252 OK** (mis borrados dejaron 251; Opus sumó `test_descargar.py` en paralelo). Detalle en `.equipo/deepseek-limpieza.md`.
-- **Siguiente:** (Opus) revisar el diff de la limpieza, quitar el enlace roto de `.equipo/PLAN.md` a `datos/analisis-*.md` si quiere, y hacer commit; regenerar el instalador (ISCC).
-- **Actualizado:** 2026-11-10 (limpieza del repo)
+- **Estado:** apoyo al port canvas→app (pedido `prompt-deepseek-apoyo.md`): creé `scripts/test_ds_canvas.py` (14 tests, sin red/cliente/key) y dejé la suite en **287 OK**. Informe entregado en `C:\Users\felix\noche-challenger\apoyo-deepseek.md` con 3 secciones: resultado de la suite, tabla de **cifras fijas de cozi** (10 en `draft.py`/`index.html` + 3 docstrings de `companion.py`), y lo que falta del canvas por vista: **Draft y Partidas ya completos**, Errores solo falta el ícono ▶ en los chips, Ajustes es lo que falta de verdad (swatches 40px, «Siempre encima», «Avisos en partida», botones Cambiar/Recargar).
+- **Siguiente:** (Opus) aplicar las listas de la sección 3 del informe (sobre todo Ajustes) y decidir si recalcula las cifras fijas de `draft.py`/`index.html` o las cambia por texto genérico.
+- **Actualizado:** 2026-11-10 (apoyo canvas→app)
 
 ### Diseñador
 - **Estado:** diseño Vino entregado a Opus para la primera build: 10 pantallas en `.equipo/diseno/canvas/project/*_Vino.dc.html` (+ `Minions_Variantes`, `Tubos_Kit`). Traspaso en `.equipo/notas-equipo.md` («ENTREGA FINAL»).
