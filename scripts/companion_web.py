@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
+          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
 VERSION = "0.6.1"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -112,7 +112,27 @@ def bombear(q):
 def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la cola
     r = None if gui.ajeno(gui.CUENTA[0]) else rendimiento_rapido()  # historial de otra cuenta: no mostrarlo como tuyo
     with LOCK: ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1)
-    if r is not None: tus_builds()
+    if r is not None: tus_builds(); vistas_previas(r)
+
+
+def vistas_previas(r):
+    """Fuera del champ select y de la partida, Selección y En vivo no quedan vacías: Selección = tu mejor pick contra tu
+    rival más frecuente (lo mismo que verías en champ select); En vivo = la última foto de tu última partida grabada."""
+    previa = ultima = None
+    try:
+        V = (r or {}).get("vistas") or {}
+        pos = V.get("pos"); fr = ((V.get("draft") or {}).get(pos) or {}).get("frecuentes") or []
+        if pos and fr:
+            previa = dict(draft_json(pos, gui.recomendaciones(pos, [fr[0]["rival"]])), previa=True)
+    except Exception: previa = None  # sin partidas suficientes draft.py truena: Selección muestra Draft como antes
+    try:
+        fs = sorted(companion.VIVO.glob("*.jsonl"))
+        if fs:
+            lineas = fs[-1].read_text(encoding="utf-8").strip().splitlines()
+            d = json.loads(lineas[-1]); d = d.get("foto", d)
+            if (m := companion.meta_fase(d)): ultima = {**m, "texto": gui.texto_meta(m), "recibido": None, "archivo": fs[-1].stem}
+    except (OSError, ValueError, KeyError, IndexError, AttributeError): ultima = None
+    with LOCK: ESTADO.update(previa=previa, ultima=ultima, v=ESTADO["v"] + 1)
 
 
 RELEASES = "https://api.github.com/repos/C0z1/racha.gg/releases/latest"

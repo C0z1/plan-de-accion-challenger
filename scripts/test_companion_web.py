@@ -121,6 +121,19 @@ class Http(unittest.TestCase):
         with mock.patch.object(w, "descargar_todo") as dt, mock.patch.object(w.gui, "puede_descargar", return_value=False):
             w.primera_vez(); dt.assert_not_called()
 
+    def test_vistas_previas(self):  # Selección y En vivo no quedan vacías fuera del champ select y de la partida
+        import tempfile
+        foto = (pathlib.Path(w.__file__).parent / "fixtures" / "vivo" / "allgamedata.json").read_text(encoding="utf-8")
+        r = {"vistas": {"pos": "MIDDLE", "draft": {"MIDDLE": {"frecuentes": [{"rival": "Zed"}]}}}}
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(w.companion, "VIVO", pathlib.Path(d)), \
+                mock.patch.object(w.gui, "recomendaciones", return_value=[("Zed", None)]) as rec:
+            pathlib.Path(d, "20261110-1.jsonl").write_text(json.dumps(json.loads(foto)) + "\n", encoding="utf-8")
+            w.vistas_previas(r)
+        rec.assert_called_once_with("MIDDLE", ["Zed"])
+        self.assertTrue(w.ESTADO["previa"]["previa"]); self.assertEqual(w.ESTADO["ultima"]["campeon"], "Ekko")
+        w.vistas_previas({})  # sin vistas ni fotos: nada, sin tronar
+        w.ESTADO.update(previa=None, ultima=None)
+
     def test_icono(self):
         st, b = self.get("/icono.png"); self.assertEqual(st, 200); self.assertEqual(b[1:4], b"PNG")
         self.assertIn(b'href="/icono.png"', self.get("/")[1])
@@ -147,7 +160,7 @@ class Http(unittest.TestCase):
 
     def test_integracion_de_vistas(self):  # auditoría turno 9 it. 6: Selección en partida, En vivo con cliente, error de vista visible
         st, b = self.get("/"); t = b.decode()
-        self.assertIn('vista === "companion" && !s.draft ? draftV(s)', t); self.assertIn("s.draft ? champSelect(s)", t)
+        self.assertIn('vista === "companion" && !s.draft ? (s.previa ? champSelect({...s, draft: s.previa}) : draftV(s))', t)  # Selección ya no cae en Draft; self.assertIn("s.draft ? champSelect(s)", t)
         self.assertNotIn('s.fase === "ChampSelect" && s.draft ? champSelect', t)
         for f in ("Aún no estás en partida", "Esta vista falló", "console.error(e)"): self.assertIn(f, t)
         # pantalla de carga, reconexión y espera de stats también son «en partida» (turno 9 it. 7)

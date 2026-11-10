@@ -223,7 +223,7 @@ function champSelect(s) {
       <div class="card"><b>${esc(rec.rival || "?")} no aparece en tus partidas</b><span class="sub">Va tu WR por campeón en el rol.</span></div>`, ""];
   const pq = fi.por_que, c = fi.cuidado, b = rec.build_dict, wr = s.rango && s.rango.n ? s.rango.wr / 100 : null;
   const main = `
-  <div><h1>Selección de campeón</h1><span class="sub">${esc(pos)} · ${esc(fi.champ)} contra ${esc(fi.rival)}</span></div>
+  <div><h1>Selección de campeón</h1><span class="sub">${d.previa ? "Vista previa contra tu rival más frecuente · " : ""}${esc(pos)} · ${esc(fi.champ)} contra ${esc(fi.rival)}</span></div>
   <div class="tres">
     <div class="card stat"><div class="cab">${img("champion", fi.rival, "ico40")}<b>Contra ${esc(fi.rival)}</b></div>
       <div class="big"><b>${pq.v}-${pq.n - pq.v}</b><span>con ${esc(fi.champ)}</span></div>
@@ -425,7 +425,7 @@ function puestoTag(p) {
 
 function partidas(s) {  // Partidas_Vino: filtros, historial en tabla (score, reglas ✓/✕, equipo, error) y la partida seleccionada
   const cl = delCliente(s); if (cl) return partidasCliente(s, cl);
-  const ps = s.rendimiento?.resumen?.partidas || [], V = VS(s), PP = (V && V.por_partida) || {}, RG = V ? V.reglas : [];
+  const ps = (s.rendimiento?.resumen?.partidas || []).slice(0, 10), V = VS(s), PP = (V && V.por_partida) || {}, RG = V ? V.reglas : [];  // las últimas 10
   if (!ps.length) return `<div><h1>Partidas</h1><span class="sub">Sin partidas en disco.</span></div>`;
   const v = ps.filter(p => p.win).length, mvp = ps.filter(p => p.puesto_eq === 1).length, peor = ps.filter(p => p.puesto_eq === 5).length;
   const info = p => PP[p.archivo] || {reglas: [], error: null};
@@ -619,11 +619,11 @@ function erroresV(s) {  // Errores_Vino: los 3 errores repetidos con sus momento
   return [main, aside];
 }
 
-function envivoAram(s, m) {  // ARAM y modos sin líneas: marcador, tu KDA y a quién cuidar en la pelea
+function envivoAram(s, m, prev) {  // ARAM y modos sin líneas: marcador, tu KDA y a quién cuidar en la pelea
   const [tu, ellos] = m.kills || [0, 0], [tt, te] = m.torres || [0, 0], am = m.amenazas || [];
   const main = `
-  <div><h1>En partida · ARAM</h1><span class="sub">${esc(m.campeon || "")} · minuto ${m.minuto ?? 0}</span></div>
-  <div class="card"><div class="cab2"><h2>Marcador</h2><span class="sub" style="font-size:12px">se actualiza cada 30 s</span></div>
+  <div><h1>${prev ? "Tu última partida" : "En partida"} · ARAM</h1><span class="sub">${esc(m.campeon || "")} · minuto ${m.minuto ?? 0}${prev ? " · foto en vivo" : ""}</span></div>
+  <div class="card"><div class="cab2"><h2>Marcador</h2><span class="sub" style="font-size:12px">${prev ? "al final de la partida" : "se actualiza cada 30 s"}</span></div>
     <div style="display:flex;gap:40px;align-items:baseline"><div><span class="sub">Kills</span><br><b style="font-size:44px;color:var(--teal)">${tu}</b> <span class="sub" style="font-size:22px">vs</span> <b style="font-size:44px;color:var(--red)">${ellos}</b></div>
       <div><span class="sub">Torres</span><br><b style="font-size:30px">${tt} – ${te}</b></div></div></div>
   <div class="card"><div class="cab2"><h2>Tú</h2><span class="sub" style="font-size:12px">nivel ${m.nivel ?? "?"}</span></div>
@@ -637,9 +637,10 @@ function envivoAram(s, m) {  // ARAM y modos sin líneas: marcador, tu KDA y a q
 }
 
 function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estado en vivo; al terminar, la línea final
-  const m = s.meta, f = s.fin;
+  const prev = !s.meta && !s.fin && s.ultima && !EN_PARTIDA.includes(s.fase);
+  const m = s.meta || (prev ? s.ultima : null), f = s.fin;
   if (!m && !f) return [otraFase(s), ""];
-  if (m && !f && m.modo === "ARAM") return envivoAram(s, m);
+  if (m && !f && m.modo === "ARAM") return envivoAram(s, m, prev);
   const x = f || m, min = x.minuto ?? 0, reglas = [];
   const est = (ok, cuando) => min < cuando ? ["▲ Ahora", "amber"] : ok ? ["✓ Cumplida", "ok"] : ["✕ Fallada", "red"];
   if (x.nivel != null && x.nivel_rival != null) reglas.push([`Llega al 6 sin nivel abajo`, `Nivel ${x.nivel} contra ${x.nivel_rival} de ${esc(x.rival || "tu rival")}`, ...est(x.nivel >= x.nivel_rival, 6), 6]);
@@ -650,7 +651,7 @@ function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estad
   reglas.sort((a, b) => (b[3] === "amber") - (a[3] === "amber"));
   const fase = [[0, 6, "0–6"], [6, 10, "6–10"], [10, 14, "10–14"], [14, 25, "14–25"], [25, 40, "25+"]];
   const main = `
-  <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1>${f ? "Fin de partida" : "En partida"}</h1><span class="sub">${esc(ROL_VIVO || "")}${esc(x.campeon || "")}${x.rival ? " contra " + esc(x.rival) : ""} · fase: ${min < 14 ? "línea" : min < 25 ? "medio juego (14–25)" : "final"}</span></div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1>${f ? "Fin de partida" : prev ? "Tu última partida" : "En partida"}</h1><span class="sub">${esc(ROL_VIVO || "")}${esc(x.campeon || "")}${x.rival ? " contra " + esc(x.rival) : ""} · fase: ${min < 14 ? "línea" : min < 25 ? "medio juego (14–25)" : "final"}</span></div>
     ${x.t != null ? `<span style="border:1px solid var(--acc);border-radius:10px;padding:10px 16px;font-weight:700;display:flex;gap:8px;align-items:center"><i style="width:8px;height:8px;border-radius:50%;background:var(--acc)"></i>${Math.floor(x.t / 60)}:${String(x.t % 60).padStart(2, "0")}</span>` : ""}</div>
   ${franja(x, !!f)}
   <div class="card"><div class="cab2"><h2>Tus reglas en esta partida</h2><span class="sub" style="font-size:12px">la de ahora, arriba</span></div>
@@ -749,7 +750,7 @@ async function tick() {
       const vista = elegida || (s.fase === "ChampSelect" ? (s.draft ? "companion" : "draft") : EN_PARTIDA.includes(s.fase) || s.fin || s.revision ? "envivo" : "inicio");
       for (const b of VISTAS) document.getElementById("b-" + b).toggleAttribute("aria-current", vista === b);
       const [m, a] = vista === "inicio" ? inicio(s) : vista === "draft" ? draftV(s) : vista === "envivo" ? envivo(s) : vista === "campeones" ? campeonesV(s)
-        : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? draftV(s) : vista === "perfil" ? perfil(s) : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida
+        : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? (s.previa ? champSelect({...s, draft: s.previa}) : draftV(s)) : vista === "perfil" ? perfil(s) : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida
       const nv = s.nueva ? `<div class="aviso teal" role="status">Hay una versión nueva de Racha (${esc(s.nueva.version)}). <a href="${esc(s.nueva.url)}" target="_blank" rel="noopener" style="color:inherit;font-weight:800">Descárgala aquí →</a></div>` : "";
       const av = nv + (s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "");
       const mn = document.getElementById("main"); mn.classList.toggle("ancho", !a); mn.innerHTML = av + m;  // sin columna derecha (Partidas_Vino): a todo el ancho
