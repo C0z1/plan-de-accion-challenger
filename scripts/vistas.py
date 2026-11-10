@@ -44,8 +44,14 @@ def campeones(minimo=3):
             v = [g["cs14"] for g in rs if g["opp"] == o and g.get("cs14") is not None]
             cs.append(dict(rival=o, cs14=round(st.mean(v)) if v else None, n=sum(g["opp"] == o for g in rs)))
         out.append(dict(champ=c, pos=pos, n=len(rs), wr=round(w, 3), forma=_forma(rs), etiqueta=etiqueta(len(rs), w, _forma(rs), draft.base),
-                        mejor=mejor, peor=peor, counters=cs, reglas=cumple(draft.reglas(c, pos), rs[-20:])))
+                        mejor=mejor, peor=peor, counters=cs, reglas=cumple(draft.reglas(c, pos), rs[-20:]), build=_build(c, pos)))
     return out
+
+
+def _build(campeon, pos):
+    """La build guardada de builds.py (sin red) para «Tu build» de Campeones_Vino; None si no hay o si builds.py truena."""
+    try: import builds; return builds.guardado_dict(campeon, pos)
+    except Exception: return None
 
 
 def cumple(rs_reglas, gs):
