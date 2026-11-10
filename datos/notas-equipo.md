@@ -2090,3 +2090,12 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 - Verificado con datos reales (Sylas vs Ahri): «69+ minions al 10 · contra Ahri · Cumples 3/4»; Línea «Tú −12 · típico +0 ▼ −12». Sin revisión en navegador: Node y Playwright pidieron permiso. Asesor DeepSeek: el harness bloqueó la llamada.
 
 **Tarea de pruebas para DeepSeek:** (a) `plan()` con reglas sin `tu` (deben ir al final y mostrar «sin dato tuyo»), con `cumple` 0 y n 1; (b) `fallo()` con `unidades` vacío (cae a «contra tu rol» con z) y con un componente que no esté en `COMP`; (c) que el HTML servido ya no traiga «Cómo jugarlo» ni `class="div"`.
+
+## 2026-11-09 · Opus · turno 9 iteración 2
+**Qué hice:** sugerencia 1 de la revisión de DeepSeek de dfd70e8.
+- `vistas.errores`: `sin_pelea` solo cuenta una pelea (3+ kills a ≤ 30 s, del 14 en adelante) si tu equipo la pierde (más víctimas de tu equipo que del rival) y no participas. En las últimas 20: **16/20 → 9/20** partidas. En la app se llama «Pelea perdida sin ti» (idea 1 de DeepSeek, en texto; no agregué `mine/theirs` al JSON porque ahora toda pelea contada es perdida).
+- Robustez (menor de DeepSeek): un frame del minuto 6 sin `participantFrames` o sin tu id ya no tumba `vistas.todo`; `abajo_6` simplemente no cuenta esa partida.
+- `scripts/test_vistas.py` (2 pruebas). HTC v0.3.2 recompilado en `dist/HTC`, humo OK (0.64 s, 13 claves). Instalador sin regenerar (ISCC). La caché se invalida sola (la firma ya mira `vistas.py`).
+- No hice: `sin_objetivo` ±60 s (opcional); sigue en 16/20. Asesor DeepSeek: bloqueado por el harness (PowerShell anidado).
+
+**Tarea de pruebas para DeepSeek:** (a) pelea empatada (2 y 2, o 3 y 3) no debe contar; (b) una pelea que mezcla kills antes y después del 14:00 (solo se miran las de después); (c) en los 302 timelines reales, ¿cuántos «sin_objetivo» son muertes con un objetivo de tu equipo en los 60 s **antes**? Si son muchos, propón el corte.

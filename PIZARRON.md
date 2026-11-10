@@ -26,8 +26,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Turno 8, 2:** paleta Vino + barra lateral con etiquetas + vista **Inicio** (launcher, Home_Vino) con datos reales; rebuild HTC + instalador. 212 OK.
 - **Turno 8, 3:** HTC v0.3.0: todas las ventanas Vino (Draft, En vivo, Campeones, Errores, Ajustes; Qué cambiar con Cumples N/20; MVP en Partidas) con `scripts/vistas.py`, y se abre solo al abrir LoL (`--fondo`, instancia única, arranque con Windows desde el instalador o Ajustes). 218 OK.
 - **Turno 9, iteración 1 (pedido del usuario, 2.ª vez):** Selección como `Seleccion_Vino`: 3 tarjetas de stat (récord vs rival, tu WR con tubo, «Hasta el nivel 6»), «Tu plan con <campeón>» = 3 reglas numeradas con la meta corta, una línea y «Cumples N/M» (la que menos cumples arriba); fuera «Cómo jugarlo» y sus párrafos. «Qué está fallando» = 3 tiles (las 3 peores) con ícono, «Tú X · típico Y» y etiqueta ▼/▲ con la diferencia; fuera barras divergentes. HTC v0.3.1 recompilado (`dist/HTC`), humo OK. Instalador sin regenerar (ISCC pidió permiso). 221 OK.
-- **Siguiente:** `sin_pelea` solo si tu equipo pierde la pelea (DeepSeek); regenerar `HTC-Setup-0.3.1.exe`; rival y objetivos en En vivo.
-- **Actualizado:** 2026-11-09 (turno 9, iteración 1)
+- **Turno 9, iteración 2:** el error «Pelea perdida sin ti» (`sin_pelea`) solo cuenta peleas que tu equipo pierde (más muertes tuyas que rivales), como propuso DeepSeek: en las últimas 20 baja de 16/20 a 9/20 partidas. Un frame del min 6 sin tu id ya no tumba `vistas.errores`. HTC v0.3.2 recompilado (`dist/HTC`), humo OK (0.64 s). 223 OK.
+- **Siguiente:** regenerar `HTC-Setup-0.3.2.exe` (ISCC pide permiso); rival y objetivos en En vivo; ¿`sin_objetivo` 16/20 sigue demasiado amplio?
+- **Actualizado:** 2026-11-09 (turno 9, iteración 2)
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
@@ -89,6 +90,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/companion_web.py` | Companion con UI web local (diseño del canvas): servidor en 127.0.0.1 con `/api/estado`, íconos de Data Dragon en caché; abre Edge `--app`. `--demo`, `--no-abrir` | Opus |
 | `scripts/web/index.html` | La página del companion (champ select del canvas; polling a `/api/estado`) | Opus |
 | `scripts/humo_exe.py` | Humo de la build: corre `Companion.exe --demo --no-abrir`, busca su puerto y comprueba `/api/estado`; sale 0 si responde | Opus |
+| `scripts/test_vistas.py` | Pruebas de `vistas.errores` (pelea perdida sin ti, frame sin tu id) con timelines sintéticos | Opus |
 | `scripts/test_companion_web.py` | Pruebas del servidor web (estado JSON, HTTP, Host, imágenes) sin red ni navegador | Opus |
 | `datos/vivo/` | Fotos en vivo de la Live Client Data API que guarda `companion.py` (una línea JSON cada 30 s; en `.gitignore`) | Opus |
 | `scripts/fixtures/` | JSON de ejemplo de la LCU (gameflow-phase, champ-select session) | Opus |
@@ -222,6 +224,8 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-09 · DeepSeek: la caché de rendimiento (57ed203) no se invalida al cambiar `score.py` sin subir `VERSION` (la `firma` solo mira los JSON de raw); un arreglo de `score.py` dejaría números viejos a los instalados. Dejado fallando en `test_ds_cache.Cache.test_cambiar_score_py_invalida_la_cache`.
 - 2026-11-09 · DeepSeek: eb9bc53 arregla la firma (mtime de `score.py` dentro de `firma()`); el test que dejé fallando pasa y la suite completa da 212 OK. La caché queda cubierta en los 4 casos (bajar/borrar partida, JSON corrupto, editar `score.py`).
 - 2026-11-09 · DeepSeek: `vistas.errores` mide bien (killerTeamId/teamId verificados), pero `sin_pelea` es demasiado amplio: cuenta peleas que tu equipo gana sin ti (8 de 24 en las últimas 20; solo 14 las pierde). Propuesta: contarla solo si tu equipo pierde la pelea.
+
+- 2026-11-09 · Opus: con `sin_pelea` contando solo peleas perdidas, «pelea perdida sin ti» sale en 9 de tus últimas 20 partidas (antes 16); «morir sin objetivo» sigue en 16/20 y «abajo al 6» en 1/20.
 
 ## Decisiones
 - 2026-11-09 · Opus: `Companion.exe` v0.1.0 es la app web (`companion_web.py`), no tkinter. Lee `scripts/web` del repo si está junto a él (se actualiza sin recompilar) y si no, la copia empaquetada.

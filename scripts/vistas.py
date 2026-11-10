@@ -102,7 +102,7 @@ def errores(gs, n=20):
     [{campeon, rival, minuto «mm:ss», archivo}]. gs = score.partidas()[0].
     sin_objetivo: tu muerte del 14 al 25 sin dragón/heraldo/barón/torre de tu equipo en el minuto siguiente.
     abajo_6: kill en la que participas (o mueres) del 5:30 al 7:00 con menos nivel que tu rival al minuto 6.
-    sin_pelea: pelea del 14 en adelante (3+ muertes en 30 s) sin kill, asistencia ni muerte tuya."""
+    sin_pelea: pelea del 14 en adelante (3+ muertes en 30 s) que tu equipo pierde (más muertes suyas), sin kill, asistencia ni muerte tuya."""
     mm = lambda ms: f"{ms // 60000}:{ms // 1000 % 60:02d}"
     out = {k: [] for k in ("sin_objetivo", "abajo_6", "sin_pelea")}
     vistos = 0
@@ -115,6 +115,7 @@ def errores(gs, n=20):
         vistos += 1
         yo = g["pid"]; me = next(p for p in info["participants"] if p["participantId"] == yo); eq = me["teamId"]
         opp = next((p for p in info["participants"] if p["teamPosition"] == me["teamPosition"] and p["teamId"] != eq), None)
+        equipo = {p["participantId"]: p["teamId"] for p in info["participants"]}
         base = dict(campeon=g["champ"], rival=opp["championName"] if opp else None, archivo=g["f"].stem)
         ev = [e for f in fr for e in f["events"]]
         kills = [e for e in ev if e["type"] == "CHAMPION_KILL"]
@@ -125,8 +126,9 @@ def errores(gs, n=20):
             if e.get("victimId") == yo and 14 * 60000 <= e["timestamp"] < 25 * 60000 and not any(0 <= t - e["timestamp"] <= 60000 for t in obj):
                 out["sin_objetivo"].append({**base, "minuto": mm(e["timestamp"])})
         if opp and len(fr) > 6:
-            pf = fr[6]["participantFrames"]
-            if pf[str(yo)]["level"] < pf[str(opp["participantId"])]["level"]:
+            pf = fr[6].get("participantFrames") or {}
+            nv = lambda pid: (pf.get(str(pid)) or {}).get("level")
+            if None not in (nv(yo), nv(opp["participantId"])) and nv(yo) < nv(opp["participantId"]):
                 e = next((e for e in kills if 330000 <= e["timestamp"] < 420000 and mio(e)), None)
                 if e: out["abajo_6"].append({**base, "minuto": mm(e["timestamp"])})
         i, tarde = 0, [e for e in kills if e["timestamp"] >= 14 * 60000]
@@ -134,7 +136,8 @@ def errores(gs, n=20):
             j = i
             while j + 1 < len(tarde) and tarde[j + 1]["timestamp"] - tarde[j]["timestamp"] <= 30000: j += 1
             pelea = tarde[i:j + 1]
-            if len(pelea) >= 3 and not any(mio(e) for e in pelea): out["sin_pelea"].append({**base, "minuto": mm(pelea[0]["timestamp"])})
+            caen = sum(equipo.get(e.get("victimId")) == eq for e in pelea)  # muertes de tu equipo
+            if len(pelea) >= 3 and caen > len(pelea) - caen and not any(mio(e) for e in pelea): out["sin_pelea"].append({**base, "minuto": mm(pelea[0]["timestamp"])})
             i = j + 1
     cuenta = {k: len({m["archivo"] for m in v}) for k, v in out.items()}
     return dict(n=vistos, partidas=cuenta, momentos=out)
