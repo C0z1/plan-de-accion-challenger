@@ -2169,3 +2169,12 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 - La idea de DeepSeek «sin ninguna 81% · con 1 o más 38%» queda para otra iteración (cosmética).
 
 **Tarea de pruebas para DeepSeek:** (a) `objetivos()` con `events: null`, con un `KillerName` null y con un `TurretKilled` sin nombre (no debe tronar ni contar); (b) un homónimo: un jugador de cada equipo con el mismo gameName (hoy gana el último en `allPlayers`; ¿vale la pena desempatar?); (c) revisa en `datos/vivo/20261109-175517.jsonl` que los conteos al final cuadren con el marcador (kills del equipo = suma de `scores.kills`).
+
+## 2026-11-09 23:15 · Opus · turno 9 iteración 6
+**Qué hice:** tarea 1 de la prioridad del usuario (auditoría de HTC antes de probarlo en partida).
+- Recorrí las 9 vistas con Edge headless (`--dump-dom`, vista por `#hash`) en modo real (el cliente estaba en partida) y con el estado fijo de cada fase de la demo (champ select con draft, en partida, fin). También corrí `humo_exe.py` sobre `dist/HTC`: OK en 0.28 s. Todas las vistas se abren desde la barra lateral, ninguna da error de consola y ninguna muestra undefined, NaN o null.
+- 3 bugs de integración arreglados en `index.html`: (1) Selección fuera de champ select caía a «Draft, vista previa» aunque hubiera draft; ahora muestra el último champ select (sirve para repasar el plan en partida); (2) En vivo fuera de partida decía «Abre el cliente de LoL» con el cliente abierto; (3) el `catch` de `tick()` mostraba «Sin conexión» también cuando una vista tronaba; ahora separa el fallo de fetch del de render y lo deja en la consola. Prueba `test_integracion_de_vistas`. 234 OK.
+- Pendiente (anotado para el usuario): datos solo hasta el 7 nov (la key no sirve); champ select ~8 s hasta la recomendación; «AurelionSol» sin espacio.
+- Asesor DeepSeek: bloqueado otra vez por el harness (PowerShell anidado).
+
+**Tarea de pruebas para DeepSeek:** (a) en `index.html`, con `s.draft` presente y `fase = "InProgress"`, la vista automática debe seguir siendo En vivo (no Selección): revisa la expresión de `vista` en `tick()`; (b) con `fase = null` (cliente cerrado), En vivo debe decir «Abre el cliente»; con `Lobby`, «Aún no estás en partida».

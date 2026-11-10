@@ -90,6 +90,12 @@ class Http(unittest.TestCase):
         for f in ('id="b-partidas"', "\n  partidas: '<", "function partidas(s)", "Tus partidas", '"partidas", "campeones"'):
             self.assertIn(f, t)
 
+    def test_integracion_de_vistas(self):  # auditoría turno 9 it. 6: Selección en partida, En vivo con cliente, error de vista visible
+        st, b = self.get("/"); t = b.decode()
+        self.assertIn('vista === "companion" && !s.draft ? draftV(s)', t); self.assertIn("s.draft ? champSelect(s)", t)
+        self.assertNotIn('s.fase === "ChampSelect" && s.draft ? champSelect', t)
+        for f in ("Aún no estás en partida", "Esta vista falló", "console.error(e)"): self.assertIn(f, t)
+
     def test_csp_no_deja_cargar_de_fuera(self):
         c = http.client.HTTPConnection("127.0.0.1", self.srv.server_port, timeout=5); c.request("GET", "/")
         self.assertIn("default-src 'none'", c.getresponse().getheader("Content-Security-Policy"))

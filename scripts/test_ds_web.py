@@ -113,6 +113,12 @@ class TestServidor(unittest.TestCase):
         self.assertIn(b'COMP[c] || [c, "alerta", v => v, "", ""]', cuerpo)  # componente fuera de COMP no truena
         self.assertIn(b"DEC[c] ?? 1", cuerpo)
 
+    def test_fallo_muertes_signo_alineado(self):  # turno 9 iter 4 (b): el número de Muertes lleva el signo de la flecha
+        _, _, cuerpo = self.s.get("/")
+        self.assertIn(b'(c === "muertes" ? -1 : 1)', cuerpo)  # menos es mejor: se niega para seguir a ▼/▲
+        self.assertIn(b"muertes: 1", cuerpo)                  # 1 decimal → «−2.0» y no «−2»
+        self.assertIn(b'v < 0 ? "\xe2\x88\x92"', cuerpo)      # signo usa el menos unario − (U+2212)
+
 
 class TestEstado(unittest.TestCase):
     def test_evento_fase_resetea_draft(self):
@@ -166,6 +172,30 @@ class TestEstado(unittest.TestCase):
         import builds
         with mock.patch.object(builds, "ddragon", return_value=({}, {}, {})):
             self.assertIsNone(web.imagen("champion", "NoExiste"))
+
+    def test_imagen_prefijo_no_confunde_campeones(self):  # turno 9 iter 4 (a): el prefijo no cae en otro campeón
+        import builds, pathlib, tempfile
+        # claves como builds.ddragon()[2] en es_MX: norm(id) y norm(nombre es_MX) de cada campeón
+        pares = [("Nunu", "Nunu y Willump"), ("Bard", "Bardo"), ("MasterYi", "Maestro Yi"),
+                 ("MonkeyKing", "Wukong"), ("Renata", "Renata Glasc"), ("Vi", "Vi"),
+                 ("Viego", "Viego"), ("Viktor", "Viktor"), ("DrMundo", "Dr. Mundo"),
+                 ("JarvanIV", "Jarvan IV"), ("Belveth", "Bel'Veth"), ("KSante", "K'Sante")]
+        d = {}
+        for cid, nombre in pares:
+            d[builds.norm(cid)] = (cid, 0, "Fighter")
+            d[builds.norm(nombre)] = (cid, 0, "Fighter")
+        casos = {"NunuWillump": "Nunu", "Nunu & Willump": "Nunu", "Nunu y Willump": "Nunu",
+                 "Bard": "Bard", "Bardo": "Bard", "MasterYi": "MasterYi", "Maestro Yi": "MasterYi",
+                 "Wukong": "MonkeyKing", "RenataGlasc": "Renata", "Renata Glasc": "Renata",
+                 "Vi": "Vi", "Viego": "Viego", "Viktor": "Viktor", "DrMundo": "DrMundo",
+                 "JarvanIV": "JarvanIV", "BelVeth": "Belveth", "KSante": "KSante", "Zzz": None}
+        with tempfile.TemporaryDirectory() as t, mock.patch.object(builds, "ddragon", return_value=({}, {}, d)), \
+             mock.patch.object(web, "IMG", pathlib.Path(t)):
+            for cid, _ in pares:
+                (pathlib.Path(t) / "champion").mkdir(exist_ok=True)
+                (pathlib.Path(t) / "champion" / f"{cid}.png").write_bytes(cid.encode())
+            for nombre, esperado in casos.items():
+                self.assertEqual(web.imagen("champion", nombre), esperado.encode() if esperado else None, nombre)
 
     def test_demo_sin_foto_vivo_solo_champselect(self):
         q = queue.Queue()

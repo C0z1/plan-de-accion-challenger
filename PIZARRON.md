@@ -30,8 +30,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Turno 9, iteración 3:** «Morir sin objetivo» mira ±60 s alrededor de tu muerte (morir asegurando o robando ya no cuenta): 503 → 326 momentos, últimas 20 16/20 → 13/20; WR con 0/1/2+ = 81/50/27% (`scripts/sin_objetivo.py`). HTC v0.3.3 recompilado, humo OK. 227 OK.
 - **Turno 9, iteración 4:** en «Qué está fallando», el número de Muertes ya lleva el signo de la flecha (revisión de DeepSeek). El ícono de «Nunu & Willump» sale por prefijo (`nunu`); Kai'Sa ya salía. HTC v0.3.4 recompilado, humo OK. 228 OK.
 - **Turno 9, iteración 5:** En vivo con el panel «Tu rival» (nivel, KDA, CS contra el tuyo, ítems) y «Objetivos» (kills, torres, dragones, larvas, heraldo y barón de cada equipo; timer de dragón y barón) desde la Live Client Data (`companion.objetivos()`, formato verificado en una partida real grabada). HTC v0.3.5 recompilado, humo OK. 231 OK.
-- **Siguiente:** regenerar `HTC-Setup-0.3.5.exe` (ISCC pide permiso); «Tu build» del panel En vivo (siguiente ítem y oro que falta).
-- **Actualizado:** 2026-11-09 (turno 9, iteración 5)
+- **Turno 9, iteración 6 (prioridad del usuario, tarea 1: auditoría):** recorrí las 9 vistas con Edge headless (`#vista`) en modo real (tu cliente abierto, en partida) y en cada fase de la demo (champ select, en partida, fin), y el humo del `.exe` (0.28 s). Todas se abren desde la barra lateral, ninguna da error de consola y todas muestran datos reales. Arreglé 3 bugs de integración en `index.html`: Selección en partida o al terminar caía a «Draft, vista previa» (ahora muestra tu último champ select); En vivo fuera de partida decía «Abre el cliente» aunque estuviera abierto; y si una vista tronaba, salía «Sin conexión». 234 OK.
+- **Siguiente:** tarea 2: probar que las fases reales (lobby → champ select → partida → fin) cambien la vista solas; tarea 3: launcher (`--fondo`) con arranque real.
+- **Actualizado:** 2026-11-09 23:15 (turno 9, iteración 6)
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
@@ -236,6 +237,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-09 · DeepSeek: el «morir sin objetivo» (±60 s) aguanta el control por oro del equipo al 14: 0 vs 1+ va 87%→57% (oro≥0, n=147) y 67%→23% (oro<0, n=135); no es solo reflejo de ir perdiendo.
 - 2026-11-09 · Opus: en la Live Client Data real, `KillerName` de dragón/heraldo/barón/larvas (`HordeKill`) es el gameName sin tag, las torres traen al dueño en el nombre (`Turret_TOrder_`/`Turret_TChaos_`) y un inhibidor puede caer por `Minion_T200…`.
 - 2026-11-09 · Opus: de los nombres de campeón con símbolos, solo «Nunu & Willump» (→ `NunuWillump`) no tenía ícono; Kai'Sa, Wukong, Renata Glasc, K'Sante y Cho'Gath ya resolvían.
+- 2026-11-09 · Opus: auditoría de HTC: 9/9 vistas cargan sin error de consola, en modo real (cliente en partida) y en las 3 fases de la demo. En la demo, la recomendación tarda ~8 s (`gui.recomendaciones`), así que el champ select muestra Draft mientras tanto.
 
 ## Decisiones
 - 2026-11-09 · Opus: `Companion.exe` v0.1.0 es la app web (`companion_web.py`), no tkinter. Lee `scripts/web` del repo si está junto a él (se actualiza sin recompilar) y si no, la copia empaquetada.
@@ -301,6 +303,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-09 · Opus: la app nueva es web local (`http.server` en 127.0.0.1 + HTML del canvas, abierta con Edge `--app`), reutiliza el `trabajador` de `companion_gui.py`; tkinter queda de respaldo. Valida `Host` y se cierra sola sin la ventana (DeepSeek).
 
 ## Para el usuario (cuando vuelva)
+- **Auditoría de HTC (2026-11-09 23:15):** las 9 vistas (Inicio, Draft, Selección, En vivo, Perfil, Partidas, Campeones, Errores y Ajustes) se abren desde la barra lateral, cargan sin errores y muestran tus datos, con tu cliente real y en la demo. Ya arreglado (sin recompilar, porque el `.exe` lee la página del repo): en partida, **Selección** ahora te deja volver a ver tu plan del champ select; **En vivo** fuera de partida ya no dice «Abre el cliente» si está abierto; y si una vista falla, lo dice con el error para que lo reportes, en vez de «Sin conexión». **Lo que sigue roto o pendiente:** (1) Perfil, Partidas, Errores y Campeones llegan solo hasta el **7 nov**, porque la `RIOT_KEY` no sirve y las partidas nuevas no se bajan: renuévala (`setx RIOT_KEY …`) y corre `python scripts/descargar.py`; (2) en champ select, Selección tarda unos 8 s en salir (calcula el pick) y mientras tanto ves Draft; (3) «AurelionSol» aparece sin espacio (es cosmético).
 - Cambio: en champ select, «Cuidado con <rival>» ahora separa lo que sí se repite contra ese rival (tus muertes antes del 6) de lo que no (oro, CS y nivel: varían de partida a partida). Si ves muertes antes del 6 por encima de tu media, juega el nivel 1–6 con más cuidado. Recompila `Companion.exe`.
 - Cambio: champ select ya no dice «contra este rival llegas al 6 con −0.3 niveles»; ese promedio no anticipaba nada. Recompila `Companion.exe`.
 - Nuevo: si champ select dice «casi igual que Ekko (54%): cualquiera de los dos», tus picks no se separan contra ese rival (pasa con 6 de tus 10 rivales de mid más frecuentes): elige el que mejor manejes. Recompila `Companion.exe`.

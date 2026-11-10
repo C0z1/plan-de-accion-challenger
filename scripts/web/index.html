@@ -262,7 +262,7 @@ function otraFase(s) {  // en partida, al terminar y esperando
     <b>${esc(r.champ)}${r.rival ? " vs " + esc(r.rival) : ""} ${esc(r.kda || "")}</b>
     <span class="sub">Oro al 14 ${esc(r.oro)} · CS al 14 ${esc(r.cs)} · muertes 14–25 ${esc(r.m25)} · score ${esc(r.score)}</span></div>`);
   if (s.espera) bloques.push(`<div class="card"><span class="sub">${esc(s.espera)}</span></div>`);
-  if (bloques.length === 1) bloques.push(`<div class="card"><span class="sub">Abre el cliente de LoL: aquí verás tu pick en champ select y la revisión al terminar.</span></div>`);
+  if (bloques.length === 1) bloques.push(`<div class="card"><span class="sub">${FASES_CLIENTE[s.fase] ? "Aún no estás en partida: al empezar, HTC cambia aquí solo." : "Abre el cliente de LoL: aquí verás tu pick en champ select y la revisión al terminar."}</span></div>`);
   return bloques.join("");
 }
 
@@ -548,12 +548,16 @@ async function tick() {
       const vista = elegida || (s.fase === "ChampSelect" ? (s.draft ? "companion" : "draft") : ["InProgress", "PreEndOfGame", "EndOfGame"].includes(s.fase) || s.fin || s.revision ? "envivo" : "inicio");
       for (const b of VISTAS) document.getElementById("b-" + b).toggleAttribute("aria-current", vista === b);
       const [m, a] = vista === "inicio" ? inicio(s) : vista === "draft" ? draftV(s) : vista === "envivo" ? envivo(s) : vista === "campeones" ? campeonesV(s)
-        : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !(s.fase === "ChampSelect" && s.draft) ? draftV(s) : vista === "perfil" ? [perfil(s), ""] : vista === "partidas" ? [partidas(s), ""] : s.fase === "ChampSelect" && s.draft ? champSelect(s) : [otraFase(s), ""];
+        : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? draftV(s) : vista === "perfil" ? [perfil(s), ""] : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida
       const av = s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "";
       document.getElementById("main").innerHTML = av + m;
       const as = document.getElementById("aside"); as.innerHTML = a; as.hidden = !a;
     }
-  } catch (e) { document.getElementById("main").innerHTML = `<h1>HTC</h1><p class="sub">Sin conexión con el companion.</p>`; v = -1; }
+  } catch (e) {  // sin servidor o una vista que truena: no son lo mismo y el usuario debe poder reportarlo
+    console.error(e); v = -1;
+    document.getElementById("main").innerHTML = e instanceof TypeError && /fetch/i.test(e.message) ? `<h1>HTC</h1><p class="sub">Sin conexión con el companion.</p>`
+      : `<h1>HTC</h1><div class="aviso red">Esta vista falló: ${esc(String(e && e.message || e))}. Prueba otra vista y avísale a Opus con este texto.</div>`;
+  }
 }
 const VISTAS = ["inicio", "draft", "companion", "envivo", "perfil", "partidas", "campeones", "errores", "ajustes"];
 for (const [b, i, t] of [["inicio", "casa", "Inicio"], ["draft", "draft", "Draft"], ["companion", "champselect", "Selección"], ["envivo", "envivo", "En vivo"], ["perfil", "perfil", "Perfil"],
