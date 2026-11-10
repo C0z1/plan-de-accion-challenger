@@ -1,5 +1,5 @@
 """Pruebas de companion_web.py sin red, sin cliente ni navegador: estado JSON y HTTP servido."""
-import http.client, http.server, json, pathlib, threading, unittest
+import io, http.client, http.server, json, pathlib, threading, unittest
 from unittest import mock
 
 import companion_web as w
@@ -97,6 +97,29 @@ class Http(unittest.TestCase):
         w.evento(("crono", {"fase": "BAN_PICK", "ms": 28000, "t": 1.0}))
         self.assertEqual(w.ESTADO["crono"]["ms"], 28000)
         self.assertIn("FASE_CS", self.get("/")[1].decode())
+
+    def test_version_nueva(self):
+        self.assertTrue(w.version_mayor("v0.6.1", "0.6.0")); self.assertTrue(w.version_mayor("v1.0.0", "0.9.9"))
+        self.assertFalse(w.version_mayor("v0.6.0", "0.6.0")); self.assertFalse(w.version_mayor("beta", "0.6.0"))
+        class R(io.BytesIO):
+            def __enter__(self): return self
+            def __exit__(self, *a): pass
+        datos = json.dumps({"tag_name": "v99.0.0", "html_url": "https://github.com/C0z1/racha.gg/releases/tag/v99.0.0"}).encode()
+        with mock.patch.object(w.urllib.request, "urlopen", return_value=R(datos)):
+            w.buscar_version()
+        self.assertEqual(w.ESTADO["nueva"]["version"], "v99.0.0"); w.ESTADO["nueva"] = None
+        malo = json.dumps({"tag_name": "v99.0.0", "html_url": "https://evil.example/x"}).encode()
+        with mock.patch.object(w.urllib.request, "urlopen", return_value=R(malo)):
+            w.buscar_version()
+        self.assertIsNone(w.ESTADO["nueva"])  # solo enlaces de GitHub
+
+    def test_primera_vez_descarga_solo_sin_partidas(self):
+        import tempfile, os
+        with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {"DATOS_DIR": d}),                 mock.patch.object(w, "descargar_todo") as dt, mock.patch.object(w.gui, "puede_descargar", return_value=True):
+            w.primera_vez(); self.assertEqual(dt.call_count, 1)
+            pathlib.Path(d, "LA1_1.json").write_text("{}"); w.primera_vez(); self.assertEqual(dt.call_count, 1)
+        with mock.patch.object(w, "descargar_todo") as dt, mock.patch.object(w.gui, "puede_descargar", return_value=False):
+            w.primera_vez(); dt.assert_not_called()
 
     def test_icono(self):
         st, b = self.get("/icono.png"); self.assertEqual(st, 200); self.assertEqual(b[1:4], b"PNG")
@@ -207,7 +230,7 @@ class Fondo(unittest.TestCase):
                 mock.patch.object(w, "PUERTO", pathlib.Path(d) / "htc.port"), mock.patch.object(w, "autoarranque"), \
                 mock.patch.object(w, "refrescar"), mock.patch.object(w.gui, "trabajador"), \
                 mock.patch.object(w.time, "sleep", side_effect=Fin), mock.patch.object(w, "abrir") as a, \
-                mock.patch.object(w.gui, "perfil", return_value="x"), mock.patch.object(w, "vigilar_cuenta"):
+                mock.patch.object(w.gui, "perfil", return_value="x"), mock.patch.object(w, "vigilar_cuenta"),                 mock.patch.object(w, "buscar_version"), mock.patch.object(w, "primera_vez"):
             with self.assertRaises(Fin): w.main(["--fondo", "--sin-overlay"])
             a.assert_not_called()                                      # --fondo no abre al arrancar...
             w.ESTADO["fase"] = "inicio"; w.evento(("fase", "Lobby")); a.assert_called_once()  # ...sino con la primera fase

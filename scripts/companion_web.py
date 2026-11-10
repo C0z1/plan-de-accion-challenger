@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
+          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
 VERSION = "0.6.0"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -113,6 +113,32 @@ def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la c
     r = None if gui.ajeno(gui.CUENTA[0]) else rendimiento_rapido()  # historial de otra cuenta: no mostrarlo como tuyo
     with LOCK: ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1)
     if r is not None: tus_builds()
+
+
+RELEASES = "https://api.github.com/repos/C0z1/racha.gg/releases/latest"
+
+
+def version_mayor(a, b):
+    """True si la versión a («v0.6.1») es mayor que b («0.6.0»); lo que no se entienda, False."""
+    try: return tuple(map(int, a.lstrip("v").split("."))) > tuple(map(int, b.lstrip("v").split(".")))
+    except (ValueError, AttributeError): return False
+
+
+def buscar_version():
+    """Al arrancar: ¿hay una versión de Racha más nueva en GitHub Releases? Solo avisa (no instala nada)."""
+    try:
+        req = urllib.request.Request(RELEASES, headers={"User-Agent": "racha", "Accept": "application/vnd.github+json"})
+        with urllib.request.urlopen(req, timeout=10) as r: d = json.load(r)
+    except (OSError, ValueError): return
+    if version_mayor(d.get("tag_name", ""), VERSION) and str(d.get("html_url", "")).startswith("https://github.com/"):
+        with LOCK: ESTADO.update(nueva={"version": d["tag_name"], "url": d["html_url"]}, v=ESTADO["v"] + 1)
+
+
+def primera_vez():
+    """Un amigo con código de acceso y sin partidas: su historial se baja solo al abrir Racha (no tiene que buscar el botón)."""
+    import os
+    raw = pathlib.Path(os.environ.get("DATOS_DIR") or gui.REPO / "datos" / "raw")
+    if gui.puede_descargar() and not any(raw.glob("*_*.json")): descargar_todo()
 
 
 DESCARGANDO = threading.Lock()
@@ -313,6 +339,8 @@ def main(argv=None):
     threading.Thread(target=refrescar, daemon=True).start()
     if unico: threading.Thread(target=precargar, daemon=True).start()
     if "--demo" not in argv: threading.Thread(target=vigilar_cuenta, args=(q,), daemon=True).start()
+    if unico:  # solo el Racha real: ni la demo ni las pruebas salen a internet ni descargan
+        threading.Thread(target=buscar_version, daemon=True).start(); threading.Thread(target=primera_vez, daemon=True).start()
     threading.Thread(target=demo if "--demo" in argv else gui.trabajador, args=(q,), daemon=True).start()
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     print(url, flush=True)
