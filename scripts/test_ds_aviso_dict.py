@@ -15,12 +15,12 @@ import companion_gui as g  # noqa: E402
 class AvisoDict(unittest.TestCase):
     def test_post_partida_key_caducada_es_aviso_error(self):
         q = queue.Queue()
-        orig = g.script, g.time.sleep, g.hay_key
-        g.script, g.time.sleep, g.hay_key = (lambda *a: (2, "")), (lambda s: None), (lambda: True)
+        orig = g.script, g.time.sleep, g.puede_descargar
+        g.script, g.time.sleep, g.puede_descargar = (lambda *a: (2, "")), (lambda s: None), (lambda: True)
         try:
             g._post_partida(q)
         finally:
-            g.script, g.time.sleep, g.hay_key = orig
+            g.script, g.time.sleep, g.puede_descargar = orig
         avisos = [e[1] for e in list(q.queue) if e[0] == "aviso"]
         self.assertEqual(len(avisos), 1)
         self.assertEqual((avisos[0]["tipo"], avisos[0]["minuto"]), ("error", None))
@@ -28,12 +28,12 @@ class AvisoDict(unittest.TestCase):
 
     def test_post_partida_sin_key_no_descarga_ni_avisa(self):  # beta para amigos sin key
         q, corridos = queue.Queue(), []
-        orig = g.script, g.hay_key
-        g.script, g.hay_key = (lambda *a: corridos.append(a) or (0, "")), (lambda: False)
+        orig = g.script, g.puede_descargar
+        g.script, g.puede_descargar = (lambda *a: corridos.append(a) or (0, "")), (lambda: False)
         try:
             g._post_partida(q)
         finally:
-            g.script, g.hay_key = orig
+            g.script, g.puede_descargar = orig
         self.assertEqual((corridos, list(q.queue)), ([], []))
 
     def test_recomendaciones_sin_partidas_no_truena(self):  # amigo sin historial en su primer champ select
