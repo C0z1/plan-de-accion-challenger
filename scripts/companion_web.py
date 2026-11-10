@@ -155,9 +155,12 @@ def imagen(tipo, nombre):
         if not c: return None
         nombre = c[0]  # «Wukong» → «MonkeyKing»
     if tipo == "rango" and nombre not in RANGOS: return None
+    if tipo == "minion" and nombre != "caster": return None
     f = IMG / tipo / f"{nombre}.png"
     if not f.exists():
-        if tipo == "rango":  # emblema de la liga (CommunityDragon: los mismos archivos que usa el cliente)
+        if tipo == "minion":  # acuerdo 21: el caster de CommunityDragon en la tarjeta de CS
+            url = "https://raw.communitydragon.org/latest/game/assets/characters/sru_orderminionranged/hud/bluerange_circle.png"
+        elif tipo == "rango":  # emblema de la liga (CommunityDragon: los mismos archivos que usa el cliente)
             url = f"https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-{nombre}.png"
         else:
             v = builds.get("https://ddragon.leagueoflegends.com/api/versions.json", ttl=builds.DIA)[0]
@@ -204,7 +207,7 @@ class H(http.server.BaseHTTPRequestHandler):
             return self.enviar(200, (WEB / "fonts" / f"{m.group(1)}.woff2").read_bytes(), "font/woff2")
         if self.path in ("/icono.png", "/favicon.ico"): return self.enviar(200, (WEB / "icono.png").read_bytes(), "image/png")  # ícono de la ventana de Edge --app
         if self.path == "/api/estado": return self.enviar(200, estado().encode(), "application/json; charset=utf-8")
-        if m := re.fullmatch(r"/img/(champion|item|profileicon|rango)/(\w{1,40})\.png", self.path):
+        if m := re.fullmatch(r"/img/(champion|item|profileicon|rango|minion)/(\w{1,40})\.png", self.path):
             if b := imagen(*m.groups()): return self.enviar(200, b, "image/png")
         self.enviar(404, b"", "text/plain")
 
