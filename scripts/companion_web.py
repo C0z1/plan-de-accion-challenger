@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
+          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
 VERSION = "0.6.1"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -299,6 +299,11 @@ class H(http.server.BaseHTTPRequestHandler):
         # X-HTC obliga a un preflight CORS que no contestamos: otra web no puede mandar este POST, aunque el Host cuadre
         if self.headers.get("Host", "").split(":")[0] not in ("127.0.0.1", "localhost") or self.headers.get("X-HTC") != "1":
             return self.enviar(403, b"", "text/plain")
+        if self.path == "/api/ventana":  # botones y arrastre de la franja propia (la ventana ya no tiene barra de Windows)
+            import ventana
+            try: ventana.accion(json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 100)))["accion"])
+            except (ValueError, KeyError, TypeError): return self.enviar(400, b"", "text/plain")
+            return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/descargar":  # «Descargar mis partidas»: con tu key o tu código de acceso, en su hilo
             threading.Thread(target=descargar_todo, daemon=True).start(); return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/acceso":
@@ -326,7 +331,12 @@ class H(http.server.BaseHTTPRequestHandler):
 def abrir(url):
     edge = shutil.which("msedge") or next((str(p) for p in (pathlib.Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
                                                             pathlib.Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe")) if p.exists()), None)
-    if edge: subprocess.Popen([edge, f"--app={url}", "--window-size=1440,1024"])
+    if edge:
+        subprocess.Popen([edge, f"--app={url}", "--window-size=1440,1024"])
+        import ventana  # sin barra de título de Windows (Ventana_Vino); si no se puede, queda la barra normal
+        def listo():
+            with LOCK: ESTADO.update(sin_marco=True, v=ESTADO["v"] + 1)
+        threading.Thread(target=ventana.sin_marco, kwargs={"al_listo": listo}, daemon=True).start()
     else: webbrowser.open(url)
 
 

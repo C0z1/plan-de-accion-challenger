@@ -110,6 +110,14 @@ details.otras[open]>div{background:var(--dark2);border-radius:10px;padding:8px 1
 .fch.ok{background:var(--okbg);color:var(--okfg)}.fch.red{background:var(--redbg);color:var(--redfg)}
 .btn2{border:1px solid var(--line);background:none;color:var(--txt);border-radius:10px;padding:8px 14px;font:700 13px Mulish,sans-serif;cursor:pointer}
 main.ancho{max-width:none}
+/* Ventana_Vino (acuerdo 23): franja propia de 38 px; solo cuando Racha quitó la barra de Windows */
+.barra-v{position:fixed;top:0;left:0;right:0;height:38px;z-index:50;display:flex;align-items:center;justify-content:space-between;background:#1A1014;border-bottom:1px solid rgba(255,255,255,.06);user-select:none}
+.barra-v .nom{display:flex;align-items:center;gap:8px;padding-left:14px;font:700 13px Mulish,sans-serif;color:#F2F4F7}
+.barra-v .nom i{width:20px;height:20px;border-radius:5px;background:#36192A url(/icono.png) center/16px no-repeat;box-shadow:inset 0 0 0 1px #F28DB0}
+.barra-v .bot{display:flex;margin-right:8px}.barra-v button{width:46px;height:38px;border:none;background:none;color:#D2BAC4;display:grid;place-items:center;cursor:pointer}
+.barra-v button:hover{background:rgba(255,255,255,.08);color:#fff}.barra-v button:active{background:rgba(255,255,255,.14)}
+.barra-v button.cerrar:hover{background:#E81123;color:#fff}.barra-v button.cerrar:active{background:#B30E1C}.barra-v button:focus-visible{outline:2px solid #F28DB0;outline-offset:-2px}
+body.sin-marco{padding-top:38px}body.sin-marco .app{min-height:calc(100vh - 38px)}
 .camps{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .campc{align-items:flex-start;border:1px solid transparent;color:var(--txt);font:inherit;cursor:pointer;text-align:left;min-height:410px;justify-content:space-between}.campc.sel{border-color:var(--acc)}
 .pool{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.poolc{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px;border-radius:12px;background:var(--dark2)}
@@ -147,6 +155,14 @@ main.ancho{max-width:none}
 </head>
 <body>
 <div class="app">
+<div class="barra-v" id="barra-v" hidden onmousedown="if(!event.target.closest('button'))ventana('arrastrar')" ondblclick="if(!event.target.closest('button'))ventana('maximizar')">
+  <span class="nom"><i aria-hidden="true"></i>Racha</span>
+  <span class="bot">
+    <button aria-label="Minimizar" onclick="ventana('minimizar')"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M0 5h10" stroke="currentColor" stroke-width="1.2"/></svg></button>
+    <button aria-label="Maximizar" onclick="ventana('maximizar')"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x=".6" y=".6" width="8.8" height="8.8" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+    <button class="cerrar" aria-label="Cerrar" onclick="ventana('cerrar')"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor" stroke-width="1.2"/></svg></button>
+  </span>
+</div>
 <nav aria-label="Secciones">
 <button id="b-inicio" aria-label="Inicio" aria-current="page" onclick="ver('inicio')"></button>
 <div class="sep" aria-hidden="true"></div>
@@ -712,6 +728,9 @@ async function ajuste(clave, on) {
   try { await fetch("/api/ajuste", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({clave, on})}); } catch (e) {}
   v = -1; tick();
 }
+function ventana(accion) {
+  fetch("/api/ventana", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({accion})}).catch(() => {});
+}
 async function descargar() {
   try { await fetch("/api/descargar", {method: "POST", headers: {"X-HTC": "1"}}); } catch (e) {}
 }
@@ -751,6 +770,7 @@ async function tick() {
       for (const b of VISTAS) document.getElementById("b-" + b).toggleAttribute("aria-current", vista === b);
       const [m, a] = vista === "inicio" ? inicio(s) : vista === "draft" ? draftV(s) : vista === "envivo" ? envivo(s) : vista === "campeones" ? campeonesV(s)
         : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? (s.previa ? champSelect({...s, draft: s.previa}) : draftV(s)) : vista === "perfil" ? perfil(s) : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida
+      document.getElementById("barra-v").hidden = !s.sin_marco; document.body.classList.toggle("sin-marco", !!s.sin_marco);
       const nv = s.nueva ? `<div class="aviso teal" role="status">Hay una versión nueva de Racha (${esc(s.nueva.version)}). <a href="${esc(s.nueva.url)}" target="_blank" rel="noopener" style="color:inherit;font-weight:800">Descárgala aquí →</a></div>` : "";
       const av = nv + (s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "");
       const mn = document.getElementById("main"); mn.classList.toggle("ancho", !a); mn.innerHTML = av + m;  // sin columna derecha (Partidas_Vino): a todo el ancho

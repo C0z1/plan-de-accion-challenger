@@ -134,6 +134,14 @@ class Http(unittest.TestCase):
         w.vistas_previas({})  # sin vistas ni fotos: nada, sin tronar
         w.ESTADO.update(previa=None, ultima=None)
 
+    def test_api_ventana(self):  # botones de la franja propia: solo con X-HTC y acciones conocidas
+        c = http.client.HTTPConnection("127.0.0.1", self.srv.server_port, timeout=5)
+        c.request("POST", "/api/ventana", body=b'{"accion":"borrar"}', headers={"X-HTC": "1", "Content-Type": "application/json", "Content-Length": "19"})
+        self.assertEqual(c.getresponse().status, 400)
+        c = http.client.HTTPConnection("127.0.0.1", self.srv.server_port, timeout=5)
+        c.request("POST", "/api/ventana", body=b'{"accion":"cerrar"}', headers={"Content-Type": "application/json", "Content-Length": "19"})
+        self.assertEqual(c.getresponse().status, 403)
+
     def test_icono(self):
         st, b = self.get("/icono.png"); self.assertEqual(st, 200); self.assertEqual(b[1:4], b"PNG")
         self.assertIn(b'href="/icono.png"', self.get("/")[1])
