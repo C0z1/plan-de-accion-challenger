@@ -16,8 +16,8 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
-VERSION = "0.5.1"  # HTC; también invalida la caché de rendimiento
+          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
+VERSION = "0.6.0"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
 PUERTO = gui.REPO / "datos" / "cache" / "htc.port"  # el HTC que ya corre: otro arranque abre su ventana en vez de duplicarse
@@ -216,10 +216,17 @@ class H(http.server.BaseHTTPRequestHandler):
         # X-HTC obliga a un preflight CORS que no contestamos: otra web no puede mandar este POST, aunque el Host cuadre
         if self.headers.get("Host", "").split(":")[0] not in ("127.0.0.1", "localhost") or self.headers.get("X-HTC") != "1":
             return self.enviar(403, b"", "text/plain")
-        if self.path != "/api/autoarranque": return self.enviar(404, b"", "text/plain")
-        try: on = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 100)))["on"]
+        if self.path == "/api/recargar":  # Ajustes_Vino «Recargar»: vuelve a leer tus partidas del disco
+            threading.Thread(target=refrescar, daemon=True).start(); return self.enviar(200, b"{}", "application/json")
+        if self.path not in ("/api/autoarranque", "/api/ajuste"): return self.enviar(404, b"", "text/plain")
+        try: d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 200))); on = d["on"]
         except (ValueError, KeyError, TypeError): return self.enviar(400, b"", "text/plain")
         if not isinstance(on, bool): return self.enviar(400, b"", "text/plain")
+        if self.path == "/api/ajuste":
+            try: a = gui.guardar_ajuste(d.get("clave"), on)
+            except (ValueError, OSError): return self.enviar(400, b"", "text/plain")
+            with LOCK: ESTADO.update(ajustes=a, v=ESTADO["v"] + 1)
+            return self.enviar(200, json.dumps(a).encode(), "application/json")
         a = autoarranque(on)
         with LOCK: ESTADO.update(autoarranque=a, v=ESTADO["v"] + 1)
         self.enviar(200, json.dumps({"on": a}).encode(), "application/json")

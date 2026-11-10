@@ -103,7 +103,7 @@ details.otras[open]>div{background:var(--dark2);border-radius:10px;padding:8px 1
 @media (prefers-reduced-motion:reduce){.anillo *{animation:none!important}}
 .retrato2{width:96px;height:96px;border-radius:50%;border:3px solid var(--acc);object-fit:cover}
 .forma{display:flex;gap:4px;margin-top:6px}.forma i{width:12px;height:12px;border-radius:3px;background:#FF8A8A}.forma i.v{background:#A8D8C0}
-.chip{border:1px solid var(--line);background:var(--dark2);color:var(--txt);border-radius:999px;padding:6px 14px;font:700 13px Mulish,sans-serif;cursor:pointer}.chip.on{background:var(--acc);color:var(--ontint);border-color:var(--acc)}
+.filtro{border:1px solid var(--line);background:var(--dark2);color:var(--txt);border-radius:999px;padding:6px 14px;font:700 13px Mulish,sans-serif;cursor:pointer}.filtro.on{background:var(--acc);color:var(--ontint);border-color:var(--acc)}
 .pfila{display:grid;grid-template-columns:4px minmax(150px,1.5fr) 70px minmax(140px,1.3fr) 150px 160px minmax(120px,1.2fr) 64px;gap:14px;align-items:center;padding:10px 14px 10px 0;border-radius:10px;background:var(--dark2)}
 .pfila.cab{background:none;font-size:12px;color:var(--muted)}.pfila.sel{box-shadow:0 0 0 1px var(--acc) inset}.pfila .res{align-self:stretch;border-radius:4px}
 .fch{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--dark3);color:var(--muted)}
@@ -431,7 +431,7 @@ function partidas(s) {  // Partidas_Vino: filtros, historial en tabla (score, re
   const info = p => PP[p.archivo] || {reglas: [], error: null};
   const vis = ps.filter(p => partFiltro === "todas" ? true : partFiltro === "errores" ? !!info(p).error : info(p).reglas[+partFiltro] === false);
   const sel = ps.find(p => p.archivo === partSel) || vis[0] || ps[0];
-  const chip = (k, t) => `<button class="chip ${partFiltro === k ? "on" : ""}" onclick="partFiltro='${k}';v=-1;tick()">${t}</button>`;
+  const chip = (k, t) => `<button class="filtro ${partFiltro === k ? "on" : ""}" onclick="partFiltro='${k}';v=-1;tick()">${t}</button>`;
   const fila = p => { const i = info(p);
     return `<div class="pfila ${p === sel ? "sel" : ""}"><span class="res" style="background:${p.win ? "var(--teal)" : "var(--red)"}"></span>
       <span style="display:flex;gap:10px;align-items:center;min-width:0">${img("champion", p.campeon, "item", p.campeon)}<span style="min-width:0"><b>${esc(p.campeon)}</b><br><span class="sub" style="font-size:12px">${p.rival ? "vs " + esc(p.rival) + " · " : ""}${esc(p.fecha)}</span></span></span>
@@ -600,14 +600,15 @@ function erroresV(s) {  // Errores_Vino: los 3 errores repetidos con sus momento
   const V = VS(s); if (!V) return sinDatos("Tus errores");
   const e = V.errores, orden = Object.keys(ERR).sort((a, b) => e.partidas[b] - e.partidas[a]);
   const main = `
-  <div><h1>Tus errores</h1><span class="sub">En tus últimas ${e.n} partidas con timeline · el que más se repite, arriba</span></div>
-  <div class="card"><div class="cab2"><h2>Errores repetidos</h2><span class="sub" style="font-size:12px">minuto exacto para buscarlo en el replay</span></div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1>Tus errores</h1><span class="sub">${orden.filter(k => e.partidas[k]).length} se repiten en tus últimas ${e.n} · el que más pesa, arriba</span></div>
+    <button class="btn2" onclick="ver('perfil')">← Perfil</button></div>
+  <div class="card"><div class="cab2"><h2>Errores repetidos</h2><span class="sub" style="font-size:12px">el minuto exacto para buscarlo en el replay</span></div>
     ${orden.map((k, i) => { const [t, pq, como] = ERR[k], n = e.partidas[k], ms = e.momentos[k];
-      return `<div class="err ${i === 0 && n ? "top" : ""}"><div style="display:flex;gap:14px;align-items:center"><span class="num amber">${i + 1}</span>
+      return `<div class="err ${i === 0 && n ? "top" : ""}"><div style="display:flex;gap:14px;align-items:center"><span class="num" style="width:40px;height:40px;border-radius:50%;background:var(--dark4);color:var(--acc2)">${i + 1}</span>
         <div class="txt" style="flex:1"><b style="font-size:17px">${t}</b><small>${pq}</small></div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="sub" style="font-size:12px"><b style="color:var(--txt)">${n}/${e.n}</b> partidas</span>
         <span class="tuboH" style="flex:none;width:140px"><i style="width:${e.n ? n / e.n * 100 : 0}%;background:linear-gradient(90deg,#9A2E3A,#FF8A8A)"></i></span></div></div>
-        ${n ? `<span style="font-size:13px"><b>Cómo verlo:</b> ${como}</span><div class="chips">${ms.slice(0, 4).map(m => `<span class="chip">${img("champion", m.campeon, "mini2", "")} ${m.rival ? "vs " + esc(m.rival) : esc(m.campeon)} · ${esc(m.minuto)}</span>`).join("")}${ms.length > 4 ? `<span class="sub" style="font-size:12px">+${ms.length - 4} más</span>` : ""}</div>` : '<span class="sub" style="font-size:13px">No se repite. Bien.</span>'}</div>`; }).join("")}</div>`;
+        ${n ? `<span style="font-size:13px"><b>Cómo verlo:</b> ${como}</span><div class="chips">${ms.slice(0, 4).map(m => `<span class="chip">${img("champion", m.campeon, "mini2", "")} ${m.rival ? "vs " + esc(m.rival) : esc(m.campeon)} · ${esc(m.minuto)} ▶</span>`).join("")}${ms.length > 4 ? `<span class="sub" style="font-size:12px">+${ms.length - 4} más</span>` : ""}</div>` : '<span class="sub" style="font-size:13px">No se repite. Bien.</span>'}</div>`; }).join("")}</div>`;
   const aside = `<h2>Cómo los cuento</h2>${orden.map(k => `<div class="est"><b>${ERR[k][0]}</b><span class="sub" style="font-size:13px">${ERR[k][3]}</span></div>`).join("")}
   <div class="est"><b>Ojo</b><span class="sub" style="font-size:13px">Es lo que se repite, no la causa de perder: úsalo para saber qué revisar.</span></div>`;
   return [main, aside];
@@ -675,21 +676,36 @@ function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estad
   return [main, aside];
 }
 
-function ajustesV(s) {  // Ajustes_Vino: cuenta, arranque con Windows y movimiento (sin key de Riot: va a producción)
-  const V = VS(s), a = s.autoarranque, rm = document.documentElement.classList.contains("quieto");
+function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida (todo se guarda en tu equipo)
+  const V = VS(s), a = s.autoarranque, rm = document.documentElement.classList.contains("quieto"), aj = s.ajustes || {};
   const ult = V ? new Date(V.ultima).toLocaleString("es", {dateStyle: "medium", timeStyle: "short"}) : null;
   const tog = (id, on, dis, fn) => `<button class="tog" role="switch" aria-checked="${on}" ${dis ? "disabled" : ""} id="${id}" onclick="${fn}"><i></i></button>`;
+  const fila = (t, sub, extra) => `<div class="filaV"><div class="txt"><b>${t}</b><small>${sub}</small></div>${extra}</div>`;
+  const av = (k, t, sub) => fila(t, sub, tog("t-" + k, aj[k] !== false, false, `ajuste('${k}',${aj[k] === false})`));
   return [`
   <div><h1>Ajustes</h1><span class="sub">Racha · racha.gg</span></div>
   <div class="dos">
-    <div class="card"><div class="cab2"><h2>Cuenta</h2></div>
-      <div class="filaV"><div class="txt"><b>Riot ID</b><small>${esc(String(s.perfil || "").split(" · ")[0])}</small></div></div>
-      <div class="filaV"><div class="txt"><b>Partidas descargadas</b><small>${V ? `${V.total} · última: ${esc(ult)}` : "sin datos"}</small></div></div></div>
-    <div class="card"><div class="cab2"><h2>Racha</h2></div>
-      <div class="filaV"><div class="txt"><b>Arrancar con Windows</b><small>${a == null ? "Solo en la versión instalada." : "Corre en segundo plano y se abre solo cuando abres LoL."}</small></div>
-        ${tog("t-auto", !!a, a == null, "autoarranque(!" + !!a + ")")}</div>
-      <div class="filaV"><div class="txt"><b>Reducir movimiento</b><small>Frascos y anillos sin animación.</small></div>${tog("t-rm", rm, false, "quieto()")}</div></div>
+    <div style="display:flex;flex-direction:column;gap:26px">
+      <div class="card"><div class="cab2"><h2>Cuenta</h2></div>
+        ${fila("Riot ID", esc([String(s.perfil || "").split(" · ")[0], s.region].filter(Boolean).join(" · ")) || "Abre el cliente de LoL", '<span class="sub" style="font-size:12px">la del cliente</span>')}
+        ${fila("Partidas descargadas", V ? `${V.total} · última: ${esc(ult)}` : s.cliente ? `${s.cliente.length} del cliente (sin descargar)` : "sin datos", '<button class="btn2" onclick="recargar()">Recargar</button>')}</div>
+      <div class="card"><div class="cab2"><h2>Apariencia</h2></div>
+        ${fila("Reducir movimiento", "Tubos y anillos sin ola ni brillo.", tog("t-rm", rm, false, "quieto()"))}
+        ${fila("Siempre encima en partida", "La franja queda sobre el juego (en modo sin bordes).", tog("t-overlay", aj.overlay !== false, false, `ajuste('overlay',${aj.overlay === false})`))}
+        ${fila("Arrancar con Windows", a == null ? "Solo en la versión instalada." : "Corre en segundo plano y se abre sola cuando abres LoL.", tog("t-auto", !!a, a == null, "autoarranque(!" + !!a + ")"))}</div>
+    </div>
+    <div class="card" style="align-self:flex-start"><div class="cab2"><h2>Avisos en partida</h2></div>
+      ${av("aviso_nivel", "Nivel 6 con nivel abajo", "Te avisa al llegar al 6 si vas abajo de tu rival.")}
+      ${av("aviso_minions", "Minions al 10", "Si vas bajo tu meta de config.json al minuto 10.")}
+      ${av("aviso_muertes", "Muertes del 14 al 25", "Al llegar a 2 muertes desde el 14.")}</div>
   </div>`, ""];
+}
+async function ajuste(clave, on) {
+  try { await fetch("/api/ajuste", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({clave, on})}); } catch (e) {}
+  v = -1; tick();
+}
+async function recargar() {
+  try { await fetch("/api/recargar", {method: "POST", headers: {"X-HTC": "1"}}); } catch (e) {}
 }
 async function autoarranque(on) {
   try { await fetch("/api/autoarranque", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({on})}); } catch (e) {}

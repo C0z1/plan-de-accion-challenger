@@ -68,6 +68,25 @@ def ultima_partida():
     except (OSError, ValueError, KeyError, StopIteration): return {}
 
 
+AJUSTES_F = REPO / "datos" / "cache" / "ajustes.json"
+AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "aviso_muertes": True}  # Ajustes_Vino
+
+
+def ajustes():
+    """Ajustes guardados (los que faltan, por defecto); un archivo roto no tumba nada."""
+    try: d = json.loads(AJUSTES_F.read_text(encoding="utf-8"))
+    except (OSError, ValueError): d = {}
+    return {k: d[k] if isinstance(d.get(k), bool) else v for k, v in AJUSTES_DEF.items()}
+
+
+def guardar_ajuste(clave, on):
+    """Guarda un ajuste conocido; devuelve todos. Clave desconocida: ValueError (lista blanca)."""
+    if clave not in AJUSTES_DEF or not isinstance(on, bool): raise ValueError(clave)
+    a = {**ajustes(), clave: on}
+    AJUSTES_F.parent.mkdir(parents=True, exist_ok=True); AJUSTES_F.write_text(json.dumps(a), encoding="utf-8")
+    return a
+
+
 NOMBRES = {}  # championId -> nombre del cliente (companion_web.vigilar_cuenta), para quien no tiene partidas descargadas
 CUENTA = [None]  # «gameName#tag» con sesión en el cliente (la pone companion_web.vigilar_cuenta)
 
@@ -215,8 +234,9 @@ def trabajador(q):
             if jugando and time.time() - ult >= 30:
                 d = companion.vivo(); archivo, ult = companion.capturar(archivo, d), time.time(); foto = d or foto
                 if mf := companion.meta_fase(d): q.put(("meta", mf))
+                aj = ajustes()  # Ajustes_Vino: cada aviso se puede apagar
                 for f in (companion.aviso_nivel, companion.aviso_minions, companion.aviso_muertes):
-                    if f not in avisado and (txt := f(d)):
+                    if f not in avisado and aj.get(f.__name__, True) and (txt := f(d)):
                         q.put(aviso(txt, "consejo", int((((d or {}).get("gameData") or {}).get("gameTime") or 0) // 60))); avisado.add(f)
             elif not jugando: archivo, avisado = None, set()
             if fase in FIN and real not in FIN:

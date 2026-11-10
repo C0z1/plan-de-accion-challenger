@@ -53,7 +53,8 @@ def correr(leer, seguir, x=0.22, y=6):
     def tick():
         if not seguir(): root.destroy(); return
         s = leer() or {}
-        ps = partes(s.get("meta"), time.time()) if s.get("fase") == "InProgress" else []
+        encendido = (s.get("ajustes") or {}).get("overlay", True)  # Ajustes_Vino: «Siempre encima en partida»
+        ps = partes(s.get("meta"), time.time()) if s.get("fase") == "InProgress" and encendido else []
         for w in fila.winfo_children(): w.destroy()
         for i, (t, c) in enumerate(ps):
             if i: tk.Label(fila, text="·", fg="#7A5A68", bg=BG, font=("Segoe UI", 11)).pack(side="left", padx=4)
