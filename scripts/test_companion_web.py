@@ -115,7 +115,7 @@ class Http(unittest.TestCase):
 
     def test_primera_vez_descarga_solo_sin_partidas(self):
         import tempfile, os
-        with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {"DATOS_DIR": d}),                 mock.patch.object(w, "descargar_todo") as dt, mock.patch.object(w.gui, "puede_descargar", return_value=True):
+        with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {"DATOS_DIR": d}),                 mock.patch.object(w, "descargar_todo") as dt, mock.patch.object(w.gui, "puede_descargar", return_value=True),                 mock.patch.object(w.companion, "lcu", return_value={"gameName": "Amigo"}):  # con el cliente abierto
             w.primera_vez(); self.assertEqual(dt.call_count, 1)
             pathlib.Path(d, "LA1_1.json").write_text("{}"); w.primera_vez(); self.assertEqual(dt.call_count, 1)
         with mock.patch.object(w, "descargar_todo") as dt, mock.patch.object(w.gui, "puede_descargar", return_value=False):

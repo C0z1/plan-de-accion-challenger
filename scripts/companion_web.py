@@ -138,7 +138,9 @@ def primera_vez():
     """Un amigo con código de acceso y sin partidas: su historial se baja solo al abrir Racha (no tiene que buscar el botón)."""
     import os
     raw = pathlib.Path(os.environ.get("DATOS_DIR") or gui.REPO / "datos" / "raw")
-    if gui.puede_descargar() and not any(raw.glob("*_*.json")): descargar_todo()
+    if not gui.puede_descargar() or any(raw.glob("*_*.json")): return
+    if not (companion.lcu("/lol-summoner/v1/current-summoner") or {}).get("gameName"): return  # sin cliente: se reintenta al abrir LoL
+    descargar_todo()
 
 
 DESCARGANDO = threading.Lock()
@@ -151,6 +153,8 @@ def descargar_todo(n=100):
         def aviso(t):
             with LOCK: ESTADO.update(descarga=t, v=ESTADO["v"] + 1)
         if not gui.puede_descargar(): return aviso("Falta tu código de acceso (o una RIOT_KEY).")
+        if gui.ajeno(gui.CUENTA[0]):  # el historial de esta PC es de otra cuenta: bajarlo pisaría su perfil.json
+            return aviso("Esta PC guarda el historial de otra cuenta: para el tuyo, usa Racha en tu PC.")
         aviso("Descargando tus partidas… puede tardar unos minutos la primera vez.")
         code, out = gui.script("descargar.py", str(n))
         if code in (0, 3):
@@ -178,6 +182,7 @@ def vigilar_cuenta(q, cada=10):
         if nueva:
             ultima = c; q.put(("rango", companion.rango(companion.lcu("/lol-ranked/v1/current-ranked-stats"))))
             q.put(("cuenta", c, s.get("profileIconId")))
+            if ESTADO.get("conectado"): threading.Thread(target=primera_vez, daemon=True).start()  # LoL recién abierto
         if s.get("gameName") and (nueva or vuelta % 6 == 0):  # tus últimas partidas del cliente (sin key): al conectar y cada minuto
             h = companion.lcu("/lol-match-history/v1/products/lol/current-summoner/matches?begIndex=0&endIndex=19")
             if h:
@@ -280,6 +285,7 @@ class H(http.server.BaseHTTPRequestHandler):
             try: gui.guardar_acceso(json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 200)))["token"])
             except (ValueError, KeyError, TypeError, OSError): return self.enviar(400, b"", "text/plain")
             with LOCK: ESTADO.update(descarga="Código guardado. Ya puedes descargar tus partidas.", conectado=True, v=ESTADO["v"] + 1)
+            threading.Thread(target=primera_vez, daemon=True).start()  # con el cliente abierto, empieza a bajar sola
             return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/recargar":  # Ajustes_Vino «Recargar»: vuelve a leer tus partidas del disco
             threading.Thread(target=refrescar, daemon=True).start(); return self.enviar(200, b"{}", "application/json")

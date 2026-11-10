@@ -131,8 +131,8 @@ def partidas(raw=None):
     yo = json.loads((raw / "perfil.json").read_text())["account"]["puuid"]
     gs = []
     for f in raw.glob("*_*.json"):
-        info = json.loads(f.read_text())["info"]
-        zs = z_partida(info)
+        try: info = json.loads(f.read_text())["info"]; zs = z_partida(info)
+        except (OSError, ValueError, KeyError, TypeError): continue  # una partida dañada no vacía todo el rendimiento
         me = next((p for p in info["participants"] if p["puuid"] == yo), None)
         if zs and me: gs.append(dict(t=info["gameCreation"], win=me["win"], champ=me["championName"], rol=me["teamPosition"],
                                      kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", zs=zs, f=f, pid=me["participantId"],
