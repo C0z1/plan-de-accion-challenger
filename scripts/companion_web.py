@@ -112,6 +112,17 @@ def bombear(q):
 def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la cola
     r = None if gui.ajeno(gui.CUENTA[0]) else rendimiento_rapido()  # historial de otra cuenta: no mostrarlo como tuyo
     with LOCK: ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1)
+    if r is not None: tus_builds()
+
+
+def tus_builds():
+    """«Tu build» sin key (builds.guardar_tuyas) si hay partidas más nuevas que builds.json; un fallo no tumba nada."""
+    import builds, os
+    raw = pathlib.Path(os.environ.get("DATOS_DIR") or gui.REPO / "datos" / "raw"); f = builds.META / "builds.json"
+    try:
+        nuevo = max((p.stat().st_mtime for p in raw.glob("*_*.json")), default=0)
+        if nuevo and (not f.exists() or f.stat().st_mtime < nuevo): builds.guardar_tuyas()
+    except Exception: pass
 
 
 def vigilar_cuenta(q, cada=10):

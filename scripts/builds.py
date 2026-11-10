@@ -270,6 +270,23 @@ def pool(minimo=10):
     return [(ch, max((r for (x, r) in c if x == ch), key=lambda r: c[(ch, r)])) for ch, v in tot.most_common() if v >= minimo]
 
 
+def guardar_tuyas(minimo=10):
+    """«Tu build» sin key: tu build por campeón (10+ partidas, con timeline) desde datos/raw, mezclada en builds.json sin
+    borrar las de los mejores. Devuelve cuántas guardó. La corre la app al ver partidas nuevas (auditoría de DeepSeek)."""
+    items, runas, _ = ddragon()
+    f = META / "builds.json"
+    try: d = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError): d = {}
+    n = 0
+    for ch, pos in pool(minimo):
+        tu = resumir([build_de(m, t, u, items) for m, t, u in tuyas(ch, pos)], items, runas)
+        if tu: d[f"{ch}|{pos}|tu"] = tu; n += 1
+    if n:
+        META.mkdir(parents=True, exist_ok=True)
+        tmp = f.with_suffix(".tmp"); tmp.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8"); tmp.replace(f)
+    return n
+
+
 def guardado_dict(campeon, pos):
     """La build que dejó `--pool` (sin red) como dict para la GUI: el resumen de `resumir` más `fuente` ("mejores" o "tu")
     y, en la de los mejores, `primer` = {item, si: [V, n], no: [V, n]} (tu récord con su primer ítem y con otro); o None."""
