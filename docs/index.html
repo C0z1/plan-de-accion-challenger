@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/svg+xml" href="img/racha.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Racha — Tu coach de League of Legends, hecho con tus propias partidas</title>
+<meta name="description" content="Racha te dice qué te hace perder en League of Legends y te lo recuerda justo cuando importa. Gratis, de código abierto y solo lee datos de tu cliente.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fondo:#24111A;
+    --fondo2:#2E1622;
+    --borde:#4A2436;
+    --rosa:#F28DB0;
+    --rosa2:#F6C1D4;
+    --texto:#FBF2F6;
+    --suave:#D9B8C6;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:Mulish,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--fondo);color:var(--texto);line-height:1.6}
+  a{color:var(--rosa2)}
+  a:hover{color:var(--rosa)}
+  a:focus-visible,button:focus-visible{outline:3px solid var(--rosa);outline-offset:2px;border-radius:6px}
+  .contenedor{max-width:960px;margin:0 auto;padding:0 24px}
+  header{padding:56px 0 24px;text-align:center}
+  .logo{font-size:3rem;font-weight:800;letter-spacing:-.02em;margin:0}
+  .logo span{color:var(--rosa)}
+  .tagline{color:var(--suave);font-size:1.25rem;max-width:640px;margin:12px auto 0}
+  .btn{display:inline-block;background:var(--rosa);color:var(--fondo);font-weight:800;text-decoration:none;padding:14px 28px;border-radius:999px;margin-top:24px}
+  .btn:hover{background:var(--rosa2);color:var(--fondo)}
+  img{max-width:100%;height:auto;border:1px solid var(--borde);border-radius:14px;display:block}
+  .hero-img{margin:32px auto 0;max-width:760px}
+  section{padding:40px 0}
+  h2{font-size:1.75rem;margin:0 0 16px;color:var(--rosa2)}
+  .que-es p{max-width:720px}
+  .grid{display:grid;gap:24px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+  .tarjeta{background:var(--fondo2);border:1px solid var(--borde);border-radius:14px;padding:20px}
+  .tarjeta h3{margin:0 0 8px;color:var(--rosa)}
+  .captura{margin:0 0 40px}
+  .captura figure{margin:0}
+  .captura figcaption{color:var(--suave);margin-top:10px;font-size:.95rem}
+  .faq details{background:var(--fondo2);border:1px solid var(--borde);border-radius:12px;padding:14px 18px;margin-bottom:12px}
+  .faq summary{cursor:pointer;font-weight:600;color:var(--rosa2)}
+  .faq p{margin:10px 0 0;color:var(--suave)}
+  .descarga{text-align:center;padding:48px 0}
+  footer{border-top:1px solid var(--borde);padding:32px 0;color:var(--suave);font-size:.9rem}
+  footer .legal{margin-top:16px;font-size:.82rem;opacity:.85}
+  .pie-enlaces{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+</style>
+</head>
+<body>
+
+<header class="contenedor">
+  <h1 class="logo">Ra<span>cha</span></h1>
+  <p class="tagline">Deja de adivinar por qué pierdes. Tu coach de League of Legends, hecho con tus propias partidas.</p>
+  <a class="btn" href="https://github.com/C0z1/racha.gg/releases/latest">Descargar para Windows (gratis)</a>
+  <img class="hero-img" src="img/readme/hero.png" alt="Racha. Deja de adivinar por qué pierdes. Tu coach de League of Legends, hecho con tus propias partidas.">
+</header>
+
+<main>
+  <section class="contenedor que-es">
+    <h2>Qué es Racha</h2>
+    <p>Las guías te dicen cómo juega un Challenger. <strong>Racha te dice qué te hace perder <em>a ti</em></strong>, y te lo recuerda justo cuando importa.</p>
+    <div class="grid">
+      <div class="tarjeta"><h3>Hecho con tus partidas</h3><p>Nada de «farmea más». Racha descubre, por ejemplo, que con 2 muertes o menos del minuto 14 al 25 ganas el 68&nbsp;%, y con 3 o más, el 43&nbsp;%.</p></div>
+      <div class="tarjeta"><h3>Aparece sola</h3><p>Se abre cuando abres LoL y cambia de pantalla según la fase: champ select, partida y final. Cero clics.</p></div>
+      <div class="tarjeta"><h3>Juego limpio</h3><p>Solo lee lo que el cliente ofrece a las apps. No juega por ti, no toca el juego y no da ventajas injustas.</p></div>
+      <div class="tarjeta"><h3>Tus datos son tuyos</h3><p>Tus partidas viven en tu computadora. La cuenta en la nube es opcional y la borras con un botón.</p></div>
+    </div>
+  </section>
+
+  <section class="contenedor">
+    <h2>Qué ves en cada momento</h2>
+    <div class="captura">
+      <figure>
+        <img src="img/readme/champ-select.png" alt="Champ select: tu récord contra el rival, tu win rate, tu plan con el campeón y la build.">
+        <figcaption>Tu récord contra ese rival, tu mejor pick y 3 reglas para esa partida, antes de que cargue la pantalla.</figcaption>
+      </figure>
+    </div>
+    <div class="captura">
+      <figure>
+        <img src="img/readme/en-vivo.png" alt="En partida: nivel y minions contra tu rival, muertes, reglas en vivo, build, rival y objetivos.">
+        <figcaption>Tu nivel y tus minions contra los de tu rival, sus ítems y cuánto falta para dragón y barón, sin salir del juego.</figcaption>
+      </figure>
+    </div>
+    <div class="captura">
+      <figure>
+        <img src="img/readme/campeones.png" alt="Tus campeones: win rate, últimas 5 partidas, mejores y peores matchups y reglas por campeón.">
+        <figcaption>Con quién ganas de verdad, contra quién sufres y qué cuidar con cada campeón.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="contenedor faq">
+    <h2>Preguntas frecuentes</h2>
+    <details>
+      <summary>¿Me pueden banear por usarla?</summary>
+      <p>Racha solo lee la información que el propio cliente de LoL ofrece a las apps, la misma que ya ves en tu pantalla. No pickea, no banea, no acepta partidas y no modifica el juego.</p>
+    </details>
+    <details>
+      <summary>¿Cuánto cuesta?</summary>
+      <p>Es gratis y de código abierto.</p>
+    </details>
+    <details>
+      <summary>¿Funciona en mi servidor?</summary>
+      <p>Sí: LAN, LAS, NA, EUW, KR y el resto de servidores de Riot.</p>
+    </details>
+    <details>
+      <summary>Windows dice «Windows protegió su PC». ¿Es seguro?</summary>
+      <p>Pasa con las apps nuevas que todavía no tienen firma digital. Dale a Más información → Ejecutar de todas formas. El código está publicado, a la vista de todos.</p>
+    </details>
+  </section>
+
+  <section class="descarga">
+    <a class="btn" href="https://github.com/C0z1/racha.gg/releases/latest">Descargar Racha</a>
+  </section>
+</main>
+
+<footer>
+  <div class="contenedor">
+    <nav class="pie-enlaces" aria-label="Legal">
+      <a href="privacidad.html">Política de privacidad</a>
+      <a href="terminos.html">Términos de uso</a>
+      <a href="https://github.com/C0z1/racha.gg">Código fuente</a>
+    </nav>
+    <p class="legal">Racha isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.</p>
+  </div>
+</footer>
+
+</body>
+</html>

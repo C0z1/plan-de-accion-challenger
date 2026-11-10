@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/svg+xml" href="img/racha.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Política de privacidad — Racha</title>
+<meta name="description" content="Política de privacidad de Racha: qué datos guarda la app, qué guarda la nube y cómo borrarlos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --fondo:#24111A;
+    --fondo2:#2E1622;
+    --borde:#4A2436;
+    --rosa:#F28DB0;
+    --rosa2:#F6C1D4;
+    --texto:#FBF2F6;
+    --suave:#D9B8C6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Mulish,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--fondo);color:var(--texto);line-height:1.7}
+  a{color:var(--rosa2)}
+  a:hover{color:var(--rosa)}
+  a:focus-visible{outline:3px solid var(--rosa);outline-offset:2px;border-radius:6px}
+  .contenedor{max-width:760px;margin:0 auto;padding:0 24px}
+  header{border-bottom:1px solid var(--borde);padding:24px 0}
+  header .volver{font-size:.95rem}
+  main{padding:32px 0}
+  h1{font-size:1.9rem;margin:0 0 8px;color:var(--rosa2)}
+  h2{font-size:1.3rem;margin:28px 0 8px;color:var(--rosa2)}
+  .borrador{background:var(--fondo2);border:1px solid var(--borde);border-left:4px solid var(--rosa);border-radius:8px;padding:12px 16px;color:var(--suave);margin-bottom:8px}
+  code{background:var(--fondo2);border:1px solid var(--borde);border-radius:6px;padding:1px 6px;font-size:.92em}
+  li{margin-bottom:6px}
+  footer{border-top:1px solid var(--borde);padding:24px 0;color:var(--suave);font-size:.85rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="contenedor">
+    <a class="volver" href="index.html">← Volver a Racha</a>
+  </div>
+</header>
+
+<main class="contenedor">
+  <h1>Política de privacidad de Racha</h1>
+  <div class="borrador">Borrador para revisión legal. Este documento no ha sido revisado por un abogado.</div>
+  <p>Última actualización: 2026-11-10.</p>
+
+  <h2>1. Qué es Racha</h2>
+  <p>Racha (racha.gg) es una aplicación de escritorio para Windows, gratuita y de código abierto, que a partir de tus propias partidas de League of Legends te muestra qué te hace perder y qué cuidar en cada partida. Esta política describe qué datos guarda y para qué.</p>
+
+  <h2>2. Datos que guarda la app en tu computadora</h2>
+  <p>Racha guarda en tu PC (en la carpeta <code>datos/</code> de la aplicación). No salen de tu computadora salvo que inicies sesión y actives la sincronización (sección 3):</p>
+  <ul>
+    <li><strong>Partidas:</strong> las partidas y sus líneas de tiempo que la app descarga de la Riot API, en archivos JSON (<code>datos/raw/</code>).</li>
+    <li><strong>Fotos en vivo:</strong> una línea JSON cada 30 segundos durante cada partida (<code>datos/vivo/</code>), leída de la Live Client Data API local.</li>
+    <li><strong>Ajustes:</strong> tus preferencias (<code>datos/cache/ajustes.json</code>), por ejemplo qué avisos están encendidos o si la ventana queda siempre encima.</li>
+    <li><strong>Sesión:</strong> si iniciaste sesión, tu sesión de Racha (<code>datos/cache/sesion.json</code>): el token de sesión de Racha, tu correo de Google y tu nombre. No se guarda ningún token de Google ni tu contraseña.</li>
+    <li><strong>Caché:</strong> caché de la Riot API, de Data Dragon y de las builds precalculadas (<code>datos/meta/</code>).</li>
+    <li><strong>Configuración opcional:</strong> tu pool de campeones y tus metas (<code>config.json</code>), solo si tú lo creas.</li>
+  </ul>
+
+  <h2>3. Datos que guarda el backend (nube)</h2>
+  <p>Si inicias sesión con Google y usas la cuenta en la nube, el backend de Racha (Cloudflare Workers y Cloudflare D1) guarda:</p>
+  <ul>
+    <li><strong>Cuenta:</strong> tu identificador de Google (<code>sub</code>), tu correo, tu nombre, tu Riot ID, tu región y tus ajustes (tabla <code>usuarios</code>).</li>
+    <li><strong>Sesiones:</strong> el hash (SHA-256) de tu token de sesión, nunca el token en claro (tabla <code>sesiones</code>). Las sesiones duran 90 días.</li>
+    <li><strong>Resúmenes de partidas:</strong> un resumen pequeño por partida (tabla <code>resumenes</code>): campeón, rival, resultado, KDA, score, puesto del equipo y fecha. No se sube la partida completa ni la línea de tiempo.</li>
+  </ul>
+  <p>Además, sin importar si iniciaste sesión:</p>
+  <ul>
+    <li><strong>Invitaciones:</strong> si alguien te invitó, el nombre corto que eligió para ti, tu código de acceso y, si lo dio, tu correo de Google (tabla <code>invitados</code>), para dejarte entrar.</li>
+    <li><strong>Reportes:</strong> si mandas un reporte desde Ajustes, el texto que escribiste, la versión de la app, la pantalla, la fase de la partida y el último aviso en pantalla (tabla <code>reportes</code>). No guarda quién lo mandó; solo lo lee quien administra Racha.</li>
+    <li><strong>Métricas anónimas (apagadas por defecto):</strong> si las prendes, una vez al día se suma 1 a un contador por día, versión y región, y se marca si usaste el overlay, la selección de campeón o la revisión (tabla <code>metricas</code>). Ni tu Riot ID, ni tu correo, ni tu código.</li>
+    <li><strong>Partidas a través del backend:</strong> si usas un código o tu sesión en vez de tu propia key de Riot, tus consultas a la Riot API pasan por el backend de Racha, que guarda en la caché del borde las respuestas públicas de Riot (ver sección 7).</li>
+  </ul>
+
+  <h2>4. Qué no guarda</h2>
+  <ul>
+    <li>Tu contraseña ni tu token de Google. Google solo confirma quién eres; Racha recibe tu correo, tu nombre y tu identificador de Google.</li>
+    <li>El token de sesión en claro (solo se guarda su hash).</li>
+    <li>Las partidas completas ni las líneas de tiempo en la nube (solo el resumen pequeño de la sección 3).</li>
+    <li>Ningún cálculo de MMR o ELO.</li>
+    <li>Tu key de Riot: Racha no te la pide. Si usas la tuya, vive en una variable de entorno de tu PC y no se manda al backend.</li>
+    <li>Datos de pago (la app es gratis y no pide ninguno).</li>
+  </ul>
+
+  <h2>5. Para qué se usan</h2>
+  <ul>
+    <li>Para mostrarte el análisis: récord contra rivales, win rate, reglas por partida, builds y errores repetidos.</li>
+    <li>La cuenta en la nube sirve para recordar tu Riot ID, tus ajustes y el resumen de tus partidas entre equipos y reinstalaciones.</li>
+  </ul>
+
+  <h2>6. Con quién se comparte</h2>
+  <ul>
+    <li><strong>Cloudflare:</strong> es el proveedor que aloja el backend (Workers y D1). Los datos de la nube se guardan en sus servidores.</li>
+    <li><strong>Riot Games:</strong> es la fuente de los datos. Para traer tus partidas, la app le pregunta a la Riot API (directo o a través del backend de Racha) por tu Riot ID o puuid.</li>
+    <li><strong>Google:</strong> solo para iniciar sesión. Google maneja la autenticación; Racha no comparte tus datos con Google más allá del propio inicio de sesión.</li>
+  </ul>
+  <p>Racha no vende ni comparte tus datos con terceros fuera de estos proveedores.</p>
+
+  <h2>7. Cuánto tiempo se guardan</h2>
+  <ul>
+    <li>Sesiones: 90 días desde el inicio de sesión.</li>
+    <li>Resúmenes de partidas y cuenta: hasta que los borres (sección 8).</li>
+    <li>Caché en el borde: las partidas y líneas de tiempo de la Riot API se guardan en caché del borde hasta 30 días (son datos inmutables); las demás consultas, menos tiempo.</li>
+    <li>En tu PC: hasta que borres la carpeta <code>datos/</code> o desinstales la app.</li>
+  </ul>
+
+  <h2>8. Cómo borrar tus datos</h2>
+  <ul>
+    <li><strong>Nube:</strong> en Ajustes, el botón <strong>«Borrar mis datos de la nube»</strong> borra tu cuenta, tus sesiones y tus resúmenes del backend. Para quitar tu invitación, pídelo como dice la sección 10. Los reportes y las métricas no se pueden ligar a ti, así que no hay nada tuyo que borrar ahí.</li>
+    <li><strong>PC:</strong> puedes borrar la carpeta <code>datos/</code> de la aplicación o desinstalar Racha.</li>
+  </ul>
+
+  <h2>9. Tus derechos (ARCO en México y GDPR)</h2>
+  <p>Si estás en México, la Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP) te da derechos de <strong>Acceso, Rectificación, Cancelación y Oposición (ARCO)</strong> sobre tus datos personales. Si estás en el Espacio Económico Europeo, el Reglamento General de Protección de Datos (GDPR) te da derechos equivalentes (acceso, rectificación, supresión, oposición y portabilidad).</p>
+  <p>Para ejercerlos, sigue la sección 10. También puedes borrar tus datos desde la propia app (sección 8).</p>
+
+  <h2>10. Contacto</h2>
+  <p>Para dudas o para ejercer tus derechos: <a href="https://github.com/C0z1/racha.gg/issues">abre un issue en GitHub</a> o, en privado, usa <strong>Ajustes → Ayuda → Mandar reporte</strong> dentro de la app.</p>
+
+  <h2>11. Cambios a esta política</h2>
+  <p>Si esta política cambia, lo avisaremos en la app o en la página del proyecto. La versión vigente es la publicada junto a la app.</p>
+</main>
+
+<footer>
+  <div class="contenedor">
+    <a href="index.html">← Volver a Racha</a>
+  </div>
+</footer>
+
+</body>
+</html>
