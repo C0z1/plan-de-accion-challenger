@@ -77,7 +77,7 @@ def ultima_partida():
 
 
 AJUSTES_F = REPO / "datos" / "cache" / "ajustes.json"
-AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "aviso_muertes": True,  # Ajustes_Vino
+AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "aviso_muertes": True, "aviso_regreso": True,  # Ajustes_Vino
                "metricas": False}  # métricas anónimas: solo si el amigo las prende (v0.8)
 
 
@@ -272,7 +272,7 @@ def trabajador(q):
                 d = companion.vivo(); archivo, ult = companion.capturar(archivo, d), time.time(); foto = d or foto
                 if mf := companion.meta_fase(d): q.put(("meta", mf))
                 aj = ajustes()  # Ajustes_Vino: cada aviso se puede apagar
-                for f in (companion.aviso_nivel, companion.aviso_minions, companion.aviso_muertes):
+                for f in (companion.aviso_nivel, companion.aviso_minions, companion.aviso_muertes, companion.aviso_regreso):
                     if f not in avisado and aj.get(f.__name__, True) and (txt := f(d)):
                         q.put(aviso(txt, "consejo", int((((d or {}).get("gameData") or {}).get("gameTime") or 0) // 60))); avisado.add(f)
             elif not jugando: archivo, avisado = None, set()

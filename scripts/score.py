@@ -136,6 +136,7 @@ def partidas(raw=None):
         me = next((p for p in info["participants"] if p["puuid"] == yo), None)
         if zs and me: gs.append(dict(t=info["gameCreation"], win=me["win"], champ=me["championName"], rol=me["teamPosition"],
                                      kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", zs=zs, f=f, pid=me["participantId"],
+                                     pids={p["puuid"]: p["participantId"] for p in info["participants"]},
                                      jug={p["puuid"]: [p["championName"], f"{p['kills']}/{p['deaths']}/{p['assists']}"] for p in info["participants"]},
                                      u=unidades(info)))
     gs.sort(key=lambda g: g["t"])
@@ -155,6 +156,28 @@ def muertes14_25(g):
                    if e["type"] == "CHAMPION_KILL" and e["victimId"] == g["pid"])
     except (ValueError, KeyError, TypeError, OSError):
         return None
+
+
+def oro14(g):
+    """Tu oro total al 14:00 menos el de tu rival de línea (timeline); None sin timeline, sin rival o si acabó antes del 14."""
+    rid = g.get("pids", {}).get(g.get("rival_id"))
+    if "f" not in g or rid is None: return None
+    tf = g["f"].parent / "timeline" / g["f"].name
+    try:
+        if not tf.exists(): return None
+        fr = json.loads(tf.read_text())["info"]["frames"]
+        if len(fr) <= 14: return None
+        pf = fr[14]["participantFrames"]
+        return pf[str(g["pid"])]["totalGold"] - pf[str(rid)]["totalGold"]
+    except (ValueError, KeyError, TypeError, OSError):
+        return None
+
+
+def racha_oro14(difs, k=5):
+    """De las k últimas diferencias de oro al 14 (la más reciente primero; None = sin dato): {marcas: [True/False/None] de la más vieja
+    a la más reciente, ok: cuántas con oro >= rival, n: cuántas con dato}. Empatar cuenta como llegar parejo."""
+    marcas = [None if d is None else d >= 0 for d in reversed(difs[:k])]
+    return dict(marcas=marcas, ok=marcas.count(True), n=sum(m is not None for m in marcas))
 
 
 def resumen(n=10, raw=None):
@@ -184,7 +207,7 @@ def resumen(n=10, raw=None):
     return dict(partidas=[dict(fecha=datetime.fromtimestamp(g["t"] / 1000).strftime("%m-%d %H:%M"), campeon=g["champ"],
                                win=g["win"], kda=g["kda"], score=round(g["score"], 1), puesto=g["puesto"],
                                puesto_eq=g["puesto_eq"], linea=g["linea"], comp={c: round(v, 2) for c, v in g["comp"].items()},
-                               clave=clave(g), muertes14_25=muertes14_25(g), archivo=g["f"].stem if g.get("f") else None, t=g.get("t"),
+                               clave=clave(g), muertes14_25=muertes14_25(g), oro14=oro14(g), archivo=g["f"].stem if g.get("f") else None, t=g.get("t"),
                                rival=(g.get("jug") or {}).get(g.get("rival_id"), [None])[0],
                                mvp=dict(campeon=g["jug"][g["mvp_id"]][0], kda=g["jug"][g["mvp_id"]][1], score=g["mvp_score"], tu=g["mvp_id"] == yo)
                                    if g.get("jug") and g.get("mvp_id") in g["jug"] else None)
@@ -193,7 +216,7 @@ def resumen(n=10, raw=None):
                 tendencia=[m(gs[i:i + 20]) for i in range(0, len(gs), 20)],
                 por_campeon={c: dict(n=len(v), wr=round(sum(g["win"] for g in v) / len(v), 2), score=m(v))
                              for c, v in sorted(champs.items(), key=lambda x: -len(x[1]))},
-                ref=50, unidades=uds)
+                ref=50, unidades=uds, racha_oro14=racha_oro14([oro14(g) for g in reversed(gs[-5:])]))
 
 
 def wilson(k, n, z=1.96):  # misma que draft.py

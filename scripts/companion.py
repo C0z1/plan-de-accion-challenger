@@ -198,6 +198,23 @@ def aviso_nivel(d):
             f"({me.get('level') or '?'} contra {rival.get('level') or '?'}). No tradees hasta igualar; quédate en rango de XP de cada oleada.")
 
 
+REGRESO_DESDE, REGRESO_HASTA = 600, 840  # min 10 al 14: aún hay tiempo de igualar antes de la ventana de objetivos del 14
+REGRESO_CS = 10  # CS de diferencia que cuenta como farm perdido (misma meta que draft.py: CS al 14 >= -10)
+
+
+def aviso_regreso(d):
+    """«Plan de regreso»: del min 10 al 14, si vas abajo de nivel contra tu rival de línea, un solo consejo tranquilo. La Live Client Data
+    no trae XP ni oro del rival: el nivel es el proxy de XP (lo que más importa yendo abajo, .equipo/PLAN.md) y el CS el dato de farm."""
+    t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
+    if not grieta(d) or not REGRESO_DESDE <= t <= REGRESO_HASTA: return None
+    me, rival = yo_rival(d)
+    if not rival or (n := (rival.get("level") or 0) - (me.get("level") or 0)) < 1: return None
+    dcs = ((rival.get("scores") or {}).get("creepScore") or 0) - ((me.get("scores") or {}).get("creepScore") or 0)
+    farm = f" y {dcs} CS" if dcs >= REGRESO_CS else ""
+    return (f"Min {int(t // 60)}: vas {n} nivel{'es' if n > 1 else ''}{farm} abajo de {rival.get('championName', 'tu rival')}. Juega seguro hasta igualar, "
+            "farmea bajo torre y no pelees el próximo objetivo sin tu jungla.")
+
+
 def muertes14(d, me=None, hasta=float("inf")):
     """Tus muertes desde el 14:00 hasta `hasta` s (eventos ChampionKill de la foto en vivo); None antes del 14 o sin tu jugador."""
     if me is None: me, _ = yo_rival(d)

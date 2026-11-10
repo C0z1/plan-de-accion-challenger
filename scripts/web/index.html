@@ -482,6 +482,13 @@ function partidas(s) {  // Partidas_Vino: filtros, historial en tabla (score, re
 
 const ROL_VIVO = "";
 const DIAS = new Intl.DateTimeFormat("es", {weekday: "long", day: "numeric", month: "long"});
+function oroCard(r) {  // «Racha de oro al 14»: de tus últimas 5, cuántas llegaron al 14 con oro >= tu rival de línea
+  if (!r || !r.n) return "";
+  const m = r.marcas.map(x => x == null ? ["s", "Sin dato"] : x ? ["v", "Oro igual o mayor"] : ["d", "Oro menor"]);
+  return `<div class="card"><div class="cab2"><h2>Racha de oro al 14</h2><span class="sub" style="font-size:12px">últimas ${r.marcas.length}</span></div>
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><span class="forma" style="margin:0">${m.map(([c, t]) => `<i class="${c}" role="img" aria-label="${t}" title="${t}"${c == "s" ? ' style="background:var(--dark4)"' : ""}></i>`).join("")}</span>
+    <span><b>${r.ok} de ${r.n}</b> llegaron al 14 con oro igual o mayor que su rival.${r.ok < r.n / 2 ? " Si vas abajo, prioriza XP y farm." : ""}</span></div></div>`;
+}
 function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan con tu dato, rango y atajos
   const R = s.rendimiento, t = R && R.tilt, ps = R ? R.resumen.partidas : [], [id, ...resto] = String(s.perfil || "").split(" · ");
   const nombre = id.includes("#") ? id.split("#")[0] : "", cliente = enCliente(s.fase);
@@ -502,6 +509,7 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
     ${hoy.length ? `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${hoy.slice(-6).map(g => `<div class="mini">${img("champion", g.campeon, "item", g.campeon)}<b class="${g.win ? "v" : "d"}">${g.win ? "V" : "D"}</b>${esc(g.fecha)}</div>`).join("")}
       ${t.tras2.n ? `<div style="flex:1;min-width:220px"><b>${t.racha >= 2 ? "Llevas 2 derrotas seguidas: descansa 15 min" : "Tras 2 derrotas seguidas, paras"}</b><br><span class="sub" style="font-size:13px">Llegaste a 2 seguidas ${t.llegas} veces; la partida siguiente: ${t.tras2.v}-${t.tras2.n - t.tras2.v}${t.pocas ? " (pista: pocas partidas)" : ""}.</span></div>` : ""}</div>`
       : `<span class="sub">Aún no juegas hoy.</span>`}</div>
+  ${oroCard(R && R.resumen.racha_oro14)}
   ${VS(s) && VS(s).reglas.length ? `<div class="card" style="flex:1"><div class="cab2"><h2>Tu regla de hoy</h2><span class="sub" style="font-size:12px">la que más te cuesta</span></div>
     ${reglaCumple(VS(s).reglas[0], 0)}</div>` : `<div class="card" style="flex:1"><div class="cab2"><h2>Tu regla de hoy</h2><span class="sub" style="font-size:12px">del plan, con tus últimas partidas</span></div>
     <div class="fila2" style="border:none"><span class="ic red">${ic("muertes")}</span>
@@ -732,7 +740,8 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
     <div class="card" style="align-self:flex-start"><div class="cab2"><h2>Avisos en partida</h2></div>
       ${av("aviso_nivel", "Nivel 6 con nivel abajo", "Te avisa al llegar al 6 si vas abajo de tu rival.")}
       ${av("aviso_minions", "Minions al 10", "Si vas bajo tu meta de config.json al minuto 10.")}
-      ${av("aviso_muertes", "Muertes del 14 al 25", "Al llegar a 2 muertes desde el 14.")}</div>
+      ${av("aviso_muertes", "Muertes del 14 al 25", "Al llegar a 2 muertes desde el 14.")}
+      ${av("aviso_regreso", "Plan de regreso", "Del min 10 al 14, si vas abajo de nivel: un consejo para igualar.")}</div>
     ${ayudaV(s, aj)}
   </div>`, ""];
 }

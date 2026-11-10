@@ -65,7 +65,7 @@ class AvisoDict(unittest.TestCase):
                 with self.assertRaises(KeyboardInterrupt): g.trabajador(q)
             finally:
                 c.lcu, c.vivo, c.capturar, c.CFG, g.time.sleep, g.time.time = orig
-        avisos = [e[1] for e in list(q.queue) if e[0] == "aviso"]
+        avisos = [e[1] for e in list(q.queue) if e[0] == "aviso" and "de CS" in e[1]["texto"]]  # aviso_regreso (min 10-14) puede salir aparte
         self.assertEqual(len(avisos), 1)  # aviso_nivel no salta a los 630 s
         self.assertEqual((avisos[0]["tipo"], avisos[0]["minuto"]), ("consejo", 10))
         self.assertIn("60 de CS", avisos[0]["texto"])
