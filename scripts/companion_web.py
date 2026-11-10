@@ -298,9 +298,12 @@ def reportar(texto, vista):
     """Manda tu reporte privado (lo lee solo quien administra Racha) con la versión, la pantalla, la fase y el último aviso."""
     with LOCK: fase, aviso = ESTADO.get("fase"), ESTADO.get("descarga")
     cuerpo = {"texto": (texto.strip() + (f"\n\nÚltimo aviso en pantalla: {aviso}" if aviso else ""))[:4000], "version": VERSION, "vista": vista, "fase": fase}
+    import urllib.error
     try: ok = companion.backend("POST", "/v1/reporte", cuerpo, gui.REPO) is not None
+    except urllib.error.HTTPError as e: ok = "limite" if e.code == 429 else False
     except Exception: ok = False
-    msg = "Gracias: tu reporte llegó." if ok else "No se pudo mandar (¿sin internet o sin código/sesión?). Puedes abrir un issue en GitHub."
+    msg = ("Gracias: tu reporte llegó." if ok is True else "Ya mandaste varios reportes hoy: mañana puedes mandar más, o abre un issue en GitHub."
+           if ok == "limite" else "No se pudo mandar (¿sin internet o sin código/sesión?). Puedes abrir un issue en GitHub.")
     with LOCK: ESTADO.update(reporte=msg, v=ESTADO["v"] + 1)
 
 

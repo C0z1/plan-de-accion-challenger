@@ -32,6 +32,9 @@ class V08(unittest.TestCase):
         def caido(*a, **k): raise urllib.error.URLError("x")
         with mock.patch.object(w.companion, "backend", caido): w.reportar("otra", "ajustes")
         self.assertIn("No se pudo", w.ESTADO["reporte"])
+        def lleno(*a, **k): raise urllib.error.HTTPError("u", 429, "x", {}, None)
+        with mock.patch.object(w.companion, "backend", lleno): w.reportar("otra", "ajustes")
+        self.assertIn("varios reportes hoy", w.ESTADO["reporte"])
 
     def test_invitar_muestra_el_codigo_o_el_motivo(self):
         def falso(m, ruta, c=None, base=None):
