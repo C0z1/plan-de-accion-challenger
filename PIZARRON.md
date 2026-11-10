@@ -31,21 +31,23 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Turno 9, iteración 4:** en «Qué está fallando», el número de Muertes ya lleva el signo de la flecha (revisión de DeepSeek). El ícono de «Nunu & Willump» sale por prefijo (`nunu`); Kai'Sa ya salía. HTC v0.3.4 recompilado, humo OK. 228 OK.
 - **Turno 9, iteración 5:** En vivo con el panel «Tu rival» (nivel, KDA, CS contra el tuyo, ítems) y «Objetivos» (kills, torres, dragones, larvas, heraldo y barón de cada equipo; timer de dragón y barón) desde la Live Client Data (`companion.objetivos()`, formato verificado en una partida real grabada). HTC v0.3.5 recompilado, humo OK. 231 OK.
 - **Turno 9, iteración 6 (prioridad del usuario, tarea 1: auditoría):** recorrí las 9 vistas con Edge headless (`#vista`) en modo real (tu cliente abierto, en partida) y en cada fase de la demo (champ select, en partida, fin), y el humo del `.exe` (0.28 s). Todas se abren desde la barra lateral, ninguna da error de consola y todas muestran datos reales. Arreglé 3 bugs de integración en `index.html`: Selección en partida o al terminar caía a «Draft, vista previa» (ahora muestra tu último champ select); En vivo fuera de partida decía «Abre el cliente» aunque estuviera abierto; y si una vista tronaba, salía «Sin conexión». 234 OK.
-- **Siguiente:** tarea 2: probar que las fases reales (lobby → champ select → partida → fin) cambien la vista solas; tarea 3: launcher (`--fondo`) con arranque real.
-- **Actualizado:** 2026-11-09 23:15 (turno 9, iteración 6)
+- **Turno 9, iteración 7 (tarea 2: integrar las ventanas):** rendericé la página en Edge headless con cada fase del LCU. Las 3 fases que faltaban (`GameStart` = pantalla de carga, `Reconnect`, `WaitingForStats`) caían a Inicio y decían «Abre el cliente» con el cliente abierto. Ahora van a En vivo («Esperando los datos en vivo» hasta que carga el mapa), y cualquier fase no nula cuenta como cliente abierto. Elegir una vista a mano dura hasta el siguiente cambio de fase. HTC v0.3.6 recompilado, humo OK (0.53 s). Instalador sin regenerar. 234 OK.
+- **Siguiente:** tarea 3: launcher (`--fondo`, instancia única, acceso directo) con arranque real.
+- **Actualizado:** 2026-11-09 23:45 (turno 9, iteración 7)
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
-- **Estado:** revisado e2d3be5 (turno 9, iter 3: sin_objetivo ±60 s): números exactos (503→326, 16/20→13/20, 81/50/27%); `BUILDING_KILL.teamId` verificado contra timelines reales = dueño de la torre, así que la definición de «objetivo» es correcta; el efecto aguanta el control por oro del equipo al 14 (0 vs 1+: 87→57 con oro≥0 y 67→23 con oro<0). 2 pruebas nuevas (borde 60 s exactos, objetivo antes del 14) → suite **230 OK**.
-- **Siguiente:** (Opus) opcional: resumen «con 1 o más, 38%» en la tarjeta; regenerar `HTC-Setup-0.3.3.exe` (ISCC pide permiso).
-- **Actualizado:** 2026-11-09 23:05 (turno 9, revisión e2d3be5)
+- **Estado:** revisado 468ffba (iter 6) + 6c1df29 (iter 5) + 9e83783 (iter 4): los 3 correctos; suite **238 OK**. Menores: `FASES_CLIENTE` (iter 6) omite GameStart/Reconnect/WaitingForStats (el Diseñador/Opus ya lo arregla en iter 7, sin commitear); `objetivos` atribuye por KillerName sin guard de homónimos (torres no: van por el dueño).
+- **Siguiente:** (Opus) opcional: guard de homónimos en `objetivos` (una línea); confirmar que iter 7 cierra el hueco de `FASES_CLIENTE` con `enCliente`.
+- **Actualizado:** 2026-11-09 23:01 (turno 9, revisión 468ffba)
 
 ### Diseñador
 - **Estado:** diseño Vino entregado a Opus para la primera build: 10 pantallas en `datos/diseno/canvas/project/*_Vino.dc.html` (+ `Minions_Variantes`, `Tubos_Kit`). Traspaso en `datos/notas-equipo.md` («ENTREGA FINAL»).
 - **Siguiente:** diseñar Vino claro; afinar el minion si el usuario lo pide; revisar la build de Opus contra los artboards.
 - **Iteración 1 (noche):** sin cambios de diseño; idea 2 de DeepSeek ya cubierta (n/20 en las tarjetas). Consulta a DeepSeek bloqueada por el harness.
 - **Iteración 2 (noche):** Vino claro propuesto en `datos/diseno-acuerdos.md` (contraste AA sin medir).
-- **Actualizado:** 2026-11-09 (noche, iteración 2)
+- **Iteración 3 (noche):** revisión de la build de En vivo («Tu rival», «Objetivos») en `datos/diseno-auditoria.md` §6; 3 pedidos a Opus en notas.
+- **Actualizado:** 2026-11-09 (noche, iteración 3)
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -238,6 +240,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-09 · Opus: en la Live Client Data real, `KillerName` de dragón/heraldo/barón/larvas (`HordeKill`) es el gameName sin tag, las torres traen al dueño en el nombre (`Turret_TOrder_`/`Turret_TChaos_`) y un inhibidor puede caer por `Minion_T200…`.
 - 2026-11-09 · Opus: de los nombres de campeón con símbolos, solo «Nunu & Willump» (→ `NunuWillump`) no tenía ícono; Kai'Sa, Wukong, Renata Glasc, K'Sante y Cho'Gath ya resolvían.
 - 2026-11-09 · Opus: auditoría de HTC: 9/9 vistas cargan sin error de consola, en modo real (cliente en partida) y en las 3 fases de la demo. En la demo, la recomendación tarda ~8 s (`gui.recomendaciones`), así que el champ select muestra Draft mientras tanto.
+- 2026-11-09 · Opus: la página solo conocía 8 fases del LCU: con `GameStart` (pantalla de carga), `Reconnect` o `WaitingForStats`, HTC se quedaba en Inicio y decía «Abre el cliente». Arreglado en v0.3.6.
 
 ## Decisiones
 - 2026-11-09 · Opus: `Companion.exe` v0.1.0 es la app web (`companion_web.py`), no tkinter. Lee `scripts/web` del repo si está junto a él (se actualiza sin recompilar) y si no, la copia empaquetada.
@@ -303,6 +306,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-09 · Opus: la app nueva es web local (`http.server` en 127.0.0.1 + HTML del canvas, abierta con Edge `--app`), reutiliza el `trabajador` de `companion_gui.py`; tkinter queda de respaldo. Valida `Host` y se cierra sola sin la ventana (DeepSeek).
 
 ## Para el usuario (cuando vuelva)
+- **Fases (2026-11-09 23:45, HTC v0.3.6):** HTC cambia de vista solo: Inicio en el lobby, Draft y luego Selección en champ select, En vivo desde la **pantalla de carga** (antes se quedaba en Inicio y decía «Abre el cliente») y al reconectar, y la línea final al terminar. Si eliges otra vista a mano, se queda hasta el siguiente cambio de fase. *Solo se verifica en una partida real:* que la pantalla de carga pase a En vivo y que los datos salgan al cargar el mapa.
 - **Auditoría de HTC (2026-11-09 23:15):** las 9 vistas (Inicio, Draft, Selección, En vivo, Perfil, Partidas, Campeones, Errores y Ajustes) se abren desde la barra lateral, cargan sin errores y muestran tus datos, con tu cliente real y en la demo. Ya arreglado (sin recompilar, porque el `.exe` lee la página del repo): en partida, **Selección** ahora te deja volver a ver tu plan del champ select; **En vivo** fuera de partida ya no dice «Abre el cliente» si está abierto; y si una vista falla, lo dice con el error para que lo reportes, en vez de «Sin conexión». **Lo que sigue roto o pendiente:** (1) Perfil, Partidas, Errores y Campeones llegan solo hasta el **7 nov**, porque la `RIOT_KEY` no sirve y las partidas nuevas no se bajan: renuévala (`setx RIOT_KEY …`) y corre `python scripts/descargar.py`; (2) en champ select, Selección tarda unos 8 s en salir (calcula el pick) y mientras tanto ves Draft; (3) «AurelionSol» aparece sin espacio (es cosmético).
 - Cambio: en champ select, «Cuidado con <rival>» ahora separa lo que sí se repite contra ese rival (tus muertes antes del 6) de lo que no (oro, CS y nivel: varían de partida a partida). Si ves muertes antes del 6 por encima de tu media, juega el nivel 1–6 con más cuidado. Recompila `Companion.exe`.
 - Cambio: champ select ya no dice «contra este rival llegas al 6 con −0.3 niveles»; ese promedio no anticipaba nada. Recompila `Companion.exe`.

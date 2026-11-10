@@ -95,6 +95,9 @@ class Http(unittest.TestCase):
         self.assertIn('vista === "companion" && !s.draft ? draftV(s)', t); self.assertIn("s.draft ? champSelect(s)", t)
         self.assertNotIn('s.fase === "ChampSelect" && s.draft ? champSelect', t)
         for f in ("Aún no estás en partida", "Esta vista falló", "console.error(e)"): self.assertIn(f, t)
+        # pantalla de carga, reconexión y espera de stats también son «en partida» (turno 9 it. 7)
+        for f in ('"GameStart"', '"Reconnect"', '"WaitingForStats"', "EN_PARTIDA.includes(s.fase)"): self.assertIn(f, t)
+        self.assertNotIn("FASES_CLIENTE", t)
 
     def test_csp_no_deja_cargar_de_fuera(self):
         c = http.client.HTTPConnection("127.0.0.1", self.srv.server_port, timeout=5); c.request("GET", "/")

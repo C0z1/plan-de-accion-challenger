@@ -162,7 +162,7 @@ const ICON = {
 const ic = (n, t = 22, label = "") => `<svg ${label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"'} width="${t}" height="${t}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[n] || ICON.alerta}</svg>`;
 const ROL = {TOP: "Top", JUNGLE: "Jungla", MIDDLE: "Mid", BOTTOM: "Bot", UTILITY: "Support"};
 const FASES = {null: "Cliente cerrado", None: "Sin actividad", Lobby: "En lobby", Matchmaking: "Buscando partida", ReadyCheck: "Partida encontrada",
-  ChampSelect: "Champ select", InProgress: "En partida", PreEndOfGame: "Fin de partida", EndOfGame: "Fin de partida", inicio: "Iniciando…"};
+  ChampSelect: "Champ select", GameStart: "Cargando partida", InProgress: "En partida", Reconnect: "Reconectando", WaitingForStats: "Fin de partida", PreEndOfGame: "Fin de partida", EndOfGame: "Fin de partida", inicio: "Iniciando…"};
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 const signo = (v, d = 0) => v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
 const pct = p => Math.round(p * 100) + "%";
@@ -262,7 +262,7 @@ function otraFase(s) {  // en partida, al terminar y esperando
     <b>${esc(r.champ)}${r.rival ? " vs " + esc(r.rival) : ""} ${esc(r.kda || "")}</b>
     <span class="sub">Oro al 14 ${esc(r.oro)} · CS al 14 ${esc(r.cs)} · muertes 14–25 ${esc(r.m25)} · score ${esc(r.score)}</span></div>`);
   if (s.espera) bloques.push(`<div class="card"><span class="sub">${esc(s.espera)}</span></div>`);
-  if (bloques.length === 1) bloques.push(`<div class="card"><span class="sub">${FASES_CLIENTE[s.fase] ? "Aún no estás en partida: al empezar, HTC cambia aquí solo." : "Abre el cliente de LoL: aquí verás tu pick en champ select y la revisión al terminar."}</span></div>`);
+  if (bloques.length === 1) bloques.push(`<div class="card"><span class="sub">${EN_PARTIDA.includes(s.fase) ? "Esperando los datos en vivo: salen cuando carga el mapa." : enCliente(s.fase) ? "Aún no estás en partida: al empezar, HTC cambia aquí solo." : "Abre el cliente de LoL: aquí verás tu pick en champ select y la revisión al terminar."}</span></div>`);
   return bloques.join("");
 }
 
@@ -348,7 +348,7 @@ function partidas(s) {  // última primero; la clave es el componente que más p
 const DIAS = new Intl.DateTimeFormat("es", {weekday: "long", day: "numeric", month: "long"});
 function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan con tu dato, rango y atajos
   const R = s.rendimiento, t = R && R.tilt, ps = R ? R.resumen.partidas : [], [id, ...resto] = String(s.perfil || "").split(" · ");
-  const nombre = id.includes("#") ? id.split("#")[0] : "", cliente = !!FASES_CLIENTE[s.fase];
+  const nombre = id.includes("#") ? id.split("#")[0] : "", cliente = enCliente(s.fase);
   const hoy = t ? t.hoy : [], v = hoy.filter(g => g.win).length;
   const d25 = ps.filter(p => p.muertes14_25 != null), ok = d25.filter(p => p.muertes14_25 <= 2).length, f = d25.length ? ok / d25.length : 0;
   const main = `
@@ -378,7 +378,8 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
     <button class="atajo" onclick="ver('companion')">Champ select y partida <span>→</span></button></div>`;
   return [main, aside];
 }
-const FASES_CLIENTE = {None: 1, Lobby: 1, Matchmaking: 1, ReadyCheck: 1, ChampSelect: 1, InProgress: 1, PreEndOfGame: 1, EndOfGame: 1};
+const enCliente = f => f != null && f !== "inicio";  // null = cliente cerrado; "inicio" = HTC aún no lo ha leído; cualquier otra fase del LCU (GameStart, Reconnect…) es cliente abierto
+const EN_PARTIDA = ["GameStart", "InProgress", "Reconnect", "WaitingForStats", "PreEndOfGame", "EndOfGame"];
 
 // ===== Ventanas nuevas (artboards *_Vino). Datos: s.rendimiento.vistas (scripts/vistas.py, en caché) =====
 const VS = s => (s.rendimiento && s.rendimiento.vistas) || null;
@@ -545,7 +546,7 @@ async function tick() {
     if (s.v !== v) {
       v = s.v;
       if (s.fase !== ultFase) { if (ultFase !== undefined) elegida = null; ultFase = s.fase; }
-      const vista = elegida || (s.fase === "ChampSelect" ? (s.draft ? "companion" : "draft") : ["InProgress", "PreEndOfGame", "EndOfGame"].includes(s.fase) || s.fin || s.revision ? "envivo" : "inicio");
+      const vista = elegida || (s.fase === "ChampSelect" ? (s.draft ? "companion" : "draft") : EN_PARTIDA.includes(s.fase) || s.fin || s.revision ? "envivo" : "inicio");
       for (const b of VISTAS) document.getElementById("b-" + b).toggleAttribute("aria-current", vista === b);
       const [m, a] = vista === "inicio" ? inicio(s) : vista === "draft" ? draftV(s) : vista === "envivo" ? envivo(s) : vista === "campeones" ? campeonesV(s)
         : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? draftV(s) : vista === "perfil" ? [perfil(s), ""] : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida

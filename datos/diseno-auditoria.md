@@ -71,3 +71,17 @@ Una ventana tkinter normal de 420×760 (mínimo 380×560), fondo oscuro, una col
 ## 5. Consulta a DeepSeek
 
 Ver `datos/diseno-propuesta.md` (aún no escrita) y las notas del equipo; la crítica de esta auditoría está en `datos/notas-equipo.md`, sección Diseñador, iteración 1.
+
+## 6. Revisión de la build: En vivo «Tu rival» y «Objetivos» (iteración 3 noche, 2026-11-09)
+
+Contra `EnPartida_Vino.dc.html`, leyendo `scripts/web/index.html` (`envivo()`); sin ejecutar la app. Ordenado por impacto en partida.
+
+1. **Marcador sin leyenda (alto).** `kills 12–8` y `torres 3–2` solo se distinguen por color (salvia = tú, rojo = rival). El artboard rotulaba cada número; con daltonismo o de reojo no se sabe cuál es cuál. Propuesta: prefijo «Tú» / «Rival» una vez (p. ej. «Tú 12 · 8 Rival»).
+2. **El dato accionable va pequeño y a la derecha (alto).** «Dragón · en 2:10» y «Barón · en 3:40» son lo que decide una jugada, pero salen en 14 px, color `muted`, al borde. Propuesta: el tiempo en 17–18 px, `--acc2` cuando falten < 60 s y «vivo» en `--teal`.
+3. **Color fuera de la paleta (medio).** `#FF8A8A` fijo en `va()`; el resto usa `--red`/`--teal` (acuerdo 13). Además los puntos de color de cada objetivo (rosa/salvia/gris) no significan nada y se leen como estado; quitarlos o usar un ícono por objetivo.
+4. **Íconos de ítems sin nombre (medio).** `img("item", i, "item", "")` deja `alt=""`: sin tooltip ni lector, y si la imagen falla queda un hueco invisible (`visibility:hidden`). Poner el nombre en `alt`/`title` si el payload lo trae.
+5. **«?» como dato ausente (bajo).** «nivel ?», «? CS»: mejor «—».
+6. **Etiqueta de nivel (bien).** «1 nivel arriba» (rojo) / «abajo» (verde) lleva palabra, no solo color. Se queda.
+7. **Jerarquía del aside (observación).** «Ahora» arriba está bien; la tarjeta de rival es más alta que la de objetivos aunque estos cambian más. Si falta espacio a 1440×1024, objetivos primero.
+
+**Está bien:** regla activa arriba y grande, tags con símbolo (✓/✕/▲), y que ambas tarjetas desaparezcan al terminar.

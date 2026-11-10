@@ -2178,3 +2178,40 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 - Asesor DeepSeek: bloqueado otra vez por el harness (PowerShell anidado).
 
 **Tarea de pruebas para DeepSeek:** (a) en `index.html`, con `s.draft` presente y `fase = "InProgress"`, la vista automática debe seguir siendo En vivo (no Selección): revisa la expresión de `vista` en `tick()`; (b) con `fase = null` (cliente cerrado), En vivo debe decir «Abre el cliente»; con `Lobby`, «Aún no estás en partida».
+
+## 2026-11-09 · Diseñador · iteración 3 (noche)
+- Revisé la build de Opus (En vivo: «Tu rival» y «Objetivos») contra `EnPartida_Vino`: 7 puntos en `datos/diseno-auditoria.md` §6, sin tocar `scripts/`.
+- **Pedido a Opus:** (a) rotular Tú/Rival en el marcador y cambiar `#FF8A8A` por `var(--red)` (`index.html`, `va()`); (b) tiempo de dragón/barón más grande y teñido cuando falten < 60 s; (c) `alt` con el nombre en los ítems del rival.
+- Consulta a DeepSeek: no la hice (el harness bloquea el PowerShell anidado, como en las iteraciones previas).
+
+## 2026-11-09 23:01 · DeepSeek · revisión de 468ffba (iter 6) + 6c1df29 (iter 5) + 9e83783 (iter 4)
+
+**Bien (verificado)**
+- iter 4 — `fallo()` muertes: `(c === "muertes" ? -1 : 1)` con `DEC.muertes=1` y el menos unario `−` → `fallo("muertes", z<0, {tu:7, rol:5})` da «▼ −2.0». Prueba `test_fallo_muertes_signo_alineado`.
+- iter 4 — prefijo de `imagen`: verificado contra los **173 campeones reales de es_MX** (16.22.1, en caché): ningún nombre cae en otro (`mal=[]`). Solo «Nunu & Willump» dispara el prefijo (→ `nunu`, su propio id); los prefijos cruzados (`vi`→`viego`/`viktor`) los salva el match exacto. Prueba `test_imagen_prefijo_no_confunde_campeones`.
+- iter 5 — `objetivos()` correcto en partida real grabada (`datos/vivo/20261109-175517.jsonl`, min 34): kills 25/33 = suma de `scores.kills`; torres 3/10, dragones 1/4, larvas 0/3, heraldo 0/1, barón 0/1. Borde: `events:null`, `KillerName:null` y `TurretKilled` sin nombre no truenan ni cuentan; las torres van por el dueño (`_TOrder_`/`_TChaos_`), no por el killer. Pruebas en `test_ds_objetivos.py` (4).
+- iter 6 — los 3 fixes de integración son correctos: (1) `s.draft ? champSelect(s)` (Selección repasa el plan en partida); (2) `otraFase` distingue cliente abierto/cerrado; (3) `catch` separa «Sin conexión» (TypeError de fetch) de «Esta vista falló». Suite completa **238 OK**.
+
+**Está mal / a corregir (menor, con evidencia)**
+- iter 6 (commit 468ffba): `FASES_CLIENTE` es una lista blanca que **omite `GameStart`, `Reconnect` y `WaitingForStats`** (fases válidas del LCU). En esas fases `inicio` dice «Abre el cliente de LoL» con el cliente abierto y la vista automática cae a Inicio en vez de En vivo. **Ya lo está arreglando el Diseñador/Opus en el árbol sin commitear** (`enCliente = f => f != null && f !== "inicio"` + `EN_PARTIDA`, iter 7 en curso): lo dejo anotado para que quede rastro.
+- iter 5 — `objetivos` atribuye dragón/heraldo/larva/barón por `KillerName` **sin el guard de homónimos** que sí usa `muertes_en`: si un nombre lo comparten 2 jugadores de distinto equipo, cuenta en el último de `allPlayers` (documentado en `test_homonimo_ultimo_gana`). Las torres no se afectan (usan el dueño). Raro y solo cosmético (HUD en vivo).
+- iter 5 — el Anciano se cuenta como dragón elemental y reinicia el timer de dragón (ya documentado en el `shortcut:`). Cosmético.
+
+**Sugerencias**
+1. (Opus, opcional) en `objetivos`, si un `KillerName` lo comparten 2 jugadores, no lo atribuyas (como `corto` en `muertes_en`). Una línea; no urgente.
+2. (Opus/Diseñador) confirmar que iter 7 cierra el hueco de `FASES_CLIENTE` (null = cliente cerrado, "inicio" = aún sin leer).
+
+### Ideas de DeepSeek
+1. (Diseñador) el timer del Barón antes del 20:00 muestra «desde el 20:00» (no el countdown) y el Dragón «en m:ss»; si se quiere uniformidad, «en m:ss» para ambos. Cosmético.
+2. (Opus) en el panel «Tu rival», el ítem del rival ya sale sin alt; el Diseñador pidió `alt` con el nombre (iter 3). Que `img("item", …)` reciba el nombre del ítem, no solo el id.
+
+## 2026-11-09 23:45 · Opus · turno 9 iteración 7
+**Qué hice:** tarea 2 de la prioridad del usuario (integrar las ventanas: las fases cambian la vista solas y se puede volver a mano).
+- Rendericé `index.html` en Edge headless con el servidor real y `ESTADO["fase"]` fijo en cada fase del LCU (None, inicio, Lobby, ChampSelect, GameStart, InProgress, Reconnect, WaitingForStats, EndOfGame). Resultado: Inicio, Inicio, Inicio, Draft, y En vivo en las 5 de partida.
+- Bug: la página solo conocía 8 fases. `GameStart` (pantalla de carga), `Reconnect` y `WaitingForStats` caían a Inicio, que además decía «Abre el cliente de LoL» con el cliente abierto. Ahora `EN_PARTIDA` las incluye y `enCliente(f)` = cualquier fase no nula que no sea «inicio» (sustituye a `FASES_CLIENTE`). En vivo sin datos todavía dice «Esperando los datos en vivo: salen cuando carga el mapa», no «Aún no estás en partida».
+- El lado de Python ya estaba bien: graba solo en `InProgress` y la post-partida sale con `PreEndOfGame`/`EndOfGame`.
+- Elegir una vista a mano (`elegida`) dura hasta el siguiente cambio de fase (ya era así; verificado en el código).
+- HTC v0.3.6 recompilado a mano con los pasos de `build.ps1` (el harness no deja lanzar el `.ps1`), humo OK (0.53 s, 13 claves). Instalador sin regenerar (ISCC). 234 OK.
+- Asesor DeepSeek: no lo consulté, porque el harness bloquea el PowerShell anidado.
+
+**Tarea de pruebas para DeepSeek:** (a) en `index.html`, cada valor de `EN_PARTIDA` lleva un texto en `FASES` (si no, el h1 sale crudo); (b) con `fase = "TerminatedInError"` o `"FailedToLaunch"` la vista es Inicio y `enCliente` da true; (c) ¿hace falta que Inicio diga algo en `TerminatedInError`?
