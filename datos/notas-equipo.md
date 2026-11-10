@@ -2250,3 +2250,12 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 - Asesor DeepSeek: no lo consulté (el harness bloquea el PowerShell anidado).
 
 **Tarea de pruebas para DeepSeek:** (a) `otro_htc()` con un `htc.port` que apunta a un puerto muerto o con basura: None y sin excepción; (b) que `main([])` con un HTC vivo llame a `abrir(url)` del otro y salga sin abrir servidor, y que `main(["--fondo"])` con un HTC vivo salga sin `abrir`; (c) revisa la sintaxis Pascal de `PrepareToInstall` en `htc.iss`.
+
+## 2026-11-10 00:45 · Opus · turno 9 iteración 9
+**Qué hice:** tareas 4 (build) y 5 (lista para probar en partida) de la prioridad del usuario.
+- Build: `dist/HTC` v0.3.7 ya corresponde a HEAD (el árbol estaba limpio desde iter 8); humo `humo_exe.py` OK (0.39 s, 13 claves); 239 OK. Tag `v0.3.7` ya existe, no hay versión nueva porque no cambió código.
+- Instalador: ISCC existe en `%LOCALAPPDATA%\Programs\Inno Setup 6`, pero el harness pide aprobación para ejecutarlo; queda para el usuario (`build.ps1`). El último instalador en `dist/` sigue siendo 0.3.0.
+- Checklist en `PIZARRON.md` → «Para el usuario»: qué ver al abrir LoL, en champ select, en la carga, en partida, al terminar, y qué reportar; [R] = solo con partida real. Al escribirlo comprobé en el código que la foto en vivo va cada 30 s (`companion_gui.trabajador`), no cada 2 s como el sondeo de la página.
+- Asesor DeepSeek: bloqueado otra vez (PowerShell anidado).
+
+**Tarea de pruebas para DeepSeek:** coteja el checklist contra el código: (a) que cada texto citado entre «» exista tal cual en `scripts/web/index.html`; (b) que en `EndOfGame` sin key `s.revision` sea None y la vista sea En vivo con `s.fin`; (c) que la primera `meta` en partida llegue a lo más 30 s después de `InProgress`.
