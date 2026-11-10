@@ -88,7 +88,8 @@ def hay_key():
 
 def recomendaciones(pos, rivales):
     """[(rival, datos_draft | None)] usando draft.py (lo recarga si hay partidas nuevas)."""
-    import draft
+    try: import draft
+    except (AssertionError, OSError, ValueError, KeyError): return [(r, None) for r in rivales]  # sin partidas ni perfil.json (beta sin key): rival «sin datos», no un error
     with DRAFT: return [(r, dict(draft.datos_draft(r, pos), ficha=draft.ficha(r, pos)) if r else None) for r in rivales]
 
 

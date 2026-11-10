@@ -36,6 +36,15 @@ class AvisoDict(unittest.TestCase):
             g.script, g.hay_key = orig
         self.assertEqual((corridos, list(q.queue)), ([], []))
 
+    def test_recomendaciones_sin_partidas_no_truena(self):  # amigo sin historial en su primer champ select
+        import os, subprocess, sys, tempfile
+        with tempfile.TemporaryDirectory() as vacio:
+            env = dict(os.environ, DATOS_DIR=vacio)
+            codigo = "import companion_gui as g; print(g.recomendaciones('MIDDLE', ['Ahri']))"
+            r = subprocess.run([sys.executable, "-c", codigo], cwd=os.path.dirname(os.path.abspath(__file__)), env=env, capture_output=True, text=True, timeout=60)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("[('Ahri', None)]", r.stdout)
+
     def test_minions_en_trabajador_a_630s_da_minuto_10(self):
         c = g.companion
         d = json.loads((AQUI / "fixtures" / "vivo" / "allgamedata.json").read_text(encoding="utf-8"))
