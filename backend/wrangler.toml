@@ -2,4 +2,9 @@ name = "racha-api"
 main = "worker.js"
 compatibility_date = "2025-10-01"
 
-# Secretos (nunca aquí): npx wrangler secret put RIOT_KEY  ·  npx wrangler secret put ACCESOS
+[[d1_databases]]
+binding = "DB"
+database_name = "racha"
+database_id = "f6dd437c-7d63-4d43-9226-0f62ebf2c641"
+
+# Secretos (nunca aquí): RIOT_KEY · ACCESOS · GOOGLE_CLIENT_ID · GOOGLE_CLIENT_SECRET · GOOGLE_EMAILS

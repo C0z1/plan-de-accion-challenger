@@ -5,6 +5,8 @@
 // - Solo deja pasar las 4 consultas que usa la app (cuenta, ids de partidas, partida/timeline, liga).
 // - Las partidas y timelines no cambian: se guardan en la caché del borde y casi no gastan key.
 
+import {cuenta, usuarioDeSesion} from "./cuenta.js";
+
 const RUTEO = new Set(["americas", "europe", "asia", "sea"]);
 const PLATAFORMAS = new Set(["na1", "la1", "la2", "br1", "euw1", "eun1", "tr1", "ru", "me1", "kr", "jp1", "oc1", "sg2", "tw2", "vn2"]);
 const ID = "[A-Za-z0-9_-]{1,100}", NOMBRE = "[^/?#]{1,64}";
@@ -52,9 +54,11 @@ export function destino(url) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const c = await cuenta(request, env, url);  // /v1/login y /v1/yo… (cuenta en la nube)
+    if (c) return c;
     if (request.method !== "GET") return json({error: "solo GET"}, 405);
     if (url.pathname === "/v1/salud") return json({ok: true, version: 1});
-    const quien = quienEs(request.headers.get("x-racha-token"), env.ACCESOS);
+    const quien = quienEs(request.headers.get("x-racha-token"), env.ACCESOS) || await usuarioDeSesion(request, env);  // código o sesión de Google
     if (!quien) return json({error: "código de acceso inválido"}, 401);
     const d = destino(url);
     if (!d) return json({error: "consulta no permitida"}, 404);
