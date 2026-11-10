@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
+          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
 VERSION = "0.5.1"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -57,6 +57,7 @@ def evento(e):
         threading.Thread(target=refrescar, daemon=True).start()  # si el historial en disco es de otra cuenta, se oculta
     elif tipo == "cliente": s = {"cliente": e[1]}
     elif tipo == "region": s = {"region": e[1]}
+    elif tipo == "crono": s = {"crono": e[1]}
     elif tipo == "aviso": s = {"aviso": e[1]}
     elif tipo == "pos": s = {"pos": e[1]}  # champ select antes de ver al rival: la ventana Draft
     with LOCK: ESTADO.update(s, v=ESTADO["v"] + 1)

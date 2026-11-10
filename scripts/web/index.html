@@ -109,7 +109,7 @@ details.otras[open]>div{background:var(--dark2);border-radius:10px;padding:8px 1
 .filaV{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:10px;background:var(--dark2);border:1px solid transparent}
 .filaV .txt{flex:1;display:flex;flex-direction:column;gap:2px}.filaV small{font-size:12px;color:var(--muted)}
 .filaV.oscura{background:var(--dark2)}.filaV.activa{border-color:var(--acc)}
-.espera{width:84px;height:84px;border-radius:50%;border:2px dashed var(--acc);display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--acc);flex-shrink:0}
+.espera{width:96px;height:96px;border-radius:50%;border:2px dashed var(--acc);display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--acc);flex-shrink:0}
 .err{display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:12px;background:var(--dark2);border:1px solid transparent}.err.top{border-color:var(--acc)}
 .err .txt{display:flex;flex-direction:column;gap:2px}.err small{font-size:12px;color:var(--muted)}
 .chips{display:flex;gap:8px;flex-wrap:wrap}.chip{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:12px;font-weight:700}
@@ -479,21 +479,24 @@ function anillo(champ, wr, tam = 150) {  // Draft_Vino/Campeones_Vino: halo que 
 }
 const forma = f => `<span class="forma">${f.map(w => `<i class="${w ? "v" : "d"}" title="${w ? "Victoria" : "Derrota"}"></i>`).join("")}</span>`;
 const ETQ = {"Pickéalo": "ok", "Estable": "amber", "Bajando": "red", "Evítalo vs sus counters": "red", "Pocas partidas": ""};
+const FASE_CS = {PLANNING: "planeación", BAN_PICK: "bans y picks", FINALIZATION: "últimos segundos", GAME_STARTING: "cargando"};
 const ROLMIN = {TOP: "top", JUNGLE: "jungla", MIDDLE: "mid", BOTTOM: "bot", UTILITY: "support"};
 
 function draftV(s) {  // Draft_Vino: fase de bans y picks antes de ver a tu rival
   const V = VS(s); if (!V) return sinDatos("Draft");
   const pos = s.pos || V.pos, d = V.draft[pos] || {bans: [], frecuentes: [], pool: []}, rol = ROLMIN[pos] || pos;
   const main = `
-  <div><h1>Draft</h1><span class="sub">${esc(ROL[pos] || pos)} · ${s.fase === "ChampSelect" ? "champ select" : "vista previa: así se verá en champ select"}</span></div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1>Draft</h1><span class="sub">${esc(ROL[pos] || pos)} · ${s.fase === "ChampSelect" ? (FASE_CS[s.crono && s.crono.fase] || "champ select") : "vista previa: así se verá en champ select"}</span></div>
+    ${s.fase === "ChampSelect" && s.crono ? `<span style="border:1px solid var(--acc);border-radius:10px;padding:10px 16px;font-weight:700;font-size:18px" aria-label="Tiempo de la fase">${(() => { const t = Math.max(0, Math.round(s.crono.ms / 1000 - (Date.now() / 1000 - s.crono.t))); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); })()}</span>` : ""}</div>
   <div class="card"><div class="cab2"><h2>Banea</h2><span class="sub" style="font-size:12px">contra quien peor te va en ${esc(rol)}</span></div>
     ${d.bans.length ? d.bans.map(b => `<div class="filaV">${img("champion", b.rival, "item", b.rival)}<div class="txt"><b>${esc(b.rival)} <span class="tag red">${b.v}-${b.n - b.v}</span></b><small>${esc(b.por_que)}</small></div></div>`).join("")
       : '<span class="sub">Ningún rival con 3+ partidas en el rol te baja del WR.</span>'}</div>
   <div class="card"><div class="cab2"><h2>Tu pool para ${esc(rol)}</h2><span class="sub" style="font-size:12px">antes de ver al rival</span></div>
-    <div class="pool">${d.pool.map((p, i) => `<div class="poolc"><b>${esc(p.champ)}</b>${anillo(p.champ, p.wr, 120)}<div><b style="font-size:22px">${pct(p.wr)}</b> <span class="sub">${p.n} partidas</span></div>
-      ${i === d.pool.reduce((m, x, j, a) => x.wr > a[m].wr ? j : m, 0) ? '<span class="tag ok">El más seguro</span>' : ""}</div>`).join("") || '<span class="sub">Menos de 5 partidas por campeón en este rol.</span>'}</div></div>`;
+    <div class="pool">${d.pool.map((p, i) => `<div class="poolc"><b>${esc(p.champ)}</b>${anillo(p.champ, p.wr, 120)}<div><b style="font-size:26px">${pct(p.wr)}</b> <span class="sub" style="font-size:13px">${p.n} partidas</span></div>
+      ${p.n < 10 ? '<span class="tag" style="background:var(--dark4);color:var(--muted)">Pocas partidas</span>' : i === d.pool.reduce((m, x, j, a) => x.wr > a[m].wr ? j : m, 0) ? '<span class="tag ok">El más seguro</span>' : ""}</div>`).join("") || '<span class="sub">Menos de 5 partidas por campeón en este rol.</span>'}</div></div>`;
   const aside = `
-  <div style="display:flex;gap:20px;align-items:center"><span class="espera">?</span><div><h2>Esperando su pick…</h2><span class="sub">Cuando tu rival de línea pickee, Racha pasa a Selección con tu mejor pick.</span></div></div>
+  <span class="sub" style="font-size:13px;margin-bottom:-12px">Rival de línea</span>
+  <div style="display:flex;gap:20px;align-items:center"><span class="espera">?</span><div><h2 style="font-size:26px">Esperando su pick…</h2><span class="sub">Cuando tu rival de línea pickee, Racha pasa a Selección con tu mejor pick.</span></div></div>
   <div style="display:flex;justify-content:space-between;align-items:baseline"><h2>Rivales frecuentes en ${esc(rol)}</h2><span class="sub" style="font-size:12px">últimos 3 meses</span></div>
   ${d.frecuentes.map(f => `<div class="filaV oscura">${img("champion", f.rival, "item", f.rival)}<b style="flex:1">${esc(f.rival)}</b><span><b style="color:${f.v * 2 >= f.n ? "var(--teal)" : "var(--red)"}">${f.v}-${f.n - f.v}</b> <span class="sub" style="font-size:12px">tu récord</span></span></div>`).join("") || '<span class="sub">Sin rivales recientes.</span>'}`;
   return [main, aside];

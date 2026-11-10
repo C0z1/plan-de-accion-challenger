@@ -204,6 +204,9 @@ def trabajador(q):
             jugando = (fase or real) == "InProgress"  # cliente reiniciándose a media partida: la partida sigue
             if fase == "ChampSelect" and (s := companion.lcu("/lol-champ-select/v1/session")):
                 pos, ids = companion.rivales(s)
+                tm = s.get("timer") or {}  # cronómetro de la fase (solo lectura), para el reloj de Draft_Vino
+                if isinstance(tm.get("adjustedTimeLeftInPhase"), (int, float)):
+                    q.put(("crono", {"fase": tm.get("phase"), "ms": tm["adjustedTimeLeftInPhase"], "t": time.time()}))
                 if ids and (pos, ids) != visto:
                     m = m or companion.nombres() or dict(NOMBRES); visto = (pos, ids)
                     q.put(("draft", pos, recomendaciones(pos, [m.get(i) for i in ids])))

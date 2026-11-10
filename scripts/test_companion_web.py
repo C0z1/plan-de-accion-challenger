@@ -93,6 +93,11 @@ class Http(unittest.TestCase):
         st, b = self.get("/fonts/mulish.woff2"); self.assertEqual((st, b[:4]), (200, b"wOF2"))
         self.assertEqual(self.get("/fonts/otra.woff2")[0], 404)
 
+    def test_crono_de_champ_select(self):  # Draft_Vino: reloj de la fase, leído del cliente (solo lectura)
+        w.evento(("crono", {"fase": "BAN_PICK", "ms": 28000, "t": 1.0}))
+        self.assertEqual(w.ESTADO["crono"]["ms"], 28000)
+        self.assertIn("FASE_CS", self.get("/")[1].decode())
+
     def test_icono(self):
         st, b = self.get("/icono.png"); self.assertEqual(st, 200); self.assertEqual(b[1:4], b"PNG")
         self.assertIn(b'href="/icono.png"', self.get("/")[1])
