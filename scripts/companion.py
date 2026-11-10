@@ -74,10 +74,43 @@ def meta_fase(d, m10=None):
     me, rival = yo_rival(d)
     if not me: return None
     if m10 is None: m10 = minions10()
+    rs = (rival or {}).get("scores") or {}
     return {"minuto": int(((d.get("gameData") or {}).get("gameTime") or 0) // 60), "campeon": me.get("championName"),
             "nivel": me.get("level"), "rival": (rival or {}).get("championName"), "nivel_rival": (rival or {}).get("level"),
             "cs": (me.get("scores") or {}).get("creepScore"), "muertes14": muertes14(d, me),
-            "cs_meta": m10.get("minimo") if m10 and me.get("championName") == m10.get("campeon") else None}
+            "cs_meta": m10.get("minimo") if m10 and me.get("championName") == m10.get("campeon") else None,
+            "rival_kda": f"{rs.get('kills') or 0}/{rs.get('deaths') or 0}/{rs.get('assists') or 0}" if rival else None,
+            "rival_cs": rs.get("creepScore"), "rival_items": [i["itemID"] for i in (rival or {}).get("items") or [] if i.get("itemID") and not i.get("consumable") and i.get("slot") != 6][:6],  # slot 6 = trinket
+            "objetivos": objetivos(d, me)}
+
+
+def objetivos(d, me):
+    """Lo de cada equipo en la foto en vivo: {tuyos|rival: {kills, torres, dragones, larvas, heraldo, baron}, dragon, baron}.
+    dragon/baron = segundos que faltan para que salga (None: está vivo). Torres por el dueño en el nombre (Turret_TOrder_ / _TChaos_);
+    lo demás por el equipo de KillerName (gameName sin tag, o Minion_T100/T200); si no se reconoce, no cuenta."""
+    ps = (d or {}).get("allPlayers") or []
+    eq = {n: p.get("team") for p in ps for n in (p.get("riotIdGameName"), p.get("summonerName"), (p.get("riotId") or "").split("#")[0]) if n}
+    eq.update({"Minion_T100": "ORDER", "Minion_T200": "CHAOS"})
+    yo = me.get("team")
+    lado = lambda t: None if t is None else "tuyos" if t == yo else "rival"
+    r = {k: {"kills": sum((p.get("scores") or {}).get("kills") or 0 for p in ps if lado(p.get("team")) == k),
+             "torres": 0, "dragones": 0, "larvas": 0, "heraldo": 0, "baron": 0} for k in ("tuyos", "rival")}
+    ult = {"DragonKill": None, "BaronKill": None}
+    tipo = {"DragonKill": "dragones", "HordeKill": "larvas", "HeraldKill": "heraldo", "BaronKill": "baron"}
+    for e in ((d or {}).get("events") or {}).get("Events") or []:
+        n, k = e.get("EventName"), str(e.get("KillerName") or "")
+        if n == "TurretKilled":
+            t = str(e.get("TurretKilled") or "")
+            if (l := lado("CHAOS" if "_TOrder_" in t else "ORDER" if "_TChaos_" in t else None)): r[l]["torres"] += 1
+        elif n in tipo and (l := lado(eq.get(k) or eq.get(k[:11]))):
+            r[l][tipo[n]] += 1
+            if n in ult: ult[n] = e.get("EventTime") or 0
+    t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
+    # shortcut: dragón 5:00 y cada 5 min, barón 20:00 y cada 6 (ni el Anciano ni cambios de parche); si cambia, ajustar aquí
+    def falta(u, primero, cada):  # segundos hasta que sale; None si ya está vivo
+        s = (primero if u is None else u + cada) - t
+        return round(s) if s > 0 else None
+    return {**r, "dragon": falta(ult["DragonKill"], 300, 300), "baron": falta(ult["BaronKill"], 1200, 360)}
 
 
 def aviso_nivel(d):

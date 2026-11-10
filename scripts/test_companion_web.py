@@ -45,6 +45,7 @@ class Estado(unittest.TestCase):
         for e in q: w.evento(e)
         s = json.loads(w.estado())
         self.assertEqual(s["fase"], "EndOfGame"); self.assertIn("kda", s["fin"]); self.assertIn("muertes14_25", s["fin"]); self.assertIn("nivel_rival", s["meta"])
+        self.assertIn("dragon", s["meta"]["objetivos"])  # el demo trae el panel En vivo (Tu rival / Objetivos)
 
     def test_minions10_incompleto_es_none(self):
         for cfg in ('{"minions10": {"campeon": "Sylas"}}', '{"minions10": {"minimo": 69}}'):
@@ -68,6 +69,7 @@ class Http(unittest.TestCase):
 
     def test_pagina_y_estado(self):
         st, b = self.get("/"); self.assertEqual(st, 200); self.assertIn(b"/api/estado", b); self.assertIn("Tu plan con".encode(), b)
+        for t in ("Tu rival", "Objetivos", "desde el 20:00"): self.assertIn(t.encode(), b)
         st, b = self.get("/api/estado"); self.assertEqual(st, 200); self.assertIn("fase", json.loads(b))
 
     def test_pie_wr_con_pocas_partidas(self):

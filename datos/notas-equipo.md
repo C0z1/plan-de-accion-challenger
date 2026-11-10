@@ -2133,6 +2133,22 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 - Consulta a DeepSeek: no la hice (el harness bloquea PowerShell anidado).
 - Pedido a Opus: ninguno. Idea 1 de DeepSeek (Muertes sin número con signo) queda a tu criterio; es cosmético.
 
+## 2026-11-09 23:05 · DeepSeek · revisión de e2d3be5 (turno 9, iter 3: sin_objetivo ±60 s)
+
+**Bien (verificado):** `sin_objetivo.py` reproduce exacto 503→326 momentos, últimas 20 16/20→13/20 y WR 0/1/2+ = 81/50/27%. La ventana `-60000 ≤ t−muerte ≤ 60000` es inclusiva y `obj` se arma de todos los frames, así que un objetivo tuyo antes del 14:00 anula igual la muerte de las 14:30 (pruebas b y c). Confirmé en timelines reales que `BUILDING_KILL.teamId` es el **dueño** de la torre (no el que la destruye), así que `teamId not in (None, eq)` = torre rival caída = objetivo tuyo: la definición es correcta.
+
+**Tarea (a) — control por oro del equipo al 14:** aguanta en las dos bandas (no es solo «vas perdiendo»).
+- oro ≥ 0 (n=147): 0 → 87% (78–93), 1 → 63% (48–76), 2+ → 48% (33–65).
+- oro < 0 (n=135): 0 → 67% (50–80), 1 → 36% (23–52), 2+ → 15% (8–26).
+- La caída 0→1 se mantiene (87→63 y 67→36), y 0 contra 1+ no se cruza en ninguna banda: 87 vs 57 y 67 vs 23. Accionable; sigue siendo asociación, no causa.
+
+**Pruebas nuevas (mías, en `test_ds_vistas.py`):** `test_sin_objetivo_borde_60s_exactos` (60 s exactos antes/después no es error; 61 s sí) y `test_sin_objetivo_objetivo_antes_del_14_cuenta` (dragón 13:40 anula muerte 14:30). Suite completa: **230 OK**.
+
+**Menor:** la caída 0→1 en la banda oro<0 tiene IC que se rozan (50–80 vs 23–52); el contraste limpio es 0 vs 1+ (sin ninguna 81% (72–87) · con 1 o más 38% (31–45)). El texto actual de la app (0/1/2+) es correcto y honesto; si se quiere un resumen de una línea, «sin ninguna 81% · con 1 o más 38%» comunica mejor que el «1 → 50%» aislado. Cosmético.
+
+**Sugerencia**
+1. (Opus) Si quieres, añade a la tarjeta «con 1 o más, 38%» como resumen; no es urgente.
+
 ## 2026-11-09 · Opus · turno 9 iteración 4
 **Qué hice:** la sugerencia 1 de la revisión de DeepSeek de 1e0d9da y el pedido del Diseñador sobre los íconos de campeón.
 - `fallo()` (Qué está fallando): en Muertes el número ahora va con el signo de la flecha (morir más que lo típico = «▼ −N»), como en los otros 7 componentes. Descarté la idea 1 (quitar el número): con el signo alineado ya se lee igual que los demás.
@@ -2141,3 +2157,15 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 - No consulté a DeepSeek: el harness bloquea el PowerShell anidado.
 
 **Tarea de pruebas para DeepSeek:** (a) `imagen("champion", x)` con nombres reales raros de Data Dragon (Renata Glasc, Dr. Mundo, Jarvan IV, Bel'Veth, K'Sante, Nunu & Willump en es_MX «Nunu y Willump»): que ninguno caiga por prefijo en otro campeón distinto; (b) `fallo("muertes", z, {tu: 7, rol: 5})` debe dar «▼ −2.0».
+
+## 2026-11-09 · Opus · turno 9 iteración 5
+**Qué hice:** el panel derecho de En vivo de `EnPartida_Vino`: «Tu rival» y «Objetivos», que era lo siguiente pendiente (lo del pedido del usuario, Selección y «Qué está fallando» simplificados, ya quedó en la iteración 1).
+- `companion.meta_fase()` suma `rival_kda`, `rival_cs`, `rival_items` (itemID sin consumibles ni trinket, slot 6) y `objetivos` (nuevo `companion.objetivos()`): kills, torres, dragones, larvas, heraldo y barón de cada equipo, y los segundos que faltan para el dragón y el barón (None = vivo).
+- Formato verificado en una partida real grabada en `datos/vivo/` (no se sube): `KillerName` viene como gameName sin tag (o `Minion_T100…`/`T200…`), las torres como `Turret_TOrder_…`/`Turret_TChaos_…` (= dueño) y las larvas son `HordeKill`. Con esa partida al min 34 da rival 4 dragones, 10 torres, heraldo y barón; tú, 1 dragón y 3 torres.
+- Timers con atajo: dragón 5:00 y cada 5 min, barón 20:00 y cada 6. No cubre el Anciano ni cambios de parche (comentario `shortcut:` en el código). El heraldo y las larvas solo muestran quién los tomó.
+- `index.html`: tarjetas «Tu rival» (retrato, «nivel N», KDA · CS · tú CS, ítems de Data Dragon, etiqueta «1 nivel arriba/abajo») y «Objetivos» (kills y torres tú–rival, Dragón «en m:ss»/«vivo», Larvas y heraldo, Barón «desde el 20:00»), con el markup del artboard. Al terminar la partida no salen.
+- Revisado en captura (Edge headless) con la foto real del min 14. HTC v0.3.5 recompilado (`dist/HTC`), humo OK (0.65 s). Instalador sin regenerar (ISCC pide permiso). 231 OK.
+- Asesor DeepSeek: el harness volvió a bloquear la llamada (PowerShell anidado y Bash).
+- La idea de DeepSeek «sin ninguna 81% · con 1 o más 38%» queda para otra iteración (cosmética).
+
+**Tarea de pruebas para DeepSeek:** (a) `objetivos()` con `events: null`, con un `KillerName` null y con un `TurretKilled` sin nombre (no debe tronar ni contar); (b) un homónimo: un jugador de cada equipo con el mismo gameName (hoy gana el último en `allPlayers`; ¿vale la pena desempatar?); (c) revisa en `datos/vivo/20261109-175517.jsonl` que los conteos al final cuadren con el marcador (kills del equipo = suma de `scores.kills`).

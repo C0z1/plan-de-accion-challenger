@@ -488,8 +488,20 @@ function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estad
     ${reglas.map(([t, sub, e, cls], i) => `<div class="filaV ${cls === "amber" ? "activa" : ""}"><span class="num amber">${i + 1}</span><div class="txt"><b>${t}</b><small>${sub}</small></div><span class="tag ${cls}">${e}</span></div>`).join("")}</div>
   <div class="card" style="flex-direction:row;align-items:center;gap:20px"><h2>Fase</h2><div class="fases">${fase.map(([a, b, t]) => `<div><span class="tuboH" style="flex:none;width:100%"><i style="width:${Math.max(0, Math.min(1, (min - a) / (b - a))) * 100}%;background:linear-gradient(90deg,${min >= a && min < b ? "#A33A63,#F8C3D6" : "#3E7A62,#A8D8C0"})"></i></span><small class="${min >= a && min < b ? "ahora" : ""}">${t}${min >= a && min < b ? " · ahora" : ""}</small></div>`).join("")}</div></div>`;
   const ahora = reglas.find(r => r[3] === "amber");
+  const dn = x.nivel != null && x.nivel_rival != null ? x.nivel_rival - x.nivel : 0, o = x.objetivos;
+  const mmss = t => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+  const obj = (c, t, d) => `<div style="display:flex;align-items:center;gap:12px"><span style="width:8px;height:8px;border-radius:50%;background:${c}"></span><b style="flex-grow:1;font-size:15px">${t}</b><span class="sub" style="font-size:14px">${d}</span></div>`;
+  const va = k => `<b style="color:var(--teal)">${o.tuyos[k]}</b>–<b style="color:#FF8A8A">${o.rival[k]}</b>`;
+  const rivalC = x.rival ? `<div class="est" style="gap:12px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="sub" style="font-size:14px">Tu rival</span>${dn ? `<span class="tag ${dn > 0 ? "red" : "ok"}" style="align-self:auto">${Math.abs(dn)} nivel${Math.abs(dn) > 1 ? "es" : ""} ${dn > 0 ? "arriba" : "abajo"}</span>` : ""}</div>
+    <div style="display:flex;align-items:center;gap:14px">${img("champion", x.rival, "item", x.rival)}<div style="display:flex;flex-direction:column;gap:4px"><b style="font-size:17px">${esc(x.rival)} · nivel ${x.nivel_rival ?? "?"}</b><span class="sub" style="font-size:13px">${esc(x.rival_kda || "")} · ${x.rival_cs ?? "?"} CS · tú ${x.cs ?? "?"}</span></div></div>
+    ${(x.rival_items || []).length ? `<div style="display:flex;gap:8px">${x.rival_items.map(i => img("item", i, "item", "")).join("")}</div>` : ""}</div>` : "";
+  const objC = o ? `<div class="est" style="gap:10px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="sub" style="font-size:14px">Objetivos</span><span style="font-size:13px">kills ${va("kills")} · torres ${va("torres")}</span></div>
+    ${obj("#F8C3D6", `Dragón <span class="sub" style="font-size:13px">${va("dragones")}</span>`, o.dragon == null ? "vivo" : "en " + mmss(o.dragon))}
+    ${obj("#A8D8C0", `Larvas y heraldo <span class="sub" style="font-size:13px">${va("larvas")} · ${va("heraldo")}</span>`, "")}
+    ${obj("var(--soft)", `Barón <span class="sub" style="font-size:13px">${va("baron")}</span>`, o.baron == null ? "vivo" : min < 20 && !o.tuyos.baron && !o.rival.baron ? "desde el 20:00" : "en " + mmss(o.baron))}</div>` : "";
   const aside = `
   <div style="display:flex;gap:20px;align-items:center">${img("champion", x.campeon, "retrato2", x.campeon)}<div><span class="sub">Ahora</span><h2 style="font-size:30px">${ahora ? esc(ahora[0].split(":")[0]) : f ? "Revisa tu partida" : "Juega tu línea"}</h2></div></div>
+  ${f ? "" : rivalC + objC}
   ${f ? `<div class="est"><span class="sub">Al terminar</span><b>${esc(f.texto || "")}</b>${f.cotejo === false ? '<span class="tag red">No cuadran tus muertes con los eventos</span>' : ""}</div>` : ""}
   ${s.revision ? `<div class="est"><span class="sub">Revisión (Riot)</span><b>${esc(s.revision.champ)} ${esc(s.revision.kda || "")} · score ${esc(s.revision.score)}</b><span class="sub">Oro al 14 ${esc(s.revision.oro)} · CS al 14 ${esc(s.revision.cs)}</span></div>` : ""}
   ${s.espera ? `<div class="est"><span class="sub">${esc(s.espera)}</span></div>` : ""}`;
