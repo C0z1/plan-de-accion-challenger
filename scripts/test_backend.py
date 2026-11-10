@@ -36,8 +36,8 @@ class TestBackend(unittest.TestCase):
         d = tempfile.mkdtemp()
         env = {k: v for k, v in os.environ.items() if k not in ("RIOT_KEY",)}
         env.update(RACHA_SOLO_BACKEND="1", RACHA_API=f"http://127.0.0.1:{self.srv.server_port}", RACHA_TOKEN=token,
-                   RIOT_ID="Amigo#LAN", RIOT_REGION="la1", DATOS_DIR=d)
-        r = subprocess.run([sys.executable, str(DIR / "descargar.py"), "1"], env=env, capture_output=True, text=True, timeout=60)
+                   RIOT_ID="Amigo#LAN", RIOT_REGION="la1", DATOS_DIR=d, PYTHONIOENCODING="utf-8")
+        r = subprocess.run([sys.executable, str(DIR / "descargar.py"), "1"], env=env, capture_output=True, text=True, encoding="utf-8", timeout=60)
         return r, pathlib.Path(d)
 
     def test_baja_con_codigo_sin_key(self):

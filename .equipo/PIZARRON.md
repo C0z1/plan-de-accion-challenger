@@ -41,9 +41,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
-- **Estado:** apoyo al port canvas→app (pedido `prompt-deepseek-apoyo.md`): creé `scripts/test_ds_canvas.py` (14 tests, sin red/cliente/key) y dejé la suite en **287 OK**. Informe entregado en `C:\Users\felix\noche-challenger\apoyo-deepseek.md` con 3 secciones: resultado de la suite, tabla de **cifras fijas de cozi** (10 en `draft.py`/`index.html` + 3 docstrings de `companion.py`), y lo que falta del canvas por vista: **Draft y Partidas ya completos**, Errores solo falta el ícono ▶ en los chips, Ajustes es lo que falta de verdad (swatches 40px, «Siempre encima», «Avisos en partida», botones Cambiar/Recargar).
-- **Siguiente:** (Opus) aplicar las listas de la sección 3 del informe (sobre todo Ajustes) y decidir si recalcula las cifras fijas de `draft.py`/`index.html` o las cambia por texto genérico.
-- **Actualizado:** 2026-11-10 (apoyo canvas→app)
+- **Estado:** apoyo 2 al backend Racha (pedido `prompt-deepseek-apoyo2.md`): creé `scripts/test_ds_backend.py` (18 tests sin red/backend real: `companion.acceso()`, `gui.guardar_acceso()`, `puede_descargar()`, POST `/api/acceso` y `/api/descargar` con el candado `DESCARGANDO`). Suite completa: **313 tests, 1 fallo preexistente de Opus** (`test_backend.py:52`, mojibake cp1252/UTF-8). Informe en `C:\Users\felix\noche-challenger\apoyo2-deepseek.md`: onboarding de un amigo nuevo (tarjeta «Tus 3 pasos» en Inicio cuando `!s.conectado`) y rendimiento de `/api/estado` (28,8 KB; `?desde=v → 304` ahorra ~52 MB/h por ventana en reposo).
+- **Siguiente:** (Opus) el fix de `test_backend.py:52` (`encoding="utf-8"`), decidir si aplica la tarjeta de onboarding y el `304`; si aplica el 304, dejo un `test_ds_*` para cubrirlo.
+- **Actualizado:** 2026-11-10 (apoyo 2 backend Racha)
 
 ### Diseñador
 - **Estado:** diseño Vino entregado a Opus para la primera build: 10 pantallas en `.equipo/diseno/canvas/project/*_Vino.dc.html` (+ `Minions_Variantes`, `Tubos_Kit`). Traspaso en `.equipo/notas-equipo.md` («ENTREGA FINAL»).
@@ -207,6 +207,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-09 · Opus: la página solo conocía 8 fases del LCU: con `GameStart` (pantalla de carga), `Reconnect` o `WaitingForStats`, HTC se quedaba en Inicio y decía «Abre el cliente». Arreglado en v0.3.6.
 
 - 2026-11-10 · Opus: `--fondo` arrancado con LoL ya abierto no abría la ventana nunca (la guarda de 6 s contaba el arranque como «ventana viva»). Arreglado en v0.3.7 y verificado con el `.exe` real.
+- 2026-11-10 · DeepSeek: `rendimiento` (vistas+resumen, 28,7 KB) es el 98% de `/api/estado` y solo cambia al terminar una partida, pero se reenvía cada 2 s; `vistas.campeones` (8,7 KB), `resumen.partidas` (9,1 KB) y `errores.momentos` (4,3 KB) son lo que más pesa. Un `?desde=v → 304` (mínimo, 2 sitios) corta ~52 MB/h por ventana en reposo. Además el onboarding de un amigo nuevo está roto: solo Ajustes menciona el código y nada en Inicio lleva ahí.
 - 2026-11-09 · DeepSeek: repo revisado para Riot: 0 keys, 0 correos, 0 rutas completas y 0 saldo en los archivos rastreados; README reescrito y detalle técnico a `docs/USO.md`.
 
 ## Decisiones

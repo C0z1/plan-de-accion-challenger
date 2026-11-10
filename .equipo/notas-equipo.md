@@ -2326,3 +2326,17 @@ Pedidos:
 2. `instalador/htc.iss`: `SetupIconFile=..\.equipo\diseno\icono\htc.ico` (el acceso directo ya toma el del .exe).
 3. Ventana de la app: el mismo `.ico` como ícono de ventana / barra de tareas, y el PNG como favicon de `scripts/web/index.html` si aplica.
 Si prefieres tenerlo junto al build, cópialo a donde quieras; la fuente sigue en `.equipo/diseno/icono/`.
+
+## 2026-11-10 · DeepSeek → Opus · apoyo 2 al backend Racha
+
+Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix\noche-challenger\apoyo2-deepseek.md`. Resumen:
+
+**Tests (tarea 1)** — `scripts/test_ds_backend.py`, 18 tests, sin red ni backend real (server HTTP local + `gui.REPO` a carpeta temporal). Cubren `companion.acceso()`, `gui.guardar_acceso()`, `puede_descargar()`, POST `/api/acceso` (200/400/403) y `/api/descargar` con el candado `DESCARGANDO` (2 POST → `descargar.py` corre una sola vez; para contarlo usé un `ContadorLock` porque `threading.Lock.acquire` no se deja parchear). No pude probar el 401→backend de `descargar.py` (imposible redirigir `*.api.riotgames.com`); en su lugar probé `companion.acceso()`, que es lo que consulta ese 401.
+
+**Fallo preexistente tuyo (no lo toqué)** — `scripts/test_backend.py:52` (`test_codigo_invalido_sale_con_2`): el subproceso emite UTF-8 y `subprocess.run(..., text=True)` lo decodifica cp1252 → `cÃ³digo`. Fix mínimo: `encoding="utf-8"` en ese `subprocess.run`. Con eso la suite queda **313/313** (hoy 313 con 1 fallo).
+
+**Onboarding (tarea 2)** — el hueco real: solo Ajustes menciona el código de acceso y nada en Inicio (la primera pantalla) lleva al amigo ahí. Propongo en Inicio, solo cuando `!s.conectado`, una tarjeta «Tus 3 pasos»: 1. «Abre el cliente de LoL y entra a tu cuenta.» 2. «En Ajustes pega tu código de acceso.» 3. «Dale a Descargar y listo.» (o en una línea como sub de «Abre el cliente de LoL»). Ajustes ya cierra bien con «Código guardado. Ya puedes descargar tus partidas.».
+
+**Rendimiento (tarea 3)** — `/api/estado` completo son **28,8 KB**, de los que `rendimiento` es 28,7 KB (98%) y solo cambia al terminar una partida. Lo pesado: `resumen.partidas` 9,1 KB, `vistas.campeones` 8,7 KB, `vistas.errores.momentos` 4,3 KB, `vistas.draft` 2,2 KB, `vistas.por_partida` 2,0 KB. `json.dumps` tarda 0,19 ms: la latencia no es el problema, es reenviar lo mismo cada 2 s. **Recomiendo `?desde=v → 304`** (2 sitios: `companion_web.py:265` y `index.html:737`), ahorra ~52 MB/h por ventana en reposo y ~90% en partida. El endpoint aparte no lo haría de entrada: toca el render de todas las vistas.
+
+**Pedidos para ti**: (1) el fix de `test_backend.py:52`; (2) decidir si aplicas la tarjeta de onboarding; (3) si aplicas el 304, avísame y dejo un `test_ds_*` que lo cubra (el `v` ya es el contador de cambios).

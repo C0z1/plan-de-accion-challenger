@@ -368,7 +368,7 @@ function aro(f, ref, col, tam = 76) {  // acuerdo 21: anillo con raya de referen
 
 function perfil(s) {  // Perfil_Vino (+ acuerdo 21): score, win rate y errores con anillo; qué cambiar; tilt hoy; cuenta y campeones
   const R = s.rendimiento;
-  if (!R) return [`<div><h1>Tu rendimiento</h1><span class="sub">${esc(s.perfil)}</span></div><div class="card"><span class="sub">Sin partidas en disco (o calculando…).</span></div>`, cuentaCab(s) + rangoCard(s, true)];
+  if (!R) return [`<div><h1>Tu rendimiento</h1><span class="sub">${esc(s.perfil)}</span></div><div class="card"><span class="sub">Aún no tienes partidas aquí. ${s.conectado ? "Se están bajando: tarda unos minutos la primera vez." : "En Ajustes pega tu código de acceso y dale a Descargar."}</span></div>`, cuentaCab(s) + rangoCard(s, true)];
   const r = R.resumen, t = R.tilt, ps = r.partidas, v = ps.filter(p => p.win).length, wr = ps.length ? v / ps.length : null, V = VS(s);
   const base = s.rango && s.rango.n ? s.rango.wr / 100 : t.base.wr, E = V && V.errores, rep = E ? Object.keys(ERR).filter(k => (E.partidas[k] || 0) > 0) : [], peor = E && E.n ? Math.max(0, ...rep.map(k => E.partidas[k])) / E.n : 0;
   const fecha = ps.length && ps[ps.length - 1].fecha ? " · " + esc(ps[ps.length - 1].fecha) : "";
@@ -466,11 +466,16 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
   const hoy = t ? t.hoy : (delCliente(s) || []).filter(g => new Date(g.ts).toDateString() === new Date().toDateString()).reverse()
     .map(g => ({...g, fecha: HORA.format(new Date(g.ts))})), v = hoy.filter(g => g.win).length;
   const d25 = ps.filter(p => p.muertes14_25 != null), ok = d25.filter(p => p.muertes14_25 <= 2).length, f = d25.length ? ok / d25.length : 0;
+  const pasos = !s.conectado && !s.rendimiento ? `<div class="card" style="box-shadow:0 0 0 1px var(--acc) inset"><div class="cab2"><h2>Tus 3 pasos</h2><span class="sub" style="font-size:12px">para ver tu historial</span></div>
+    ${[["Abre el cliente de LoL y entra a tu cuenta.", enCliente(s.fase)], ["En Ajustes pega tu código de acceso.", s.conectado], ["Dale a Descargar y listo.", !!s.rendimiento]].map(([t, ok], i) =>
+      `<div class="filaV" style="padding:10px 14px"><span class="num" style="width:32px;height:32px;border-radius:50%;background:${ok ? "var(--okbg)" : "var(--dark4)"};color:${ok ? "var(--okfg)" : "var(--acc2)"};font-size:14px">${ok ? "✓" : i + 1}</span><b style="flex:1;font-size:15px">${t}</b></div>`).join("")}
+    <button class="btn" style="align-self:flex-start" onclick="ver('ajustes')">Ir a Ajustes</button></div>` : "";
   const main = `
   <div><h1>${nombre ? "Hola, " + esc(nombre) : "Racha"}</h1><span class="sub">${esc(DIAS.format(new Date()).replace(/^./, c => c.toUpperCase()))}</span></div>
   <div class="card" style="flex-direction:row;align-items:center;gap:20px"><span class="luz ${cliente ? "on" : ""}"><i></i></span>
     <div style="flex:1"><h2>${cliente ? "Cliente conectado" : "Abre el cliente de LoL"}</h2><span class="sub">${cliente ? esc(FASES[s.fase] ?? s.fase) + " · en champ select Racha cambia solo al draft." : "Racha lo detecta solo y no escribe nada en el cliente."}</span></div>
     <button class="btn" onclick="ver('perfil')">Ver mi perfil</button></div>
+  ${pasos}
   <div class="card"><div class="cab2"><h2>Hoy</h2><span class="sub" style="font-size:12px">${hoy.length ? `${v}-${hoy.length - v}` : "sin partidas"}${t ? (t.racha >= 2 ? " · para" : " · sin tilt") : ""}</span></div>
     ${hoy.length ? `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${hoy.slice(-6).map(g => `<div class="mini">${img("champion", g.campeon, "item", g.campeon)}<b class="${g.win ? "v" : "d"}">${g.win ? "V" : "D"}</b>${esc(g.fecha)}</div>`).join("")}
       ${t.tras2.n ? `<div style="flex:1;min-width:220px"><b>${t.racha >= 2 ? "Llevas 2 derrotas seguidas: descansa 15 min" : "Tras 2 derrotas seguidas, paras"}</b><br><span class="sub" style="font-size:13px">Llegaste a 2 seguidas ${t.llegas} veces; la partida siguiente: ${t.tras2.v}-${t.tras2.n - t.tras2.v}${t.pocas ? " (pista: pocas partidas)" : ""}.</span></div>` : ""}</div>`
@@ -504,7 +509,7 @@ const EN_PARTIDA = ["GameStart", "InProgress", "Reconnect", "WaitingForStats", "
 
 // ===== Ventanas nuevas (artboards *_Vino). Datos: s.rendimiento.vistas (scripts/vistas.py, en caché) =====
 const VS = s => (s.rendimiento && s.rendimiento.vistas) || null;
-const sinDatos = (t, sub) => [`<div><h1>${t}</h1><span class="sub">${esc(sub || "")}</span></div><div class="card"><span class="sub">Sin datos todavía: Racha los calcula con tus partidas descargadas (o sigue calculando…).</span></div>`, ""];
+const sinDatos = (t, sub) => [`<div><h1>${t}</h1><span class="sub">${esc(sub || "")}</span></div><div class="card"><span class="sub">Aún no tienes partidas aquí: Racha arma esta vista con tu historial. Si no lo tienes, ve a <a href="#" onclick="ver('ajustes');return false" style="color:var(--acc);font-weight:700">Ajustes</a>, pega tu código de acceso y dale a Descargar.</span></div>`, ""];
 const fmin = v => v == null ? "–" : signo(v, 0);
 
 let ANI = 0;  // ids únicos de los degradados de cada anillo
@@ -734,7 +739,9 @@ function ver(x) { elegida = x; v = -1; tick(); }
 let v = -1;
 async function tick() {
   try {
-    const s = await (await fetch("/api/estado")).json();
+    const r = await fetch("/api/estado?desde=" + v);
+    if (r.status === 304) return;  // nada cambió
+    const s = await r.json();
     if (document.activeElement && document.activeElement.tagName === "INPUT") return;  // no borrar lo que estás escribiendo
     if (s.v !== v) {
       v = s.v;

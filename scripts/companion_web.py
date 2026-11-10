@@ -262,7 +262,10 @@ class H(http.server.BaseHTTPRequestHandler):
         if m := re.fullmatch(r"/fonts/(mulish|inter)\.woff2", self.path):  # empaquetadas (OFL): la CSP no deja cargar Google Fonts
             return self.enviar(200, (WEB / "fonts" / f"{m.group(1)}.woff2").read_bytes(), "font/woff2")
         if self.path in ("/icono.png", "/favicon.ico"): return self.enviar(200, (WEB / "icono.png").read_bytes(), "image/png")  # ícono de la ventana de Edge --app
-        if self.path == "/api/estado": return self.enviar(200, estado().encode(), "application/json; charset=utf-8")
+        if self.path == "/api/estado" or self.path.startswith("/api/estado?"):
+            if self.path == f"/api/estado?desde={ESTADO['v']}":  # nada cambió desde la última vez: sin cuerpo (auditoría de DeepSeek)
+                self.send_response(304); self.send_header("Cache-Control", "no-store"); self.end_headers(); return
+            return self.enviar(200, estado().encode(), "application/json; charset=utf-8")
         if m := re.fullmatch(r"/img/(champion|item|profileicon|rango|minion)/(\w{1,40})\.png", self.path):
             if b := imagen(*m.groups()): return self.enviar(200, b, "image/png")
         self.enviar(404, b"", "text/plain")
