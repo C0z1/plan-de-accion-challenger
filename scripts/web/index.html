@@ -89,6 +89,9 @@ details summary{cursor:pointer;color:var(--muted)}
 .atajo{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--dark2);color:var(--txt);font:600 15px Mulish,'Segoe UI',sans-serif;cursor:pointer;text-align:left}
 .atajo:hover{border-color:var(--acc)}
 nav .abajo{margin-top:auto}
+details.otras{position:relative}details.otras summary{list-style:none;cursor:pointer;border:1px solid var(--line);border-radius:12px;padding:10px 14px;white-space:nowrap}details.otras summary::after{content:" ⌄"}
+details.otras[open]>div{background:var(--dark2);border-radius:10px;padding:8px 12px}
+.ico20{width:20px;height:20px;border-radius:4px}
 .anillo{position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .anillo svg{position:absolute;inset:0;overflow:visible}
 .anillo .arco{animation:arco 1.8s cubic-bezier(.22,1,.36,1) both}.anillo .orbita{transform-origin:center;animation:gira 22s linear infinite}
@@ -229,35 +232,31 @@ function champSelect(s) {
     ${plan(fi.reglas).map(reglaPlan).join("")}
   </div>
   ${c.notas.length ? `<div class="card"><span class="sub">Tu nota: ${c.notas.map(esc).join(" · ")}</span></div>` : ""}
-  ${b ? `<div class="card build" style="gap:12px"><div class="cab2" style="flex:1 0 100%"><h2>Build</h2><span class="sub" style="font-size:12px">${b.fuente === "tu" ? "Tu build" : "Los mejores"} · ${pct(b.wr)} · ${b.n} partidas</span></div>
-    <div style="display:flex;align-items:center;gap:8px;color:var(--soft)">${b.core.map(([n, p, id]) => img("item", id, "item", n)).join("→")}</div>
-    ${b.runa || b.skills ? `<span class="tag teal" style="font-size:12px;padding:8px 10px">${esc(b.runa ? b.runa[0] : "")}${b.runa && b.skills ? " · " : ""}${esc(b.skills ? b.skills[0] : "")}</span>` : ""}</div>` : ""}
+  ${b ? `<div class="card" style="gap:14px"><div class="cab2"><h2>Build</h2><span class="sub" style="font-size:12px">${b.fuente === "tu" ? "Tu build" : "Los mejores"} · ${pct(b.wr)}</span></div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      ${b.core.map(([n, p, id], i) => `${i ? '<span class="sub" style="font-size:18px">→</span>' : ""}<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span class="itm ${i === 0 ? "core" : ""}">${img("item", id, "", n)}<span class="sh"></span>${i ? '<span class="itm-ch"></span>' : ""}</span><span class="sub" style="font-size:12px">${i === 0 ? '<b style="color:var(--acc);letter-spacing:.06em">CORE</b> · ' : ""}${pct(p)}</span></div>`).join("")}
+      ${b.runa ? `<span style="width:1px;height:44px;background:var(--line);margin:0 4px"></span><div style="display:flex;flex-direction:column;gap:2px"><b style="font-size:14px">${esc(b.runa[0])}</b><span class="sub" style="font-size:12px">${pct(b.runa[1])}</span></div>` : ""}
+      ${b.skills ? `<span style="margin-left:auto;display:flex;align-items:center;gap:6px">${b.skills[0].split(">").map((k, i) => `${i ? '<span class="sub">›</span>' : ""}<b style="width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:14px;${i === 0 ? "background:var(--acc);color:var(--ontint)" : "background:var(--dark3);color:var(--txt)"}">${esc(k.trim())}</b>`).join("")}</span>` : ""}
+    </div></div>` : ""}
   ${(rec.avisos || []).map(a => `<div class="aviso red">${esc(a)}</div>`).join("")}`;
   const est = pq.est, x = v => Math.max(0, Math.min(100, (v - .4) / .3 * 100));  // escala 40–70%
+  const otras = rec.filas.slice(1, 4);
   const aside = `
-  <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-size:22px;font-weight:600">Pickea</h2></div>
-  <div style="display:grid;grid-template-columns:187px 1fr;gap:20px">
-    <div style="display:flex;flex-direction:column;gap:20px">
-      <div class="tile amber">${img("champion", fi.rival, "", fi.rival)}<div><span>Rival</span><br><b>${esc(fi.rival)}</b></div></div>
-      <div class="tile teal"><div><span>Rol</span><br><b>${esc(pos)}</b></div></div>
-    </div>
-    <div class="est"><span>Estimado contra ${esc(fi.rival)}</span>
-      <div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:24px">${pct(est)}</b><span class="tag ok" style="font-size:12px">Mejor pick</span></div>
-      <div class="barra"><div class="punto" style="left:${x(est)}%"></div>${wr != null ? `<div class="marca" style="left:${x(wr)}%"></div>` : ""}</div>
-      <div class="escala"><span>40</span><span>50</span><span>60</span><span>70</span></div>
-      <span style="font-size:12px;color:var(--muted)">${esc(pq.frase)}${wr != null ? ` Línea = tu WR general (${pct(wr)}).` : ""}</span>
-    </div>
-  </div>
-  ${rec.filas.length > 1 ? `<details><summary>Otras ${rec.filas.length - 1} opciones</summary>${rec.filas.slice(1, 4).map(f => `<div class="fila"><b>${esc(f.champ)}</b><span>${esc(f.vd)} · ${pct(f.est)}</span></div>`).join("")}</details>` : ""}
-  <div style="height:1px;background:var(--line)"></div>
-  <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
-    <div style="display:flex;flex-direction:column;gap:16px;flex:1">
-      <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="font-size:20px;font-weight:600">Si te toca contra…</h2><span class="sub" style="font-size:13px">CS al 14</span></div>
-      <div class="counters">${fi.counters.lista.length ? fi.counters.lista.map(k => `<div class="counter"><span>${img("champion", k.rival, "", "")}${esc(k.rival)}</span>
-        <b>${signo(k.cs14)} ${k.cs14 < 0 ? '<span style="color:var(--red)">↓</span>' : ""}</b><small>CS al 14 · ${k.v}-${k.n - k.v}${k.pocas ? " · pista" : ""}</small></div>`).join("") : '<span class="sub">Sin counters medidos.</span>'}</div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:14px">${img("champion", fi.champ, "", fi.champ).replace('class=""', 'style="width:160px;height:160px;border-radius:16px;border:3px solid #F28DB0"')}<b style="font-size:26px">${esc(fi.champ)}</b></div>
-  </div>`;
+  <div style="display:flex;gap:20px;align-items:center">${img("champion", fi.champ, "retrato2", fi.champ)}
+    <div style="flex:1"><span class="sub" style="font-size:13px">Pickea</span><h2 style="font-size:30px">${esc(fi.champ)}</h2>
+      <span class="sub" style="display:flex;align-items:center;gap:6px">${esc(pos)} contra ${img("champion", fi.rival, "ico20", fi.rival)} ${esc(fi.rival)}</span></div>
+    ${otras.length ? `<details class="otras"><summary>Otras ${otras.length}</summary>${otras.map(f => `<div class="fila"><b>${esc(f.champ)}</b><span>${esc(f.vd)} · ${pct(f.est)}</span></div>`).join("")}</details>` : ""}</div>
+  <div class="est" style="gap:12px"><div style="display:flex;justify-content:space-between;align-items:center"><span>Estimado contra ${esc(fi.rival)}</span>
+      <span style="display:flex;align-items:center;gap:8px"><b style="font-size:26px">${pct(est)}</b>${rec.filas[0] && rec.filas[0].champ === fi.champ ? '<span class="tag" style="background:var(--acc);color:var(--ontint)">Mejor pick</span>' : ""}</span></div>
+    <span class="tuboH" style="flex:none;width:100%" role="img" aria-label="Estimado ${pct(est)}${wr != null ? ", tu WR " + pct(wr) : ""}"><i style="width:${x(est)}%;background:linear-gradient(90deg,#3E7A62,#A8D8C0)"></i>${wr != null ? `<u style="left:${x(wr)}%"></u>` : ""}</span>
+    <div class="escala"><span>40%</span><span>50%</span><span>60%</span><span>70%</span></div>
+    <span class="sub" style="font-size:13px">${esc(pq.frase)}</span></div>
+  <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="font-size:22px">Si te toca contra…</h2><span class="sub" style="font-size:13px">CS al 14</span></div>
+  ${fi.counters.lista.length ? fi.counters.lista.map(k => `<div class="est" style="flex-direction:row;align-items:center;gap:14px;padding:14px 16px">${img("champion", k.rival, "item", k.rival)}
+    <div style="flex:1;display:flex;flex-direction:column;gap:6px"><span><b>${esc(k.rival)}</b> ${k.cs14 < 0 ? '<span class="tag red" style="font-size:11px;padding:2px 8px">Evítalo</span>' : ""}</span>
+      <span class="sub" style="font-size:13px">${k.cs14 < 0 ? "Te niega el farm" : "Le sacas farm"} · ${k.v}-${k.n - k.v}${k.pocas ? " · pista" : ""}</span>
+      <span class="tuboH" style="flex:none;width:100%;height:6px"><i style="width:${Math.min(100, Math.abs(k.cs14 || 0) / 30 * 100)}%;background:linear-gradient(90deg,${k.cs14 < 0 ? "#9A2E3A,#FF8A8A" : "#3E7A62,#A8D8C0"})"></i></span></div>
+    <b style="font-size:20px;color:${k.cs14 < 0 ? "var(--red)" : "var(--teal)"}">${signo(k.cs14)}</b></div>`).join("") : '<span class="sub">Sin counters medidos.</span>'}`;
   return [main, aside];
 }
 
