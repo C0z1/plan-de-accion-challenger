@@ -103,6 +103,13 @@ details.otras[open]>div{background:var(--dark2);border-radius:10px;padding:8px 1
 @media (prefers-reduced-motion:reduce){.anillo *{animation:none!important}}
 .retrato2{width:96px;height:96px;border-radius:50%;border:3px solid var(--acc);object-fit:cover}
 .forma{display:flex;gap:4px;margin-top:6px}.forma i{width:12px;height:12px;border-radius:3px;background:#FF8A8A}.forma i.v{background:#A8D8C0}
+.chip{border:1px solid var(--line);background:var(--dark2);color:var(--txt);border-radius:999px;padding:6px 14px;font:700 13px Mulish,sans-serif;cursor:pointer}.chip.on{background:var(--acc);color:var(--ontint);border-color:var(--acc)}
+.pfila{display:grid;grid-template-columns:4px minmax(150px,1.5fr) 70px minmax(140px,1.3fr) 150px 160px minmax(120px,1.2fr) 64px;gap:14px;align-items:center;padding:10px 14px 10px 0;border-radius:10px;background:var(--dark2)}
+.pfila.cab{background:none;font-size:12px;color:var(--muted)}.pfila.sel{box-shadow:0 0 0 1px var(--acc) inset}.pfila .res{align-self:stretch;border-radius:4px}
+.fch{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--dark3);color:var(--muted)}
+.fch.ok{background:var(--okbg);color:var(--okfg)}.fch.red{background:var(--redbg);color:var(--redfg)}
+.btn2{border:1px solid var(--line);background:none;color:var(--txt);border-radius:10px;padding:8px 14px;font:700 13px Mulish,sans-serif;cursor:pointer}
+main.ancho{max-width:none}
 .camps{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .campc{align-items:flex-start;border:1px solid transparent;color:var(--txt);font:inherit;cursor:pointer;text-align:left;min-height:410px;justify-content:space-between}.campc.sel{border-color:var(--acc)}
 .pool{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.poolc{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px;border-radius:12px;background:var(--dark2)}
@@ -406,14 +413,49 @@ function partidasCliente(s, cl) {  // últimas ~20 del cliente: resultado, campe
   <div class="card"><span class="sub">El análisis completo (tu score, tus errores, tu plan) llega con tu historial en una próxima versión.</span></div>`;
 }
 
-function partidas(s) {  // última primero; la clave es el componente que más pesó en esa partida (si cuadra con el resultado)
+let partSel = null, partFiltro = "todas";
+const CORTA = {nivel: "Nivel al 6", muertes: "Muertes 14–25", cs: "Minions al 10", kp: "Peleas del 14+"};
+function ficha(v) {  // ✓ / ✕ / – de una regla en una partida
+  return `<span class="fch ${v === true ? "ok" : v === false ? "red" : ""}" role="img" aria-label="${v === true ? "cumplida" : v === false ? "fallada" : "sin dato"}">${v === true ? "✓" : v === false ? "✕" : "–"}</span>`;
+}
+function puestoTag(p) {
+  return p.puesto_eq === 1 ? '<span class="tag" style="background:#F5D88A;color:#3A2A08">★ MVP del equipo</span>' : p.puesto_eq === 5 ? '<span class="tag red">▼ Peor del equipo</span>'
+    : p.puesto_eq ? `<span class="tag" style="background:var(--dark3);color:var(--muted)">${p.puesto_eq}.º de 5</span>` : "";
+}
+
+function partidas(s) {  // Partidas_Vino: filtros, historial en tabla (score, reglas ✓/✕, equipo, error) y la partida seleccionada
   const cl = delCliente(s); if (cl) return partidasCliente(s, cl);
-  const ps = s.rendimiento?.resumen?.partidas || [];
-  const mvp = ps.filter(p => p.puesto_eq === 1).length, peor = ps.filter(p => p.puesto_eq === 5).length;
-  return `<div><h1>Tus partidas</h1><span class="sub">${ps.length ? `Últimas ${ps.length} · MVP de tu equipo en ${mvp}, el peor en ${peor}` : "Sin partidas en disco."} · ${esc(s.perfil)}</span></div>
-  <div class="card" style="gap:0">${ps.map(p => `<div class="fila" style="border-color:var(--line)">
-    <span>${ic(p.win ? "ok" : "mal", 20, p.win ? "Victoria" : "Derrota")} ${img("champion", p.campeon, "item", p.campeon)} <b>${esc(p.campeon)}</b> ${esc(p.kda)}</span>
-    <span class="sub">${p.puesto_eq === 1 ? '<span class="mvp ok">★ MVP</span> ' : p.puesto_eq === 5 ? '<span class="mvp red">▼ Peor del equipo</span> ' : p.puesto_eq ? `<span class="mvp" style="background:var(--dark3)">${p.puesto_eq}.º de 5</span> ` : ""}${p.clave ? `${p.win ? "Te subió" : "Te bajó"}: ${esc(((COMP[p.clave[0]] || [p.clave[0]])[0]).toLowerCase())} · ` : ""}score ${p.score} · ${esc(p.fecha)}</span></div>`).join("")}</div>`;
+  const ps = s.rendimiento?.resumen?.partidas || [], V = VS(s), PP = (V && V.por_partida) || {}, RG = V ? V.reglas : [];
+  if (!ps.length) return `<div><h1>Partidas</h1><span class="sub">Sin partidas en disco.</span></div>`;
+  const v = ps.filter(p => p.win).length, mvp = ps.filter(p => p.puesto_eq === 1).length, peor = ps.filter(p => p.puesto_eq === 5).length;
+  const info = p => PP[p.archivo] || {reglas: [], error: null};
+  const vis = ps.filter(p => partFiltro === "todas" ? true : partFiltro === "errores" ? !!info(p).error : info(p).reglas[+partFiltro] === false);
+  const sel = ps.find(p => p.archivo === partSel) || vis[0] || ps[0];
+  const chip = (k, t) => `<button class="chip ${partFiltro === k ? "on" : ""}" onclick="partFiltro='${k}';v=-1;tick()">${t}</button>`;
+  const fila = p => { const i = info(p);
+    return `<div class="pfila ${p === sel ? "sel" : ""}"><span class="res" style="background:${p.win ? "var(--teal)" : "var(--red)"}"></span>
+      <span style="display:flex;gap:10px;align-items:center;min-width:0">${img("champion", p.campeon, "item", p.campeon)}<span style="min-width:0"><b>${esc(p.campeon)}</b><br><span class="sub" style="font-size:12px">${p.rival ? "vs " + esc(p.rival) + " · " : ""}${esc(p.fecha)}</span></span></span>
+      <b>${esc(p.kda)}</b>
+      <span style="display:flex;align-items:center;gap:10px"><span class="tuboH" style="flex:1"><i style="width:${Math.max(0, Math.min(100, p.score))}%;background:linear-gradient(90deg,#5E4590,#C9B0F0)"></i></span><b>${Math.round(p.score)}</b></span>
+      <span style="display:flex;gap:6px">${[0, 1, 2, 3].map(k => ficha(i.reglas[k])).join("")}</span>
+      <span>${puestoTag(p)}</span>
+      <span style="font-size:13px;color:${i.error ? "var(--red)" : "var(--muted)"}">${i.error ? esc((ERR[i.error.clave] || [i.error.clave])[0].replace(/ del 14 al 25$/, "")) + " · min " + esc(i.error.minuto.split(":")[0]) : "—"}</span>
+      <button class="btn2" onclick="partSel='${esc(p.archivo)}';v=-1;tick()">Ver</button></div>`; };
+  const i = info(sel), mal = RG.map((t, k) => i.reglas[k] === false ? t : null).filter(Boolean);
+  const mejora = [...(i.error ? [[`${(ERR[i.error.clave] || [i.error.clave])[0]} al min ${i.error.minuto.split(":")[0]}`, (ERR[i.error.clave] || [, , ""])[2]]] : []), ...mal.map(t => [t, "Regla del plan que no cumpliste en esta partida."])].slice(0, 3);
+  return `
+  <div><h1>Partidas</h1><span class="sub">Últimas ${ps.length} · ${v}-${ps.length - v} · MVP en ${mvp} · peor del equipo en ${peor}</span></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">${chip("todas", "Todas")}${chip("errores", "Con errores")}${RG.map((t, k) => chip(String(k), `${k + 1} · ${CORTA[V.reglas[k].metrica] || t.slice(0, 18)}`)).join("")}</div>
+  <div class="card" style="gap:8px"><div class="cab2"><h2>Historial</h2><span class="sub" style="font-size:12px">la más reciente arriba</span></div>
+    <div class="pfila cab"><span></span><span>Partida</span><span>KDA</span><span>Score (50 = tu rol)</span><span>Reglas 1–${RG.length}</span><span>En tu equipo</span><span>Error</span><span></span></div>
+    ${vis.map(fila).join("") || '<span class="sub">Ninguna partida con ese filtro.</span>'}</div>
+  <div class="card"><div class="cab2"><h2>${esc(sel.campeon)}${sel.rival ? " vs " + esc(sel.rival) : ""} · ${esc(sel.fecha)} · ${sel.win ? "Victoria" : "Derrota"}</h2><span class="sub" style="font-size:12px">la partida seleccionada</span></div>
+    <div class="tres" style="grid-template-columns:1fr 1fr 1.6fr">
+      <div class="est"><span class="sub">MVP de tu equipo</span>${sel.mvp ? `<span style="display:flex;gap:10px;align-items:center">${img("champion", sel.mvp.campeon, "item", sel.mvp.campeon)}<span><b>${esc(sel.mvp.campeon)}${sel.mvp.tu ? " (tú)" : ""}</b><br><span class="sub" style="font-size:12px">score ${Math.round(sel.mvp.score)} · ${esc(sel.mvp.kda)}</span></span></span><span class="tag" style="background:#F5D88A;color:#3A2A08">★ MVP</span>` : '<span class="sub">Sin dato.</span>'}</div>
+      <div class="est" style="${sel.puesto_eq >= 4 ? "box-shadow:0 0 0 1px var(--acc) inset" : ""}"><span class="sub">Tú en tu equipo</span><span style="display:flex;gap:10px;align-items:center">${img("champion", sel.campeon, "item", sel.campeon)}<span><b>${sel.puesto_eq}.º de 5</b><br><span class="sub" style="font-size:12px">score ${Math.round(sel.score)} · ${sel.puesto}.º de 10</span></span></span>
+        <span class="tag ${sel.puesto_eq >= 4 ? "red" : "ok"}">${sel.puesto_eq >= 4 ? "▼ Fuiste mal" : "▲ Bien"}</span></div>
+      <div class="est"><span class="sub">Cosas a mejorar</span>${mejora.length ? mejora.map(([t, d], k) => `<div style="display:flex;gap:12px"><span class="num" style="width:26px;height:26px;border-radius:50%;background:var(--dark3);font-size:13px">${k + 1}</span><div><b style="font-size:14px">${esc(t)}</b>${d ? `<br><span class="sub" style="font-size:12px">${esc(d)}</span>` : ""}</div></div>`).join("") : '<span class="sub">Nada que marcar: cumpliste el plan.</span>'}</div>
+    </div></div>`;
 }
 
 const ROL_VIVO = "";
@@ -675,7 +717,7 @@ async function tick() {
       const [m, a] = vista === "inicio" ? inicio(s) : vista === "draft" ? draftV(s) : vista === "envivo" ? envivo(s) : vista === "campeones" ? campeonesV(s)
         : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? draftV(s) : vista === "perfil" ? perfil(s) : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida
       const av = s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "";
-      document.getElementById("main").innerHTML = av + m;
+      const mn = document.getElementById("main"); mn.classList.toggle("ancho", !a); mn.innerHTML = av + m;  // sin columna derecha (Partidas_Vino): a todo el ancho
       const as = document.getElementById("aside"); as.innerHTML = a; as.hidden = !a;
     }
   } catch (e) {  // sin servidor o una vista que truena: no son lo mismo y el usuario debe poder reportarlo

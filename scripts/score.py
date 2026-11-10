@@ -95,9 +95,11 @@ def de(zs, yo, med):
     if not mio: return None
     s = mio[2]
     riv = next((r for r in res if mio[4] and r[4] == mio[4] and r[1] != mio[1]), None)
+    mvp = max((r for r in res if r[1] == mio[1]), key=lambda r: r[2])  # el mejor de tu equipo (puedes ser tú)
     return dict(score=s, puesto=1 + sum(r[2] > s for r in res),
                 puesto_eq=1 + sum(r[2] > s for r in res if r[1] == mio[1]),
-                linea=(1 if s > riv[2] else 2) if riv else None, comp=mio[3])
+                linea=(1 if s > riv[2] else 2) if riv else None, comp=mio[3],
+                rival_id=riv[0] if riv else None, mvp_id=mvp[0], mvp_score=round(mvp[2], 1))
 
 
 def _ic(vs):  # media ± 1.96·error estándar
@@ -134,6 +136,7 @@ def partidas(raw=None):
         me = next((p for p in info["participants"] if p["puuid"] == yo), None)
         if zs and me: gs.append(dict(t=info["gameCreation"], win=me["win"], champ=me["championName"], rol=me["teamPosition"],
                                      kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", zs=zs, f=f, pid=me["participantId"],
+                                     jug={p["puuid"]: [p["championName"], f"{p['kills']}/{p['deaths']}/{p['assists']}"] for p in info["participants"]},
                                      u=unidades(info)))
     gs.sort(key=lambda g: g["t"])
     med = medias_rol((g["zs"] for g in gs), yo)
@@ -181,7 +184,10 @@ def resumen(n=10, raw=None):
     return dict(partidas=[dict(fecha=datetime.fromtimestamp(g["t"] / 1000).strftime("%m-%d %H:%M"), campeon=g["champ"],
                                win=g["win"], kda=g["kda"], score=round(g["score"], 1), puesto=g["puesto"],
                                puesto_eq=g["puesto_eq"], linea=g["linea"], comp={c: round(v, 2) for c, v in g["comp"].items()},
-                               clave=clave(g), muertes14_25=muertes14_25(g))
+                               clave=clave(g), muertes14_25=muertes14_25(g), archivo=g["f"].stem if g.get("f") else None, t=g.get("t"),
+                               rival=(g.get("jug") or {}).get(g.get("rival_id"), [None])[0],
+                               mvp=dict(campeon=g["jug"][g["mvp_id"]][0], kda=g["jug"][g["mvp_id"]][1], score=g["mvp_score"], tu=g["mvp_id"] == yo)
+                                   if g.get("jug") and g.get("mvp_id") in g["jug"] else None)
                           for g in reversed(gs[-n:])],
                 media=m(gs), ultimas20=m(gs[-20:]), anteriores=m(gs[:-20]),
                 tendencia=[m(gs[i:i + 20]) for i in range(0, len(gs), 20)],

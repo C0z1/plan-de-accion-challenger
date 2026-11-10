@@ -76,6 +76,28 @@ def reglas_perfil(comp20):
     return sorted(rs, key=lambda r: (r["ok"] / r["n"]) if r["n"] else 2)
 
 
+def por_partida(resumen, errs):
+    """Partidas_Vino: por partida (clave = archivo), si cumplió cada regla de «Qué cambiar» en ese mismo orden
+    (True/False, o None si esa partida no tiene el dato o la regla no aplica) y su primer error repetido con el minuto."""
+    reglas = reglas_perfil([p["comp"] for p in resumen["partidas"]])
+    ok = lambda r, g: None if g is None or g.get(r["campo"]) is None else bool(r["ok"](g[r["campo"]]))
+    chk = {draft.R_NIVEL6["texto"]: lambda g, p: ok(draft.R_NIVEL6, g), draft.R_MUERTES["texto"]: lambda g, p: ok(draft.R_MUERTES, g),
+           R_KP["texto"]: lambda g, p: None if p["comp"].get("kp") is None else p["comp"]["kp"] >= 0}
+    for c, rs in draft.REGLAS_CHAMP.items():
+        for r in rs:
+            if r.get("campo") == "min10": chk.setdefault(r["texto"], lambda g, p, r=r, c=c: ok(r, g) if g and g["champ"] == c else None)
+    por_t = {g["t"]: g for g in draft.games}
+    mom = defaultdict(list)
+    for k, ms in errs["momentos"].items():
+        for m in ms: mom[m["archivo"]].append((m["minuto"], k))
+    out = {}
+    for p in resumen["partidas"]:
+        g = por_t.get(p.get("t"))
+        out[p["archivo"]] = dict(reglas=[chk[r["texto"]](g, p) if r["texto"] in chk else None for r in reglas],
+                                 error=dict(zip(("minuto", "clave"), min(mom[p["archivo"]]))) if mom[p["archivo"]] else None)
+    return out
+
+
 def draft_rol(pos, dias=90):
     """Draft_Vino: a quién banear en el rol (peor WR contra él, 3+ partidas, con el porqué medido), rivales frecuentes
     de los últimos `dias` y tu pool del rol (5+ partidas)."""
@@ -154,7 +176,7 @@ def todo(resumen):
     gs = score.partidas()[0]
     pos = Counter(g["pos"] for g in draft.games[-50:]).most_common(1)[0][0]
     return dict(campeones=campeones(), reglas=reglas_perfil([p["comp"] for p in resumen["partidas"]]),
-                draft={p: draft_rol(p) for p in ("TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY")}, pos=pos, errores=errores(gs),
+                draft={p: draft_rol(p) for p in ("TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY")}, pos=pos, errores=(e := errores(gs)), por_partida=por_partida(resumen, e),
                 total=len(draft.games), ultima=max(g["t"] for g in draft.games))
 
 
