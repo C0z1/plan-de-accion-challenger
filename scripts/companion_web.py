@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
+          "aviso": None, "espera": None, "rango": None, "cuenta": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
 VERSION = "0.4.1"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -55,6 +55,7 @@ def evento(e):
     elif tipo == "cuenta":  # la cuenta con sesión en el cliente: manda sobre perfil.json (un amigo, u otra cuenta en tu PC)
         gui.CUENTA[0] = e[1]; s = {"cuenta": e[1], "perfil": gui.perfil(ESTADO["rango"], e[1])}
         threading.Thread(target=refrescar, daemon=True).start()  # si el historial en disco es de otra cuenta, se oculta
+    elif tipo == "cliente": s = {"cliente": e[1]}
     elif tipo == "aviso": s = {"aviso": e[1]}
     elif tipo == "pos": s = {"pos": e[1]}  # champ select antes de ver al rival: la ventana Draft
     with LOCK: ESTADO.update(s, v=ESTADO["v"] + 1)
@@ -113,12 +114,18 @@ def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la c
 
 def vigilar_cuenta(q, cada=10):
     """Cada `cada` s lee la cuenta con sesión en el cliente (solo lectura); al cambiar, manda su rango y su «gameName#tag»."""
-    ultima = None
+    ultima, vuelta, m = None, 0, None
     while True:
         s = companion.lcu("/lol-summoner/v1/current-summoner") or {}
-        if s.get("gameName") and (c := f"{s['gameName']}#{s.get('tagLine', '')}") != ultima:
+        nueva = s.get("gameName") and (c := f"{s['gameName']}#{s.get('tagLine', '')}") != ultima
+        if nueva:
             ultima = c; q.put(("rango", companion.rango(companion.lcu("/lol-ranked/v1/current-ranked-stats")))); q.put(("cuenta", c))
-        time.sleep(cada)
+        if s.get("gameName") and (nueva or vuelta % 6 == 0):  # tus últimas partidas del cliente (sin key): al conectar y cada minuto
+            h = companion.lcu("/lol-match-history/v1/products/lol/current-summoner/matches?begIndex=0&endIndex=19")
+            if h:
+                if not gui.NOMBRES: gui.NOMBRES.update(companion.nombres_lcu())
+                m = m or {**gui.NOMBRES, **companion.nombres()}; q.put(("cliente", companion.historial(h, m)))
+        vuelta += 1; time.sleep(cada)
 
 
 def precargar():  # import draft lee tus ~300 partidas (~4 s): al arrancar, para que el primer champ select no lo espere

@@ -337,7 +337,20 @@ function perfil(s) {  // ventana 2 del canvas: score, WR y muertes de las últim
     ${pool.map(([c, d]) => `<div class="fila" style="border-color:var(--line)"><span>${img("champion", c, "item", c)} <b>${esc(c)}</b></span><span>${pct(d.wr)} · ${d.n} partidas · score ${d.score}</span></div>`).join("")}</div>`;
 }
 
+const HORA = new Intl.DateTimeFormat("es", {hour: "2-digit", minute: "2-digit"}), FECHA = new Intl.DateTimeFormat("es", {day: "numeric", month: "short"});
+const delCliente = s => (!s.rendimiento && s.cliente && s.cliente.length) ? s.cliente : null;  // sin historial descargado: el del cliente (sin key)
+
+function partidasCliente(s, cl) {  // últimas ~20 del cliente: resultado, campeón, KDA, CS, cola y cuándo
+  const v = cl.filter(p => p.win).length;
+  return `<div><h1>Tus partidas</h1><span class="sub">Últimas ${cl.length} del cliente · ${v}-${cl.length - v} · ${esc(s.perfil)}</span></div>
+  <div class="card" style="gap:0">${cl.map(p => `<div class="fila" style="border-color:var(--line)">
+    <span>${ic(p.win ? "ok" : "mal", 20, p.win ? "Victoria" : "Derrota")} ${img("champion", p.campeon, "item", p.campeon)} <b>${esc(p.campeon)}</b> ${esc(p.kda)}</span>
+    <span class="sub">${p.cs} CS · ${esc(p.cola)} · ${p.min} min · ${esc(FECHA.format(new Date(p.ts)))}</span></div>`).join("")}</div>
+  <div class="card"><span class="sub">El análisis completo (tu score, tus errores, tu plan) llega con tu historial en una próxima versión.</span></div>`;
+}
+
 function partidas(s) {  // última primero; la clave es el componente que más pesó en esa partida (si cuadra con el resultado)
+  const cl = delCliente(s); if (cl) return partidasCliente(s, cl);
   const ps = s.rendimiento?.resumen?.partidas || [];
   const mvp = ps.filter(p => p.puesto_eq === 1).length, peor = ps.filter(p => p.puesto_eq === 5).length;
   return `<div><h1>Tus partidas</h1><span class="sub">${ps.length ? `Últimas ${ps.length} · MVP de tu equipo en ${mvp}, el peor en ${peor}` : "Sin partidas en disco."} · ${esc(s.perfil)}</span></div>
@@ -350,7 +363,8 @@ const DIAS = new Intl.DateTimeFormat("es", {weekday: "long", day: "numeric", mon
 function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan con tu dato, rango y atajos
   const R = s.rendimiento, t = R && R.tilt, ps = R ? R.resumen.partidas : [], [id, ...resto] = String(s.perfil || "").split(" · ");
   const nombre = id.includes("#") ? id.split("#")[0] : "", cliente = enCliente(s.fase);
-  const hoy = t ? t.hoy : [], v = hoy.filter(g => g.win).length;
+  const hoy = t ? t.hoy : (delCliente(s) || []).filter(g => new Date(g.ts).toDateString() === new Date().toDateString()).reverse()
+    .map(g => ({...g, fecha: HORA.format(new Date(g.ts))})), v = hoy.filter(g => g.win).length;
   const d25 = ps.filter(p => p.muertes14_25 != null), ok = d25.filter(p => p.muertes14_25 <= 2).length, f = d25.length ? ok / d25.length : 0;
   const main = `
   <div><h1>${nombre ? "Hola, " + esc(nombre) : "HTC"}</h1><span class="sub">${esc(DIAS.format(new Date()).replace(/^./, c => c.toUpperCase()))}</span></div>
@@ -419,7 +433,18 @@ function draftV(s) {  // Draft_Vino: fase de bans y picks antes de ver a tu riva
 }
 
 let campSel = null;
+function campeonesCliente(cl) {  // sin historial descargado: WR por campeón de tus últimas partidas del cliente
+  const por = {}; cl.forEach(p => { const c = por[p.campeon] ||= {champ: p.campeon, n: 0, v: 0}; c.n++; c.v += p.win; });
+  const cs = Object.values(por).sort((a, b) => b.n - a.n || b.v - a.v);
+  return [`<div><h1>Campeones</h1><span class="sub">Tus últimas ${cl.length} partidas del cliente · todas las colas</span></div>
+  <div class="camps">${cs.slice(0, 6).map(x => `<div class="card campc">
+    <div style="text-align:left;width:100%"><b style="font-size:18px">${esc(x.champ)}</b><br><span class="sub" style="font-size:12px">${x.n} ${x.n === 1 ? "partida" : "partidas"}</span></div>
+    <div style="display:flex;align-items:center;gap:20px">${anillo(x.champ, x.v / x.n, 120)}<div style="text-align:left"><b style="font-size:30px">${pct(x.v / x.n)}</b><br><span class="sub" style="font-size:12px">${x.v}-${x.n - x.v}</span></div></div></div>`).join("")}</div>
+  <div class="card"><span class="sub">Pocas partidas: tómalo como pista. Tus matchups y reglas por campeón llegan con tu historial completo.</span></div>`, ""];
+}
+
 function campeonesV(s) {  // Campeones_Vino: pool en tarjetas con anillo; panel con reglas y counters del elegido
+  const cl = delCliente(s); if (cl) return campeonesCliente(cl);
   const V = VS(s); if (!V) return sinDatos("Campeones");
   const cs = V.campeones, c = cs.find(x => x.champ === campSel) || cs[0];
   if (!c) return sinDatos("Campeones", "Menos de 3 partidas por campeón.");

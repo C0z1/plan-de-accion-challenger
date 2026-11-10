@@ -68,6 +68,7 @@ def ultima_partida():
     except (OSError, ValueError, KeyError, StopIteration): return {}
 
 
+NOMBRES = {}  # championId -> nombre del cliente (companion_web.vigilar_cuenta), para quien no tiene partidas descargadas
 CUENTA = [None]  # «gameName#tag» con sesión en el cliente (la pone companion_web.vigilar_cuenta)
 
 
@@ -200,7 +201,7 @@ def trabajador(q):
             if fase == "ChampSelect" and (s := companion.lcu("/lol-champ-select/v1/session")):
                 pos, ids = companion.rivales(s)
                 if ids and (pos, ids) != visto:
-                    m = m or companion.nombres(); visto = (pos, ids)
+                    m = m or companion.nombres() or dict(NOMBRES); visto = (pos, ids)
                     q.put(("draft", pos, recomendaciones(pos, [m.get(i) for i in ids])))
                 elif not ids and pos and visto != pos: q.put(("pos", pos)); visto = pos  # bans y picks antes del rival
             elif fase != "ChampSelect": visto = None

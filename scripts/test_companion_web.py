@@ -77,7 +77,7 @@ class Http(unittest.TestCase):
         c, q, n = w.companion, queue.Queue(), iter(range(6))
         cuentas = ["Uno", "Uno", None, "Dos"]
         def lcu(path):
-            if "summoner" in path:
+            if path == "/lol-summoner/v1/current-summoner":
                 i = next(n)
                 if i >= len(cuentas): raise KeyboardInterrupt
                 return {"gameName": cuentas[i], "tagLine": "LAN"} if cuentas[i] else None

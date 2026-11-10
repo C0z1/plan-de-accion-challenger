@@ -40,6 +40,24 @@ def rango(s):
             "lp": q.get("leaguePoints") or 0, "wins": v, "losses": d, "n": v + d, "wr": round(100 * v / (v + d)) if v + d else None}
 
 
+COLAS = {420: "Solo/Duo", 440: "Flex", 400: "Normal", 430: "Normal", 490: "Rápida", 480: "Rápida", 450: "ARAM"}
+
+
+def historial(h, nombres):
+    """Tus últimas partidas del cliente (/lol-match-history, sin key de Riot; trae ~20 y solo tus datos), la más nueva
+    primero: [{campeon, win, kda, cs, cola, ts, min}]. Sin remakes (< 5 min) ni modos de evento (colas fuera de COLAS)."""
+    out = []
+    for g in ((h or {}).get("games") or {}).get("games") or []:
+        p = (g.get("participants") or [None])[0]
+        if not p or g.get("queueId") not in COLAS or (g.get("gameDuration") or 0) < 300: continue
+        st = p.get("stats") or {}
+        out.append({"campeon": nombres.get(p.get("championId"), str(p.get("championId"))), "win": bool(st.get("win")),
+                    "kda": f"{st.get('kills', 0)}/{st.get('deaths', 0)}/{st.get('assists', 0)}",
+                    "cs": (st.get("totalMinionsKilled") or 0) + (st.get("neutralMinionsKilled") or 0),
+                    "cola": COLAS[g["queueId"]], "ts": g.get("gameCreation") or 0, "min": (g.get("gameDuration") or 0) // 60})
+    return sorted(out, key=lambda x: -x["ts"])
+
+
 VIVO = DIR.parent / "datos" / "vivo"
 
 
@@ -169,7 +187,7 @@ def aviso_muertes(d):
     t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
     if not 840 <= t < 1500 or (n := muertes14(d) or 0) < 2: return None
     return (f"Min {int(t // 60)}: {n} muertes desde el 14. Juega con objetivo: no pelees si no sale un dragón, heraldo o torre; "
-            "con 3+ del 14 al 25 tu WR baja de 68% a 43%.")
+            "la meta es 2 o menos del 14 al 25.")
 
 
 CFG = DIR.parent / "config.json"  # opcional, como en revision.py
@@ -212,6 +230,12 @@ def rivales(s):
     mismo = [p["championId"] for p in elegidos if POS.get(p.get("assignedPosition") or "") == pos]
     if any(p.get("assignedPosition") for p in ellos): return pos, mismo  # con roles: espera a tu rival, no al jungla
     return pos, sorted(p["championId"] for p in elegidos)
+
+
+def nombres_lcu():
+    """championId -> alias («MonkeyKing», como championName de la Riot API) de la lista local del cliente: sirve sin partidas."""
+    s = lcu("/lol-game-data/assets/v1/champion-summary.json")
+    return {c["id"]: c["alias"] for c in s if isinstance(c, dict) and (c.get("id") or -1) > 0 and c.get("alias")} if isinstance(s, list) else {}
 
 
 def nombres():

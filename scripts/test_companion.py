@@ -320,3 +320,15 @@ class Robusto(unittest.TestCase):
 
 
 if __name__ == "__main__": unittest.main()
+
+
+class TestHistorialCliente(unittest.TestCase):  # v0.5: últimas partidas del cliente sin key de Riot
+    def test_filtra_remakes_y_eventos_y_ordena(self):
+        def g(gid, cola, dur, ts, win, champ=1):
+            return {"gameId": gid, "queueId": cola, "gameDuration": dur, "gameCreation": ts,
+                    "participants": [{"championId": champ, "stats": {"win": win, "kills": 3, "deaths": 1, "assists": 4, "totalMinionsKilled": 150, "neutralMinionsKilled": 10}}]}
+        h = {"games": {"games": [g(1, 420, 1800, 100, True), g(2, 420, 200, 300, False), g(3, 2400, 1500, 400, True), g(4, 450, 1200, 200, False, 99)]}}
+        r = companion.historial(h, {1: "Ahri"})
+        self.assertEqual([(x["campeon"], x["cola"], x["win"]) for x in r], [("99", "ARAM", False), ("Ahri", "Solo/Duo", True)])
+        self.assertEqual((r[1]["kda"], r[1]["cs"], r[1]["min"]), ("3/1/4", 160, 30))
+        self.assertEqual(companion.historial(None, {}), [])
