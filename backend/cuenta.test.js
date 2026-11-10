@@ -132,3 +132,14 @@ test("reportes privados y métricas anónimas: solo el admin los lee", async () 
   const met = await (await worker.fetch(conCodigo("/v1/admin/metricas", "codigo-admin1"), env, ctx)).json();
   assert.deepEqual([met[0].usos, met[0].overlay, met[0].region], [2, 1, "la1"]);
 });
+
+test("seguridad v0.8: cuerpo enorme, URL rota, invitado con nombre de admin y códigos de otra longitud", async () => {
+  const {env, ctx} = entorno(); env.ACCESOS = "cozi:codigo-admin1"; env.ADMINS = "cozi,carla";
+  const grande = new Request("https://racha.test/v1/reporte", {method: "POST", body: "x", headers: {"content-length": "999999", "x-racha-token": "codigo-admin1"}});
+  assert.equal((await worker.fetch(grande, env, ctx)).status, 413);
+  assert.equal((await worker.fetch(conCodigo("/v1/builds/%E0%A4%A", "codigo-admin1"), env, ctx)).status, 404);
+  const inv = await (await worker.fetch(conCodigo("/v1/admin/invitados", "codigo-admin1", {method: "POST", body: {nombre: "carla"}}), env, ctx)).json();
+  assert.equal((await worker.fetch(conCodigo("/v1/admin/invitados", inv.codigo), env, ctx)).status, 403);  // se llama como un admin, pero no lo es
+  assert.equal((await worker.fetch(conCodigo("/v1/riot/americas/lol/match/v5/matches/LA1_9", "codigo-admin"), env, ctx)).status, 401);  // prefijo de un código
+  assert.equal((await worker.fetch(conCodigo("/v1/riot/americas/lol/match/v5/matches/LA1_9", "codigo-admin12"), env, ctx)).status, 401);
+});

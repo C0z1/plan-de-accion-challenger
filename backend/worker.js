@@ -28,9 +28,9 @@ export function quienEs(token, accesos) {
   if (!token || !accesos) return null;
   for (const par of accesos.split(",")) {
     const [nombre, codigo] = par.split(":").map(x => (x || "").trim());
-    if (!codigo || codigo.length !== token.length) continue;
-    let d = 0;
-    for (let i = 0; i < codigo.length; i++) d |= codigo.charCodeAt(i) ^ token.charCodeAt(i);
+    if (!codigo) continue;
+    let d = codigo.length ^ token.length;  // sin salir antes por longitud: el tiempo no revela cuánto mide un código
+    for (let i = 0; i < Math.max(codigo.length, token.length); i++) d |= (codigo.charCodeAt(i) || 0) ^ (token.charCodeAt(i) || 0);
     if (d === 0) return nombre || "amigo";
   }
   return null;
@@ -55,6 +55,8 @@ export function destino(url) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (Number(request.headers.get("content-length") || 0) > 65536) return json({error: "demasiado grande"}, 413);  // antes de parsear nada
+    // shortcut: sin rate-limit por IP en /v1/login ni en el proxy; agregarlo si alguien abusa del plan gratis
     const c = await cuenta(request, env, url);  // /v1/login y /v1/yo… (cuenta en la nube)
     if (c) return c;
     const e = await extra(request, env, url, quienEs);  // builds, reportes, métricas y admin

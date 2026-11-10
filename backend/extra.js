@@ -25,8 +25,10 @@ export async function correoInvitado(email, env) {
 async function quien(request, env, quienEs) {
   // {id, admin} de quien llama (código de ACCESOS, código de D1 o sesión de Google), o null
   const admins = lista(env.ADMINS), tok = request.headers.get("x-racha-token");
-  const nombre = quienEs(tok, env.ACCESOS) || await codigoInvitado(tok, env);
+  const nombre = quienEs(tok, env.ACCESOS);  // solo los códigos del secreto ACCESOS pueden ser admin
   if (nombre) return {id: "c:" + nombre, admin: admins.includes(nombre.toLowerCase())};
+  const invitado = await codigoInvitado(tok, env);
+  if (invitado) return {id: "i:" + invitado, admin: false};
   const sub = await usuarioDeSesion(request, env);
   if (!sub) return null;
   const u = await env.DB.prepare("SELECT email FROM usuarios WHERE google_sub = ?").bind(sub).first();
@@ -52,7 +54,7 @@ export async function extra(request, env, url, quienEs) {
     return json(results || []);
   }
   if (ruta.startsWith("/v1/builds/") && m === "GET") {
-    const clave = decodeURIComponent(ruta.slice(11));
+    let clave; try { clave = decodeURIComponent(ruta.slice(11)); } catch { return json({error: "sin build todavía"}, 404); }
     const f = CLAVE.test(clave) && await DB.prepare("SELECT datos, ts FROM builds WHERE clave = ?").bind(clave).first();
     return f ? json({clave, ts: f.ts, datos: JSON.parse(f.datos)}) : json({error: "sin build todavía"}, 404);
   }
@@ -100,7 +102,8 @@ export async function extra(request, env, url, quienEs) {
     return json({nombre, email, codigo});
   }
   if (ruta.startsWith("/v1/admin/invitados/") && m === "DELETE") {
-    await DB.prepare("DELETE FROM invitados WHERE nombre = ?").bind(decodeURIComponent(ruta.slice(20))).run();
+    let nombre; try { nombre = decodeURIComponent(ruta.slice(20)); } catch { return json({error: "no existe"}, 404); }
+    await DB.prepare("DELETE FROM invitados WHERE nombre = ?").bind(nombre).run();
     return json({ok: true});
   }
   if (ruta === "/v1/admin/reportes" && m === "GET") {

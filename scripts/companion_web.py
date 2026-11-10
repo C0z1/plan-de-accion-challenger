@@ -113,7 +113,7 @@ def bombear(q):
 def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la cola
     r = None if gui.ajeno(gui.CUENTA[0]) else rendimiento_rapido()  # historial de otra cuenta: no mostrarlo como tuyo
     with LOCK: ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1)
-    if r is not None: tus_builds(); vistas_previas(r)
+    if r is not None: vistas_previas(r); tus_builds()  # tu build propia relee las timelines: al final (auditoría de rendimiento)
     builds_del_backend(); sync_nube()
 
 

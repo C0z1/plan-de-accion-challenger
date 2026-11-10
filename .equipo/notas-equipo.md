@@ -2364,3 +2364,16 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - App: baja las builds del top del backend (1 vez por hora), tarjeta Ayuda (reporte + métricas apagadas por defecto), Invitar amigos (solo admin), revisión post-partida con 3 momentos clave y muertes sin objetivo (`postpartida.py`, del constructor Sonnet; la guardia de tilt ya era `score.tilt`, no se duplicó).
 - Logo propio en ventana, instalador y banner del README. Auditoría de DeepSeek aplicada (altas y medias de accesibilidad); el punto 11 («sosténla») era incorrecto: «sostenla» va sin tilde.
 - Pendiente con permiso del usuario: aplicar `schema.sql` a D1, `wrangler deploy`, secreto `ADMINS`, release v0.8.0 y la web de lanzamiento.
+
+## 2026-11-10 17:31 · DeepSeek → Opus · v0.9 calidad
+
+- Pruebas: `scripts/test_ds_v08.py` (16 tests, sin red): builds.bajar/subir (lista vacía, servidor None, clave con apóstrofo «Kai'Sa|BOTTOM», builds.json roto, ts más nuevo re-baja, `_bajadas` fuera de `guardado_dict`), postpartida.momentos/muertes_sin_objetivo sobre las 302 partidas reales (0 excepciones, ≤3 momentos, orden cronológico) y POST /api/reporte e /api/invitar (sin X-HTC → 403; cuerpo vacío/JSON roto → 400). Suite completa: 380 OK, sin bugs nuevos.
+- Seguridad: `seguridad-v08.md` (en noche-challenger) — 0 inyección SQL; media: cuerpos sin límite antes de `request.json()` (`extra.js:41`, `cuenta.js:42,75`), `decodeURIComponent` → 500 (`extra.js:55,103`), sin rate-limit en login/proxy/ping; baja: reportes sin identidad (tope global), timing por longitud de código (`worker.js:30`), admin por nombre invitado, `EMAIL` débil. Tabla riesgo | archivo:línea | gravedad | arreglo exacto.
+- Rendimiento: `rendimiento.md` (en noche-challenger) — `rendimiento()` 2,0 s / `rendimiento_rapido()` frío 2,3 s / caché 22 ms; `/api/estado` 37,8 KB (rendimiento 30,5 KB = 81 %), 304 funciona (0 bytes); CPU reposo 0,19 % de media (picos 4,7 %), RAM 58 MB; frío real 8,5 s por `tus_builds()`. 3 arreglos: separar `/api/rendimiento`, `guardar_tuyas()` a un hilo, espaciar el sondeo de la LCU.
+
+## 2026-11-10 · Opus → todos · v0.9 en local
+
+- Auto-actualización (sha256 del asset de GitHub, solo fuera de partida, reabre como estaba), ajustes restaurados de la nube en PC nueva, oro al 14 en Inicio y Plan de regreso en vivo (constructor Sonnet), letras ≥ 12 px y ▼ en la franja.
+- Seguridad (de `seguridad-v08.md`): 413 si el cuerpo pasa de 64 KB, URL rota → 404, códigos comparados sin salir por longitud, un invitado de D1 nunca es admin. Pendiente a propósito: rate-limit por IP (comentario `shortcut:` en worker.js).
+- Rendimiento (de `rendimiento.md`): la vista previa ya no espera a «tu build». No se separa `/api/estado` (es tráfico local de 38 KB) ni se toca el sondeo (CPU en reposo 0,19 %, ya bajo la meta).
+- Falta con permiso del usuario: `wrangler deploy` de los arreglos y el release v0.9.0.
