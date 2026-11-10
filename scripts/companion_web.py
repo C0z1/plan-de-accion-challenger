@@ -72,6 +72,7 @@ def rendimiento(raw=None):
     if raw is None:  # las ventanas nuevas (vistas.py) leen datos/raw de draft.py; con otra carpeta no aplican
         try:
             import vistas; r["vistas"] = vistas.todo(r["resumen"])
+            import semanal; r["semana"] = semanal.plan(r["resumen"], r["vistas"])  # «Tu semana» en Perfil
         except Exception: r["vistas"] = None  # sin partidas suficientes draft.py truena al importar: las ventanas dicen «sin datos»
     return r
 
@@ -82,7 +83,7 @@ CACHE = gui.REPO / "datos" / "cache" / "rendimiento.json"
 def firma(raw):
     """(n, mtime máx, bytes) de las partidas y timelines, y la fecha de score.py: si cambia algo, la caché ya no vale."""
     fs = [f.stat() for f in pathlib.Path(raw).rglob("*.json")]
-    codigo = [(gui.REPO / "scripts" / f).stat().st_mtime_ns if (gui.REPO / "scripts" / f).exists() else 0 for f in ("score.py", "draft.py", "vistas.py")]
+    codigo = [(gui.REPO / "scripts" / f).stat().st_mtime_ns if (gui.REPO / "scripts" / f).exists() else 0 for f in ("score.py", "draft.py", "vistas.py", "semanal.py", "postpartida.py")]
     return [len(fs), max((s.st_mtime_ns for s in fs), default=0), sum(s.st_size for s in fs), *codigo]
 
 

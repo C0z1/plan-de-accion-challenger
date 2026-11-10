@@ -420,7 +420,22 @@ function perfil(s) {  // Perfil_Vino (+ acuerdo 21): score, win rate y errores c
       <span style="display:flex;gap:8px;align-items:center">${forma(x.forma)}<span class="sub" style="font-size:12px">últimas 5</span></span>
       <span style="font-size:13px">Mejor vs: ${esc(x.mejor.join(", ") || "—")}</span></div>
     ${x.etiqueta ? `<span class="tag ${ETQ[x.etiqueta] ?? ""}">${esc(x.etiqueta)}</span>` : ""}</div>`).join("")}` : ""}`;
-  return [main, aside];
+  return [main + semanaCard(R.semana), aside];
+}
+function semanaCard(p) {  // «Tu semana» (scripts/semanal.py): récord, contra la anterior, la regla a cuidar y el foco
+  if (!p) return "";
+  const dato = (t, v) => `<div class="filaV" style="padding:10px 14px"><div class="txt"><small>${t}</small><b style="font-size:15px">${v}</b></div></div>`;
+  const r = p.regla_foco, mc = p.mejor_campeon, pr = p.peor_rival;
+  return `<div class="card" style="gap:10px"><div class="cab2"><h2>Tu semana</h2><span class="sub" style="font-size:12px">desde el lunes ${esc(p.semana.slice(8))}/${esc(p.semana.slice(5, 7))}${p.completa ? "" : " · de tus últimas partidas descargadas"}</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+      ${dato("Récord", p.partidas ? `${p.v}-${p.d} · ${pct(p.wr)}` : "sin partidas")}
+      ${dato("Semana anterior", p.wr_prev != null ? pct(p.wr_prev) : "sin dato")}
+      ${dato("Oro al 14 parejo o arriba", p.oro14.n ? `${p.oro14.ok} de ${p.oro14.n}` : "sin dato")}
+      ${dato("Veces en 2 derrotas seguidas", p.tilt)}
+      ${mc ? dato("Mejor campeón", `${esc(mc.campeon)} ${mc.v}-${mc.n - mc.v}`) : ""}
+      ${pr ? dato("Peor rival", `${esc(pr.rival)} ${pr.v}-${pr.n - pr.v}`) : ""}</div>
+    ${r ? `<span class="sub" style="font-size:14px">Regla a cuidar: <b style="color:var(--txt)">${esc(r.texto)}</b> (la cumpliste ${r.ok} de ${r.n})</span>` : ""}
+    <span style="font-size:15px">${esc(p.foco_texto)}</span></div>`;
 }
 
 const HORA = new Intl.DateTimeFormat("es", {hour: "2-digit", minute: "2-digit"}), FECHA = new Intl.DateTimeFormat("es", {day: "numeric", month: "short"});

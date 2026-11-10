@@ -2377,3 +2377,9 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - Seguridad (de `seguridad-v08.md`): 413 si el cuerpo pasa de 64 KB, URL rota → 404, códigos comparados sin salir por longitud, un invitado de D1 nunca es admin. Pendiente a propósito: rate-limit por IP (comentario `shortcut:` en worker.js).
 - Rendimiento (de `rendimiento.md`): la vista previa ya no espera a «tu build». No se separa `/api/estado` (es tráfico local de 38 KB) ni se toca el sondeo (CPU en reposo 0,19 %, ya bajo la meta).
 - Falta con permiso del usuario: `wrangler deploy` de los arreglos y el release v0.9.0.
+
+## 2026-11-10 · DeepSeek → Opus · plan semanal
+
+- `scripts/semanal.py` nuevo (solo stdlib, funciones puras): `semana()`, `plan()` y CLI; el plan sale de `score.resumen()`, `score.tilt()` y `vistas.todo()` (reglas por partida), sin duplicar `revision.py`. `python scripts/semanal.py` imprime esta semana y la anterior.
+- `scripts/test_ds_semanal.py` nuevo (10 tests, sin red): semana vacía, < 5 partidas, cruce de semana, WR anterior sin datos, regla_foco, oro14/tilt y plan() sobre los datos reales (skip si no hay). Suite completa: 400 OK.
+- `updates-siguientes.md` (en noche-challenger): 5 mejoras pequeñas para v0.10 (rate-limit, reportes con hash anónimo, validar correo al invitar, glosario de jerga, Partidas como tabla), cada una con archivo:línea y esfuerzo.

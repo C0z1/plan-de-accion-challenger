@@ -119,4 +119,19 @@ class PickHoy(unittest.TestCase):  # idea 7: el estimado encogido manda, no el W
 
 
 
+
+class SemanaCompleta(unittest.TestCase):  # con solo las últimas 20 no se compara contra una semana a medias
+    def test_cobertura(self):
+        import semanal
+        from datetime import date, datetime
+        ms = lambda y, m, d: int(datetime(y, m, d, 12).timestamp() * 1000)
+        g = lambda t, w=True: dict(t=t, win=w, campeon="Yone", rival="Zed")
+        hoy = date(2026, 11, 11)  # miércoles; lunes 9, lunes anterior 2
+        p = semanal.plan({"partidas": [g(ms(2026, 11, 10)), g(ms(2026, 11, 9))]}, hoy=hoy)
+        self.assertEqual((p["completa"], p["wr_prev"], p["partidas"]), (False, None, 2))
+        p = semanal.plan({"partidas": [g(ms(2026, 11, 10)), g(ms(2026, 11, 3), False), g(ms(2026, 10, 30))]}, hoy=hoy)
+        self.assertEqual((p["completa"], p["wr_prev"]), (True, 0.0))
+
+
+
 if __name__ == "__main__": unittest.main()
