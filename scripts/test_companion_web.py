@@ -72,6 +72,10 @@ class Http(unittest.TestCase):
         for t in ("Tu rival", "Objetivos", "desde el 20:00"): self.assertIn(t.encode(), b)
         st, b = self.get("/api/estado"); self.assertEqual(st, 200); self.assertIn("fase", json.loads(b))
 
+    def test_icono(self):
+        st, b = self.get("/icono.png"); self.assertEqual(st, 200); self.assertEqual(b[1:4], b"PNG")
+        self.assertIn(b'href="/icono.png"', self.get("/")[1])
+
     def test_pie_wr_con_pocas_partidas(self):
         st, b = self.get("/"); self.assertIn(b"ps.length > 3", b); self.assertIn("Pocas partidas: el WR casi no dice nada".encode(), b)
 

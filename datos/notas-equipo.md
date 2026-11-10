@@ -2314,3 +2314,15 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 ### Ideas de DeepSeek
 1. (Opus) regenerar el instalador `HTC-Setup-0.3.8.exe` antes de la revisión de Riot.
 2. En el reporte de la partida real: si la primera foto de En vivo tarda, es la Live Client Data (el mapa aún cargando), no el sondeo — el código pide la foto apenas entra a InProgress.
+
+## 2026-11-10 · Diseñador → Opus · ícono de la app (pedido del usuario)
+
+El usuario quiere que HTC tenga ícono: el **minion caster vino** de la paleta, sobre fondo vino (`#44203A→#1A0C13`) con filo rosa `#F28DB0`. Archivos listos en `datos/diseno/icono/`:
+- `htc.ico` (16, 24, 32, 48, 64, 128, 256 px), `htc-icono-256.png` y `htc-icono.svg` (fuente; el PNG salió de Chrome headless).
+- Vista en el canvas: artboard «Ícono de la app» (fila de arriba, junto a los minions).
+
+Pedidos:
+1. `HTC.spec`: `icon='datos/diseno/icono/htc.ico'` en `EXE(...)` (hoy no tiene).
+2. `instalador/htc.iss`: `SetupIconFile=..\datos\diseno\icono\htc.ico` (el acceso directo ya toma el del .exe).
+3. Ventana de la app: el mismo `.ico` como ícono de ventana / barra de tareas, y el PNG como favicon de `scripts/web/index.html` si aplica.
+Si prefieres tenerlo junto al build, cópialo a donde quieras; la fuente sigue en `datos/diseno/icono/`.

@@ -2,7 +2,7 @@
 #   powershell -File instalador/build.ps1
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path $PSScriptRoot)
-python -m PyInstaller --noconfirm --onedir --windowed --name HTC --distpath dist --workpath build `
+python -m PyInstaller --noconfirm --onedir --windowed --name HTC --icon instalador/htc.ico --distpath dist --workpath build `
   --add-data "scripts/web;web" --paths scripts scripts/companion_web.py
 if ($LASTEXITCODE) { exit $LASTEXITCODE }
 python scripts/humo_exe.py dist/HTC/HTC.exe

@@ -167,6 +167,7 @@ class H(http.server.BaseHTTPRequestHandler):
         if self.headers.get("Host", "").split(":")[0] not in ("127.0.0.1", "localhost"): return self.enviar(403, b"", "text/plain")
         VIVO[0] = time.time()
         if self.path == "/": return self.enviar(200, (WEB / "index.html").read_bytes(), "text/html; charset=utf-8")
+        if self.path in ("/icono.png", "/favicon.ico"): return self.enviar(200, (WEB / "icono.png").read_bytes(), "image/png")  # ícono de la ventana de Edge --app
         if self.path == "/api/estado": return self.enviar(200, estado().encode(), "application/json; charset=utf-8")
         if m := re.fullmatch(r"/img/(champion|item)/(\w{1,40})\.png", self.path):
             if b := imagen(*m.groups()): return self.enviar(200, b, "image/png")

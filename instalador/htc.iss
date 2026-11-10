@@ -6,6 +6,7 @@ AppId={{6B1F0C2E-4D1A-4C8E-9E57-48544301C11B}
 AppName=HTC
 AppVerName=HTC {#Version} (How to Climb)
 AppVersion={#Version}
+SetupIconFile=htc.ico
 DefaultDirName={localappdata}\Programs\HTC
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
