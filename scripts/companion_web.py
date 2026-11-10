@@ -17,7 +17,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "espera": None, "rango": None, "cuenta": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
-VERSION = "0.4.1"  # HTC; también invalida la caché de rendimiento
+VERSION = "0.5.0"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
 PUERTO = gui.REPO / "datos" / "cache" / "htc.port"  # el HTC que ya corre: otro arranque abre su ventana en vez de duplicarse
@@ -45,7 +45,7 @@ def evento(e):
         if e[1] == "ChampSelect": s.update(draft=None, fin=None, meta=None, pos=None)
         if e[1] in ("Lobby", "Matchmaking", "ReadyCheck"): s.update(aviso=None, perfil=gui.perfil(ESTADO["rango"], ESTADO["cuenta"]))
     elif tipo == "draft": s = {"draft": draft_json(e[1], e[2])}
-    elif tipo == "meta": s = {"meta": {**e[1], "texto": gui.texto_meta(e[1])}}
+    elif tipo == "meta": s = {"meta": {**e[1], "texto": gui.texto_meta(e[1]), "recibido": time.time()}}  # «recibido»: el overlay descuenta los timers
     elif tipo == "fin": s = {"fin": {**e[1], "texto": companion.linea_fin(e[1])}}
     elif tipo == "post_espera": s = {"espera": e[1]}
     elif tipo == "revision":
@@ -255,7 +255,13 @@ def main(argv=None):
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     print(url, flush=True)
     if not FONDO[0] and "--no-abrir" not in argv: abrir(url)
-    while FONDO[0] or time.time() - VIVO[0] < 60: time.sleep(2)  # la ventana pregunta cada 2 s: si se cerró (y no es --fondo), salimos
+    seguir = lambda: FONDO[0] or time.time() - VIVO[0] < 60  # la ventana pregunta cada 2 s: si se cerró (y no es --fondo), salimos
+    if "--overlay" in argv or not ({"--demo", "--no-abrir", "--sin-overlay"} & set(argv)):
+        def leer():
+            with LOCK: return dict(ESTADO)
+        try: import overlay; overlay.correr(leer, seguir)  # franja en partida; ocupa el hilo principal (tkinter)
+        except Exception: pass  # sin tkinter o sin pantalla: HTC sigue sin overlay
+    while seguir(): time.sleep(2)
     srv.shutdown()
 
 

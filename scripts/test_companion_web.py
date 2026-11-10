@@ -196,8 +196,8 @@ class Fondo(unittest.TestCase):
                 mock.patch.object(w, "PUERTO", pathlib.Path(d) / "htc.port"), mock.patch.object(w, "autoarranque"), \
                 mock.patch.object(w, "refrescar"), mock.patch.object(w.gui, "trabajador"), \
                 mock.patch.object(w.time, "sleep", side_effect=Fin), mock.patch.object(w, "abrir") as a, \
-                mock.patch.object(w.gui, "perfil", return_value="x"):
-            with self.assertRaises(Fin): w.main(["--fondo"])
+                mock.patch.object(w.gui, "perfil", return_value="x"), mock.patch.object(w, "vigilar_cuenta"):
+            with self.assertRaises(Fin): w.main(["--fondo", "--sin-overlay"])
             a.assert_not_called()                                      # --fondo no abre al arrancar...
             w.ESTADO["fase"] = "inicio"; w.evento(("fase", "Lobby")); a.assert_called_once()  # ...sino con la primera fase
 
