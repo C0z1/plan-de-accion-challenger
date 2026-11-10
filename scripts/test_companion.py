@@ -93,7 +93,7 @@ class AvisoNivel(unittest.TestCase):
 
     def test_rival_y_objetivos(self):  # formato de eventos tomado de una partida real (KillerName sin tag, torres por dueño)
         d = foto(); d["gameData"]["gameTime"] = 1000
-        d["allPlayers"][2]["items"] = [{"itemID": 3142, "slot": 0}, {"itemID": 2003, "consumable": True, "slot": 1}, {"itemID": 3340, "slot": 6}]
+        d["allPlayers"][2]["items"] = [{"itemID": 3142, "displayName": "Espada fantasma", "slot": 0}, {"itemID": 2003, "consumable": True, "slot": 1}, {"itemID": 3340, "slot": 6}]
         d["allPlayers"][2]["scores"] = {"kills": 2, "deaths": 1, "assists": 0, "creepScore": 90}
         ev = lambda n, t, k, **x: {"EventName": n, "EventTime": t, "KillerName": k, **x}
         d["events"]["Events"] += [ev("DragonKill", 500, "Rival2"), ev("DragonKill", 800, "Aliado1"), ev("HordeKill", 400, "Rival2"),
@@ -101,7 +101,7 @@ class AvisoNivel(unittest.TestCase):
             ev("TurretKilled", 950, "Minion_T100L1S1", TurretKilled="Turret_TChaos_L1_P3_1_0"),  # torre rival caída = tuya
             ev("TurretKilled", 960, "Rival1", TurretKilled="Turret_TOrder_L0_P3_2_0")]
         m = companion.meta_fase(d, {}); o = m["objetivos"]
-        self.assertEqual((m["rival_kda"], m["rival_cs"], m["rival_items"]), ("2/1/0", 90, [3142]))  # sin poción ni trinket
+        self.assertEqual((m["rival_kda"], m["rival_cs"], m["rival_items"]), ("2/1/0", 90, [[3142, "Espada fantasma"]]))  # sin poción ni trinket
         self.assertEqual(o["tuyos"], {"kills": 0, "torres": 1, "dragones": 1, "larvas": 0, "heraldo": 0, "baron": 0})
         self.assertEqual(o["rival"], {"kills": 2, "torres": 1, "dragones": 1, "larvas": 1, "heraldo": 0, "baron": 0})
         self.assertEqual((o["dragon"], o["baron"]), (100, 200))  # 800 + 300 − 1000; barón al 20:00

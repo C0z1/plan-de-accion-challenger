@@ -2251,6 +2251,23 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 
 **Tarea de pruebas para DeepSeek:** (a) `otro_htc()` con un `htc.port` que apunta a un puerto muerto o con basura: None y sin excepción; (b) que `main([])` con un HTC vivo llame a `abrir(url)` del otro y salga sin abrir servidor, y que `main(["--fondo"])` con un HTC vivo salga sin `abrir`; (c) revisa la sintaxis Pascal de `PrepareToInstall` en `htc.iss`.
 
+## 2026-11-09 23:16 · DeepSeek · revisión de 45f63e8 (iter 8)
+
+**Bien (verificado)**
+- El fix del launcher es correcto y sin carrera: `VIVO[0] = 0` se pone antes de arrancar los hilos (`trabajador`/`bombear`), así que la primera fase —aunque llegue < 6 s del arranque— ve `time.time() − 0 > 6` y abre la ventana; después el polling de la ventana refresca `VIVO` (cada 2 s) y no repite `abrir`. La prueba nueva de Opus cubre el bug exacto.
+- Tarea (a): `otro_htc()` devuelve `None` sin excepción con `htc.port` basura (`int()` → `ValueError`), inexistente (`FileNotFoundError`) y puerto muerto (`URLError` por conexión rechazada). `except (OSError, ValueError)` alcanza: `URLError`/`HTTPError` son subclases de `OSError`. 3 pruebas en `test_ds_launcher.py`.
+- Tarea (b): `main([])` con HTC vivo llama `abrir(url)` una vez y sale sin abrir servidor; `main(["--fondo"])` con HTC vivo sale sin `abrir` ni servidor. 2 pruebas en `test_ds_launcher.py`. Cuadra con la verificación real de Opus (2.º `--fondo` en 0.2 s, un solo HTC.exe).
+- Tarea (c): la sintaxis de `htc.iss` es correcta contra la API de Inno (`PrepareToInstall(var NeedsRestart: Boolean): String`; `Exec(..., SW_HIDE, ewWaitUntilTerminated, R)`; `Result := ''` = seguir; `[UninstallRun]` con `RunOnceId` y `{sys}\taskkill.exe` válidos). No lo compilé (no hay ISCC). En instalación limpia `taskkill` falla sin HTC.exe y se ignora: inofensivo.
+- `TerminatedInError`/`FailedToLaunch` con texto en `FASES` cierran el h1 crudo que señalé en 6aebafc; ya no queda fase del LCU sin texto.
+- Suite completa: **244 OK** (239 + mis 5 en `test_ds_launcher.py`).
+- Re-verifiqué filtraciones para Riot (`git ls-files`): 0 keys `RGAPI-`, 0 correos, 0 rutas completas (solo `C:\Users\…` truncado en notas de limpieza). Saldo: solo «Tope de DeepSeek: $5» y «Costo equivalente ≈ $16.5» (benignos). README con el aviso legal de Riot al pie, sin emoji en títulos.
+
+**Está mal / a corregir**
+- Nada que rompa. Único pendiente de fondo: el instalador `.exe` sigue sin regenerarse (ISCC bloqueado por el harness), así que `htc.iss` va en 0.3.7 pero el binario que verá Riot puede ser 0.3.6 o anterior.
+
+### Ideas de DeepSeek
+1. (Opus) regenerar el instalador `HTC-Setup-0.3.7.exe` (ISCC) antes de enseñarle el repo a Riot, para que la versión instalable corresponda a v0.3.7.
+
 ## 2026-11-10 00:45 · Opus · turno 9 iteración 9
 **Qué hice:** tareas 4 (build) y 5 (lista para probar en partida) de la prioridad del usuario.
 - Build: `dist/HTC` v0.3.7 ya corresponde a HEAD (el árbol estaba limpio desde iter 8); humo `humo_exe.py` OK (0.39 s, 13 claves); 239 OK. Tag `v0.3.7` ya existe, no hay versión nueva porque no cambió código.
@@ -2259,3 +2276,15 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 - Asesor DeepSeek: bloqueado otra vez (PowerShell anidado).
 
 **Tarea de pruebas para DeepSeek:** coteja el checklist contra el código: (a) que cada texto citado entre «» exista tal cual en `scripts/web/index.html`; (b) que en `EndOfGame` sin key `s.revision` sea None y la vista sea En vivo con `s.fin`; (c) que la primera `meta` en partida llegue a lo más 30 s después de `InProgress`.
+
+## 2026-11-09 23:20 · Opus · turno 9 iteración 10
+**Qué hice:** las 5 tareas de la prioridad del usuario ya estaban cerradas (iter 6–9), así que hice los 3 pedidos chicos del Diseñador para En vivo (§6 de `diseno-auditoria.md`).
+- (a) «Objetivos · Tú–Rival» rotulado en la cabecera; el rojo del marcador es `var(--red)` en vez de `#FF8A8A`.
+- (b) El timer de dragón y barón sale más grande (17 px) y en `var(--amber)` cuando faltan < 60 s (`cuenta()` en `index.html`). El «desde el 20:00» del barón no cambia.
+- (c) Ítems del rival con `alt` = nombre: `companion.meta_fase` da `rival_items` como `[[id, displayName], …]` (la Live Client Data trae `displayName`); `test_companion` actualizado.
+- Verificado en Edge headless con el servidor y una foto con dragón a 42 s: `alt="Espada fantasma"`, «Tú», «en 0:42».
+- `test_ds_launcher.py` de DeepSeek (5 pruebas) pasa sin cambios y entra al repo.
+- HTC v0.3.8 recompilado, humo OK (0.43 s, 13 claves), tag `v0.3.8`. 244 OK. Instalador: ISCC sigue pidiendo aprobación.
+- Asesor DeepSeek: no lo consulté (cambio cosmético de 3 líneas; además el PowerShell anidado sigue bloqueado).
+
+**Tarea de pruebas para DeepSeek:** (a) que `meta_fase` con un ítem sin `displayName` dé `[id, ""]` y no truene; (b) en `index.html`, que `cuenta(59)` tiña y `cuenta(60)` no (borde); (c) que ninguna otra parte lea `rival_items` como lista de enteros.

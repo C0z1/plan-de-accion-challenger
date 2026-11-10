@@ -492,14 +492,15 @@ function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estad
   const dn = x.nivel != null && x.nivel_rival != null ? x.nivel_rival - x.nivel : 0, o = x.objetivos;
   const mmss = t => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
   const obj = (c, t, d) => `<div style="display:flex;align-items:center;gap:12px"><span style="width:8px;height:8px;border-radius:50%;background:${c}"></span><b style="flex-grow:1;font-size:15px">${t}</b><span class="sub" style="font-size:14px">${d}</span></div>`;
-  const va = k => `<b style="color:var(--teal)">${o.tuyos[k]}</b>–<b style="color:#FF8A8A">${o.rival[k]}</b>`;
+  const va = k => `<b style="color:var(--teal)">${o.tuyos[k]}</b>–<b style="color:var(--red)">${o.rival[k]}</b>`;
+  const cuenta = t => t < 60 ? `<b style="color:var(--amber);font-size:17px">en ${mmss(t)}</b>` : "en " + mmss(t);  // < 60 s: hay que moverse ya
   const rivalC = x.rival ? `<div class="est" style="gap:12px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="sub" style="font-size:14px">Tu rival</span>${dn ? `<span class="tag ${dn > 0 ? "red" : "ok"}" style="align-self:auto">${Math.abs(dn)} nivel${Math.abs(dn) > 1 ? "es" : ""} ${dn > 0 ? "arriba" : "abajo"}</span>` : ""}</div>
     <div style="display:flex;align-items:center;gap:14px">${img("champion", x.rival, "item", x.rival)}<div style="display:flex;flex-direction:column;gap:4px"><b style="font-size:17px">${esc(x.rival)} · nivel ${x.nivel_rival ?? "?"}</b><span class="sub" style="font-size:13px">${esc(x.rival_kda || "")} · ${x.rival_cs ?? "?"} CS · tú ${x.cs ?? "?"}</span></div></div>
-    ${(x.rival_items || []).length ? `<div style="display:flex;gap:8px">${x.rival_items.map(i => img("item", i, "item", "")).join("")}</div>` : ""}</div>` : "";
-  const objC = o ? `<div class="est" style="gap:10px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="sub" style="font-size:14px">Objetivos</span><span style="font-size:13px">kills ${va("kills")} · torres ${va("torres")}</span></div>
-    ${obj("#F8C3D6", `Dragón <span class="sub" style="font-size:13px">${va("dragones")}</span>`, o.dragon == null ? "vivo" : "en " + mmss(o.dragon))}
+    ${(x.rival_items || []).length ? `<div style="display:flex;gap:8px">${x.rival_items.map(([id, n]) => img("item", id, "item", n)).join("")}</div>` : ""}</div>` : "";
+  const objC = o ? `<div class="est" style="gap:10px"><div style="display:flex;justify-content:space-between;align-items:center"><span class="sub" style="font-size:14px">Objetivos · <b style="color:var(--teal)">Tú</b>–<b style="color:var(--red)">Rival</b></span><span style="font-size:13px">kills ${va("kills")} · torres ${va("torres")}</span></div>
+    ${obj("#F8C3D6", `Dragón <span class="sub" style="font-size:13px">${va("dragones")}</span>`, o.dragon == null ? "vivo" : cuenta(o.dragon))}
     ${obj("#A8D8C0", `Larvas y heraldo <span class="sub" style="font-size:13px">${va("larvas")} · ${va("heraldo")}</span>`, "")}
-    ${obj("var(--soft)", `Barón <span class="sub" style="font-size:13px">${va("baron")}</span>`, o.baron == null ? "vivo" : min < 20 && !o.tuyos.baron && !o.rival.baron ? "desde el 20:00" : "en " + mmss(o.baron))}</div>` : "";
+    ${obj("var(--soft)", `Barón <span class="sub" style="font-size:13px">${va("baron")}</span>`, o.baron == null ? "vivo" : min < 20 && !o.tuyos.baron && !o.rival.baron ? "desde el 20:00" : cuenta(o.baron))}</div>` : "";
   const aside = `
   <div style="display:flex;gap:20px;align-items:center">${img("champion", x.campeon, "retrato2", x.campeon)}<div><span class="sub">Ahora</span><h2 style="font-size:30px">${ahora ? esc(ahora[0].split(":")[0]) : f ? "Revisa tu partida" : "Juega tu línea"}</h2></div></div>
   ${f ? "" : rivalC + objC}
