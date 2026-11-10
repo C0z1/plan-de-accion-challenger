@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>HTC · How to Climb</title>
+<title>Racha</title>
 <link rel="icon" type="image/png" href="/icono.png">
 <meta name="theme-color" content="#1A0C13">
 <meta name="color-scheme" content="dark">
@@ -128,7 +128,7 @@ nav .abajo{margin-top:auto}
 <button id="b-errores" aria-label="Errores" onclick="ver('errores')"></button>
 <button id="b-ajustes" class="abajo" aria-label="Ajustes" onclick="ver('ajustes')"></button>
 </nav>
-<main id="main"><h1>HTC</h1><p class="sub">Conectando…</p></main>
+<main id="main"><h1>Racha</h1><p class="sub">Conectando…</p></main>
 <aside id="aside" hidden></aside>
 </div>
 <script>
@@ -265,7 +265,7 @@ function otraFase(s) {  // en partida, al terminar y esperando
     <b>${esc(r.champ)}${r.rival ? " vs " + esc(r.rival) : ""} ${esc(r.kda || "")}</b>
     <span class="sub">Oro al 14 ${esc(r.oro)} · CS al 14 ${esc(r.cs)} · muertes 14–25 ${esc(r.m25)} · score ${esc(r.score)}</span></div>`);
   if (s.espera) bloques.push(`<div class="card"><span class="sub">${esc(s.espera)}</span></div>`);
-  if (bloques.length === 1) bloques.push(`<div class="card"><span class="sub">${EN_PARTIDA.includes(s.fase) ? "Esperando los datos en vivo: salen cuando carga el mapa." : enCliente(s.fase) ? "Aún no estás en partida: al empezar, HTC cambia aquí solo." : "Abre el cliente de LoL: aquí verás tu pick en champ select y la revisión al terminar."}</span></div>`);
+  if (bloques.length === 1) bloques.push(`<div class="card"><span class="sub">${EN_PARTIDA.includes(s.fase) ? "Esperando los datos en vivo: salen cuando carga el mapa." : enCliente(s.fase) ? "Aún no estás en partida: al empezar, Racha cambia aquí solo." : "Abre el cliente de LoL: aquí verás tu pick en champ select y la revisión al terminar."}</span></div>`);
   return bloques.join("");
 }
 
@@ -369,9 +369,9 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
     .map(g => ({...g, fecha: HORA.format(new Date(g.ts))})), v = hoy.filter(g => g.win).length;
   const d25 = ps.filter(p => p.muertes14_25 != null), ok = d25.filter(p => p.muertes14_25 <= 2).length, f = d25.length ? ok / d25.length : 0;
   const main = `
-  <div><h1>${nombre ? "Hola, " + esc(nombre) : "HTC"}</h1><span class="sub">${esc(DIAS.format(new Date()).replace(/^./, c => c.toUpperCase()))}</span></div>
+  <div><h1>${nombre ? "Hola, " + esc(nombre) : "Racha"}</h1><span class="sub">${esc(DIAS.format(new Date()).replace(/^./, c => c.toUpperCase()))}</span></div>
   <div class="card" style="flex-direction:row;align-items:center;gap:20px"><span class="luz ${cliente ? "on" : ""}"><i></i></span>
-    <div style="flex:1"><h2>${cliente ? "Cliente conectado" : "Abre el cliente de LoL"}</h2><span class="sub">${cliente ? esc(FASES[s.fase] ?? s.fase) + " · en champ select HTC cambia solo al draft." : "HTC lo detecta solo y no escribe nada en el cliente."}</span></div>
+    <div style="flex:1"><h2>${cliente ? "Cliente conectado" : "Abre el cliente de LoL"}</h2><span class="sub">${cliente ? esc(FASES[s.fase] ?? s.fase) + " · en champ select Racha cambia solo al draft." : "Racha lo detecta solo y no escribe nada en el cliente."}</span></div>
     <button class="btn" onclick="ver('perfil')">Ver mi perfil</button></div>
   <div class="card"><div class="cab2"><h2>Hoy</h2><span class="sub" style="font-size:12px">${hoy.length ? `${v}-${hoy.length - v}` : "sin partidas"}${t ? (t.racha >= 2 ? " · para" : " · sin tilt") : ""}</span></div>
     ${hoy.length ? `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${hoy.slice(-6).map(g => `<div class="mini">${img("champion", g.campeon, "item", g.campeon)}<b class="${g.win ? "v" : "d"}">${g.win ? "V" : "D"}</b>${esc(g.fecha)}</div>`).join("")}
@@ -395,12 +395,12 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
     <button class="atajo" onclick="ver('companion')">Champ select y partida <span>→</span></button></div>`;
   return [main, aside];
 }
-const enCliente = f => f != null && f !== "inicio";  // null = cliente cerrado; "inicio" = HTC aún no lo ha leído; cualquier otra fase del LCU (GameStart, Reconnect…) es cliente abierto
+const enCliente = f => f != null && f !== "inicio";  // null = cliente cerrado; "inicio" = Racha aún no lo ha leído; cualquier otra fase del LCU (GameStart, Reconnect…) es cliente abierto
 const EN_PARTIDA = ["GameStart", "InProgress", "Reconnect", "WaitingForStats", "PreEndOfGame", "EndOfGame"];
 
 // ===== Ventanas nuevas (artboards *_Vino). Datos: s.rendimiento.vistas (scripts/vistas.py, en caché) =====
 const VS = s => (s.rendimiento && s.rendimiento.vistas) || null;
-const sinDatos = (t, sub) => [`<div><h1>${t}</h1><span class="sub">${esc(sub || "")}</span></div><div class="card"><span class="sub">Sin datos todavía: HTC los calcula con tus partidas descargadas (o sigue calculando…).</span></div>`, ""];
+const sinDatos = (t, sub) => [`<div><h1>${t}</h1><span class="sub">${esc(sub || "")}</span></div><div class="card"><span class="sub">Sin datos todavía: Racha los calcula con tus partidas descargadas (o sigue calculando…).</span></div>`, ""];
 const fmin = v => v == null ? "–" : signo(v, 0);
 
 function anillo(champ, wr, tam = 150) {  // anillo animado alrededor del retrato: arco = WR, órbita punteada y halo
@@ -428,7 +428,7 @@ function draftV(s) {  // Draft_Vino: fase de bans y picks antes de ver a tu riva
     <div class="pool">${d.pool.map((p, i) => `<div class="poolc"><b>${esc(p.champ)}</b>${anillo(p.champ, p.wr, 120)}<div><b style="font-size:22px">${pct(p.wr)}</b> <span class="sub">${p.n} partidas</span></div>
       ${i === d.pool.reduce((m, x, j, a) => x.wr > a[m].wr ? j : m, 0) ? '<span class="tag ok">El más seguro</span>' : ""}</div>`).join("") || '<span class="sub">Menos de 5 partidas por campeón en este rol.</span>'}</div></div>`;
   const aside = `
-  <div style="display:flex;gap:20px;align-items:center"><span class="espera">?</span><div><h2>Esperando su pick…</h2><span class="sub">Cuando tu rival de línea pickee, HTC pasa a Selección con tu mejor pick.</span></div></div>
+  <div style="display:flex;gap:20px;align-items:center"><span class="espera">?</span><div><h2>Esperando su pick…</h2><span class="sub">Cuando tu rival de línea pickee, Racha pasa a Selección con tu mejor pick.</span></div></div>
   <div style="display:flex;justify-content:space-between;align-items:baseline"><h2>Rivales frecuentes en ${esc(rol)}</h2><span class="sub" style="font-size:12px">últimos 3 meses</span></div>
   ${d.frecuentes.map(f => `<div class="filaV oscura">${img("champion", f.rival, "item", f.rival)}<b style="flex:1">${esc(f.rival)}</b><span><b style="color:${f.v * 2 >= f.n ? "var(--teal)" : "var(--red)"}">${f.v}-${f.n - f.v}</b> <span class="sub" style="font-size:12px">tu récord</span></span></div>`).join("") || '<span class="sub">Sin rivales recientes.</span>'}`;
   return [main, aside];
@@ -561,12 +561,12 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, arranque con Windows y movimien
   const ult = V ? new Date(V.ultima).toLocaleString("es", {dateStyle: "medium", timeStyle: "short"}) : null;
   const tog = (id, on, dis, fn) => `<button class="tog" role="switch" aria-checked="${on}" ${dis ? "disabled" : ""} id="${id}" onclick="${fn}"><i></i></button>`;
   return [`
-  <div><h1>Ajustes</h1><span class="sub">HTC · How to Climb</span></div>
+  <div><h1>Ajustes</h1><span class="sub">Racha · racha.gg</span></div>
   <div class="dos">
     <div class="card"><div class="cab2"><h2>Cuenta</h2></div>
       <div class="filaV"><div class="txt"><b>Riot ID</b><small>${esc(String(s.perfil || "").split(" · ")[0])}</small></div></div>
       <div class="filaV"><div class="txt"><b>Partidas descargadas</b><small>${V ? `${V.total} · última: ${esc(ult)}` : "sin datos"}</small></div></div></div>
-    <div class="card"><div class="cab2"><h2>HTC</h2></div>
+    <div class="card"><div class="cab2"><h2>Racha</h2></div>
       <div class="filaV"><div class="txt"><b>Arrancar con Windows</b><small>${a == null ? "Solo en la versión instalada." : "Corre en segundo plano y se abre solo cuando abres LoL."}</small></div>
         ${tog("t-auto", !!a, a == null, "autoarranque(!" + !!a + ")")}</div>
       <div class="filaV"><div class="txt"><b>Reducir movimiento</b><small>Frascos y anillos sin animación.</small></div>${tog("t-rm", rm, false, "quieto()")}</div></div>
@@ -603,8 +603,8 @@ async function tick() {
     }
   } catch (e) {  // sin servidor o una vista que truena: no son lo mismo y el usuario debe poder reportarlo
     console.error(e); v = -1;
-    document.getElementById("main").innerHTML = e instanceof TypeError && /fetch/i.test(e.message) ? `<h1>HTC</h1><p class="sub">Sin conexión con el companion.</p>`
-      : `<h1>HTC</h1><div class="aviso red">Esta vista falló: ${esc(String(e && e.message || e))}. Prueba otra vista y avísale a Opus con este texto.</div>`;
+    document.getElementById("main").innerHTML = e instanceof TypeError && /fetch/i.test(e.message) ? `<h1>Racha</h1><p class="sub">Sin conexión con el companion.</p>`
+      : `<h1>Racha</h1><div class="aviso red">Esta vista falló: ${esc(String(e && e.message || e))}. Prueba otra vista y repórtalo con este texto.</div>`;
   }
 }
 const VISTAS = ["inicio", "draft", "companion", "envivo", "perfil", "partidas", "campeones", "errores", "ajustes"];

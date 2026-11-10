@@ -31,7 +31,7 @@ Todos corren con `python scripts/<script>.py` desde la raíz del repo y leen `da
 | `descargar.py` | Baja partidas y timelines de Solo/Duo de la Riot API a `datos/raw/`. | `[N]` (número de partidas; por defecto 100) |
 | `companion.py` | Companion de consola: lee el cliente en solo lectura; en champ select corre `draft.py` contra tu rival; en partida graba la Live Client Data cada 30 s y avisa de nivel/minions/muertes; al terminar baja 5 partidas y revisa la nueva. | `--fixture CARPETA` (una pasada con JSON de ejemplo, sin cliente) |
 | `companion_gui.py` | Companion con ventana tkinter (respaldo de la app web). | `--demo` |
-| `companion_web.py` | La app HTC: servidor local en `127.0.0.1` con la interfaz del `README`, abierta en Edge. | `--demo`, `--no-abrir`, `--fondo`, `--overlay` (forzarlo en la demo), `--sin-overlay` |
+| `companion_web.py` | La app Racha: servidor local en `127.0.0.1` con la interfaz del `README`, abierta en Edge. | `--demo`, `--no-abrir`, `--fondo`, `--overlay` (forzarlo en la demo), `--sin-overlay` |
 | `overlay.py` | Franja en partida (siempre encima, los clics la atraviesan): timers de dragón y barón, nivel y CS contra tu rival. Se ve con LoL en «sin bordes». | — |
 | `humo_exe.py` | Humo de la build: arranca `HTC.exe --demo --no-abrir`, encuentra su puerto y comprueba `/api/estado`. | `[ruta-del-exe]` |
 

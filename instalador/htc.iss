@@ -3,15 +3,15 @@
 #define Version "0.5.1"
 [Setup]
 AppId={{6B1F0C2E-4D1A-4C8E-9E57-48544301C11B}
-AppName=HTC
-AppVerName=HTC {#Version} (How to Climb)
+AppName=Racha
+AppVerName=Racha {#Version}
 AppVersion={#Version}
 SetupIconFile=htc.ico
 DefaultDirName={localappdata}\Programs\HTC
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\dist
-OutputBaseFilename=HTC-Setup-{#Version}
+OutputBaseFilename=Racha-Setup-{#Version}
 Compression=lzma2
 SolidCompression=yes
 UninstallDisplayIcon={app}\HTC.exe
@@ -23,23 +23,28 @@ Source: "..\scripts\web\*"; DestDir: "{app}\scripts\web"; Flags: recursesubdirs 
 Source: "..\scripts\fixtures\*"; DestDir: "{app}\scripts\fixtures"; Flags: recursesubdirs ignoreversion
 Source: "..\docs\config.ejemplo.json"; DestDir: "{app}"; Flags: ignoreversion
 
+[InstallDelete]
+; accesos directos de cuando la app se llamaba HTC (la carpeta y el .exe conservan el nombre para actualizar encima)
+Type: files; Name: "{userprograms}\HTC.lnk"
+Type: files; Name: "{userdesktop}\HTC.lnk"
+
 [Dirs]
 Name: "{app}\datos\raw"
 
 [Icons]
-Name: "{userprograms}\HTC"; Filename: "{app}\HTC.exe"
-Name: "{userdesktop}\HTC"; Filename: "{app}\HTC.exe"; Tasks: escritorio
+Name: "{userprograms}\Racha"; Filename: "{app}\HTC.exe"
+Name: "{userdesktop}\Racha"; Filename: "{app}\HTC.exe"; Tasks: escritorio
 
 [Tasks]
 Name: escritorio; Description: "Acceso directo en el escritorio"
-Name: inicio; Description: "Arrancar HTC con Windows (se abre solo cuando abres LoL)"
+Name: inicio; Description: "Arrancar Racha con Windows (se abre solo cuando abres LoL)"
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "HTC"; ValueData: """{app}\HTC.exe"" --fondo"; Flags: uninsdeletevalue; Tasks: inicio
 
 [Run]
 Filename: "{app}\HTC.exe"; Parameters: "--fondo"; Flags: nowait runhidden; Tasks: inicio
-Filename: "{app}\HTC.exe"; Description: "Abrir HTC"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\HTC.exe"; Description: "Abrir Racha"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM HTC.exe"; Flags: runhidden; RunOnceId: "CerrarHTC"

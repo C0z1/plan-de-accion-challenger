@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/img/readme/hero.png" alt="HTC · How to Climb. Deja de adivinar por qué pierdes. Tu coach de League of Legends, hecho con tus propias partidas.">
+  <img src="docs/img/readme/hero.png" alt="Racha (racha.gg). Deja de adivinar por qué pierdes. Tu coach de League of Legends, hecho con tus propias partidas.">
 </p>
 
 <p align="center">
@@ -8,7 +8,7 @@
 
 <p align="center">
   Las guías te dicen cómo juega un Challenger.<br>
-  <b>HTC te dice qué te hace perder <i>a ti</i></b>, y te lo recuerda justo cuando importa.
+  <b>Racha te dice qué te hace perder <i>a ti</i></b>, y te lo recuerda justo cuando importa.
 </p>
 
 <p align="center">
@@ -52,11 +52,11 @@
 
 <br>
 
-## ✨ Por qué HTC
+## ✨ Por qué Racha
 
 |  |  |
 |---|---|
-| 🎯 **Hecho con tus partidas** | Nada de «farmea más». HTC descubre, por ejemplo, que *con 2 muertes o menos del minuto 14 al 25 ganas el 68%, y con 3 o más, el 43%*. |
+| 🎯 **Hecho con tus partidas** | Nada de «farmea más». Racha descubre, por ejemplo, que *con 2 muertes o menos del minuto 14 al 25 ganas el 68%, y con 3 o más, el 43%*. |
 | ⚡ **Aparece sola** | Se abre cuando abres LoL y cambia de pantalla según la fase: champ select, partida y final. Cero clics. |
 | 🛡️ **Juego limpio** | Solo lee lo que el cliente ofrece a las apps. No juega por ti, no toca el juego y no da ventajas injustas. |
 | 🔒 **Tus datos son tuyos** | Todo se queda en tu computadora. |
@@ -66,7 +66,7 @@
 <details>
 <summary><b>¿Me pueden banear por usarla?</b></summary>
 <br>
-HTC solo <b>lee</b> la información que el propio cliente de LoL ofrece a las apps, la misma que ya ves en tu pantalla. No pickea, no banea, no acepta partidas y no modifica el juego.
+Racha solo <b>lee</b> la información que el propio cliente de LoL ofrece a las apps, la misma que ya ves en tu pantalla. No pickea, no banea, no acepta partidas y no modifica el juego.
 </details>
 
 <details>
@@ -96,7 +96,7 @@ El champ select y la partida en vivo ya funcionan. Tu historial completo (Perfil
 <br>
 
 <p align="center">
-  <a href="https://github.com/C0z1/plan-de-accion-challenger/releases/latest"><img src="https://img.shields.io/badge/Descargar_HTC-F28DB0?style=for-the-badge&logo=windows&logoColor=white&labelColor=44203A" alt="Descargar HTC"></a>
+  <a href="https://github.com/C0z1/plan-de-accion-challenger/releases/latest"><img src="https://img.shields.io/badge/Descargar_Racha-F28DB0?style=for-the-badge&logo=windows&logoColor=white&labelColor=44203A" alt="Descargar Racha"></a>
 </p>
 
 ---
@@ -105,7 +105,7 @@ El champ select y la partida en vivo ya funcionan. Tu historial completo (Perfil
 <summary>Para desarrolladores</summary>
 <br>
 
-HTC está hecha en Python sin dependencias. Corre un servidor local y muestra la ventana con Edge en modo app. Solo lee de tres fuentes: la Riot API (con tu key), la API local del cliente (LCU) y la Live Client Data API.
+Racha está hecha en Python sin dependencias. Corre un servidor local y muestra la ventana con Edge en modo app. Solo lee de tres fuentes: la Riot API (con tu key), la API local del cliente (LCU) y la Live Client Data API.
 
 ```bash
 python scripts/companion_web.py --demo      # la app con datos de ejemplo, sin cliente
@@ -116,4 +116,4 @@ Guía completa, variables (`RIOT_KEY`, `RIOT_ID`, `RIOT_REGION`) y scripts: [`do
 
 </details>
 
-<sub>HTC isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.</sub>
+<sub>Racha isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.</sub>
