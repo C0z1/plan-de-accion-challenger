@@ -107,4 +107,16 @@ class Restaurar(unittest.TestCase):  # login en una PC nueva: tus ajustes vuelve
                 self.assertEqual(nube.restaurar("t"), 0)
 
 
+
+class PickHoy(unittest.TestCase):  # idea 7: el estimado encogido manda, no el WR crudo
+    def test_estimado_y_minimo(self):
+        try: import vistas
+        except Exception as e: self.skipTest(f"vistas necesita datos: {e}")
+        c = lambda champ, n, wr, pos="MIDDLE": dict(champ=champ, pos=pos, n=n, wr=wr, forma=[True])
+        h = vistas.pick_hoy([c("Ahri", 3, 1.0), c("Yone", 40, .7), c("Zed", 10, .8), c("Garen", 50, .9, "TOP")], "MIDDLE", .5)
+        self.assertEqual((h["champ"], h["v"], h["n"]), ("Yone", 28, 40))  # 3-0 no llega al mínimo; Zed 8-2 encoge a 65 %, Yone 28-12 a 66 %; Garen es de otro rol
+        self.assertIsNone(vistas.pick_hoy([c("Ahri", 3, 1.0)], "MIDDLE", .5))
+
+
+
 if __name__ == "__main__": unittest.main()

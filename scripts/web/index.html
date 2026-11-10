@@ -482,6 +482,13 @@ function partidas(s) {  // Partidas_Vino: filtros, historial en tabla (score, re
 
 const ROL_VIVO = "";
 const DIAS = new Intl.DateTimeFormat("es", {weekday: "long", day: "numeric", month: "long"});
+function hoyCard(V) {  // «Tu pick de hoy» (vistas.pick_hoy): el campeón de tu rol con mejor WR estimado
+  const h = V && V.hoy; if (!h) return "";
+  return `<div class="card"><div class="cab2"><h2>Tu pick de hoy</h2><span class="sub" style="font-size:12px">tu rol · ${h.n} partidas</span></div>
+    <div class="filaV" style="gap:14px">${img("champion", h.champ, "", h.champ).replace('class=""', 'style="width:56px;height:56px;border-radius:12px;flex-shrink:0"')}
+      <div class="txt" style="flex:1;min-width:0"><b>${esc(h.champ)}</b><small>Vas ${h.v}-${h.n - h.v} con él: estimado ${pct(h.est)} contra tu media de ${pct(h.base)}.</small>
+      <span style="display:flex;gap:8px;align-items:center;margin-top:6px"><small class="sub">Últimas 5</small>${forma(h.forma)}</span></div></div></div>`;
+}
 function oroCard(r) {  // «Racha de oro al 14»: de tus últimas 5, cuántas llegaron al 14 con oro >= tu rival de línea
   if (!r || !r.n) return "";
   const m = r.marcas.map(x => x == null ? ["s", "Sin dato"] : x ? ["v", "Oro igual o mayor"] : ["d", "Oro menor"]);
@@ -510,6 +517,7 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
       ${t.tras2.n ? `<div style="flex:1;min-width:220px"><b>${t.racha >= 2 ? "Llevas 2 derrotas seguidas: descansa 15 min" : "Tras 2 derrotas seguidas, paras"}</b><br><span class="sub" style="font-size:13px">Llegaste a 2 seguidas ${t.llegas} veces; la partida siguiente: ${t.tras2.v}-${t.tras2.n - t.tras2.v}${t.pocas ? " (pista: pocas partidas)" : ""}.</span></div>` : ""}</div>`
       : `<span class="sub">Aún no juegas hoy.</span>`}</div>
   ${oroCard(R && R.resumen.racha_oro14)}
+  ${hoyCard(VS(s))}
   ${VS(s) && VS(s).reglas.length ? `<div class="card" style="flex:1"><div class="cab2"><h2>Tu regla de hoy</h2><span class="sub" style="font-size:12px">la que más te cuesta</span></div>
     ${reglaCumple(VS(s).reglas[0], 0)}</div>` : `<div class="card" style="flex:1"><div class="cab2"><h2>Tu regla de hoy</h2><span class="sub" style="font-size:12px">del plan, con tus últimas partidas</span></div>
     <div class="fila2" style="border:none"><span class="ic red">${ic("muertes")}</span>

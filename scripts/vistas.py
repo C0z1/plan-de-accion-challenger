@@ -171,11 +171,26 @@ def errores(gs, n=20):
     return dict(n=vistos, partidas=cuenta, momentos=out)
 
 
+MIN_HOY = 8  # partidas con el campeón en el rol para recomendarlo: menos, y el estimado es casi tu media
+
+
+def pick_hoy(camps, pos, base):
+    """«Tu pick de hoy» (idea 7 del plan): de tu rol principal, el campeón con mejor WR estimado (encogido hacia tu
+    media como en draft.py, así 3-0 no gana a 30-20); o None si ninguno llega a MIN_HOY partidas."""
+    xs = [c for c in camps if c["pos"] == pos and c["n"] >= MIN_HOY]
+    if not xs: return None
+    est = lambda c: draft.shrink(round(c["wr"] * c["n"]), c["n"], base)
+    c = max(xs, key=lambda c: (est(c), c["n"]))
+    v = round(c["wr"] * c["n"])
+    return dict(champ=c["champ"], v=v, n=c["n"], est=round(est(c), 3), forma=c["forma"], base=round(base, 3))
+
+
 def todo(resumen):
     """Lo que necesitan las ventanas, para guardarlo junto a rendimiento()."""
     gs = score.partidas()[0]
     pos = Counter(g["pos"] for g in draft.games[-50:]).most_common(1)[0][0]
-    return dict(campeones=campeones(), reglas=reglas_perfil([p["comp"] for p in resumen["partidas"]]),
+    cs = campeones()
+    return dict(campeones=cs, hoy=pick_hoy(cs, pos, draft.base), reglas=reglas_perfil([p["comp"] for p in resumen["partidas"]]),
                 draft={p: draft_rol(p) for p in ("TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY")}, pos=pos, errores=(e := errores(gs)), por_partida=por_partida(resumen, e),
                 total=len(draft.games), ultima=max(g["t"] for g in draft.games))
 
