@@ -326,6 +326,8 @@ class H(http.server.BaseHTTPRequestHandler):
     def do_POST(self):
         # X-HTC obliga a un preflight CORS que no contestamos: otra web no puede mandar este POST, aunque el Host cuadre
         if self.headers.get("Host", "").split(":")[0] not in ("127.0.0.1", "localhost") or self.headers.get("X-HTC") != "1":
+            try: self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 4096))  # leer antes de rechazar: si no,
+            except (ValueError, OSError): pass                                              # Windows corta la conexión
             return self.enviar(403, b"", "text/plain")
         if self.path in ("/api/google", "/api/google/salir", "/api/google/borrar", "/api/google/sync"):
             import nube
