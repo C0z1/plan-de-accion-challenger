@@ -770,7 +770,9 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
   </div>`, ""];
 }
 const CAMPO = "width:100%;box-sizing:border-box;background:var(--dark3);border:1px solid var(--soft);border-radius:10px;color:var(--txt);padding:10px 12px;font:inherit";
-let borrador = "";  // lo que llevas escrito del reporte (sobrevive a que la pantalla se redibuje)
+let borrador = "";
+const ABIERTOS = new Set();  // desplegables abiertos (por su título): redibujar la pantalla no los cierra
+document.addEventListener("toggle", e => { const t = e.target.querySelector?.("summary")?.textContent; if (t) e.target.open ? ABIERTOS.add(t) : ABIERTOS.delete(t); }, true);  // lo que llevas escrito del reporte (sobrevive a que la pantalla se redibuje)
 function glosarioV() {  // v0.9: términos del juego y de Racha, una línea cada uno
   const t = [["Pick", "elegir campeón (o el campeón que elegiste)."], ["Ban", "campeón que se prohíbe antes de elegir: nadie puede usarlo."],
     ["Tradear", "intercambiar golpes con tu rival en la línea."], ["Roamear", "dejar tu línea un rato para ayudar a otra."],
@@ -907,6 +909,7 @@ async function tick() {
       const av = nv + (s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}" role="status">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "");
       const mn = document.getElementById("main"); mn.classList.toggle("ancho", !a); mn.innerHTML = av + m;  // sin columna derecha (Partidas_Vino): a todo el ancho
       const as = document.getElementById("aside"); as.innerHTML = a; as.hidden = !a;
+      document.querySelectorAll("details").forEach(d => { if (ABIERTOS.has(d.querySelector("summary")?.textContent)) d.open = true; });
     }
   } catch (e) {  // sin servidor o una vista que truena: no son lo mismo y el usuario debe poder reportarlo
     console.error(e); v = -1;
