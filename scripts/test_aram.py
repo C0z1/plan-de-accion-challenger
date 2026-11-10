@@ -39,7 +39,7 @@ class TestAram(unittest.TestCase):
 
     def test_overlay_y_texto(self):
         m = companion.meta_fase(FOTO, m10={})
-        self.assertEqual([t for t, _ in overlay.partes(m, 0)], ["Kills 9 vs 32", "Cuidado Lillia 14/3/9", "Tu KDA 6/8/10"])
+        self.assertEqual([t for t, _ in overlay.partes(m, 0)], ["▼ Kills 9 vs 32", "Cuidado Lillia 14/3/9", "Tu KDA 6/8/10"])
         self.assertEqual(g.texto_meta(m), "Min 16 · Kills 9–32 · Tu KDA 6/8/10 · Cuidado con Lillia 14/3/9")
 
 

@@ -10,10 +10,10 @@ META = {"nivel": 11, "nivel_rival": 12, "rival": "Ahri", "cs": 71, "rival_cs": 1
 class TestPartes(unittest.TestCase):
     def test_franja_y_descuento(self):
         t = [x for x, _ in overlay.partes(META, 1000.0)]
-        self.assertEqual(t, ["Dragón 1:30", "Barón vivo", "Nv 11 vs 12 Ahri", "CS 71 vs 140"])
+        self.assertEqual(t, ["Dragón 1:30", "Barón vivo", "▼ Nv 11 vs 12 Ahri", "▼ CS 71 vs 140"])  # ▼: vas abajo, no solo por color
         p = dict(overlay.partes(META, 1045.0))  # 45 s después de la foto: el dragón sale en 0:45, en ámbar
         self.assertEqual(p["Dragón 0:45"], overlay.AMBAR)
-        self.assertEqual(p["Nv 11 vs 12 Ahri"], overlay.ROSA)  # nivel abajo: rosa
+        self.assertEqual(p["▼ Nv 11 vs 12 Ahri"], overlay.ROSA)  # nivel abajo: rosa
         self.assertIn("Dragón 0:00", dict(overlay.partes(META, 2000.0)))  # nunca negativo
 
     def test_sin_datos(self):
