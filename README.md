@@ -52,16 +52,16 @@
 
 <br>
 
-## ✨ Por qué Racha
+##  Por qué Racha
 
 |  |  |
 |---|---|
-| 🎯 **Hecho con tus partidas** | Nada de «farmea más». Racha descubre, por ejemplo, que *con 2 muertes o menos del minuto 14 al 25 ganas el 68%, y con 3 o más, el 43%*. |
-| ⚡ **Aparece sola** | Se abre cuando abres LoL y cambia de pantalla según la fase: champ select, partida y final. Cero clics. |
-| 🛡️ **Juego limpio** | Solo lee lo que el cliente ofrece a las apps. No juega por ti, no toca el juego y no da ventajas injustas. |
-| 🔒 **Tus datos son tuyos** | Todo se queda en tu computadora. |
+|  **Hecho con tus partidas** | Nada de «farmea más». Racha descubre, por ejemplo, que *con 2 muertes o menos del minuto 14 al 25 ganas el 68%, y con 3 o más, el 43%*. |
+|  **Aparece sola** | Se abre cuando abres LoL y cambia de pantalla según la fase: champ select, partida y final. Cero clics. |
+|  **Juego limpio** | Solo lee lo que el cliente ofrece a las apps. No juega por ti, no toca el juego y no da ventajas injustas. |
+|  **Tus datos son tuyos** | Todo se queda en tu computadora. |
 
-## ❓ Preguntas frecuentes
+##  Preguntas frecuentes
 
 <details>
 <summary><b>¿Me pueden banear por usarla?</b></summary>
