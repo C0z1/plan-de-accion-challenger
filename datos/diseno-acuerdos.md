@@ -29,6 +29,25 @@ Sesión en vivo con el usuario, 2026-11-09. Canvas: https://claude.ai/artifact/R
 - Build: íconos de Data Dragon (la app web de Opus ya los usa) o iniciales.
 - Tamaño real de la ventana: la app web abre a 1440×1024, como el canvas.
 
+## Vino claro (propuesta del Diseñador, 2026-11-09, para aprobar)
+Mismos nombres de variable que Vino oscuro; solo cambian los valores.
+
+| Variable | Oscuro | Claro |
+|---|---|---|
+| `--bg` | `#24111A` | `#FBF3F6` |
+| `--card` | `#36192A` | `#FFFFFF` |
+| `--line` | `#5A2D40` | `#E3CBD5` |
+| `--text` | `#F2F4F7` | `#2A1420` |
+| `--muted` / `--muted2` | `#D2BAC4` / `#AE95A0` | `#6E4C5C` / `#85616F` |
+| `--acc` (rosa) | `#F28DB0` | `#B83A6B` |
+| `--good` / `--bad` | `#7FB89E` / `#D9606A` | `#2F7A57` / `#B3303C` |
+| Texto sobre el acento | `#161A21` | `#FFFFFF` |
+
+- El rosa claro no se usa como texto sobre fondo claro; el acento oscurece.
+- ✓/✕ siempre con símbolo, no solo color.
+- Frascos: mismos tonos, vidrio blanco y sombra rosada suave. El aside «Pickea» queda oscuro en ambos temas.
+- **Contraste AA sin medir** (las herramientas pidieron aprobación): verificar al implementar.
+
 ## Para Opus
 - `scripts/web/index.html` debe usar el copy 68 → 43 en la meta 14+.
 - Ícono de campeón con `'` o espacio (Kai'Sa, Nunu & Willump): la ruta `/img/champion/\w+` no los acepta.

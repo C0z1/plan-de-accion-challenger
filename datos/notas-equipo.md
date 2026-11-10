@@ -2091,6 +2091,24 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 
 **Tarea de pruebas para DeepSeek:** (a) `plan()` con reglas sin `tu` (deben ir al final y mostrar «sin dato tuyo»), con `cumple` 0 y n 1; (b) `fallo()` con `unidades` vacío (cae a «contra tu rol» con z) y con un componente que no esté en `COMP`; (c) que el HTML servido ya no traiga «Cómo jugarlo» ni `class="div"`.
 
+## 2026-11-09 22:39 · DeepSeek · revisión de 1e0d9da (turno 9, iter 1: Seleccion_Vino + tiles)
+
+**Está bien (verificado)**
+- Base del commit **221 OK**; agregué 3 pruebas a `scripts/test_ds_web.py` (25 en ese archivo). El árbol ahora corre **227 OK** porque Opus ya trae cambios sin commitear (`vistas.py`, `test_vistas.py`, `index.html` y el nuevo `sin_objetivo.py` = lo de `sin_objetivo` ±60 s y `sin_pelea`); no los revisé, van en su próximo commit.
+- (a) `plan()`: reglas sin `tu` quedan con `n=0` y el centinela `: 2` del sort (con `ok/n ∈ 0..1`) las manda al final; `reglaPlan` con `n=0` muestra «sin dato tuyo». Con `cumple=0, n=1`: `ok=round(0·1)=0` → «Cumples 0/1», tubo al 0% y `urg` si es la primera. Prueba `test_plan_sin_tu_al_final_y_sin_dato_tuyo`.
+- (b) `fallo()`: con `unidades` vacío (`u` falsy) cae a «contra tu rol» y `signo(z, 2)`; componente fuera de `COMP` no truena (`COMP[c] || [c, "alerta", v=>v, "", ""]` y `DEC[c] ?? 1`). Prueba `test_fallo_unidades_vacio_y_componente_desconocido`.
+- (c) El HTML servido ya no trae «Cómo jugarlo», `class="div"`, «La sueles cumplir» ni «Counters de tu». Prueba `test_seleccion_sin_cosas_viejas` (más las de `test_companion_web`).
+- Confirmé que `resumen()["unidades"]` da `{tu, rol}` en unidades y que `COMP`/`DEC` cubren las 8 claves; con datos reales `fallo` da «Línea Tú −12 · típico +0 ▼ −12», como anotó Opus.
+
+**Está mal / a corregir (cosmético, una línea)**
+- En `fallo()`, la flecha y el color salen de `z` (correcto: mayor = mejor en las 8), pero el número sale de `u.tu − u.rol` en unidades crudas. Para **Muertes** —la única métrica donde menos es mejor— el signo queda invertido: morir más que lo típico mostraría «▼ +N» y morir menos, «▲ −N». Con datos reales muertes va `tu 6.4 / rol 6.52` y `z ≈ −0.05` → «▼ −0.1» (ruido, pero el caso claro se ve raro). Sugerencia: negar para muertes en una línea.
+
+**Sugerencia**
+1. (Opus) En `fallo`, `signo((u.tu - u.rol) * (c === "muertes" ? -1 : 1), DEC[c] ?? 1)` (o un flag «invertir» en `COMP`) para que el signo del número coincida con la flecha en Muertes.
+
+### Ideas de DeepSeek
+1. (Diseñador) En los 3 tiles de «Qué está fallando», la flecha ▼/▲ ya da el sentido; para Muertes quizá baste «Tú X · típico Y» sin número con signo. Cosmético, no urgente.
+
 ## 2026-11-09 · Opus · turno 9 iteración 2
 **Qué hice:** sugerencia 1 de la revisión de DeepSeek de dfd70e8.
 - `vistas.errores`: `sin_pelea` solo cuenta una pelea (3+ kills a ≤ 30 s, del 14 en adelante) si tu equipo la pierde (más víctimas de tu equipo que del rival) y no participas. En las últimas 20: **16/20 → 9/20** partidas. En la app se llama «Pelea perdida sin ti» (idea 1 de DeepSeek, en texto; no agregué `mine/theirs` al JSON porque ahora toda pelea contada es perdida).
@@ -2108,3 +2126,18 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 - Asesor DeepSeek: el harness volvió a bloquear la llamada (PowerShell anidado).
 
 **Tarea de pruebas para DeepSeek:** (a) revisa `sin_objetivo.py`: ¿el 81/50/27% aguanta si controlas por oro del equipo al 14 (≥ 0 contra < 0)? Si en las dos bandas se mantiene la caída de 0 a 1, el error es accionable; si no, es reflejo de ir perdiendo; (b) muerte exactamente a 60 s de un objetivo (borde, debe no contar como error); (c) un objetivo antes del 14:00 con la muerte a las 14:30 (debe valer igual).
+
+## 2026-11-09 · Diseñador · iteración 2 (noche)
+- Propuse **Vino claro** (tabla de variables) en `datos/diseno-acuerdos.md`; acento `#B83A6B`, ✓/✕ con símbolo.
+- Contraste AA **sin medir** (las herramientas de cálculo pidieron aprobación): verificar al implementar.
+- Consulta a DeepSeek: no la hice (el harness bloquea PowerShell anidado).
+- Pedido a Opus: ninguno. Idea 1 de DeepSeek (Muertes sin número con signo) queda a tu criterio; es cosmético.
+
+## 2026-11-09 · Opus · turno 9 iteración 4
+**Qué hice:** la sugerencia 1 de la revisión de DeepSeek de 1e0d9da y el pedido del Diseñador sobre los íconos de campeón.
+- `fallo()` (Qué está fallando): en Muertes el número ahora va con el signo de la flecha (morir más que lo típico = «▼ −N»), como en los otros 7 componentes. Descarté la idea 1 (quitar el número): con el signo alineado ya se lee igual que los demás.
+- `companion_web.imagen`: Kai'Sa ya funcionaba (el front quita `'` y queda `KaiSa` → `Kaisa`), pero «Nunu & Willump» llegaba como `NunuWillump` y no existía. Si no hay match exacto, usa el campeón más largo cuyo nombre normalizado sea prefijo (`nunu`). El exacto gana siempre (Viego no cae en Vi). Prueba `test_imagen_nunu_por_prefijo` (sin red).
+- HTC v0.3.4 recompilado (`dist/HTC`), humo OK (0.38 s, 13 claves). Instalador sin regenerar (ISCC necesita permiso). 228 OK.
+- No consulté a DeepSeek: el harness bloquea el PowerShell anidado.
+
+**Tarea de pruebas para DeepSeek:** (a) `imagen("champion", x)` con nombres reales raros de Data Dragon (Renata Glasc, Dr. Mundo, Jarvan IV, Bel'Veth, K'Sante, Nunu & Willump en es_MX «Nunu y Willump»): que ninguno caiga por prefijo en otro campeón distinto; (b) `fallo("muertes", z, {tu: 7, rol: 5})` debe dar «▼ −2.0».

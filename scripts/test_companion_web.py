@@ -102,6 +102,15 @@ class Http(unittest.TestCase):
             self.assertEqual(self.get("/img/otra/Ahri.png")[0], 404)
             self.assertEqual(im.call_count, 1)
 
+    def test_imagen_nunu_por_prefijo(self):
+        import builds, tempfile, pathlib
+        d = {"nunu": ("Nunu", 20, "Tank"), "vi": ("Vi", 254, "Fighter"), "viego": ("Viego", 234, "Fighter")}
+        with tempfile.TemporaryDirectory() as t, mock.patch.object(builds, "ddragon", return_value=({}, {}, d)), mock.patch.object(w, "IMG", pathlib.Path(t)):
+            for f in ("Nunu", "Viego"): (pathlib.Path(t) / "champion").mkdir(exist_ok=True); (pathlib.Path(t) / "champion" / f"{f}.png").write_bytes(f.encode())
+            self.assertEqual(w.imagen("champion", "NunuWillump"), b"Nunu")
+            self.assertEqual(w.imagen("champion", "Viego"), b"Viego")  # exacto gana al prefijo «vi»
+            self.assertIsNone(w.imagen("champion", "Zzz"))
+
 
 class CacheRendimiento(unittest.TestCase):
     def test_usa_cache_y_la_invalida_al_cambiar_partidas(self):

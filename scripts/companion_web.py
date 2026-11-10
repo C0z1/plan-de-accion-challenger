@@ -17,7 +17,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "espera": None, "rango": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
-VERSION = "0.3.3"  # HTC; también invalida la caché de rendimiento
+VERSION = "0.3.4"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
 PUERTO = gui.REPO / "datos" / "cache" / "htc.port"  # el HTC que ya corre: otro arranque abre su ventana en vez de duplicarse
@@ -116,7 +116,9 @@ def imagen(tipo, nombre):
     """PNG de Data Dragon (campeón por nombre o ítem por id), en caché en disco; None si no existe."""
     import builds
     if tipo == "champion":
-        c = builds.ddragon()[2].get(builds.norm(nombre))
+        d, n = builds.ddragon()[2], builds.norm(nombre)
+        # «Nunu & Willump» llega como «NunuWillump»: si no hay exacto, el campeón más largo que sea prefijo («nunu»)
+        c = d.get(n) or d.get(max((k for k in d if n.startswith(k)), key=len, default=""))
         if not c: return None
         nombre = c[0]  # «Wukong» → «MonkeyKing»
     f = IMG / tipo / f"{nombre}.png"

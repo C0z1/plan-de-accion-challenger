@@ -280,7 +280,7 @@ const COMP = {
 const DEC = {muertes: 1, "visión": 2, cs: 1, "línea": 0};  // decimales de la diferencia; los % van en puntos
 function fallo(c, z, u) {  // Perfil.dc: ícono, nombre, «Tú X · típico Y» y etiqueta con la diferencia (flecha = si te baja o te sube)
   const [nom, i, f, , accion] = COMP[c] || [c, "alerta", v => v, "", ""], mal = z < 0;
-  const dif = u ? (f === pct ? signo((u.tu - u.rol) * 100, 0) + " pts" : signo(u.tu - u.rol, DEC[c] ?? 1)) : signo(z, 2);
+  const dif = u ? (f === pct ? signo((u.tu - u.rol) * 100, 0) + " pts" : signo((u.tu - u.rol) * (c === "muertes" ? -1 : 1), DEC[c] ?? 1)) : signo(z, 2);  // muertes: menos es mejor, el signo sigue a la flecha
   return `<div title="${esc(accion)}"><span class="ic ${mal ? "red" : "teal"}">${ic(i, 20)}</span>
     <div class="txt"><b style="font-size:14px">${esc(nom)}</b><small>${u ? `Tú ${esc(f(u.tu))} · típico ${esc(f(u.rol))}` : "contra tu rol"}</small></div>
     <span class="tag ${mal ? "red" : "ok"}" role="img" aria-label="${mal ? "Te baja" : "Te sube"}: ${esc(dif)}">${mal ? "▼" : "▲"} ${esc(dif)}</span></div>`;
