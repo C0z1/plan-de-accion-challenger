@@ -53,11 +53,6 @@ details summary{cursor:pointer;color:var(--muted)}
 .fila2:first-of-type{border-top:none}
 .fila2 .txt{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
 .fila2 small{font-size:12px;color:var(--muted)}
-.min{font-size:10px;font-weight:700;color:var(--soft);letter-spacing:.04em}
-.estado{flex-shrink:0;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:6px 10px;border-radius:6px}
-.div{position:relative;flex:0 0 140px;height:10px;border-radius:5px;background:var(--dark3)}
-.div::after{content:"";position:absolute;left:50%;top:-3px;width:1px;height:16px;background:var(--soft)}
-.div i{position:absolute;top:0;height:10px;border-radius:5px}
 .tit{display:flex;align-items:center;gap:10px}
 /* launcher (Home_Vino) */
 .cab2{display:flex;justify-content:space-between;align-items:center;margin:-20px -20px 4px;padding:16px 20px;border-radius:12px 12px 0 0;background:linear-gradient(180deg,rgba(242,141,176,.2),rgba(242,141,176,0));border-bottom:1px solid var(--line)}
@@ -99,6 +94,21 @@ nav .abajo{margin-top:auto}
 .tog i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s}
 .tog[aria-checked=true]{background:var(--acc)}.tog[aria-checked=true] i{left:24px}.tog:disabled{opacity:.4;cursor:default}
 .mvp{font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px}
+/* Seleccion_Vino */
+.tres .card.stat{min-height:196px;border-radius:16px;padding:18px 20px;gap:10px}.stat .big{margin-top:0}.stat .big b{font-size:34px}.stat .pie{font-size:14px}
+.ico40{width:40px;height:40px;border-radius:10px;background:var(--dark3)}
+.seis{position:relative;display:flex;justify-content:space-between;align-items:center;height:32px;margin-top:4px}
+.seis::before{content:"";position:absolute;left:10px;right:14px;top:50%;height:3px;margin-top:-1.5px;border-radius:2px;background:linear-gradient(90deg,rgba(242,141,176,.15),rgba(242,141,176,.7))}
+.seis span{position:relative;width:20px;height:20px;border-radius:50%;background:var(--dark3);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--soft)}
+.seis .meta6{width:28px;height:28px;background:var(--acc);box-shadow:0 0 0 3px rgba(242,141,176,.25);font-size:12px;color:#24111A}
+.rplan{display:grid;grid-template-columns:36px 1fr 150px;align-items:center;column-gap:16px;padding:20px 18px;border-radius:12px;background:linear-gradient(180deg,#2E1622,#26121C);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 4px 12px rgba(0,0,0,.3)}
+.rplan.urg{outline:1px solid rgba(242,141,176,.6)}
+.rplan .txt{display:flex;flex-direction:column;gap:4px;min-width:0}.rplan small{font-size:13px;color:var(--muted)}
+.nro{width:36px;height:36px;border-radius:50%;background:rgba(242,141,176,.14);color:var(--acc2);display:flex;align-items:center;justify-content:center;font-weight:700}
+.cumple{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.falla{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.falla>div{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--dark2);border:1px solid var(--line)}
+.falla .ic{width:36px;height:36px;border-radius:8px}.falla .txt{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}.falla small{font-size:12px;color:var(--muted)}
 .btn{background:var(--acc);color:#24111A;border:none;border-radius:10px;padding:12px 16px;font:700 14px Mulish,'Segoe UI',sans-serif;cursor:pointer}
 </style>
 </head>
@@ -158,15 +168,15 @@ const signo = (v, d = 0) => v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "
 const pct = p => Math.round(p * 100) + "%";
 const img = (tipo, n, cls = "ico", alt = "") => `<img class="${cls}" src="/img/${tipo}/${encodeURIComponent(String(n).replace(/\W/g, ""))}.png" alt="${esc(alt)}" onerror="this.style.visibility='hidden'">`;
 
-const UREGLA = {cs: v => `${v} CS`, nivel: v => `${signo(v, 1)} niveles`, muertes: v => `${v} muertes`};  // tu media, en sus unidades
-function regla(r) {  // fila: ícono de la métrica, la regla, tu media contra la meta y si la sueles cumplir (con su n)
-  const t = r.tu, cls = {muertes: "red", cs: "teal", nivel: "amber"}[r.metrica] || "amber", u = UREGLA[r.metrica] || (v => v);
-  const dato = t ? `Tu media ${esc(t.de)}: <b>${esc(u(t.media))}</b> · meta ${esc(r.meta)}` : `Meta: <b>${esc(r.meta || r.texto)}</b>`;
-  const est = t ? (t.cumple >= .5 ? `<span class="estado ok">${ic("ok", 16)} La sueles cumplir (${pct(t.cumple)} de ${t.n})</span>`
-                                   : `<span class="estado red">${ic("mal", 16)} Te cuesta (${pct(t.cumple)} de ${t.n})</span>`) : "";
-  return `<div class="fila2"><span class="ic ${cls}">${ic(r.metrica)}</span>
-    <div class="txt"><span class="min">${r.minuto ? "MIN " + esc(r.minuto) : ""}</span><b>${esc(r.texto)}</b><span style="font-size:14px">${dato}</span>
-    <small>${esc(r.numero)}${r.pista ? " · pista: pocas partidas" : ""}</small></div>${est}</div>`;
+// reglas de ficha() → {ok, n} de tus partidas (contra el rival o con el campeón); la que menos cumples primero, las sin dato al final
+const plan = rs => rs.map(r => ({...r, ok: r.tu ? Math.round(r.tu.cumple * r.tu.n) : 0, n: r.tu ? r.tu.n : 0}))
+  .sort((a, b) => (a.n ? a.ok / a.n : 2) - (b.n ? b.ok / b.n : 2));
+function reglaPlan(r, i) {  // Seleccion_Vino: número, la regla con una línea y «Cumples N/M» con su tubo
+  const f = r.n ? r.ok / r.n : null, col = f == null ? "#9A8290,#9A8290" : f >= .5 ? "#3E7A62,#A8D8C0" : f >= .35 ? "#A33A63,#F8C3D6" : "#9A2E3A,#FF8A8A";
+  return `<div class="rplan${i === 0 && f != null && f < .5 ? " urg" : ""}"><span class="nro">${i + 1}</span>
+    <div class="txt" title="${esc(r.texto)}"><b>${esc(r.meta || r.texto)}</b><small>${r.tu ? esc(r.tu.de) + " · " : ""}${esc(r.numero)}${r.pista ? " · pista" : ""}</small></div>
+    <div class="cumple"><span class="sub" style="font-size:12px">${f == null ? "sin dato tuyo" : `Cumples <b style="color:var(--txt)">${r.ok}/${r.n}</b>`}</span>
+    <span class="tuboH" style="flex:none;width:100%" role="img" aria-label="${f == null ? "sin dato" : `Cumples ${r.ok} de ${r.n}`}"><i style="width:${(f || 0) * 100}%;background:linear-gradient(90deg,${col})"></i></span></div></div>`;
 }
 
 function champSelect(s) {
@@ -181,28 +191,23 @@ function champSelect(s) {
   const main = `
   <div><h1>Selección de campeón</h1><span class="sub">${esc(pos)} · ${esc(fi.champ)} contra ${esc(fi.rival)}</span></div>
   <div class="tres">
-    <div class="card"><div class="cab">${img("champion", fi.rival)}<b>Contra ${esc(fi.rival)}</b></div>
+    <div class="card stat"><div class="cab">${img("champion", fi.rival, "ico40")}<b>Contra ${esc(fi.rival)}</b></div>
       <div class="big"><b>${pq.v}-${pq.n - pq.v}</b><span>con ${esc(fi.champ)}</span></div>
-      ${pq.pocas ? `<span class="tag amber">▲ Pocas partidas (${pq.n})</span>` : ""}
-      ${pq.oro14 != null ? `<span class="pie">Llegas al 14 con <b>${signo(pq.oro14)}</b> de oro contra él con ${esc(fi.champ)}.</span>` : ""}</div>
-    <div class="card"><div class="cab">${img("champion", fi.champ)}<b>Tu ${esc(fi.champ)}</b></div>
-      <div class="big"><b>${pct(pq.wr_rol)}</b><span>${pq.n_rol} partidas</span></div>
-      ${wr != null ? (pq.wr_rol < wr ? `<span class="tag red">▼ Bajo tu WR (${pct(wr)})</span>` : `<span class="tag ok">▲ Sobre tu WR (${pct(wr)})</span>`) : ""}
-      <span class="pie">WR en ${esc(pos)} con este campeón.</span></div>
-    <div class="card"><div class="cab"><span class="ico red" style="display:flex;align-items:center;justify-content:center">${ic("alerta", 28)}</span><b>Cuidado</b></div>
-      ${c.n ? `<div class="big"><b>${c.v}-${c.n - c.v}</b><span>tú contra ${esc(c.rival)}</span></div>
-      <span class="tag ${c.pocas ? "amber" : "red"}">Wilson ${pct(c.ic[0])}–${pct(c.ic[1])}${c.pocas ? " · pista" : ""}</span>` : `<span class="sub">Sin partidas contra ${esc(c.rival)}.</span>`}
-      ${c.muertes6 != null ? `<span class="pie">Mueres antes del 6 <b>${c.muertes6.toFixed(1)}</b> veces (tu media ${c.ref.muertes6 != null ? c.ref.muertes6.toFixed(1) : "–"})${(c.anticipa || []).includes("muertes6") ? "; tiende a repetirse contra él" : ""}.</span>` : ""}
-      ${c.notas.map(n => `<span class="pie">Tu nota: ${esc(n)}</span>`).join("")}</div>
+      <span class="pie">${pq.pocas ? "Pocas partidas: pista" : `${pq.n} partidas contra él`}</span></div>
+    <div class="card stat"><div class="cab">${img("champion", fi.champ, "ico40")}<b>Tu ${esc(fi.champ)}</b></div>
+      <div class="big"><b>${pct(pq.wr_rol)}</b><span>${wr != null ? "tu WR " + pct(wr) : pq.n_rol + " partidas"}</span></div>
+      <span class="tuboH" style="flex:none;width:100%;margin-top:auto" role="img" aria-label="WR con ${esc(fi.champ)} ${pct(pq.wr_rol)}${wr != null ? ", tu WR " + pct(wr) : ""}"><i style="width:${pq.wr_rol * 100}%;background:linear-gradient(90deg,#A33A63,#F8C3D6)"></i>${wr != null ? `<u style="left:${wr * 100}%"></u>` : ""}</span></div>
+    <div class="card stat"><div class="cab" style="justify-content:space-between"><b>Hasta el nivel 6</b><span class="sub" style="font-size:12px">vs ${esc(c.rival)}</span></div>
+      <div class="seis" role="img" aria-label="Del nivel 1 al 6: juega seguro hasta el 6">${[1, 2, 3, 4, 5].map(k => `<span>${k}</span>`).join("")}<span class="meta6">6</span></div>
+      <span class="pie">${c.muertes6 != null ? `Mueres antes del 6: <b>${c.muertes6.toFixed(1)}</b> por partida vs él${c.ref.muertes6 != null ? ` (tu media ${c.ref.muertes6.toFixed(1)})` : ""}` : "Juega seguro hasta el 6."}</span></div>
   </div>
-  <div class="card reglas" style="padding:20px 30px 18px;gap:4px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h2>Cómo jugarlo</h2><span class="sub" style="font-size:12px">Tus ${fi.reglas.length} metas, con tu dato real</span></div>
-    ${fi.reglas.map(regla).join("")}
+  <div class="card" style="gap:14px"><div class="cab2"><h2>Tu plan con ${esc(fi.champ)}</h2><span class="sub" style="font-size:13px">${fi.reglas.length} reglas · la más urgente, arriba</span></div>
+    ${plan(fi.reglas).map(reglaPlan).join("")}
   </div>
-  ${b ? `<div class="card build"><h2 class="tit">${ic("build")}Build</h2>
-    <div style="display:flex;align-items:center;gap:8px;color:var(--muted)">${b.core.map(([n, p, id]) => img("item", id, "item", n)).join("→")}</div>
-    <span class="tag teal" style="font-size:12px;padding:8px 10px">${esc(b.runa ? b.runa[0] : "")} · ${esc(b.skills ? b.skills[0] : "")}</span>
-    <span class="sub" style="font-size:12px">${b.fuente === "tu" ? "Tu build" : "Build de los mejores"} (${b.n} partidas, WR ${pct(b.wr)})</span></div>` : ""}
+  ${c.notas.length ? `<div class="card"><span class="sub">Tu nota: ${c.notas.map(esc).join(" · ")}</span></div>` : ""}
+  ${b ? `<div class="card build" style="gap:12px"><div class="cab2" style="flex:1 0 100%"><h2>Build</h2><span class="sub" style="font-size:12px">${b.fuente === "tu" ? "Tu build" : "Los mejores"} · ${pct(b.wr)} · ${b.n} partidas</span></div>
+    <div style="display:flex;align-items:center;gap:8px;color:var(--soft)">${b.core.map(([n, p, id]) => img("item", id, "item", n)).join("→")}</div>
+    ${b.runa || b.skills ? `<span class="tag teal" style="font-size:12px;padding:8px 10px">${esc(b.runa ? b.runa[0] : "")}${b.runa && b.skills ? " · " : ""}${esc(b.skills ? b.skills[0] : "")}</span>` : ""}</div>` : ""}
   ${(rec.avisos || []).map(a => `<div class="aviso red">${esc(a)}</div>`).join("")}`;
   const est = pq.est, x = v => Math.max(0, Math.min(100, (v - .4) / .3 * 100));  // escala 40–70%
   const aside = `
@@ -223,7 +228,7 @@ function champSelect(s) {
   <div style="height:1px;background:var(--line)"></div>
   <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
     <div style="display:flex;flex-direction:column;gap:16px;flex:1">
-      <div><h2 style="font-size:22px;font-weight:600">Counters de tu ${esc(fi.champ)}</h2><span class="sub">Contra ellos vas peor (récord y CS al 14)</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="font-size:20px;font-weight:600">Si te toca contra…</h2><span class="sub" style="font-size:13px">CS al 14</span></div>
       <div class="counters">${fi.counters.lista.length ? fi.counters.lista.map(k => `<div class="counter"><span>${img("champion", k.rival, "", "")}${esc(k.rival)}</span>
         <b>${signo(k.cs14)} ${k.cs14 < 0 ? '<span style="color:var(--red)">↓</span>' : ""}</b><small>CS al 14 · ${k.v}-${k.n - k.v}${k.pocas ? " · pista" : ""}</small></div>`).join("") : '<span class="sub">Sin counters medidos.</span>'}</div>
     </div>
@@ -272,12 +277,13 @@ const COMP = {
   objetivos: ["Objetivos", "objetivos", pct, "del daño a objetivos de tu equipo", "Parejo o abajo, llega al objetivo con tu equipo."],
   "línea": ["Línea", "linea", v => signo(v, 0), "oro por minuto contra tu rival", "No salgas del 6 con un nivel abajo: tradea, pero no pierdas la carrera al 6."],
 };
-function fallo(c, z, u) {  // fila: ícono, nombre, tu valor contra lo típico del rol, barra divergente y la acción
-  const [nom, i, f, uni, accion] = COMP[c] || [c, "alerta", v => v, "", ""], w = Math.min(50, Math.abs(z) / 1.5 * 50), mal = z < 0;
-  return `<div class="fila2"><span class="ic ${mal ? "red" : "teal"}">${ic(i)}</span>
-    <div class="txt"><b>${esc(nom)}</b><span style="font-size:14px">${u ? `Tú <b>${esc(f(u.tu))}</b> contra ${esc(f(u.rol))} ${esc(uni)}` : `${signo(z, 2)} desviaciones`}</span>
-    ${mal ? `<small>${esc(accion)}</small>` : ""}</div>
-    <div class="div" role="img" aria-label="${signo(z, 2)} desviaciones contra tu rol"><i style="${mal ? `right:50%` : `left:50%`};width:${w}%;background:${mal ? "var(--red)" : "var(--teal)"}"></i></div></div>`;
+const DEC = {muertes: 1, "visión": 2, cs: 1, "línea": 0};  // decimales de la diferencia; los % van en puntos
+function fallo(c, z, u) {  // Perfil.dc: ícono, nombre, «Tú X · típico Y» y etiqueta con la diferencia (flecha = si te baja o te sube)
+  const [nom, i, f, , accion] = COMP[c] || [c, "alerta", v => v, "", ""], mal = z < 0;
+  const dif = u ? (f === pct ? signo((u.tu - u.rol) * 100, 0) + " pts" : signo(u.tu - u.rol, DEC[c] ?? 1)) : signo(z, 2);
+  return `<div title="${esc(accion)}"><span class="ic ${mal ? "red" : "teal"}">${ic(i, 20)}</span>
+    <div class="txt"><b style="font-size:14px">${esc(nom)}</b><small>${u ? `Tú ${esc(f(u.tu))} · típico ${esc(f(u.rol))}` : "contra tu rol"}</small></div>
+    <span class="tag ${mal ? "red" : "ok"}" role="img" aria-label="${mal ? "Te baja" : "Te sube"}: ${esc(dif)}">${mal ? "▼" : "▲"} ${esc(dif)}</span></div>`;
 }
 
 function perfil(s) {  // ventana 2 del canvas: score, WR y muertes de las últimas 20, qué falla, tilt, cuenta y campeones
@@ -310,10 +316,9 @@ function perfil(s) {  // ventana 2 del canvas: score, WR y muertes de las últim
   ${VS(s) ? `<div class="card" style="gap:4px"><div class="cab2"><h2>Qué cambiar</h2><span class="sub" style="font-size:12px">la que más te cuesta, arriba · tus últimas 20</span></div>
     ${VS(s).reglas.map(reglaCumple).join("")}
     <button class="atajo" onclick="ver('errores')">Ver tus errores repetidos <span>→</span></button></div>` : ""}
-  <div class="card" style="gap:4px"><div style="display:flex;justify-content:space-between"><h2>Qué está fallando</h2><span class="sub" style="font-size:12px">${ps.length ? `Últimas ${ps.length}` : ""}</span></div>
-    <span style="font-size:16px;margin:4px 0 6px">${orden.length && orden[0][1] < 0 ? `Lo que más te baja: <b>${esc((COMP[orden[0][0]] || [orden[0][0]])[0].toLowerCase())}</b>` : ps.length ? "Nada te baja de lo típico de tu rol." : "Sin partidas todavía."}</span>
-    ${orden.map(([c, z]) => fallo(c, z, U[c])).join("")}
-    <span class="pie">Barra: tu media contra lo típico de tu rol (centro = típico). Lo que más pesó en tu score, no la causa de perder.</span></div>
+  <div class="card"><div class="cab2"><h2>Qué está fallando</h2><span class="sub" style="font-size:12px">${ps.length ? `Últimas ${ps.length} contra lo típico de tu rol` : ""}</span></div>
+    <span>${orden.length && orden[0][1] < 0 ? `Lo que más te baja: <b>${esc((COMP[orden[0][0]] || [orden[0][0]])[0].toLowerCase())}</b>` : ps.length ? "Nada te baja de lo típico de tu rol." : "Sin partidas todavía."}</span>
+    ${orden.length ? `<div class="falla">${orden.slice(0, 3).map(([c, z]) => fallo(c, z, U[c])).join("")}</div>` : ""}</div>
   <div class="tres">
     <div class="card"><b class="tit"><span class="ic red">${ic("muertes")}</span>Muertes 14–25</b><div class="big"><b>${m25 != null ? m25.toFixed(1) : "–"}</b><span>por partida</span></div>
       ${m25 != null ? `<span class="tag ${m25 <= 2 ? "ok" : "red"}">${m25 <= 2 ? "✓" : "✕"} Meta: 2 o menos</span>` : ""}

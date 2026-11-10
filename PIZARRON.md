@@ -25,19 +25,21 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Turno 8 (2026-11-09, con el usuario):** la app se llama **HTC (How to Climb)** v0.2.0. Build `--onedir` (`instalador/build.ps1`): responde en 0.54 s (antes 1.1–1.4). Caché de «Tu rendimiento» en `datos/cache/` (27 ms; antes 1 s), que se invalida si cambian las partidas. Instalador Inno Setup por usuario (`dist/HTC-Setup-0.2.0.exe`), probado instalando en silencio + humo + desinstalar. 205 OK.
 - **Turno 8, 2:** paleta Vino + barra lateral con etiquetas + vista **Inicio** (launcher, Home_Vino) con datos reales; rebuild HTC + instalador. 212 OK.
 - **Turno 8, 3:** HTC v0.3.0: todas las ventanas Vino (Draft, En vivo, Campeones, Errores, Ajustes; Qué cambiar con Cumples N/20; MVP en Partidas) con `scripts/vistas.py`, y se abre solo al abrir LoL (`--fondo`, instancia única, arranque con Windows desde el instalador o Ajustes). 218 OK.
-- **Siguiente:** rival y objetivos en En vivo, Selección simplificada, paleta clara; revisión de DeepSeek de los errores.
-- **Actualizado:** 2026-11-09 (turno 8)
+- **Turno 9, iteración 1 (pedido del usuario, 2.ª vez):** Selección como `Seleccion_Vino`: 3 tarjetas de stat (récord vs rival, tu WR con tubo, «Hasta el nivel 6»), «Tu plan con <campeón>» = 3 reglas numeradas con la meta corta, una línea y «Cumples N/M» (la que menos cumples arriba); fuera «Cómo jugarlo» y sus párrafos. «Qué está fallando» = 3 tiles (las 3 peores) con ícono, «Tú X · típico Y» y etiqueta ▼/▲ con la diferencia; fuera barras divergentes. HTC v0.3.1 recompilado (`dist/HTC`), humo OK. Instalador sin regenerar (ISCC pidió permiso). 221 OK.
+- **Siguiente:** `sin_pelea` solo si tu equipo pierde la pelea (DeepSeek); regenerar `HTC-Setup-0.3.1.exe`; rival y objetivos en En vivo.
+- **Actualizado:** 2026-11-09 (turno 9, iteración 1)
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
-- **Estado:** revisado 337683d (paleta Vino + launcher Inicio): `inicio()` no truena con `rendimiento: null` ni con `perfil` sin «#» (verificado por lectura, no ejecuto JS en unittest); agregué `test_inicio_es_la_vista_por_defecto`. Suite completa **213 OK**. Residual menor: el panel derecho de Inicio repite «sin datos…» con el mensaje crudo.
-- **Siguiente:** nada mío pendiente; revisión visual (Playwright) si llega el permiso.
-- **Actualizado:** 2026-11-09 (turno 8, revisión 337683d)
+- **Estado:** revisado 8fd09b6 + dfd70e8 (HTC v0.3.0): `vistas.errores` mide bien (`killerTeamId`/`teamId` verificados en los 302 timelines), pero `sin_pelea` cuenta peleas que tu equipo gana (8/24 en las últimas 20) — propongo contarlas solo si tu equipo pierde. `cumple` y `evento(pos)` con pruebas nuevas; `do_POST` bien defendido. Suite **221 OK**. Luego 93ad7bd: solo diseño del Diseñador, sin código que revisar.
+- **Siguiente:** nada mío pendiente; (Opus) afinar `sin_pelea` y quizá `sin_objetivo` ±60 s.
+- **Actualizado:** 2026-11-09 16:40 (turno 8, revisión 93ad7bd)
 
 ### Diseñador
 - **Estado:** diseño Vino entregado a Opus para la primera build: 10 pantallas en `datos/diseno/canvas/project/*_Vino.dc.html` (+ `Minions_Variantes`, `Tubos_Kit`). Traspaso en `datos/notas-equipo.md` («ENTREGA FINAL»).
 - **Siguiente:** diseñar Vino claro; afinar el minion si el usuario lo pide; revisar la build de Opus contra los artboards.
-- **Actualizado:** 2026-11-09 (entrega final Vino)
+- **Iteración 1 (noche):** sin cambios de diseño; idea 2 de DeepSeek ya cubierta (n/20 en las tarjetas). Consulta a DeepSeek bloqueada por el harness.
+- **Actualizado:** 2026-11-09 (noche, iteración 1)
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
@@ -219,6 +221,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - 2026-11-09 · DeepSeek: el humo del `.exe` (ef71e63) sale 0 y el binario v0.1.2 responde `/api/estado`; único hueco: si hay otra instancia de `Companion.exe` abierta, `ports[0]` puede leer su puerto y dar un falso OK (una foto previa de netstat lo cubre).
 - 2026-11-09 · DeepSeek: la caché de rendimiento (57ed203) no se invalida al cambiar `score.py` sin subir `VERSION` (la `firma` solo mira los JSON de raw); un arreglo de `score.py` dejaría números viejos a los instalados. Dejado fallando en `test_ds_cache.Cache.test_cambiar_score_py_invalida_la_cache`.
 - 2026-11-09 · DeepSeek: eb9bc53 arregla la firma (mtime de `score.py` dentro de `firma()`); el test que dejé fallando pasa y la suite completa da 212 OK. La caché queda cubierta en los 4 casos (bajar/borrar partida, JSON corrupto, editar `score.py`).
+- 2026-11-09 · DeepSeek: `vistas.errores` mide bien (killerTeamId/teamId verificados), pero `sin_pelea` es demasiado amplio: cuenta peleas que tu equipo gana sin ti (8 de 24 en las últimas 20; solo 14 las pierde). Propuesta: contarla solo si tu equipo pierde la pelea.
 
 ## Decisiones
 - 2026-11-09 · Opus: `Companion.exe` v0.1.0 es la app web (`companion_web.py`), no tkinter. Lee `scripts/web` del repo si está junto a él (se actualiza sin recompilar) y si no, la copia empaquetada.

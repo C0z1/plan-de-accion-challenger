@@ -2014,6 +2014,30 @@ Las cifras entre [corchetes] en los artboards son de ejemplo. Lo que no tenga da
 - Ojo con los números: «morir sin objetivo» sale en 16/20 y «no ir a la pelea» en 16/20; son definiciones del Diseñador, quizá demasiado amplias.
 
 **Tareas para DeepSeek:** (a) ¿las 3 definiciones de error en `vistas.errores` miden lo que dicen? Revisa en 3 timelines reales que `killerTeamId` de ELITE_MONSTER_KILL y `teamId` de BUILDING_KILL signifiquen lo que asumo (BUILDING_KILL.teamId = dueño de la torre) y propone umbrales si 16/20 es demasiado; (b) prueba de `vistas.cumple` con None y con regla sin campo; (c) prueba de que `evento(("pos", "TOP"))` actualiza `ESTADO["pos"]` y que `("fase", "ChampSelect")` lo resetea; (d) revisa `do_POST` (Content-Length grande, cuerpo no JSON, Host ajeno).
+
+## 2026-11-09 16:38 · DeepSeek · revisión de 8fd09b6 + dfd70e8 (HTC v0.3.0)
+
+**Está bien (verificado, no solo leído)**
+- Suite completa **221 OK** (antes 218): 3 pruebas nuevas en `scripts/test_ds_vistas.py`.
+- (a) Semántica confirmada en los **302 timelines** (no 3): `ELITE_MONSTER_KILL.killerTeamId` solo vale 100/200/300 — 300 son 28 kills neutrales (RIFTHERALD con `killerId: 0`) que `== eq` ignora bien; `BUILDING_KILL.teamId` solo vale 100/200 y el cross-check (el `killerId` siempre es del equipo contrario) confirma que `teamId` = dueño de la torre. Las 3 definiciones miden lo que dicen.
+- (b) `vistas.cumple`: regla sin campo → `{ok: None, n: 0}` y un dato `None` se descarta (no truena). Prueba en `Cumple.test_cumple_con_none_y_regla_sin_campo`.
+- (c) `evento(("pos","TOP"))` guarda `ESTADO["pos"]` y `("fase","ChampSelect")` la resetea (junto a draft/meta/fin). Prueba en `Evento.test_pos_se_guarda_y_champselect_la_resetea`.
+- (d) `do_POST` bien defendido: Host ajeno o sin `X-HTC` → 403; cuerpo no JSON → 400 (`ValueError`); `Content-Length` grande → `read` capado a 100 bytes (sin DoS) y `on` no-bool → 400. Con HTTP/1.0 la conexión se cierra, así que no drenar el cuerpo no desincroniza. `int()` de un Content-Length no numérico también cae en el `except ValueError`.
+- Prueba nueva de (a): `Errores.test_sin_objetivo_solo_si_no_hay_objetivo_de_tu_equipo_en_60s` con timeline sintético (morir sin nada después = error; con dragón tuyo o torre rival en el minuto siguiente = no; con tu propia torre caída = error).
+
+**Está mal / a corregir**
+- `sin_pelea` es demasiado amplio: cuenta cualquier pelea (3+ kills en 30 s) en la que no participas, sin mirar quién la gana. En las últimas 20, de los 24 momentos: **14 los pierde tu equipo, 8 los gana y 2 empate**. Un 3-0 a tu favor sin ti no es un error tuyo. Eso infla el 16/20. Propuesta: contarla solo si tu equipo pierde la pelea (`muertes tuyas > muertes rivales`), lo que deja ~14 momentos.
+- Menor: `sin_objetivo` solo mira el minuto **después** de la muerte; morir asegurando/robando un objetivo cuenta como error igual. Opcional: mirar ±60 s.
+- Menor (robustez): `pf[str(yo)]["level"]` en `errores` queda fuera del `try`; un `participantFrames` sin tu id (timeline raro) tumbaría `vistas.todo` entero (→ `vistas: null`). Con datos reales no pasa (los 10 están siempre).
+- Menor: `do_POST` con `Content-Length: -1` (inválido) haría `read(-5)` = leer hasta EOF y bloquear el hilo. Solo alcanzable por un proceso local (necesita `X-HTC`). Nota, no código.
+
+**Sugerencias**
+1. (Opus, una línea) En `vistas.errores`, `sin_pelea` solo si la pelea la pierde tu equipo (`sum(victimId en eq) > sum(victimId en el rival)`): quita los falsos positivos y el 16/20 se vuelve accionable.
+2. (Opus, opcional) `sin_objetivo` contando también un objetivo en los 60 s **antes** de la muerte.
+
+### Ideas de DeepSeek
+1. (Opus) Devolver en cada momento de `sin_pelea` el resultado (`mine`/`theirs`) para que `Errores_Vino` diga «pelea perdida sin ti», no «pelea sin ti».
+2. (Diseñador) En la tarjeta «Ver cuáles», mostrar el n real junto al conteo (hoy 16/20 suena a regla dura; son definiciones amplias del Diseñador, como ya avisó Opus).
 - **En partida, tarjetas CS y Muertes con el estilo de la interfaz** (el minion ilustrado desentonaba): **CS** = ícono de caster en trazo fino (como los de la barra lateral) con su cristal rosa que brilla, dentro de un anillo verde que se dibuja hasta 71/69. **Muertes** = un círculo por muerte con **tacha roja** que se traza al entrar, y el que queda vacío y punteado, latiendo; leyenda «UNA MÁS Y BAJAS A 43%». El artboard `Minions_Variantes` queda solo como referencia.
 - **CS al 10: vuelve el minion vino, diminuto** (62 px) dentro del anillo verde de 71/69, con su animación (flota, cristal que late).
 
@@ -2047,3 +2071,22 @@ Todo lo de hoy, consolidado. Fuente de verdad: `datos/diseno/canvas/project/` (b
 6. Estado en vivo de cada regla (ahora / cumplida / fallada + minuto).
 
 **Imágenes:** los artboards usan `/_blob/…` del canvas; en la app van los íconos de Data Dragon (campeones, ítems, runas). Las cifras entre [corchetes] son de ejemplo.
+
+## 2026-11-09 16:40 · DeepSeek · revisión de 93ad7bd
+Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino + acuerdos 12–20), no toca `scripts/`. Lo accionable para Opus sigue siendo lo de mi revisión de dfd70e8: afinar `sin_pelea` (contar solo peleas que tu equipo pierde).
+
+## 2026-11-09 · Diseñador · iteración 1 (noche)
+- El diseño Vino ya está entregado (10 pantallas); no hay nada de `scripts/` que yo pueda tocar.
+- Idea 2 de DeepSeek («n real junto al conteo de errores»): ya está cubierta, `Errores_Vino` y `Perfil_Vino` muestran «[N/20] partidas». Sin cambios.
+- Consulta a DeepSeek (variante Vino claro): **bloqueada por el harness** (PowerShell anidado y `&` piden aprobación). No aportó nada.
+- Siguiente iteración: diseñar Vino claro (fondo, texto, acento rosa, ✓/✕ con contraste AA) en `datos/diseno-acuerdos.md`.
+- Pedido a Opus: ninguno nuevo.
+
+## 2026-11-09 · Opus · turno 9 iteración 1
+**Qué hice (pedido del usuario, repetido):** `scripts/web/index.html`, Selección y Perfil simplificados como el canvas.
+- Selección (`Seleccion_Vino`): 3 tarjetas de stat (récord contra el rival; tu WR con el campeón con tubo y marca de tu WR general; «Hasta el nivel 6» con puntos 1–6 y tus muertes antes del 6 contra él). «Tu plan con <campeón>»: cada regla de `ficha()["reglas"]` es una fila numerada con la meta corta (`meta`) de título, `numero` de línea y «Cumples N/M» (N = round(cumple·n) de `tu`), ordenadas por la que menos cumples; sin dato tuyo va al final con «sin dato tuyo». El texto largo queda en el `title`. «Counters» → «Si te toca contra…». Fuera «Cómo jugarlo», `regla()` y los párrafos.
+- Perfil: «Qué está fallando» = 3 tiles (las 3 peores por z medio) con ícono, «Tú X · típico Y» y etiqueta ▼/▲ con la diferencia en unidades (% en puntos). La acción de una línea queda en el `title`. Fuera la barra divergente.
+- HTC v0.3.1: `dist/HTC` recompilado, humo OK (0.40 s, 13 claves). El instalador no se regeneró: ISCC pidió permiso.
+- Verificado con datos reales (Sylas vs Ahri): «69+ minions al 10 · contra Ahri · Cumples 3/4»; Línea «Tú −12 · típico +0 ▼ −12». Sin revisión en navegador: Node y Playwright pidieron permiso. Asesor DeepSeek: el harness bloqueó la llamada.
+
+**Tarea de pruebas para DeepSeek:** (a) `plan()` con reglas sin `tu` (deben ir al final y mostrar «sin dato tuyo»), con `cumple` 0 y n 1; (b) `fallo()` con `unidades` vacío (cae a «contra tu rol» con z) y con un componente que no esté en `COMP`; (c) que el HTML servido ya no traiga «Cómo jugarlo» ni `class="div"`.

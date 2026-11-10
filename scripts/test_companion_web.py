@@ -67,7 +67,7 @@ class Http(unittest.TestCase):
         c.request("GET", path, headers={"Host": host} if host else {}); r = c.getresponse(); return r.status, r.read()
 
     def test_pagina_y_estado(self):
-        st, b = self.get("/"); self.assertEqual(st, 200); self.assertIn(b"/api/estado", b); self.assertIn("Cómo jugarlo".encode(), b)
+        st, b = self.get("/"); self.assertEqual(st, 200); self.assertIn(b"/api/estado", b); self.assertIn("Tu plan con".encode(), b)
         st, b = self.get("/api/estado"); self.assertEqual(st, 200); self.assertIn("fase", json.loads(b))
 
     def test_pie_wr_con_pocas_partidas(self):
@@ -77,8 +77,10 @@ class Http(unittest.TestCase):
         st, b = self.get("/"); t = b.decode()
         for k in ("nivel", "cs", "muertes", "kp", "vision", "oro", "dano", "objetivos", "linea", "tilt", "champselect", "perfil"):
             self.assertRegex(t, rf"\n  {k}: '<")
-        for f in ("La sueles cumplir", "Te cuesta", "Lo que más te baja", 'class="div"', 'aria-hidden="true"', 'role="img"'):
+        for f in ("Tu plan con", "Cumples", "Hasta el nivel 6", "Si te toca contra", "Lo que más te baja", "típico", 'class="falla"', 'aria-hidden="true"', 'role="img"'):
             self.assertIn(f, t)
+        for f in ("Cómo jugarlo", "La sueles cumplir", 'class="div"', "Counters de tu"):  # pedido del usuario: fuera lo viejo
+            self.assertNotIn(f, t)
         self.assertNotRegex(t, "[\U0001F300-\U0001FAFF]")  # nada de emoji
 
     def test_vista_partidas(self):
