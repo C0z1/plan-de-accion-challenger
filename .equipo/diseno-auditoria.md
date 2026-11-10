@@ -70,7 +70,7 @@ Una ventana tkinter normal de 420×760 (mínimo 380×560), fondo oscuro, una col
 
 ## 5. Consulta a DeepSeek
 
-Ver `datos/diseno-propuesta.md` (aún no escrita) y las notas del equipo; la crítica de esta auditoría está en `datos/notas-equipo.md`, sección Diseñador, iteración 1.
+Ver `.equipo/diseno-propuesta.md` (aún no escrita) y las notas del equipo; la crítica de esta auditoría está en `.equipo/notas-equipo.md`, sección Diseñador, iteración 1.
 
 ## 6. Revisión de la build: En vivo «Tu rival» y «Objetivos» (iteración 3 noche, 2026-11-09)
 

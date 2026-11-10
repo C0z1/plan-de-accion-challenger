@@ -1,6 +1,6 @@
 # Acuerdos de diseño del companion
 
-Sesión en vivo con el usuario, 2026-11-09. Canvas: https://claude.ai/artifact/RPTLnjKqhMnuVGkFm7riX7 («Base LOL»). Contexto: `datos/diseno-contexto.md`.
+Sesión en vivo con el usuario, 2026-11-09. Canvas: https://claude.ai/artifact/RPTLnjKqhMnuVGkFm7riX7 («Base LOL»). Contexto: `.equipo/diseno-contexto.md`.
 
 ## Acordado
 1. **Una sola ventana** que cambia sola por fase: champ select → franja en partida → una línea al terminar. Score, tendencia y tilt van a la ventana 2 (Perfil).
@@ -9,12 +9,12 @@ Sesión en vivo con el usuario, 2026-11-09. Canvas: https://claude.ai/artifact/R
 4. **Paleta 3E (pizarra + negro, acento `#FF8A3D`)** también se muestra en champ select: `ChampSelect_Paleta3E.dc.html`. Perfil en 3E es `Inv5.dc.html`.
 5. **Copy de la meta 14+**: «con 3+ bajas de 68% a 43%» (todas tus partidas), no 82/57. Corregido en los dos champ select.
 6. **«Cómo jugarlo»** son 3 tarjetas de stat (Nivel al 6, Minions al 10, Muertes 14–25) con ícono, valor, ✓/✕ y su número; **Perfil** tiene «Qué está fallando» en 3 filas. Los valores entre [corchetes] son ejemplo.
-7. Copia vigente del canvas (versión 1794217527-6e0d) guardada en `datos/diseno/canvas/project/`: es lo que lee Opus.
-8. Las ventanas de franja y post-partida que propuse se descartaron por ahora. Opus las construye desde `datos/diseno-propuesta.md` (su siguiente paso en el turno 7).
+7. Copia vigente del canvas (versión 1794217527-6e0d) guardada en `.equipo/diseno/canvas/project/`: es lo que lee Opus.
+8. Las ventanas de franja y post-partida que propuse se descartaron por ahora. Opus las construye desde `.equipo/diseno-propuesta.md` (su siguiente paso en el turno 7).
 9. **Frascos premium** (2026-11-09) para medidores en las 3 pantallas: vidrio, llenado 1.6 s, ola de 2 capas, brillo cada 6 s; colores por métrica (win rate teal, score azul, muertes rojo, minions naranja). Especificación en el artboard `Tubos_Kit.dc.html`.
 10. **Elevación suave + encabezado con luz** (2026-11-09) en todas las tarjetas: degradado #3B4452→#343C49, sombra en capas, filo de luz arriba; títulos de sección con degradado naranja. Referencia: `Sombras_Opciones.dc.html` (opción A).
 11. **Selección de campeón simplificada**: una idea por tarjeta; «Cómo jugarlo» = 3 frascos con % de partidas que cumples la meta.
-12. **Paleta Vino + negro** para la primera build (2026-11-09), con acento rosa `#F28DB0` y frascos en salvia / lila / carmín. Artboards `Perfil_Vino`, `Seleccion_Vino`, `EnPartida_Vino` en `datos/diseno/canvas/project/`.
+12. **Paleta Vino + negro** para la primera build (2026-11-09), con acento rosa `#F28DB0` y frascos en salvia / lila / carmín. Artboards `Perfil_Vino`, `Seleccion_Vino`, `EnPartida_Vino` en `.equipo/diseno/canvas/project/`.
 13. El acento y los frascos se adaptan a la paleta (nada de naranja fijo).
 14. **Qué está fallando**: barras divergentes desde el centro, escala ±0.35.
 15. Logo de la barra lateral: **casa** (Inicio), no escudo.
@@ -24,7 +24,7 @@ Sesión en vivo con el usuario, 2026-11-09. Canvas: https://claude.ai/artifact/R
 19. **Ajustes sin key de Riot** (producción); paleta Vino oscuro / Vino claro (claro sin diseñar).
 20. Minion: dibujo vectorial propio basado en el Ranged Minion de Order (no el modelo de Riot).
 21. **Ajustes del 2026-11-10** (pedidos del usuario, canvas v105): «Tus campeones ahora» con fichas V/D en vez de cuadritos; Perfil cambia los 3 frascos verticales por **anillos** con raya de referencia; **Inter** en textos largos/secundarios y Mulish en títulos y cifras; números de «Contra»/«Tu» a 26 px; CS con el **ícono PNG del caster** (CommunityDragon `bluerange_circle.png`, reemplaza el minion vectorial del acuerdo 20); muertes desde el 14 con **calaveras**; en «Tu build» el ítem que estás comprando va **al final**, 56 px, borde punteado rosa grueso con pulso, «Comprando: …».
-22. **Ícono de la app** (2026-11-10): el caster vino sobre fondo vino con filo rosa; `datos/diseno/icono/htc.ico` (+ PNG 256 y SVG). Pasado a Opus en `notas-equipo.md`.
+22. **Ícono de la app** (2026-11-10): el caster vino sobre fondo vino con filo rosa; `.equipo/diseno/icono/htc.ico` (+ PNG 256 y SVG). Pasado a Opus en `notas-equipo.md`.
 
 ## Sigue abierto
 - «All-in con su definitiva» y «Ese minuto juega bajo torre» no salen de ningún dato. Hay que quitarlas o escribirlas en `datos/matchups-notas.json`.

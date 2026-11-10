@@ -1,6 +1,6 @@
 # Propuesta de rediseño del companion
 
-Parte de `datos/diseno-auditoria.md` (los números entre paréntesis, p. ej. (#2), son los problemas de esa lista). Es una propuesta para hablarla, no un compromiso: nada de esto está construido. El mockup visual va aparte en `datos/diseno/mockup.html` (aún no hecho).
+Parte de `.equipo/diseno-auditoria.md` (los números entre paréntesis, p. ej. (#2), son los problemas de esa lista). Es una propuesta para hablarla, no un compromiso: nada de esto está construido. El mockup visual va aparte en `.equipo/diseno/mockup.html` (aún no hecho).
 
 ## 1. Principios
 
@@ -142,4 +142,4 @@ Regla: **nunca solo el color** — cada estado lleva también ícono o palabra (
 
 ## 9. Consulta a DeepSeek
 
-Pendiente en esta iteración; ver `datos/notas-equipo.md`, sección Diseñador, iteración 2.
+Pendiente en esta iteración; ver `.equipo/notas-equipo.md`, sección Diseñador, iteración 2.

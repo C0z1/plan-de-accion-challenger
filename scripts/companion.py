@@ -115,7 +115,7 @@ def objetivos(d, me):
 
 def aviso_nivel(d):
     """Del minuto 5 al 7, si vas abajo de nivel contra tu rival de línea (misma position, otro equipo): el aviso; si no, None.
-    Sin position (normales, ARAM) no hay rival claro y no avisa. Abajo al 6 → 44% de WR en cozi (PLAN.md, nivel6.py/muertes6.py)."""
+    Sin position (normales, ARAM) no hay rival claro y no avisa. Abajo al 6 → 44% de WR en cozi (.equipo/PLAN.md, nivel6.py/muertes6.py)."""
     t = ((d or {}).get("gameData") or {}).get("gameTime") or 0  # null mientras carga la partida
     if not 300 <= t <= 420: return None
     me, rival = yo_rival(d)

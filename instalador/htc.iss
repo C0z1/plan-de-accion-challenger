@@ -21,7 +21,7 @@ Source: "..\dist\HTC\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 Source: "..\scripts\*.py"; DestDir: "{app}\scripts"; Excludes: "test_*.py,humo_exe.py"; Flags: ignoreversion
 Source: "..\scripts\web\*"; DestDir: "{app}\scripts\web"; Flags: recursesubdirs ignoreversion
 Source: "..\scripts\fixtures\*"; DestDir: "{app}\scripts\fixtures"; Flags: recursesubdirs ignoreversion
-Source: "..\config.ejemplo.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\docs\config.ejemplo.json"; DestDir: "{app}"; Flags: ignoreversion
 
 [Dirs]
 Name: "{app}\datos\raw"

@@ -17,7 +17,7 @@ Variables de entorno (Windows: `setx NOMBRE valor` y reabre la terminal):
 
 Opcional:
 
-- **Pool y metas:** copia `config.ejemplo.json` a `config.json` (no se sube a git). Sin `config.json`, el pool son tus 3 campeones más jugados y no hay meta de minions al 10.
+- **Pool y metas:** copia `docs/config.ejemplo.json` a `config.json` (no se sube a git). Sin `config.json`, el pool son tus 3 campeones más jugados y no hay meta de minions al 10.
 - **Otra cuenta sin mezclar:** `DATOS_DIR=<carpeta>` para analizar una cuenta distinta.
 
 ## Scripts

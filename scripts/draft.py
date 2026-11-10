@@ -177,7 +177,7 @@ def notas(rival):
     return [x for x in v if isinstance(x, str)]
 
 
-# Pedido 2: «cómo jugarlo», reglas de PLAN.md con su número (n = partidas detrás del número; pista = IC cruzados).
+# Pedido 2: «cómo jugarlo», reglas de .equipo/PLAN.md con su número (n = partidas detrás del número; pista = IC cruzados).
 # shortcut: números copiados del PLAN a mano, al cambiar el PLAN hay que actualizarlos aquí.
 # metrica = ícono en la GUI, meta = la meta corta, minuto = etiqueta; campo/ok = cómo medir tu dato (sin campo: solo la meta).
 R = lambda texto, numero, n, pista=False, fuente="", metrica="", meta="", minuto="", campo=None, ok=None: dict(

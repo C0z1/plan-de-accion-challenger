@@ -21,7 +21,7 @@
 - Challenges en el early: maxLevelLeadLaneOpponent (+0.75) y placas (+0.86) separan; skillshotsDodged y visión no.
 
 **Para DeepSeek**
-- Verifica que las cifras de PLAN.md coincidan con `datos/analisis-timeline-2026-11-07.md`. Ojo: el 46% (128/280) de oro ≥ 0 al 14 sale de sumar las filas "0 a +1000" y "≥ +1000".
+- Verifica que las cifras de .equipo/PLAN.md coincidan con `datos/analisis-timeline-2026-11-07.md`. Ojo: el 46% (128/280) de oro ≥ 0 al 14 sale de sumar las filas "0 a +1000" y "≥ +1000".
 - Revisa si el plan confunde causa y efecto (por ejemplo, ¿las muertes del 14 al 25 son causa o consecuencia de ir perdiendo?).
 - No pude llamarte con `ask-deepseek.ps1`: los permisos bloquearon la llamada. Deja tu revisión aquí.
 - Siguiente iteración de Opus (propuesta): guía de matchups con intervalos y `scripts/draft.py`.
@@ -256,7 +256,7 @@
 **Para DeepSeek**
 - ¿La XP a igual oro puede ser consecuencia del rival (él roamea y gana XP en otra línea, o mata a tu jungla) más que de ti? Idea: XP @14 tuya en absoluto (no diferencia) contra la del rival.
 - Verifica el test de permutación del CS por rival: baraja etiquetas de rival entre las 131 partidas; ¿habría que estratificar por tu campeón?
-- `datos/_tmp-linea.md` no es mío y no lo commiteé. Si es tuyo, bórralo o renómbralo a `datos/deepseek-*.md`.
+- `datos/_tmp-linea.md` no es mío y no lo commiteé. Si es tuyo, bórralo o renómbralo a `.equipo/deepseek-*.md`.
 - Siguiente de Opus (propuesta): de dónde sale la XP perdida antes del 14 (tiempo fuera de línea por regresos, roams y muertes, desde las posiciones del timeline).
 
 ## 2026-11-07 09:45 · Opus · iteración 9
@@ -352,7 +352,7 @@
 ## 2026-11-07 11:30 · Opus · iteración 12
 
 **Qué hice**
-- No hay revisión tuya de xp.py, castigo.py ni placas.py todavía. Vi `datos/deepseek-castigo-check.py` sin commitear: lo dejé fuera del commit (es tuyo).
+- No hay revisión tuya de xp.py, castigo.py ni placas.py todavía. Vi `.equipo/deepseek-castigo-check.py` sin commitear: lo dejé fuera del commit (es tuyo).
 - Filtro 19:xx (tu hallazgo): `linea.py`, `convertir.py` y `xp.py` ahora piden `gameDuration ≥ 1200`. Salen 2 derrotas; regeneré los 3 análisis y actualicé los números del PLAN (Ekko abajo 43% (27–61%), XP en D −816, CS a igual oro 49% contra 44%, XP < mediana 28%). Ninguna conclusión cambia.
 - `placas.py` (tu pregunta "¿causa o reflejo?"): cada placa perdida antes del 14 se marca **muerto** (entre tu muerte y reaparición por nivel + 20 s de caminar), **vivo en línea** o **vivo fuera** (foto del minuto más cercano). Asserts en `ausente()`, `zone()` y en que muerto + vivo = perdidas.
 
@@ -724,7 +724,7 @@ Nada que corregir.
 
 ## 2026-11-07 23:26 · DeepSeek · revisión de 7512ff3
 
-Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` (Opus leyendo mi revisión de 65d3364 y cerrando la iteración 10). Las 17 pruebas siguen OK del turno anterior; la bitácora no trae partidas nuevas para verificar la recomendación del companion. Nada pendiente mío.
+Sin código que revisar: el commit solo mueve `.equipo/PIZARRON.md` y `notas-equipo.md` (Opus leyendo mi revisión de 65d3364 y cerrando la iteración 10). Las 17 pruebas siguen OK del turno anterior; la bitácora no trae partidas nuevas para verificar la recomendación del companion. Nada pendiente mío.
 
 ## 2026-11-07 23:30 · Opus · iteración 12 (última)
 
@@ -752,7 +752,7 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 **Qué hice**
 - `DATOS_DIR` en los 19 scripts (y en `companion.nombres()`): si está, leen y escriben ahí en vez de `datos/raw`.
 - Todos buscaban `glob("LA1_*.json")`: con otra región no había partidas. Ahora `*_*.json` (excluye `perfil.json` y `timeline-log.txt`).
-- `revision.py`: pool y meta de minions al 10 desde `config.json` opcional (ejemplo: `config.ejemplo.json`, con los valores de cozi; `config.json` en `.gitignore`). Sin config: pool = 3 campeones más jugados y sin la meta de minions. Con el config de cozi, `revision.py 20` da salida idéntica al commit anterior (comparado por texto).
+- `revision.py`: pool y meta de minions al 10 desde `config.json` opcional (ejemplo: `docs/config.ejemplo.json`, con los valores de cozi; `config.json` en `.gitignore`). Sin config: pool = 3 campeones más jugados y sin la meta de minions. Con el config de cozi, `revision.py 20` da salida idéntica al commit anterior (comparado por texto).
 - Punta a punta con el Challenger #1 de LAN (JUGKING#1345, 3929 LP): `descargar.py 20` → `analizar.py` → `draft.py` → `revision.py 5` con `DATOS_DIR` temporal y sin config. Todos salen 0, `datos/raw` sin tocar, carpeta de prueba borrada. 17 pruebas OK.
 - README: sección corta de `config.json` y `DATOS_DIR`.
 
@@ -761,7 +761,7 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 - CI y `companion.py --help`.
 
 **Para DeepSeek**
-- Verifica que `python scripts/revision.py 20` con `config.json` (copia de `config.ejemplo.json`) da lo mismo que antes, y que sin `config.json` corre y muestra el pool deducido.
+- Verifica que `python scripts/revision.py 20` con `config.json` (copia de `docs/config.ejemplo.json`) da lo mismo que antes, y que sin `config.json` corre y muestra el pool deducido.
 - Revisa el cambio de glob `*_*.json`: ¿algún archivo de `datos/raw` que no sea partida podría colarse?
 
 ## 2026-11-08 · Opus · turno 3, iteración 2
@@ -786,7 +786,7 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 *(Mientras revisaba 23af793, Opus commiteó 11c5626; reviso los dos, sin tocar su WIP.)*
 
 **23af793 · está bien**
-- `python scripts/revision.py 20` con `config.json` (= copia de `config.ejemplo.json`, ya presente) da la tabla idéntica a `datos/analisis-revision-2026-11-07.md`: pool «Yone, Ekko, Mordekaiser» y la fila «Sylas: 69+ minions» con su nota, igual que antes. El umbral `>= 69` coincide con el viejo `> 68`.
+- `python scripts/revision.py 20` con `config.json` (= copia de `docs/config.ejemplo.json`, ya presente) da la tabla idéntica a `datos/analisis-revision-2026-11-07.md`: pool «Yone, Ekko, Mordekaiser» y la fila «Sylas: 69+ minions» con su nota, igual que antes. El umbral `>= 69` coincide con el viejo `> 68`.
 - Sin `config.json` corre y deduce el pool: «Sylas, Ekko, Yone». Lo verifiqué con Counter sobre las 284 partidas (dur ≥ 300): Sylas 92, Ekko 72, Yone 66; Mordekaiser 4.º con 22. La meta de minions desaparece (correcto).
 - `DATOS_DIR` está consistente en los 19 scripts y en `companion.nombres()` (`os.environ.get("DATOS_DIR") or default`).
 - Glob `*_*.json`: hoy **no se cuela nada**. En `datos/raw` los únicos no-partida son `perfil.json` (sin `_`), `timeline-log.txt` (no `.json`) y el dir `timeline/` (glob no recursivo); en `timeline/` solo hay partidas.
@@ -859,7 +859,7 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 **Qué hice**
 - No hay revisión tuya de deaecec, 78192e2 ni 961fa61 todavía.
 - Corrí `descargar.py 5` (la key responde): no hay partidas después del 11-07 21:36, y `datos/vivo/` está vacío (no se ha grabado ninguna partida con el companion nuevo).
-- `revision.py 5` para ver la tendencia; arreglé en `PIZARRON.md` un renglón de "Decisiones" que quedó pegado al anterior.
+- `revision.py 5` para ver la tendencia; arreglé en `.equipo/PIZARRON.md` un renglón de "Decisiones" que quedó pegado al anterior.
 
 **Qué hallé**
 - En las últimas 5 llegó al 14 con oro < 0 en las 5 (media −786, CS −11) y ganó 3; 2 fueron fuera del pool (Locke, Rakan). n=5: es una pista, no un hecho.
@@ -927,7 +927,7 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 
 ## 2026-11-08 00:23 · DeepSeek · revisión de dc14b58
 
-Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` (cierre de la iteración 10 de Opus; `git rm --cached` de los `.pyc` bloqueado por permisos, queda para el usuario). Nada pendiente mío.
+Sin código que revisar: el commit solo mueve `.equipo/PIZARRON.md` y `notas-equipo.md` (cierre de la iteración 10 de Opus; `git rm --cached` de los `.pyc` bloqueado por permisos, queda para el usuario). Nada pendiente mío.
 
 ## 2026-11-08 00:25 · Opus · iteración 11 (última del turno 3)
 
@@ -946,7 +946,7 @@ Sin código que revisar: el commit solo mueve `PIZARRON.md` y `notas-equipo.md` 
 - El resumen en sí no trae datos personales: usa `C:\Users\…` (truncado), sin key, correo ni saldo.
 
 **Menor (pre-existente, no de este commit)**
-- Dos textos rastreados aún muestran el nombre de usuario en la ruta, no el truncado limpio `C:\Users\…`: `PIZARRON.md:132` y estas notas en mi revisión 00:19 (línea 912). La limpieza de la iteración 8 y mi nota de 00:19 decían "no quedan rutas completas", pero el nombre de usuario sí quedó visible en esas dos líneas (aunque no la carpeta del repo). Chico (el nombre ya está en `LICENSE`), pero si importa la privacidad del repo público conviene truncarlas.
+- Dos textos rastreados aún muestran el nombre de usuario en la ruta, no el truncado limpio `C:\Users\…`: `.equipo/PIZARRON.md:132` y estas notas en mi revisión 00:19 (línea 912). La limpieza de la iteración 8 y mi nota de 00:19 decían "no quedan rutas completas", pero el nombre de usuario sí quedó visible en esas dos líneas (aunque no la carpeta del repo). Chico (el nombre ya está en `LICENSE`), pero si importa la privacidad del repo público conviene truncarlas.
 
 **Sugerencias**
 1. En el próximo commit de limpieza, truncar esas dos líneas a `C:\Users\…` (y de paso hacer el `git rm -r --cached scripts/__pycache__` que sigue pendiente).
@@ -1065,14 +1065,14 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 
 ## 2026-11-08 · Diseñador · iteración 1
 
-- **Hecho:** `datos/diseno-auditoria.md` (20 problemas de la GUI ordenados por impacto en partida; 5 críticos).
+- **Hecho:** `.equipo/diseno-auditoria.md` (20 problemas de la GUI ordenados por impacto en partida; 5 críticos).
 - **Lo más grave:** la ventana no es `topmost` ni compacta, así que con LoL en pantalla completa no se ve; los avisos en vivo son un banner de 9 pt sin caducidad que se pisa entre sí y comparte estilo con los errores.
 - DeepSeek: no lo pude consultar (el permiso bloquea `ask-deepseek.ps1` como «nested PowerShell process», desde Bash y desde PowerShell).
 - **Para Opus (una línea cada uno):**
   - `post_partida` bloquea el hilo del sondeo hasta ~7 min (`companion_gui.py` l.92–104, 125): si el usuario pone cola enseguida, el champ select siguiente no se detecta. Va a un hilo aparte.
   - Exponer los avisos como `{texto, tipo: consejo|error, minuto}` en vez de cadenas.
   - Cuando existan, builds de los top y score relativo al equipo (con las últimas N) como datos estructurados, no texto de tabla.
-- **Siguiente (iteración 2):** `datos/diseno-propuesta.md` con las pantallas y 5–10 preguntas para el usuario.
+- **Siguiente (iteración 2):** `.equipo/diseno-propuesta.md` con las pantallas y 5–10 preguntas para el usuario.
 
 ## 2026-11-08 · Opus · turno 5 iteración 1
 
@@ -1145,10 +1145,10 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 
 ## 2026-11-08 · Diseñador · iteración 2
 
-- **Hecho:** `datos/diseno-propuesta.md` (principios, modo compacto/completo, 4 pantallas, tipografía, paleta propuesta con cian en vez de ámbar, tabla de datos por pantalla, 10 preguntas para el usuario). Incorpora la idea de DeepSeek de barra 0–100 con componentes coloreados y WR + score juntos por campeón.
+- **Hecho:** `.equipo/diseno-propuesta.md` (principios, modo compacto/completo, 4 pantallas, tipografía, paleta propuesta con cian en vez de ámbar, tabla de datos por pantalla, 10 preguntas para el usuario). Incorpora la idea de DeepSeek de barra 0–100 con componentes coloreados y WR + score juntos por campeón.
 - **DeepSeek:** no pude consultarlo; el permiso bloquea `ask-deepseek.ps1` («nested PowerShell process»). Sin aporte esta iteración. Pendiente: 3 riesgos del modo compacto topmost y un layout alternativo del champ select.
 - **Para Opus (sección 8 de la propuesta):** avisos como `{texto, tipo, minuto, cambia_decision}`; `builds.guardado()` con el dict estructurado; dict de score por partida (`score, puesto, componentes_z, tendencia`); meta de fase de la foto en vivo como números.
-- **Siguiente:** `datos/diseno/mockup.html`.
+- **Siguiente:** `.equipo/diseno/mockup.html`.
 
 ## 2026-11-08 · Opus · turno 5 iteración 4
 
@@ -1280,7 +1280,7 @@ Sin commit nuevo desde 3d9e4ae (ya revisado). `descargar.py 5` → 401: RIOT_KEY
 
 ## 2026-11-08 · Diseñador · iteración 3
 
-- **Hecho:** `datos/diseno/mockup.html` (un archivo, sin dependencias, datos inventados): champ select, 4 estados de la franja en partida (sin aviso, crítico, consejo, error en tira aparte) y post-partida (veredicto, score con marca de 50, sparkline, barras divergentes, chips de metas). Botones para alternar acento cian/ámbar (pregunta 7).
+- **Hecho:** `.equipo/diseno/mockup.html` (un archivo, sin dependencias, datos inventados): champ select, 4 estados de la franja en partida (sin aviso, crítico, consejo, error en tira aparte) y post-partida (veredicto, score con marca de 50, sparkline, barras divergentes, chips de metas). Botones para alternar acento cian/ámbar (pregunta 7).
 - **DeepSeek:** no consultado; el permiso bloquea `ask-deepseek.ps1` (igual que en la iteración 2).
 - **Pedidos a Opus:** sigue pendiente la meta de la fase en vivo como números (CS/nivel/oro vs objetivo) y `hay_key()` periódico.
 - **Sin verificar:** el mockup no se abrió en un navegador (no abro ventanas); revisarlo a ojo.
@@ -1434,7 +1434,7 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 
 ## 2026-11-08 · Opus · turno 6 iteración 3
 
-**Hecho (pedido 2 del Diseñador, el último de los 6):** `draft.ficha()` trae `reglas`: 2–3 dicts `{texto, numero, n, pista, fuente[, contra]}` con las reglas de `PLAN.md` para el pick y el rol (`draft.reglas(champ, pos, nivel6)`):
+**Hecho (pedido 2 del Diseñador, el último de los 6):** `draft.ficha()` trae `reglas`: 2–3 dicts `{texto, numero, n, pista, fuente[, contra]}` con las reglas de `.equipo/PLAN.md` para el pick y el rol (`draft.reglas(champ, pos, nivel6)`):
 - Primero la del campeón: Sylas 69+ minions al 10 (74 contra 32%, n=90); Ekko con la línea perdida, CS ≥ −10 al 14 (69 contra 24%, pista) y castigar (57 contra 31%, pista); Yone no forzar la línea (57% con oro < 0 al 14); Mordekaiser kill antes del 14 (90 contra 45%, pista).
 - Luego las generales: no salir del 6 con un nivel abajo (44/54/69%, pista), ≤ 2 muertes del 14 al 25 (68 contra 43%) y, en top, no pasar el río con nivel arriba (×2.43).
 - **Contra este rival:** si con 3+ partidas contra él llegas al 6 abajo en promedio, la del 6 sube al frente con `contra` = «contra este rival llegas al 6 con −0.3 niveles». Pasa en 11 de tus 28 rivales de mid con 3+ (Fizz, Orianna, Diana, Vex, Qiyana…).
@@ -1444,7 +1444,7 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 
 **DeepSeek (plan):** no pude consultarlo (el permiso bloquea el script del asesor); decidí yo.
 
-**Tarea de pruebas para DeepSeek:** `draft.reglas()`/`ficha()["reglas"]`: (a) que ningún número de `REGLAS_CHAMP`, `R_NIVEL6`, `R_MUERTES` y `R_RIO` contradiga `PLAN.md` (cotéjalo a mano); (b) campeón fuera de la tabla en top → las 3 generales; (c) nivel6 exactamente 0 o None → la del 6 no sube; (d) que el `contra` no aparezca con menos de 3 partidas contra el rival.
+**Tarea de pruebas para DeepSeek:** `draft.reglas()`/`ficha()["reglas"]`: (a) que ningún número de `REGLAS_CHAMP`, `R_NIVEL6`, `R_MUERTES` y `R_RIO` contradiga `.equipo/PLAN.md` (cotéjalo a mano); (b) campeón fuera de la tabla en top → las 3 generales; (c) nivel6 exactamente 0 o None → la del 6 no sube; (d) que el `contra` no aparezca con menos de 3 partidas contra el rival.
 
 ## 2026-11-08 · Opus · turno 6 iteración 4
 
@@ -1456,7 +1456,7 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 - Sin GUI: la ventana 2 la diseña el Diseñador. Falta el LP actual del pedido 7: no está en `datos/raw` sin key (perfil.json no trae LP fresco).
 - 128 OK (`test_tilt` en `test_score.py`: racha que no cruza sesiones, la racha a 0 si la última sesión no fue hoy).
 
-**Hallado:** llegaste 18 veces a 2 derrotas seguidas en una sesión y paraste en 12; las 6 que seguiste, 3-3 (19–81%). Tras 1 derrota en la sesión: 25/46 = 54%. Sin cortar por sesión, la partida tras 2 derrotas va 36/54 = 67% (otro día). No hay tilt medible; ya paras solo. Lo anoté en PLAN.md (línea del tilt).
+**Hallado:** llegaste 18 veces a 2 derrotas seguidas en una sesión y paraste en 12; las 6 que seguiste, 3-3 (19–81%). Tras 1 derrota en la sesión: 25/46 = 54%. Sin cortar por sesión, la partida tras 2 derrotas va 36/54 = 67% (otro día). No hay tilt medible; ya paras solo. Lo anoté en .equipo/PLAN.md (línea del tilt).
 
 **DeepSeek (plan):** no pude consultarlo (PowerShell anidado bloqueado); decidí yo.
 
@@ -1494,7 +1494,7 @@ Acuerdo con el usuario: **una sola ventana** que cambia sola por fase (champ sel
 **Está bien**
 - `resumen_fin()`/`linea_fin()`/`muertes14(hasta=)` corren limpios; suite completa 156 OK (incluye el nuevo `test_ds_linea_fin.py`).
 - Borde 14:00/25:00 correcto: 840 inclusive, 1500 (25:00 exacto) excluido de 14–25. La línea sale una sola vez por partida y aguanta un reinicio del cliente en EndOfGame (mi prueba mete `None` entre dos EndOfGame y sigue saliendo una). Sin foto (companion abierto en EndOfGame) → `resumen_fin(None)` es None, sin línea y sin tronar.
-- «meta ≤ 2» coincide con PLAN.md (métrica de la prioridad 3, líneas 96 y 126). No hay números nuevos inventados en esta iteración; el 68/43 del aviso ya venía verificado en la iteración 2.
+- «meta ≤ 2» coincide con .equipo/PLAN.md (métrica de la prioridad 3, líneas 96 y 126). No hay números nuevos inventados en esta iteración; el 68/43 del aviso ya venía verificado en la iteración 2.
 
 **Está mal / riesgo (menor)**
 - `resumen_fin()` lee `config.json` vía `meta_fase()`. En la consola es la primera vez que se lee al terminar: un `config.json` malformado lanza `ValueError` dentro del `try`, se salta `post_partida()` y, como `real` pasa a FIN fuera del `try`, la descarga + revisión **nunca** corre (queda solo «Error (sigo)»). En la GUI `meta_fase` ya se lee cada 30 s en partida, así que ahí el error saldría antes; en consola no. Sugerencia: envolver el `json.loads(CFG…)` de `meta_fase` (y `aviso_minions`) en un try → `{}`.
@@ -1913,18 +1913,18 @@ La app ahora se llama **HTC (How to Climb)**. Ya hay build rápida (0.5 s) e ins
 - Suite **212 corridas: 211 OK + 1 falla mía a propósito** (el bug de abajo). Nuevo `scripts/test_ds_cache.py` con 7 pruebas: borrar partida, caché corrupta, 3 rutas del exe y primera vez instalado. Las 205 previas siguen OK (el `tearDown` recarga `companion_gui` y no contamina).
 - Caché (a): `firma()` = (n, mtime máx, bytes) de `raw/**/*.json` — rglob recursa, así que cubre partidas **y** timelines. Bajar partida nueva ya lo cubría `test_companion_web.CacheRendimiento`; agregué borrar (pasa) y caché corrupta (pasa: `ValueError` → recalcula y reescribe).
 - Rutas del exe (b): `REPO` congelado resuelve los 3 casos con `mock.patch` de `sys.frozen`/`sys.executable` + `importlib.reload`: instalado (`scripts/` junto al exe → `{app}`), `dist/HTC/` (repo dos arriba) y carpeta sin `scripts/` (cae a la carpeta del exe → `WEB` usa `_MEIPASS/web`).
-- Instalador (c): no falta nada que los scripts lean en runtime (`scripts/*.py` sin `test_*`/`humo_exe`, `scripts/web`, `scripts/fixtures`; `datos/raw` vacío y `datos/meta`/`config.json`/`datos/matchups-notas.json` son opcionales o se crean al correr). No se cuela nada personal: solo `config.ejemplo.json` (pool + meta de Sylas, sin nombre ni PUUID).
+- Instalador (c): no falta nada que los scripts lean en runtime (`scripts/*.py` sin `test_*`/`humo_exe`, `scripts/web`, `scripts/fixtures`; `datos/raw` vacío y `datos/meta`/`config.json`/`datos/matchups-notas.json` son opcionales o se crean al correr). No se cuela nada personal: solo `docs/config.ejemplo.json` (pool + meta de Sylas, sin nombre ni PUUID).
 - Desinstalación (c): Inno solo borra lo del manifiesto; las partidas en `{app}\datos\raw` y `datos/cache` (creadas en runtime) sobreviven. El comentario del .iss es correcto.
 - Primera vez (e): con `DATOS_DIR` vacío, `gui.perfil()` → «sin datos: corre descargar.py», `rendimiento_rapido()` → None sin tronar, y `/api/estado` responde con `"rendimiento": null`. Probado.
 - Arranque (d): `import companion_web` ~138 ms en frío. Diferible (~32 ms): el bloque-shim de PyInstaller en `companion_gui` (statistics 6.6, traceback 6.3, subprocess 5.2, collections 4.0, argparse 3.3, random 2.7, webbrowser 2.1, runpy 1.0, datetime 0.9 ms). `ssl`/`http.client`/`urllib.request` no se pueden diferir (los usa `lcu`/`vivo`). Ganancia marginal frente al arranque onedir de 0.54 s: idea de baja prioridad.
 
 **Está mal / a corregir**
 - (a) **La caché NO se invalida al cambiar `score.py` si no subes `VERSION`.** La validez depende de `c["version"] == VERSION` y `firma()` solo mira los JSON. Un arreglo de `score.py` (p. ej. una fórmula) sin bump deja a los instalados con números viejos hasta que cambien sus partidas. Lo dejé **fallando** en `test_ds_cache.Cache.test_cambiar_score_py_invalida_la_cache` (toca el mtime de `score.py` y exige recalcular; hoy devuelve la caché vieja `{'media': 1}`).
-- Menor: nada copia `config.json` al instalar; el usuario que quiera la meta de Sylas debe copiar `config.ejemplo.json` a mano.
+- Menor: nada copia `config.json` al instalar; el usuario que quiera la meta de Sylas debe copiar `docs/config.ejemplo.json` a mano.
 
 **Sugerencias**
 1. Meter el mtime de `score.py` en `firma()` (y de paso el de `companion_web.py`), o regla dura de subir `VERSION` en todo cambio de `score.py`. La prueba fallando exige lo primero.
-2. Al instalar (o en el launcher), copiar `config.ejemplo.json` → `config.json` si no existe.
+2. Al instalar (o en el launcher), copiar `docs/config.ejemplo.json` → `config.json` si no existe.
 
 ### Ideas de DeepSeek
 1. (Opus) Una línea en `firma()`: incluir `pathlib.Path(score.__file__).stat().st_mtime_ns`; con eso `test_cambiar_score_py_invalida_la_cache` pasa y no dependes de acordarte del bump.
@@ -1932,10 +1932,10 @@ La app ahora se llama **HTC (How to Climb)**. Ya hay build rápida (0.5 s) e ins
 
 ## 2026-11-09 · Diseñador · pedido a Opus: primera build con el diseño Vino (aprobado por el usuario)
 
-El usuario eligió la **paleta Vino + negro** para la primera build. Artboards en `datos/diseno/canvas/project/` (lo que lees tú):
+El usuario eligió la **paleta Vino + negro** para la primera build. Artboards en `.equipo/diseno/canvas/project/` (lo que lees tú):
 - `Perfil_Vino.dc.html` (Tu rendimiento), `Seleccion_Vino.dc.html` (Selección de campeón), `EnPartida_Vino.dc.html` (En partida).
 - `Tubos_Kit.dc.html`: especificación del **frasco** (tamaños L/M/S/XS, estados, horizontal, tiempos de animación). Los colores del kit son los de pizarra; en Vino usa los de abajo.
-- Canvas: https://claude.ai/artifact/RPTLnjKqhMnuVGkFm7riX7 (fila de arriba-medio, y = −1144). Acuerdos: `datos/diseno-acuerdos.md` (12–15).
+- Canvas: https://claude.ai/artifact/RPTLnjKqhMnuVGkFm7riX7 (fila de arriba-medio, y = −1144). Acuerdos: `.equipo/diseno-acuerdos.md` (12–15).
 
 Pedidos, en orden:
 1. **Tokens Vino** en `scripts/web/index.html`: fondo `#24111A`, tarjeta `#36192A`, línea `#5A2D40`, panel derecho `#0B0709`, filas `#1A1014`/`#2C1420`, texto tenue `#D2BAC4`/`#AE95A0`, **acento rosa `#F28DB0`** (claro `#F8C3D6`). Fuente Mulish.
@@ -1950,12 +1950,12 @@ Pedidos, en orden:
 Las cifras entre [corchetes] en los artboards son de ejemplo. Lo que no tenga dato todavía, déjalo con su texto de «sin datos» (frasco vacío y gris del kit).
 
 ### Cambio a Perfil Vino (mismo día, el usuario lo pidió; reemplaza el punto 5 de arriba)
-`Perfil_Vino.dc.html` actualizado en `datos/diseno/canvas/project/`:
+`Perfil_Vino.dc.html` actualizado en `.equipo/diseno/canvas/project/`:
 - **«Qué está fallando» → «Qué cambiar»**: 4 reglas concisas (no números de desviación), la que más cuesta arriba. Cada fila: regla, por qué en una línea y «Cumples N/20» con frasco horizontal. Reglas: no salir del 6 con nivel abajo (44/54/69), unirse a peleas del 14+ (KP, el componente que más baja), 69+ minions al 10 con el campeón principal (74/32), ≤ 2 muertes del 14 al 25 (68/43). Dato nuevo: cuántas de las últimas 20 cumplen cada regla.
 - **Tarjeta «Muertes 14–25» → «Errores»**: cuántos errores se repiten en las últimas 20 y un botón «Ver cuáles →» que lleve a la vista Partidas filtrada por ese error.
 - **«Tus campeones» → «Tus campeones ahora»**: por campeón, WR, forma (V/D de las últimas 5), etiqueta (Pickéalo / Estable / Evítalo vs / Pocas partidas) y contra quién va mejor o peor (de `draft.ficha()["counters"]`; con Sylas: Viktor, Yasuo, Qiyana).
 - **Mismo enfoque en Selección y En partida** (`Seleccion_Vino`, `EnPartida_Vino` actualizados): Selección: «Cómo jugarlo» → **«Tu plan con <campeón>»**, 3 reglas en filas (regla, por qué, «Cumples N/20» con frasco; la regla que sube por el rival va primero con borde del acento); counters → **«Si te toca contra…»** con etiqueta «Evítalo» y el porqué medido («Te niega el farm», CS al 14). En partida: «Avisos» → **«Tus reglas en esta partida»**, las mismas reglas con estado en vivo (▲ Ahora / ✓ Cumplida / ✕ Fallada + minuto), la activa arriba.
-- **6 ventanas nuevas en Vino** (en `datos/diseno/canvas/project/`): `Home_Vino` (estado del cliente, hoy, tu regla del día, rango y atajos), `Draft_Vino` (fase de bans: banea contra quien peor te va + tu pool con estimado antes del pick rival), `Partidas_Vino` (historial con ✓/✕ por regla, error y minuto, filtros por regla), `Campeones_Vino` (pool en tarjetas con WR, forma, mejor/peor vs; panel con build, su regla y counters), `Ajustes_Vino` (key de Riot, avisos on/off, paleta, reducir movimiento), `Errores_Vino` (tarjeta «Ver cuáles»: 3 errores repetidos, cómo verlo y botones a cada momento del replay; panel «Cómo los cuento»). Datos nuevos que piden: detección de los 3 errores desde el timeline (muerte 14–25 sin objetivo en el minuto siguiente, pelea en el min 6 con nivel abajo, pelea 14+ con 3+ muertes sin tu KP) y el minuto de cada uno.
+- **6 ventanas nuevas en Vino** (en `.equipo/diseno/canvas/project/`): `Home_Vino` (estado del cliente, hoy, tu regla del día, rango y atajos), `Draft_Vino` (fase de bans: banea contra quien peor te va + tu pool con estimado antes del pick rival), `Partidas_Vino` (historial con ✓/✕ por regla, error y minuto, filtros por regla), `Campeones_Vino` (pool en tarjetas con WR, forma, mejor/peor vs; panel con build, su regla y counters), `Ajustes_Vino` (key de Riot, avisos on/off, paleta, reducir movimiento), `Errores_Vino` (tarjeta «Ver cuáles»: 3 errores repetidos, cómo verlo y botones a cada momento del replay; panel «Cómo los cuento»). Datos nuevos que piden: detección de los 3 errores desde el timeline (muerte 14–25 sin objetivo en el minuto siguiente, pelea en el min 6 con nivel abajo, pelea 14+ con 3+ muertes sin tu KP) y el minuto de cada uno.
 - **Partidas: MVP y cosas a mejorar** (`Partidas_Vino` actualizado): columna «En tu equipo» por partida (★ MVP del equipo / ▼ Peor del equipo / N.º de 5, por score dentro de tu equipo; `score.resumen()` ya da el puesto) y, abajo, la partida seleccionada con el **MVP de tu equipo** (campeón, score, KDA), **tú en tu equipo** («Fuiste mal» si quedas 5.º de 5) y **3 cosas a mejorar** concretas de esa partida (error con minuto, matchup al 14, KP). La cabecera cuenta en cuántas fuiste MVP y en cuántas el peor.
 - **Ronda de ajustes (las 9 ventanas Vino actualizadas):** barra lateral con **todas** las ventanas (Inicio, Draft, Selección, En vivo, Perfil, Partidas, Campeones, Errores, Ajustes), la activa con borde rosa. Selección: «Cuidado con Ahri» pasa a **«Ojo con Ahri»** con ícono de ojo rosa (nada de rojo). En partida: panel derecho con **Tu rival** (nivel, KDA, CS, ítems) y **Objetivos** (dragón/heraldo/barón con tiempo, kills y torres; de los eventos de la Live Client Data API). Draft («Tu pool») y Campeones: el frasco se cambia por un **anillo animado** alrededor del retrato (el arco se dibuja 1.8 s, órbita punteada que gira lento, halo que respira; quieto con `prefers-reduced-motion`). Ajustes: **sin la key de Riot** (va a producción: la key no la ve el usuario) y paleta solo **Vino oscuro / Vino claro** (claro = fondo `#FBEFF3`, acento `#A33A63`; falta diseñarla).
 - **Selección: «Ojo con Ahri» → «Hasta el nivel 6»**: 6 nodos (1…6) con una luz que viaja del 1 al 6 en bucle (3.6 s) y el 6 que destella al llegar; abajo «Juega seguro: mueres antes del 6 en N de M». **Íconos de build** (Selección, Campeones, En partida): marco con degradado del acento, entrada escalonada (aparecen uno tras otro), brillo que cruza cada ícono cada ~5 s, halo que respira y se elevan al pasar el ratón; el ítem «siguiente» lleva marco punteado. Todo quieto con `prefers-reduced-motion`.
@@ -2043,7 +2043,7 @@ Las cifras entre [corchetes] en los artboards son de ejemplo. Lo que no tenga da
 
 ## 2026-11-09 · Diseñador · ENTREGA FINAL a Opus (builder): primera build en Vino
 
-Todo lo de hoy, consolidado. Fuente de verdad: `datos/diseno/canvas/project/` (bajado del canvas, versión 104) + canvas https://claude.ai/artifact/RPTLnjKqhMnuVGkFm7riX7. Acuerdos: `datos/diseno-acuerdos.md` (12–20).
+Todo lo de hoy, consolidado. Fuente de verdad: `.equipo/diseno/canvas/project/` (bajado del canvas, versión 104) + canvas https://claude.ai/artifact/RPTLnjKqhMnuVGkFm7riX7. Acuerdos: `.equipo/diseno-acuerdos.md` (12–20).
 
 **Pantallas vigentes (10)** — todas 1440×1024, paleta Vino, barra lateral con las 9 ventanas:
 | Archivo | Ventana | Lo esencial |
@@ -2079,7 +2079,7 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 - El diseño Vino ya está entregado (10 pantallas); no hay nada de `scripts/` que yo pueda tocar.
 - Idea 2 de DeepSeek («n real junto al conteo de errores»): ya está cubierta, `Errores_Vino` y `Perfil_Vino` muestran «[N/20] partidas». Sin cambios.
 - Consulta a DeepSeek (variante Vino claro): **bloqueada por el harness** (PowerShell anidado y `&` piden aprobación). No aportó nada.
-- Siguiente iteración: diseñar Vino claro (fondo, texto, acento rosa, ✓/✕ con contraste AA) en `datos/diseno-acuerdos.md`.
+- Siguiente iteración: diseñar Vino claro (fondo, texto, acento rosa, ✓/✕ con contraste AA) en `.equipo/diseno-acuerdos.md`.
 - Pedido a Opus: ninguno nuevo.
 
 ## 2026-11-09 · Opus · turno 9 iteración 1
@@ -2128,7 +2128,7 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 **Tarea de pruebas para DeepSeek:** (a) revisa `sin_objetivo.py`: ¿el 81/50/27% aguanta si controlas por oro del equipo al 14 (≥ 0 contra < 0)? Si en las dos bandas se mantiene la caída de 0 a 1, el error es accionable; si no, es reflejo de ir perdiendo; (b) muerte exactamente a 60 s de un objetivo (borde, debe no contar como error); (c) un objetivo antes del 14:00 con la muerte a las 14:30 (debe valer igual).
 
 ## 2026-11-09 · Diseñador · iteración 2 (noche)
-- Propuse **Vino claro** (tabla de variables) en `datos/diseno-acuerdos.md`; acento `#B83A6B`, ✓/✕ con símbolo.
+- Propuse **Vino claro** (tabla de variables) en `.equipo/diseno-acuerdos.md`; acento `#B83A6B`, ✓/✕ con símbolo.
 - Contraste AA **sin medir** (las herramientas de cálculo pidieron aprobación): verificar al implementar.
 - Consulta a DeepSeek: no la hice (el harness bloquea PowerShell anidado).
 - Pedido a Opus: ninguno. Idea 1 de DeepSeek (Muertes sin número con signo) queda a tu criterio; es cosmético.
@@ -2180,7 +2180,7 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 **Tarea de pruebas para DeepSeek:** (a) en `index.html`, con `s.draft` presente y `fase = "InProgress"`, la vista automática debe seguir siendo En vivo (no Selección): revisa la expresión de `vista` en `tick()`; (b) con `fase = null` (cliente cerrado), En vivo debe decir «Abre el cliente»; con `Lobby`, «Aún no estás en partida».
 
 ## 2026-11-09 · Diseñador · iteración 3 (noche)
-- Revisé la build de Opus (En vivo: «Tu rival» y «Objetivos») contra `EnPartida_Vino`: 7 puntos en `datos/diseno-auditoria.md` §6, sin tocar `scripts/`.
+- Revisé la build de Opus (En vivo: «Tu rival» y «Objetivos») contra `EnPartida_Vino`: 7 puntos en `.equipo/diseno-auditoria.md` §6, sin tocar `scripts/`.
 - **Pedido a Opus:** (a) rotular Tú/Rival en el marcador y cambiar `#FF8A8A` por `var(--red)` (`index.html`, `va()`); (b) tiempo de dragón/barón más grande y teñido cuando falten < 60 s; (c) `alt` con el nombre en los ítems del rival.
 - Consulta a DeepSeek: no la hice (el harness bloquea el PowerShell anidado, como en las iteraciones previas).
 
@@ -2221,7 +2221,7 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 **TAREA NUEVA (README para Riot) — hecho:**
 - `README.md` reescrito: español, corto, sin emoji en títulos. Qué es HTC, para quién, las 9 vistas, instalar/correr, APIs (Riot match-v5/account-v1/league-v4 con la key del usuario; LCU y Live Client Data solo lectura en 127.0.0.1; sin automatización ni ventaja injusta), privacidad (todo local; `datos/raw/`, `config.json`, `.env` en `.gitignore`), licencia MIT y el aviso legal de Riot con «HTC isn't endorsed…».
 - Detalle técnico movido a `docs/USO.md` (variables de entorno, scripts con sus flags, pruebas).
-- No moví `PIZARRON.md`, `CLAUDE.md`, `PLAN.md`, `BITACORA.md`, `RESUMEN-NOCHE.md` ni `riot.txt`; quedan en «Notas del proyecto», una línea cada uno.
+- No moví `.equipo/PIZARRON.md`, `CLAUDE.md`, `.equipo/PLAN.md`, `.equipo/BITACORA.md`, `RESUMEN-NOCHE.md` ni `riot.txt`; quedan en «Notas del proyecto», una línea cada uno.
 - **Sin filtraciones** en archivos rastreados (`git ls-files`): 0 keys `RGAPI-`, 0 correos, 0 rutas completas (solo `C:\Users\…` truncado en notas de limpieza) y 0 saldo real. Quedan dos menciones benignas: «Tope de DeepSeek: $5» (PIZARRON, Decisiones) y «Costo equivalente ≈ $16.5» (RESUMEN-NOCHE.md); ninguna es saldo ni secreto. Los `.pyc` de `__pycache__` ya no están rastreados (pendiente resuelto).
 
 **Pedido de DeepSeek a Opus:** nada urgente que mover/borrar. Opcional para el repo público: quitar «Costo equivalente ≈ $16.5» de `RESUMEN-NOCHE.md` si no se quiere exponer el costo del turno.
@@ -2272,7 +2272,7 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 **Qué hice:** tareas 4 (build) y 5 (lista para probar en partida) de la prioridad del usuario.
 - Build: `dist/HTC` v0.3.7 ya corresponde a HEAD (el árbol estaba limpio desde iter 8); humo `humo_exe.py` OK (0.39 s, 13 claves); 239 OK. Tag `v0.3.7` ya existe, no hay versión nueva porque no cambió código.
 - Instalador: ISCC existe en `%LOCALAPPDATA%\Programs\Inno Setup 6`, pero el harness pide aprobación para ejecutarlo; queda para el usuario (`build.ps1`). El último instalador en `dist/` sigue siendo 0.3.0.
-- Checklist en `PIZARRON.md` → «Para el usuario»: qué ver al abrir LoL, en champ select, en la carga, en partida, al terminar, y qué reportar; [R] = solo con partida real. Al escribirlo comprobé en el código que la foto en vivo va cada 30 s (`companion_gui.trabajador`), no cada 2 s como el sondeo de la página.
+- Checklist en `.equipo/PIZARRON.md` → «Para el usuario»: qué ver al abrir LoL, en champ select, en la carga, en partida, al terminar, y qué reportar; [R] = solo con partida real. Al escribirlo comprobé en el código que la foto en vivo va cada 30 s (`companion_gui.trabajador`), no cada 2 s como el sondeo de la página.
 - Asesor DeepSeek: bloqueado otra vez (PowerShell anidado).
 
 **Tarea de pruebas para DeepSeek:** coteja el checklist contra el código: (a) que cada texto citado entre «» exista tal cual en `scripts/web/index.html`; (b) que en `EndOfGame` sin key `s.revision` sea None y la vista sea En vivo con `s.fin`; (c) que la primera `meta` en partida llegue a lo más 30 s después de `InProgress`.
@@ -2317,12 +2317,12 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 
 ## 2026-11-10 · Diseñador → Opus · ícono de la app (pedido del usuario)
 
-El usuario quiere que HTC tenga ícono: el **minion caster vino** de la paleta, sobre fondo vino (`#44203A→#1A0C13`) con filo rosa `#F28DB0`. Archivos listos en `datos/diseno/icono/`:
+El usuario quiere que HTC tenga ícono: el **minion caster vino** de la paleta, sobre fondo vino (`#44203A→#1A0C13`) con filo rosa `#F28DB0`. Archivos listos en `.equipo/diseno/icono/`:
 - `htc.ico` (16, 24, 32, 48, 64, 128, 256 px), `htc-icono-256.png` y `htc-icono.svg` (fuente; el PNG salió de Chrome headless).
 - Vista en el canvas: artboard «Ícono de la app» (fila de arriba, junto a los minions).
 
 Pedidos:
-1. `HTC.spec`: `icon='datos/diseno/icono/htc.ico'` en `EXE(...)` (hoy no tiene).
-2. `instalador/htc.iss`: `SetupIconFile=..\datos\diseno\icono\htc.ico` (el acceso directo ya toma el del .exe).
+1. `HTC.spec`: `icon='.equipo/diseno/icono/htc.ico'` en `EXE(...)` (hoy no tiene).
+2. `instalador/htc.iss`: `SetupIconFile=..\.equipo\diseno\icono\htc.ico` (el acceso directo ya toma el del .exe).
 3. Ventana de la app: el mismo `.ico` como ícono de ventana / barra de tareas, y el PNG como favicon de `scripts/web/index.html` si aplica.
-Si prefieres tenerlo junto al build, cópialo a donde quieras; la fuente sigue en `datos/diseno/icono/`.
+Si prefieres tenerlo junto al build, cópialo a donde quieras; la fuente sigue en `.equipo/diseno/icono/`.

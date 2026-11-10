@@ -8,7 +8,7 @@ from datetime import datetime
 sys.stdout.reconfigure(encoding="utf-8")
 RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
-CFG_F = pathlib.Path(__file__).resolve().parent.parent / "config.json"  # opcional; ejemplo: config.ejemplo.json
+CFG_F = pathlib.Path(__file__).resolve().parent.parent / "config.json"  # opcional; ejemplo: docs/config.ejemplo.json
 CFG = json.loads(CFG_F.read_text(encoding="utf-8")) if CFG_F.exists() else {}
 M10 = CFG.get("minions10")  # p. ej. {"campeon": "Sylas", "minimo": 69}; sin él no hay esa meta
 NOMBRE = {"MIDDLE": "mid", "TOP": "top", "BOTTOM": "bot", "UTILITY": "bot"}  # misma tabla que scripts/nivel6.py

@@ -24,12 +24,12 @@ Meta: Challenger en Solo/Duo LAN. Optimiza por LP por partida, no por partidas j
 0. **Riot API.** Si el usuario da una key (dura 24 h), corre `RIOT_KEY=<key> python scripts/descargar.py 300` y luego `PYTHONIOENCODING=utf-8 python scripts/analizar.py > datos/analisis-AAAA-MM-DD.md`. Nunca escribas la key en un archivo. Para los cortes actuales usa `la1 /lol/league/v4/{challengerleagues,grandmasterleagues}/by-queue/RANKED_SOLO_5x5`.
 1. **Datos primero.** Saca datos actuales de OP.GG (o de `datos/` si el usuario dejó capturas o exportaciones). Guarda un snapshot con fecha en `datos/AAAA-MM-DD.md`. Nunca inventes estadísticas: si falta un dato, dilo y pide al usuario la captura o los datos de la partida.
 2. **Diagnóstico.** Virtudes, defectos y sus causas probables, cada uno respaldado por un número. Separa lo mecánico, lo macro, el champion pool, lo mental y los hábitos de juego (duración de sesiones, horarios).
-3. **Plan.** Escribe o actualiza `PLAN.md` con:
+3. **Plan.** Escribe o actualiza `.equipo/PLAN.md` con:
    - Estado actual y LP que faltan para el corte de Challenger
    - Las 3 prioridades como máximo (lo que más LP da), cada una con un ejercicio concreto y una métrica para verificarla
    - Champion pool cerrado (2–3 campeones principales y 1 de contra) con su justificación
    - Reglas de sesión (por ejemplo, parar tras 2 derrotas seguidas) y metas semanales de LP y WR
-4. **Seguimiento.** Registra cada sesión en `BITACORA.md`: fecha, LP inicial y final, W/L, campeones y una lección. Ajusta el plan cada semana según los números, no por sensaciones.
+4. **Seguimiento.** Registra cada sesión en `.equipo/BITACORA.md`: fecha, LP inicial y final, W/L, campeones y una lección. Ajusta el plan cada semana según los números, no por sensaciones.
 5. **Revisión de partidas.** Cuando el usuario mande una partida (link, timestamps o descripción), da los 2–3 errores que más costaron y qué hacer distinto.
 
 Sé conciso. Prioriza lo que más LP da por hora de esfuerzo.
