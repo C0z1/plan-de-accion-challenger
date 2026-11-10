@@ -380,22 +380,28 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
     ${hoy.length ? `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${hoy.slice(-6).map(g => `<div class="mini">${img("champion", g.campeon, "item", g.campeon)}<b class="${g.win ? "v" : "d"}">${g.win ? "V" : "D"}</b>${esc(g.fecha)}</div>`).join("")}
       ${t.tras2.n ? `<div style="flex:1;min-width:220px"><b>${t.racha >= 2 ? "Llevas 2 derrotas seguidas: descansa 15 min" : "Tras 2 derrotas seguidas, paras"}</b><br><span class="sub" style="font-size:13px">Llegaste a 2 seguidas ${t.llegas} veces; la partida siguiente: ${t.tras2.v}-${t.tras2.n - t.tras2.v}${t.pocas ? " (pista: pocas partidas)" : ""}.</span></div>` : ""}</div>`
       : `<span class="sub">Aún no juegas hoy.</span>`}</div>
-  <div class="card"><div class="cab2"><h2>Tu regla de hoy</h2><span class="sub" style="font-size:12px">del plan, con tus últimas partidas</span></div>
+  ${VS(s) && VS(s).reglas.length ? `<div class="card" style="flex:1"><div class="cab2"><h2>Tu regla de hoy</h2><span class="sub" style="font-size:12px">la que más te cuesta</span></div>
+    ${reglaCumple(VS(s).reglas[0], 0)}</div>` : `<div class="card" style="flex:1"><div class="cab2"><h2>Tu regla de hoy</h2><span class="sub" style="font-size:12px">del plan, con tus últimas partidas</span></div>
     <div class="fila2" style="border:none"><span class="ic red">${ic("muertes")}</span>
       <div class="txt"><b>2 muertes o menos del 14 al 25</b><small>Morir a mitad de partida regala los objetivos.</small></div>
       ${d25.length ? `<span class="sub" style="font-size:12px">Cumples <b style="color:var(--txt)">${ok}/${d25.length}</b></span>
-      <span class="tuboH" role="img" aria-label="Cumples ${ok} de ${d25.length}"><i style="width:${f * 100}%;background:linear-gradient(90deg,${f >= .5 ? "#3E7A62,#A8D8C0" : "#9A2E3A,#FF8A8A"})"></i></span>` : '<span class="sub">Sin partidas con timeline.</span>'}</div></div>`;
+      <span class="tuboH" role="img" aria-label="Cumples ${ok} de ${d25.length}"><i style="width:${f * 100}%;background:linear-gradient(90deg,${f >= .5 ? "#3E7A62,#A8D8C0" : "#9A2E3A,#FF8A8A"})"></i></span>` : '<span class="sub">Sin partidas con timeline.</span>'}</div></div>`}`;
   const base = t && t.base.wr, x = w => Math.max(0, Math.min(100, (w - .45) / .2 * 100));
+  // Home_Vino: avatar con aro rosa, región · rol; tarjeta de rango con emblema y la meta; atajos a Qué cambiar, errores y partidas
+  const rg = s.rango, wr = rg && rg.n ? rg.wr / 100 : base, rol = VS(s) && ROL[VS(s).pos];
+  const tier = rg ? rg.tier.toLowerCase() : null, rangoTxt = rg ? [rg.tier[0] + rg.tier.slice(1).toLowerCase(), rg.division, `${rg.lp} LP`].filter(Boolean).join(" ") : resto[0] || "";
   const aside = `
-  <div><h2 style="font-size:24px">${esc(nombre ? id : "Sin cuenta")}</h2><span class="sub">${esc(nombre ? resto.join(" · ") : "Tu historial llega en una próxima versión")}</span></div>
-  ${base != null ? `<div class="est"><span class="sub">Win rate de la temporada</span>
-    <div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:28px">${pct(base)}</b><span class="sub">${t.base.n} partidas · meta 60%</span></div>
-    <span class="tuboH" style="flex:none;width:100%" role="img" aria-label="Win rate ${pct(base)}, meta 60%"><i style="width:${x(base)}%;background:linear-gradient(90deg,#3E7A62,#A8D8C0)"></i><u style="left:${x(.6)}%"></u></span>
-    <div class="escala"><span>45</span><span>50</span><span>55</span><span>60</span><span>65</span></div></div>` : ""}
+  <div style="display:flex;gap:20px;align-items:center">${s.icono != null ? `<img class="retrato2" src="/img/profileicon/${+s.icono}.png" alt="Ícono de invocador" onerror="this.style.visibility='hidden'">` : ""}
+    <div><h2 style="font-size:24px">${esc(nombre ? id : "Sin cuenta")}</h2><span class="sub">${esc(nombre ? [s.region, rol].filter(Boolean).join(" · ") || resto.join(" · ") : "Abre el cliente de LoL")}</span></div></div>
+  ${rg || wr != null ? `<div class="est" style="gap:14px">
+    ${rg ? `<div style="display:flex;gap:16px;align-items:center">${tier ? `<img src="/img/rango/${esc(tier)}.png" alt="Emblema ${esc(rangoTxt)}" style="width:56px;height:56px;object-fit:contain;transform:scale(2.6)" onerror="this.style.display='none'">` : ""}
+      <div><b style="font-size:22px">${esc(rangoTxt)}</b><br><span class="sub" style="font-size:13px">Meta: Challenger</span></div></div>` : ""}
+    ${wr != null ? `<div style="display:flex;justify-content:space-between;align-items:baseline"><span class="sub">Win rate</span><span><b style="font-size:20px">${pct(wr)}</b> <span class="sub" style="font-size:13px">· meta 60%</span></span></div>
+    <span class="tuboH" style="flex:none;width:100%" role="img" aria-label="Win rate ${pct(wr)}, meta 60%"><i style="width:${x(wr)}%;background:linear-gradient(90deg,#3E7A62,#A8D8C0)"></i><u style="left:${x(.6)}%"></u></span>` : ""}</div>` : ""}
   <div class="est"><span class="sub">Atajos</span>
-    <button class="atajo" onclick="ver('perfil')">Qué está fallando <span>→</span></button>
-    <button class="atajo" onclick="ver('partidas')">Últimas partidas <span>→</span></button>
-    <button class="atajo" onclick="ver('companion')">Champ select y partida <span>→</span></button></div>`;
+    <button class="atajo" onclick="ver('perfil')">${VS(s) ? `Qué cambiar (${VS(s).reglas.length} reglas)` : "Qué está fallando"} <span>→</span></button>
+    <button class="atajo" onclick="ver('errores')">Tus errores repetidos <span>→</span></button>
+    <button class="atajo" onclick="ver('partidas')">Últimas partidas <span>→</span></button></div>`;
   return [main, aside];
 }
 const enCliente = f => f != null && f !== "inicio";  // null = cliente cerrado; "inicio" = Racha aún no lo ha leído; cualquier otra fase del LCU (GameStart, Reconnect…) es cliente abierto

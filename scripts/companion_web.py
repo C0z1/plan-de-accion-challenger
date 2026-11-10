@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
+          "aviso": None, "espera": None, "rango": None, "cuenta": None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
 VERSION = "0.5.1"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -53,9 +53,10 @@ def evento(e):
         threading.Thread(target=refrescar, daemon=True).start()
     elif tipo == "rango": s = {"rango": e[1] or ESTADO["rango"]}; s["perfil"] = gui.perfil(s["rango"], ESTADO["cuenta"])
     elif tipo == "cuenta":  # la cuenta con sesión en el cliente: manda sobre perfil.json (un amigo, u otra cuenta en tu PC)
-        gui.CUENTA[0] = e[1]; s = {"cuenta": e[1], "perfil": gui.perfil(ESTADO["rango"], e[1])}
+        gui.CUENTA[0] = e[1]; s = {"cuenta": e[1], "perfil": gui.perfil(ESTADO["rango"], e[1]), "icono": e[2] if len(e) > 2 else None}
         threading.Thread(target=refrescar, daemon=True).start()  # si el historial en disco es de otra cuenta, se oculta
     elif tipo == "cliente": s = {"cliente": e[1]}
+    elif tipo == "region": s = {"region": e[1]}
     elif tipo == "aviso": s = {"aviso": e[1]}
     elif tipo == "pos": s = {"pos": e[1]}  # champ select antes de ver al rival: la ventana Draft
     with LOCK: ESTADO.update(s, v=ESTADO["v"] + 1)
@@ -119,10 +120,12 @@ def vigilar_cuenta(q, cada=10):
         s = companion.lcu("/lol-summoner/v1/current-summoner") or {}
         nueva = s.get("gameName") and (c := f"{s['gameName']}#{s.get('tagLine', '')}") != ultima
         if nueva:
-            ultima = c; q.put(("rango", companion.rango(companion.lcu("/lol-ranked/v1/current-ranked-stats")))); q.put(("cuenta", c))
+            ultima = c; q.put(("rango", companion.rango(companion.lcu("/lol-ranked/v1/current-ranked-stats"))))
+            q.put(("cuenta", c, s.get("profileIconId")))
         if s.get("gameName") and (nueva or vuelta % 6 == 0):  # tus últimas partidas del cliente (sin key): al conectar y cada minuto
             h = companion.lcu("/lol-match-history/v1/products/lol/current-summoner/matches?begIndex=0&endIndex=19")
             if h:
+                q.put(("region", REGION.get(str(h.get("platformId") or "").upper(), h.get("platformId"))))
                 if not gui.NOMBRES: gui.NOMBRES.update(companion.nombres_lcu())
                 m = m or {**gui.NOMBRES, **companion.nombres()}; q.put(("cliente", companion.historial(h, m)))
         vuelta += 1; time.sleep(cada)
@@ -137,6 +140,11 @@ def estado():
     with LOCK: return json.dumps(ESTADO, ensure_ascii=False, default=str)
 
 
+RANGOS = {"iron", "bronze", "silver", "gold", "platinum", "emerald", "diamond", "master", "grandmaster", "challenger"}
+REGION = {"LA1": "LAN", "LA2": "LAS", "NA1": "NA", "BR1": "BR", "EUW1": "EUW", "EUN1": "EUNE", "KR": "KR", "JP1": "JP",
+          "OC1": "OCE", "TR1": "TR", "RU": "RU", "ME1": "ME", "SG2": "SEA", "TW2": "TW", "VN2": "VN"}
+
+
 def imagen(tipo, nombre):
     """PNG de Data Dragon (campeón por nombre o ítem por id), en caché en disco; None si no existe."""
     import builds
@@ -146,11 +154,16 @@ def imagen(tipo, nombre):
         c = d.get(n) or d.get(max((k for k in d if n.startswith(k)), key=len, default=""))
         if not c: return None
         nombre = c[0]  # «Wukong» → «MonkeyKing»
+    if tipo == "rango" and nombre not in RANGOS: return None
     f = IMG / tipo / f"{nombre}.png"
     if not f.exists():
-        v = builds.get("https://ddragon.leagueoflegends.com/api/versions.json", ttl=builds.DIA)[0]
+        if tipo == "rango":  # emblema de la liga (CommunityDragon: los mismos archivos que usa el cliente)
+            url = f"https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-emblem/emblem-{nombre}.png"
+        else:
+            v = builds.get("https://ddragon.leagueoflegends.com/api/versions.json", ttl=builds.DIA)[0]
+            url = f"https://ddragon.leagueoflegends.com/cdn/{v}/img/{tipo}/{nombre}.png"  # champion, item, profileicon
         try:
-            with urllib.request.urlopen(f"https://ddragon.leagueoflegends.com/cdn/{v}/img/{tipo}/{nombre}.png", timeout=15) as r: b = r.read()
+            with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "racha"}), timeout=15) as r: b = r.read()
         except OSError: return None
         f.parent.mkdir(parents=True, exist_ok=True); f.write_bytes(b)
     return f.read_bytes()
@@ -191,7 +204,7 @@ class H(http.server.BaseHTTPRequestHandler):
             return self.enviar(200, (WEB / "fonts" / f"{m.group(1)}.woff2").read_bytes(), "font/woff2")
         if self.path in ("/icono.png", "/favicon.ico"): return self.enviar(200, (WEB / "icono.png").read_bytes(), "image/png")  # ícono de la ventana de Edge --app
         if self.path == "/api/estado": return self.enviar(200, estado().encode(), "application/json; charset=utf-8")
-        if m := re.fullmatch(r"/img/(champion|item)/(\w{1,40})\.png", self.path):
+        if m := re.fullmatch(r"/img/(champion|item|profileicon|rango)/(\w{1,40})\.png", self.path):
             if b := imagen(*m.groups()): return self.enviar(200, b, "image/png")
         self.enviar(404, b"", "text/plain")
 
