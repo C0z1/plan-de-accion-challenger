@@ -84,7 +84,7 @@ class Completar(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             f = pathlib.Path(d) / "sesion.json"
             nube.PENDIENTE["s"] = ("verifier", time.time())
-            with mock.patch.object(nube, "SESION_F", f), \
+            with mock.patch.object(nube, "SESION_F", f), mock.patch.object(nube.gui, "AJUSTES_F", pathlib.Path(d) / "ajustes.json"), \
                     mock.patch.object(nube, "pedir", return_value={"token": TOKEN, "email": "a@b.c", "nombre": "Cozi"}) as p:
                 s = nube.completar("code", "s", 8765)
             self.assertEqual(s["token"], TOKEN)
@@ -92,8 +92,8 @@ class Completar(unittest.TestCase):
             self.assertEqual(guardado, {"token": TOKEN, "email": "a@b.c", "nombre": "Cozi", "sync": None})
             self.assertEqual(set(guardado), {"token", "email", "nombre", "sync"})
             # el POST lleva code, verifier y el redirect de la app
-            self.assertEqual(p.call_args.args[:2], ("POST", "/v1/login"))
-            self.assertEqual(p.call_args.args[2], {"code": "code", "verifier": "verifier", "redirect_uri": "http://127.0.0.1:8765/oauth"})
+            self.assertEqual(p.call_args_list[0].args[:2], ("POST", "/v1/login"))
+            self.assertEqual(p.call_args_list[0].args[2], {"code": "code", "verifier": "verifier", "redirect_uri": "http://127.0.0.1:8765/oauth"})
 
 
 class Sincronizar(unittest.TestCase):

@@ -6,7 +6,7 @@ Uso:
   python scripts/companion_web.py --no-abrir no abre ventana (para pruebas)
   python scripts/companion_web.py --fondo    en segundo plano (arranca con Windows): abre la ventana sola al abrir el cliente de LoL
 Sin --fondo, el servidor se cierra solo si la ventana deja de preguntar 60 s. Si ya hay un HTC abierto, abre su ventana y sale."""
-import html, http.server, json, pathlib, queue, re, shutil, subprocess, sys, threading, time, urllib.parse, urllib.request, webbrowser
+import html, http.server, json, os, pathlib, queue, re, shutil, subprocess, sys, threading, time, urllib.parse, urllib.request, webbrowser
 
 import companion_gui as gui  # noqa: E402  (trae REPO, sys.path del .exe y el trabajador)
 from companion_gui import companion
@@ -162,14 +162,65 @@ def version_mayor(a, b):
     except (ValueError, AttributeError): return False
 
 
+DESCARGAS = "https://github.com/C0z1/racha.gg/releases/download/"
+QUIETO = {None, "None", "inicio", "Lobby", "EndOfGame"}  # fases en que se puede cerrar Racha para actualizar
+MAX_INSTALADOR = 300 * 2**20  # bytes: el instalador pesa ~30 MB; más que esto no es nuestro
+
+
+def instalador_de(d):
+    """(url, sha256) del instalador del release `d` de GitHub, o None si falta o no viene con su sha256."""
+    for a in d.get("assets") or []:
+        url, dig = str(a.get("browser_download_url", "")), str(a.get("digest") or "")
+        if re.fullmatch(r"Racha-Setup-[\d.]+\.exe", str(a.get("name", ""))) and url.startswith(DESCARGAS) and re.fullmatch(r"sha256:[0-9a-f]{64}", dig):
+            return url, dig[7:]
+    return None
+
+
+def bajar_verificado(url, sha, destino):
+    """Baja `url` a `destino` y comprueba su sha256; si no cuadra, lo borra y devuelve False (nunca se instala)."""
+    import hashlib
+    h, n = hashlib.sha256(), 0
+    tmp = destino.with_suffix(".part")
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "racha"}), timeout=60) as r, open(tmp, "wb") as f:
+            while b := r.read(1 << 16):
+                n += len(b)
+                if n > MAX_INSTALADOR: raise OSError("demasiado grande")
+                h.update(b); f.write(b)
+        if h.hexdigest() != sha: raise OSError("sha256 distinto")
+        os.replace(tmp, destino); return True
+    except OSError:
+        try: tmp.unlink()
+        except OSError: pass
+        return False
+
+
+def actualizar(version, url, sha, espera=30):
+    """Auto-actualización (solo en la versión instalada): baja el instalador, verifica su sha256, espera a que no estés
+    en selección ni en partida y lo corre en silencio; el instalador cierra Racha y la vuelve a abrir."""
+    import tempfile
+    destino = pathlib.Path(tempfile.gettempdir()) / f"Racha-Setup-{version.lstrip('v')}.exe"
+    if not bajar_verificado(url, sha, destino):
+        with LOCK: ESTADO["nueva"] = {**(ESTADO["nueva"] or {}), "estado": "No se pudo verificar la descarga: actualiza a mano."}; ESTADO["v"] += 1
+        return
+    with LOCK: ESTADO["nueva"] = {**(ESTADO["nueva"] or {}), "estado": "Lista: se instala sola cuando no estés en partida."}; ESTADO["v"] += 1
+    while True:
+        with LOCK: fase = ESTADO.get("fase")
+        if fase in QUIETO: break
+        time.sleep(espera)
+    subprocess.Popen([str(destino), "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/RACHA=" + ("--fondo" if FONDO[0] else "")])
+
+
 def buscar_version():
-    """Al arrancar: ¿hay una versión de Racha más nueva en GitHub Releases? Solo avisa (no instala nada)."""
+    """Al arrancar: ¿hay una versión de Racha más nueva en GitHub Releases? Avisa y, en la versión instalada, se actualiza sola."""
     try:
         req = urllib.request.Request(RELEASES, headers={"User-Agent": "racha", "Accept": "application/vnd.github+json"})
         with urllib.request.urlopen(req, timeout=10) as r: d = json.load(r)
     except (OSError, ValueError): return
-    if version_mayor(d.get("tag_name", ""), VERSION) and str(d.get("html_url", "")).startswith("https://github.com/"):
-        with LOCK: ESTADO.update(nueva={"version": d["tag_name"], "url": d["html_url"]}, v=ESTADO["v"] + 1)
+    if not (version_mayor(d.get("tag_name", ""), VERSION) and str(d.get("html_url", "")).startswith("https://github.com/")): return
+    inst = instalador_de(d) if getattr(sys, "frozen", False) else None  # desde el código fuente solo se avisa
+    with LOCK: ESTADO.update(nueva={"version": d["tag_name"], "url": d["html_url"], "estado": "Bajando la actualización…" if inst else None}, v=ESTADO["v"] + 1)
+    if inst: actualizar(d["tag_name"], *inst)
 
 
 def primera_vez():
@@ -363,7 +414,7 @@ class H(http.server.BaseHTTPRequestHandler):
             q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
             try:
                 nube.completar((q.get("code") or [""])[0], (q.get("state") or [""])[0], self.server.server_address[1])
-                with LOCK: ESTADO.update(nube=nube_publica(), v=ESTADO["v"] + 1)
+                with LOCK: ESTADO.update(nube=nube_publica(), ajustes=gui.ajustes(), v=ESTADO["v"] + 1)  # ajustes: los restaurados de la nube
                 threading.Thread(target=sync_nube, daemon=True).start()
                 msg = "Listo: tu cuenta de Racha quedó guardada en la nube. Ya puedes cerrar esta pestaña y volver a Racha."
             except (ValueError, OSError) as e: msg = str(e) if isinstance(e, ValueError) else "No pude hablar con el servidor de Racha."

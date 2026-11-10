@@ -55,7 +55,20 @@ def completar(code, state, puerto):
         except ValueError: msg = None
         raise ValueError(msg or "Google no aceptó el inicio de sesión.")
     s = {"token": d["token"], "email": d.get("email", ""), "nombre": d.get("nombre", ""), "sync": None}
-    _guardar(s); return s
+    _guardar(s); restaurar(s["token"]); return s
+
+
+def restaurar(token):
+    """En una PC nueva (sin ajustes guardados), trae tus ajustes de la nube antes de la primera subida, que si no los
+    pisaría con los de fábrica. Devuelve cuántos ajustes restauró; un fallo no impide iniciar sesión."""
+    if gui.AJUSTES_F.exists(): return 0
+    try: aj = (pedir("GET", "/v1/yo", None, token) or {}).get("ajustes")
+    except (urllib.error.URLError, OSError, ValueError): return 0
+    n = 0
+    for k, v in (aj if isinstance(aj, dict) else {}).items():
+        try: gui.guardar_ajuste(k, v); n += 1
+        except (ValueError, OSError): pass  # clave vieja o desconocida: lista blanca
+    return n
 
 
 def compacto(p):

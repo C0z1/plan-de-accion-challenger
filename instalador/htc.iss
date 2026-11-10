@@ -43,8 +43,10 @@ Name: inicio; Description: "Arrancar Racha con Windows (se abre solo cuando abre
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "HTC"; ValueData: """{app}\HTC.exe"" --fondo"; Flags: uninsdeletevalue; Tasks: inicio
 
 [Run]
-Filename: "{app}\HTC.exe"; Parameters: "--fondo"; Flags: nowait runhidden; Tasks: inicio
+Filename: "{app}\HTC.exe"; Parameters: "--fondo"; Flags: nowait runhidden; Tasks: inicio; Check: not WizardSilent
 Filename: "{app}\HTC.exe"; Description: "Abrir Racha"; Flags: nowait postinstall skipifsilent
+; auto-actualización (la app corre este instalador con /VERYSILENT /RACHA=--fondo o /RACHA=): Racha vuelve a abrirse como estaba
+Filename: "{app}\HTC.exe"; Parameters: "{param:RACHA|}"; Flags: nowait; Check: WizardSilent
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM HTC.exe"; Flags: runhidden; RunOnceId: "CerrarHTC"

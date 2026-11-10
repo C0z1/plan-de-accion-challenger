@@ -1,5 +1,5 @@
 """v0.8 (todo gratis): métricas anónimas opt-in, reportes privados e invitar amigos desde la app, sin red."""
-import unittest, urllib.error
+import hashlib, io, pathlib, tempfile, unittest, urllib.error
 from unittest import mock
 
 import companion_web as w
@@ -44,6 +44,67 @@ class V08(unittest.TestCase):
         with mock.patch.object(w.companion, "backend", prohibido), mock.patch("builds.bajar", lambda: 0):
             w.invitar("beto", "")
         self.assertIn("Solo quien administra", w.ESTADO["invitacion"]["error"]); self.assertIsNone(w.ESTADO["admin"])
+
+
+
+class AutoActualizar(unittest.TestCase):  # v0.9: baja, verifica sha256 y solo instala fuera de partida
+    def setUp(self): self.viejo = dict(w.ESTADO)
+    def tearDown(self): w.ESTADO.clear(); w.ESTADO.update(self.viejo)
+    BIN = b"MZ instalador de prueba" * 100
+    SHA = hashlib.sha256(BIN).hexdigest()
+
+    def release(self, **cambio):
+        a = {"name": "Racha-Setup-0.9.0.exe", "browser_download_url": w.DESCARGAS + "v0.9.0/Racha-Setup-0.9.0.exe", "digest": "sha256:" + self.SHA, **cambio}
+        return {"tag_name": "v0.9.0", "html_url": "https://github.com/C0z1/racha.gg/releases/tag/v0.9.0", "assets": [a]}
+
+    def test_instalador_de_exige_nombre_url_y_sha(self):
+        self.assertEqual(w.instalador_de(self.release()), (w.DESCARGAS + "v0.9.0/Racha-Setup-0.9.0.exe", self.SHA))
+        self.assertIsNone(w.instalador_de(self.release(digest=None)))
+        self.assertIsNone(w.instalador_de(self.release(browser_download_url="https://evil.example/Racha-Setup-0.9.0.exe")))
+        self.assertIsNone(w.instalador_de(self.release(name="otra-cosa.exe")))
+        self.assertIsNone(w.instalador_de({}))
+
+    def test_bajar_verificado(self):
+        with tempfile.TemporaryDirectory() as t:
+            destino = pathlib.Path(t) / "Racha-Setup.exe"
+            with mock.patch.object(w.urllib.request, "urlopen", lambda req, timeout=None: io.BytesIO(self.BIN)):
+                self.assertTrue(w.bajar_verificado("https://x.test/i.exe", self.SHA, destino))
+                self.assertEqual(destino.read_bytes(), self.BIN)
+                destino.unlink()
+                self.assertFalse(w.bajar_verificado("https://x.test/i.exe", "0" * 64, destino))  # sha distinto: no queda nada que instalar
+            self.assertEqual(list(pathlib.Path(t).iterdir()), [])
+
+    def test_espera_a_que_termine_la_partida(self):
+        corridas, fases = [], iter(["InProgress", "InProgress", "EndOfGame"])
+        def dormir(_): w.ESTADO["fase"] = next(fases)
+        w.ESTADO.update(fase="ChampSelect", nueva={"version": "v0.9.0"})
+        with mock.patch.object(w, "bajar_verificado", lambda *a: True), mock.patch.object(w.time, "sleep", dormir),                 mock.patch.object(w.subprocess, "Popen", lambda args: corridas.append((w.ESTADO["fase"], args))):
+            w.actualizar("v0.9.0", "u", self.SHA)
+        self.assertEqual(corridas[0][0], "EndOfGame")
+        self.assertIn("/VERYSILENT", corridas[0][1])
+
+    def test_sha_malo_no_instala(self):
+        w.ESTADO.update(fase="Lobby", nueva={"version": "v0.9.0"})
+        with mock.patch.object(w, "bajar_verificado", lambda *a: False), mock.patch.object(w.subprocess, "Popen") as po:
+            w.actualizar("v0.9.0", "u", self.SHA)
+        po.assert_not_called(); self.assertIn("a mano", w.ESTADO["nueva"]["estado"])
+
+
+
+class Restaurar(unittest.TestCase):  # login en una PC nueva: tus ajustes vuelven de la nube antes de la primera subida
+    def test_pc_nueva_restaura_y_pc_con_ajustes_no_toca(self):
+        import json, nube
+        with tempfile.TemporaryDirectory() as d:
+            f = pathlib.Path(d) / "ajustes.json"
+            nube_aj = {"overlay": False, "metricas": True, "clave_vieja": True, "aviso_nivel": "si"}
+            with mock.patch.object(nube.gui, "AJUSTES_F", f), mock.patch.object(nube, "pedir", return_value={"ajustes": nube_aj}):
+                self.assertEqual(nube.restaurar("t"), 2)  # lo desconocido o raro no entra (lista blanca)
+                a = json.loads(f.read_text(encoding="utf-8"))
+                self.assertEqual((a["overlay"], a["metricas"], a["aviso_nivel"]), (False, True, True))
+                self.assertEqual(nube.restaurar("t"), 0)  # ya hay ajustes en esta PC: mandan los locales
+            with mock.patch.object(nube.gui, "AJUSTES_F", pathlib.Path(d) / "otro.json"), \
+                    mock.patch.object(nube, "pedir", side_effect=urllib.error.URLError("x")):
+                self.assertEqual(nube.restaurar("t"), 0)
 
 
 if __name__ == "__main__": unittest.main()
