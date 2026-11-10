@@ -44,7 +44,7 @@ def evento(e):
             abrir(URL[0])  # el cliente acaba de abrir y no hay ventana de HTC (si la hubiera, preguntaría cada 2 s)
         if e[1] == "ChampSelect": s.update(draft=None, fin=None, meta=None, pos=None)
         if e[1] in ("Lobby", "Matchmaking", "ReadyCheck"): s.update(aviso=None, perfil=gui.perfil(ESTADO["rango"], ESTADO["cuenta"]))
-    elif tipo == "draft": s = {"draft": draft_json(e[1], e[2])}
+    elif tipo == "draft": s = {"draft": {**draft_json(e[1], e[2]), "probable": bool(e[3]) if len(e) > 3 else False}}
     elif tipo == "meta": s = {"meta": {**e[1], "texto": gui.texto_meta(e[1]), "recibido": time.time()}}  # «recibido»: el overlay descuenta los timers
     elif tipo == "fin": s = {"fin": {**e[1], "texto": companion.linea_fin(e[1])}}
     elif tipo == "post_espera": s = {"espera": e[1]}
@@ -342,7 +342,9 @@ class H(http.server.BaseHTTPRequestHandler):
             return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/ventana":  # botones y arrastre de la franja propia (la ventana ya no tiene barra de Windows)
             import ventana
-            try: ventana.accion(json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 100)))["accion"])
+            try:
+                d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 200)))
+                ventana.accion(d["accion"], float(d.get("alto", 0)), float(d.get("dpr", 1)))
             except (ValueError, KeyError, TypeError): return self.enviar(400, b"", "text/plain")
             return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/descargar":  # «Descargar mis partidas»: con tu key o tu código de acceso, en su hilo

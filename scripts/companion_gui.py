@@ -140,6 +140,17 @@ def hay_key():
     except (AttributeError, OSError): return False
 
 
+def rival_probable(pos, nombres):
+    """En ranked Riot oculta el rol de los enemigos: de los ya elegidos, el que más veces fue tu rival en esa posición
+    (tus partidas). None si ninguno sale en tus partidas o no hay datos: entonces se muestran todos."""
+    try: import draft
+    except Exception: return None
+    from collections import Counter
+    c = Counter(g["opp"] for g in draft.games if g.get("pos") == pos)
+    mejor = max((n for n in nombres if n), key=lambda n: c.get(n, 0), default=None)
+    return mejor if mejor and c.get(mejor, 0) > 0 else None
+
+
 def recomendaciones(pos, rivales):
     """[(rival, datos_draft | None)] usando draft.py (lo recarga si hay partidas nuevas)."""
     if ajeno(CUENTA[0]): return [(r, None) for r in rivales]  # tus partidas en disco son de otra cuenta: no recomendar con ellas
@@ -243,7 +254,9 @@ def trabajador(q):
                     q.put(("crono", {"fase": tm.get("phase"), "ms": tm["adjustedTimeLeftInPhase"], "t": time.time()}))
                 if ids and (pos, ids) != visto:
                     m = m or companion.nombres() or dict(NOMBRES); visto = (pos, ids)
-                    q.put(("draft", pos, recomendaciones(pos, [m.get(i) for i in ids])))
+                    nombres = [m.get(i) for i in ids]
+                    if len(nombres) > 1 and (p := rival_probable(pos, nombres)): nombres = [p]  # el rival de línea más probable
+                    q.put(("draft", pos, recomendaciones(pos, nombres), len(ids) > 1))
                 elif not ids and pos and visto != pos: q.put(("pos", pos)); visto = pos  # bans y picks antes del rival
             elif fase != "ChampSelect": visto = None
             if jugando and time.time() - ult >= 30:

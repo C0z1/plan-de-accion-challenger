@@ -6,7 +6,7 @@ import time
 
 HWND = [None]  # la ventana de Racha ya sin barra, o None
 CLASE_EDGE = "Chrome_WidgetWin_1"
-ACCIONES = ("minimizar", "maximizar", "cerrar", "arrastrar")
+ACCIONES = ("minimizar", "maximizar", "cerrar", "arrastrar", "recortar")
 
 
 def _win():
@@ -55,7 +55,30 @@ def sin_marco(segundos=15, al_listo=None):
     if al_listo: al_listo()
 
 
-def accion(nombre):
+def recortar(alto_css, dpr):
+    """Edge dibuja su propia barra dentro de la ventana (quitar WS_CAPTION no basta: lo vio el usuario). La página mide
+    cuánto ocupa (outerHeight - innerHeight, en px CSS) y aquí se recorta esa franja de arriba con una región."""
+    w, h = _win(), HWND[0]
+    if not w or not h or not (0 < alto_css <= 80) or not (0.5 <= dpr <= 4): return False
+    ctypes, wintypes, u = w
+    try:  # Edge extiende el marco de DWM dentro de la ventana para su barra (con efecto vidrio) y esa zona ignora la
+        # región: sin esto queda una franja blanca vacía (probado en la PC del usuario, Windows 11)
+        class MARGINS(ctypes.Structure): _fields_ = [("l", ctypes.c_int), ("r", ctypes.c_int), ("t", ctypes.c_int), ("b", ctypes.c_int)]
+        d = ctypes.windll.dwmapi; d.DwmExtendFrameIntoClientArea(h, ctypes.byref(MARGINS(0, 0, 0, 0)))
+        ninguno = ctypes.c_int(1); d.DwmSetWindowAttribute(h, 38, ctypes.byref(ninguno), 4)  # DWMWA_SYSTEMBACKDROP_TYPE = sin vidrio
+        # sin el marco que Windows 11 dibuja sobre el rectángulo completo (se veía como un contorno y una línea encima de la
+        # región recortada; lo vio el usuario): sin color de borde, sin esquinas redondeadas y sin dibujo de marco
+        for attr, valor in ((34, ctypes.c_uint(0xFFFFFFFE)), (33, ctypes.c_int(1)), (2, ctypes.c_int(1))):
+            d.DwmSetWindowAttribute(h, attr, ctypes.byref(valor), 4)
+    except (AttributeError, OSError): pass
+    r = wintypes.RECT(); u.GetWindowRect(h, ctypes.byref(r))
+    arriba = round(alto_css * dpr)
+    rgn = ctypes.windll.gdi32.CreateRectRgn(0, arriba, r.right - r.left, r.bottom - r.top)
+    u.SetWindowRgn(h, rgn, True)  # Windows se queda con la región: no se libera aquí
+    return True
+
+
+def accion(nombre, alto=0, dpr=1):
     """minimizar / maximizar (alterna) / cerrar / arrastrar (sigue al mouse mientras el botón izquierdo esté apretado)."""
     if nombre not in ACCIONES: raise ValueError(nombre)
     w, h = _win(), HWND[0]
@@ -64,6 +87,7 @@ def accion(nombre):
     if nombre == "minimizar": u.ShowWindow(h, 6)
     elif nombre == "maximizar": u.ShowWindow(h, 9 if u.IsZoomed(h) else 3)
     elif nombre == "cerrar": u.PostMessageW(h, 0x0010, 0, 0)
+    elif nombre == "recortar": return recortar(alto, dpr)
     else:
         if u.IsZoomed(h): return True  # maximizada no se arrastra
         p, r = wintypes.POINT(), wintypes.RECT()

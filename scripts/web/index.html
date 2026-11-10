@@ -244,7 +244,7 @@ function champSelect(s) {
       <div class="card"><b>${esc(rec.rival || "?")} no aparece en tus partidas</b><span class="sub">Va tu WR por campeón en el rol.</span></div>`, ""];
   const pq = fi.por_que, c = fi.cuidado, b = rec.build_dict, wr = s.rango && s.rango.n ? s.rango.wr / 100 : null;
   const main = `
-  <div><h1>Selección de campeón</h1><span class="sub">${d.previa ? "Vista previa contra tu rival más frecuente · " : ""}${esc(pos)} · ${esc(fi.champ)} contra ${esc(fi.rival)}</span></div>
+  <div><h1>Selección de campeón</h1><span class="sub">${d.previa ? "Vista previa contra tu rival más frecuente · " : d.probable ? "Rival de línea probable (Riot oculta los roles enemigos) · " : ""}${esc(pos)} · ${esc(fi.champ)} contra ${esc(fi.rival)}</span></div>
   <div class="tres">
     <div class="card stat"><div class="cab">${img("champion", fi.rival, "ico40")}<b>Contra ${esc(fi.rival)}</b></div>
       <div class="big"><b>${pq.v}-${pq.n - pq.v}</b><span>con ${esc(fi.champ)}</span></div>
@@ -446,7 +446,7 @@ function puestoTag(p) {
 
 function partidas(s) {  // Partidas_Vino: filtros, historial en tabla (score, reglas ✓/✕, equipo, error) y la partida seleccionada
   const cl = delCliente(s); if (cl) return partidasCliente(s, cl);
-  const ps = (s.rendimiento?.resumen?.partidas || []).slice(0, 10), V = VS(s), PP = (V && V.por_partida) || {}, RG = V ? V.reglas : [];  // las últimas 10
+  const ps = (s.rendimiento?.resumen?.partidas || []).slice(0, 5), V = VS(s), PP = (V && V.por_partida) || {}, RG = V ? V.reglas : [];  // las últimas 5 (pedido del usuario)
   if (!ps.length) return `<div><h1>Partidas</h1><span class="sub">Sin partidas en disco.</span></div>`;
   const v = ps.filter(p => p.win).length, mvp = ps.filter(p => p.puesto_eq === 1).length, peor = ps.filter(p => p.puesto_eq === 5).length;
   const info = p => PP[p.archivo] || {reglas: [], error: null};
@@ -766,9 +766,15 @@ async function ajuste(clave, on) {
   try { await fetch("/api/ajuste", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({clave, on})}); } catch (e) {}
   v = -1; tick();
 }
-function ventana(accion) {
-  fetch("/api/ventana", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({accion})}).catch(() => {});
+function ventana(accion, extra) {
+  fetch("/api/ventana", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({accion, ...extra})}).catch(() => {});
 }
+let recortada = false;
+function recortar() {  // la barra que Edge dibuja por dentro = outerHeight - innerHeight: se recorta para que solo quede la nuestra
+  const alto = window.outerHeight - window.innerHeight;
+  if (alto > 0) ventana("recortar", {alto, dpr: window.devicePixelRatio || 1});
+}
+window.addEventListener("resize", () => { if (recortada) recortar(); });
 async function descargar() {
   try { await fetch("/api/descargar", {method: "POST", headers: {"X-HTC": "1"}}); } catch (e) {}
 }
@@ -809,6 +815,7 @@ async function tick() {
       const [m, a] = vista === "inicio" ? inicio(s) : vista === "draft" ? draftV(s) : vista === "envivo" ? envivo(s) : vista === "campeones" ? campeonesV(s)
         : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? (s.previa ? champSelect({...s, draft: s.previa}) : draftV(s)) : vista === "perfil" ? perfil(s) : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida
       document.getElementById("barra-v").hidden = !s.sin_marco; document.body.classList.toggle("sin-marco", !!s.sin_marco);
+      if (s.sin_marco && !recortada) { recortada = true; recortar(); }
       const nv = s.nueva ? `<div class="aviso teal" role="status">Hay una versión nueva de Racha (${esc(s.nueva.version)}). <a href="${esc(s.nueva.url)}" target="_blank" rel="noopener" style="color:inherit;font-weight:800">Descárgala aquí →</a></div>` : "";
       const av = nv + (s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "");
       const mn = document.getElementById("main"); mn.classList.toggle("ancho", !a); mn.innerHTML = av + m;  // sin columna derecha (Partidas_Vino): a todo el ancho
