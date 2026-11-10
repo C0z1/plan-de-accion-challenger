@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
+          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
 VERSION = "0.6.0"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -276,7 +276,7 @@ class H(http.server.BaseHTTPRequestHandler):
         if self.path == "/api/acceso":
             try: gui.guardar_acceso(json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 200)))["token"])
             except (ValueError, KeyError, TypeError, OSError): return self.enviar(400, b"", "text/plain")
-            with LOCK: ESTADO.update(descarga="Código guardado. Ya puedes descargar tus partidas.", v=ESTADO["v"] + 1)
+            with LOCK: ESTADO.update(descarga="Código guardado. Ya puedes descargar tus partidas.", conectado=True, v=ESTADO["v"] + 1)
             return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/recargar":  # Ajustes_Vino «Recargar»: vuelve a leer tus partidas del disco
             threading.Thread(target=refrescar, daemon=True).start(); return self.enviar(200, b"{}", "application/json")
