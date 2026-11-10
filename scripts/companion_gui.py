@@ -76,7 +76,7 @@ def perfil(r=None):
         rango = f"{solo['tier'].title()} {solo.get('rank', '') if solo['tier'] not in ('MASTER', 'GRANDMASTER', 'CHALLENGER') else ''} {solo['leaguePoints']} LP".replace("  ", " ") if solo else "sin rango"
         if r: rango = " ".join(x for x in (r["tier"].title(), r["division"], f"{r['lp']} LP") if x) + (f" · {r['wins']}-{r['losses']} ({r['wr']}%)" if r["n"] else "")
         return f"{a['gameName']}#{a['tagLine']} · {rango}"
-    except (OSError, ValueError, KeyError): return "sin datos: corre descargar.py"
+    except (OSError, ValueError, KeyError): return "sin historial todavía"
 
 
 def hay_key():
@@ -108,6 +108,7 @@ def post_partida(q):
 
 
 def _post_partida(q):
+    if not hay_key(): return  # beta sin key: la foto en vivo del final ya basta; no avisar de una descarga que no puede ser
     q.put(("post_espera", "Esperando a que Riot publique la partida…")); time.sleep(60)
     for intento in range(4):
         code, _ = script("descargar.py", "5")

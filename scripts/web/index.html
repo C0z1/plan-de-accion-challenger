@@ -249,7 +249,7 @@ function franja(m, fin) {  // en partida: las metas 6 / 10 / 14+ con lo que llev
   t.push(meta("teal", "10", "CS", n(m.cs), m.cs_meta && (fin || m.minuto < 11) ? `Meta ${m.cs_meta} al 10 con ${esc(m.campeon)}.` : `Min ${m.minuto}.`));
   const d = fin ? m.muertes14_25 : m.muertes14;
   t.push(meta("red", "14+", fin ? "Muertes del 14 al 25" : "Muertes desde el 14", d == null ? "–" : `${d}<span> / 2</span> ${d <= 2 ? "✓" : "✕"}`,
-    d == null ? (fin ? "Acabó antes del 14." : "Cuenta desde el minuto 14.") : "Con 3+ del 14 al 25 tu WR baja de 68% a 43%."));
+    d == null ? (fin ? "Acabó antes del 14." : "Cuenta desde el minuto 14.") : "Meta: 2 o menos del 14 al 25."));
   return `<div class="tres">${t.join("")}</div>`;
 }
 
@@ -362,12 +362,12 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
       : `<span class="sub">Aún no juegas hoy.</span>`}</div>
   <div class="card"><div class="cab2"><h2>Tu regla de hoy</h2><span class="sub" style="font-size:12px">del plan, con tus últimas partidas</span></div>
     <div class="fila2" style="border:none"><span class="ic red">${ic("muertes")}</span>
-      <div class="txt"><b>2 muertes o menos del 14 al 25</b><small>Con 0–2 ganas 68%; con 3 o más, 43%.</small></div>
+      <div class="txt"><b>2 muertes o menos del 14 al 25</b><small>Morir a mitad de partida regala los objetivos.</small></div>
       ${d25.length ? `<span class="sub" style="font-size:12px">Cumples <b style="color:var(--txt)">${ok}/${d25.length}</b></span>
       <span class="tuboH" role="img" aria-label="Cumples ${ok} de ${d25.length}"><i style="width:${f * 100}%;background:linear-gradient(90deg,${f >= .5 ? "#3E7A62,#A8D8C0" : "#9A2E3A,#FF8A8A"})"></i></span>` : '<span class="sub">Sin partidas con timeline.</span>'}</div></div>`;
   const base = t && t.base.wr, x = w => Math.max(0, Math.min(100, (w - .45) / .2 * 100));
   const aside = `
-  <div><h2 style="font-size:24px">${esc(nombre ? id : "Sin cuenta")}</h2><span class="sub">${esc(nombre ? resto.join(" · ") : "Corre descargar.py para tus datos")}</span></div>
+  <div><h2 style="font-size:24px">${esc(nombre ? id : "Sin cuenta")}</h2><span class="sub">${esc(nombre ? resto.join(" · ") : "Tu historial llega en una próxima versión")}</span></div>
   ${base != null ? `<div class="est"><span class="sub">Win rate de la temporada</span>
     <div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:28px">${pct(base)}</b><span class="sub">${t.base.n} partidas · meta 60%</span></div>
     <span class="tuboH" style="flex:none;width:100%" role="img" aria-label="Win rate ${pct(base)}, meta 60%"><i style="width:${x(base)}%;background:linear-gradient(90deg,#3E7A62,#A8D8C0)"></i><u style="left:${x(.6)}%"></u></span>
@@ -478,7 +478,7 @@ function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estad
   if (x.nivel != null && x.nivel_rival != null) reglas.push([`Llega al 6 sin nivel abajo`, `Nivel ${x.nivel} contra ${x.nivel_rival} de ${esc(x.rival || "tu rival")}`, ...est(x.nivel >= x.nivel_rival, 6), 6]);
   if (x.cs_meta) reglas.push([`${x.cs_meta}+ minions al 10`, `${x.cs ?? "?"} CS · minuto ${min}`, ...est((x.cs ?? 0) >= x.cs_meta, 10), 10]);
   const d = f ? x.muertes14_25 : x.muertes14;
-  reglas.push([`Juega con objetivo: 2 muertes o menos del 14 al 25`, d == null ? "Cuenta desde el minuto 14." : `Llevas ${d} desde el 14 · con 3+ tu WR baja a 43%`,
+  reglas.push([`Juega con objetivo: 2 muertes o menos del 14 al 25`, d == null ? "Cuenta desde el minuto 14." : `Llevas ${d} desde el 14 · meta: 2 o menos`,
     ...(min < 14 ? ["Después", ""] : d > 2 ? ["✕ Fallada", "red"] : min < 25 && !f ? ["▲ Ahora", "amber"] : ["✓ Cumplida", "ok"]), 14]);
   reglas.sort((a, b) => (b[3] === "amber") - (a[3] === "amber"));
   const fase = [[0, 6, "0–6"], [6, 10, "6–10"], [10, 14, "10–14"], [14, 25, "14–25"], [25, 40, "25+"]];

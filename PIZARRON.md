@@ -41,7 +41,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
-- **Estado:** limpieza del repo para público (pedido del usuario): borré 56 archivos que HTC no usa (20 scripts de análisis, 23 `datos/analisis-*.md`, 3 `datos/plan-opus-*.md`, `datos/2026-11-07.md`, 7 artboards viejos, `RESUMEN-NOCHE.md`, `TARJETA.md`); README reescrito y `docs/USO.md` + mapa del repo sin menciones a lo borrado. Suite **251 OK**. Detalle en `datos/deepseek-limpieza.md`.
+- **Estado:** limpieza del repo para público (pedido del usuario): borré 56 archivos que HTC no usa (20 scripts de análisis, 23 `datos/analisis-*.md`, 3 `datos/plan-opus-*.md`, `datos/2026-11-07.md`, 7 artboards viejos, `RESUMEN-NOCHE.md`, `TARJETA.md`); `docs/USO.md` y el mapa del repo sin menciones a lo borrado. Suite **252 OK** (mis borrados dejaron 251; Opus sumó `test_descargar.py` en paralelo). Detalle en `datos/deepseek-limpieza.md`.
 - **Siguiente:** (Opus) revisar el diff de la limpieza, quitar el enlace roto de `PLAN.md` a `datos/analisis-*.md` si quiere, y hacer commit; regenerar el instalador (ISCC).
 - **Actualizado:** 2026-11-10 (limpieza del repo)
 

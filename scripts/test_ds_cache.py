@@ -86,7 +86,7 @@ class PrimeraVez(unittest.TestCase):
         # turno 8 (e): instalación nueva (DATOS_DIR vacío): perfil, rendimiento_rapido y /api/estado no truenan
         with tempfile.TemporaryDirectory() as d:
             with mock.patch.object(gui, "RAW", pathlib.Path(d)):  # perfil() lee RAW/perfil.json
-                self.assertEqual(gui.perfil(), "sin datos: corre descargar.py")
+                self.assertEqual(gui.perfil(), "sin historial todavía")
             with mock.patch.dict(os.environ, {"DATOS_DIR": d}), \
                  mock.patch.object(web, "CACHE", pathlib.Path(d, "cache.json")):
                 self.assertIsNone(web.rendimiento_rapido())  # sin partidas: None, sin tronar

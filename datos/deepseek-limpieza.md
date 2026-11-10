@@ -22,7 +22,7 @@ Pedido del usuario: dejar solo lo que usa la app HTC, mejorar `README.md` y borr
 
 ## Qué edité
 
-- **`README.md`** reescrito para el repo público: qué es, instalar (`instalador/build.ps1` → `dist/HTC/HTC.exe` + instalador), desde el código, fases (Inicio → Draft → Selección → En vivo), las 9 vistas, RIOT_KEY, APIs y privacidad, pruebas, licencia y el aviso legal de Riot **textual**. Fuera las notas internas («Notas del proyecto»).
+- **`README.md`** reescrito para el repo público: qué es, instalar, desde el código, fases (Inicio → Draft → Selección → En vivo), las 9 vistas, RIOT_KEY, APIs y privacidad, pruebas, licencia y el aviso legal de Riot **textual**. Fuera las notas internas. (Opus lo mejoró en paralelo con una versión que agrega la URL del repo; la actual en disco es esa, y también cumple el pedido.)
 - **`docs/USO.md`**: quité `analizar.py`, `partida.py`, `recorrido_ficha.py`, `minions10.py` y la sección «Análisis profundo» (todos borrados); agregué `--fondo` a `companion_web.py`.
 - **`PIZARRON.md`**: quité del mapa del repo las filas de lo borrado y actualicé mi sección.
 
@@ -36,4 +36,4 @@ Pedido del usuario: dejar solo lo que usa la app HTC, mejorar `README.md` y borr
 
 ## Suite
 
-`python -m unittest discover scripts` → **251 OK** (antes de borrar: 251; después: 251).
+`python -m unittest discover scripts` → **252 OK** al final (mis borrados: 251 antes y 251 después; Opus sumó `scripts/test_descargar.py` en paralelo = 1 más).
