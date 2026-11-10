@@ -46,19 +46,18 @@ class TestServidor(unittest.TestCase):
         self.assertIn("text/html", tipo)
         self.assertIn(b"HTC", cuerpo)
 
-    def test_pie_wr_al_95_sin_el_viejo_11(self):
+    def test_sin_el_viejo_11(self):
         code, _, cuerpo = self.s.get("/")
         self.assertEqual(code, 200)
-        self.assertIn(b"(95%)", cuerpo)
         self.assertNotIn(b"\xc2\xb111", cuerpo)  # «±11» (1 SE) ya no debe aparecer
 
     def test_sin_partidas_etiqueta_presente(self):
         _, _, cuerpo = self.s.get("/")
         self.assertIn("Sin partidas".encode(), cuerpo)
 
-    def test_sin_partidas_todavia_en_que_esta_fallando(self):
+    def test_perfil_sin_partidas_lo_dice(self):
         _, _, cuerpo = self.s.get("/")
-        self.assertIn("Sin partidas todavía.".encode("utf-8"), cuerpo)
+        self.assertIn("Sin partidas en disco".encode("utf-8"), cuerpo)
 
     def test_estado_es_json(self):
         code, tipo, cuerpo = self.s.get("/api/estado")

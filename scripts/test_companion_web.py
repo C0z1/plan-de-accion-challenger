@@ -97,14 +97,16 @@ class Http(unittest.TestCase):
         st, b = self.get("/icono.png"); self.assertEqual(st, 200); self.assertEqual(b[1:4], b"PNG")
         self.assertIn(b'href="/icono.png"', self.get("/")[1])
 
-    def test_pie_wr_con_pocas_partidas(self):
-        st, b = self.get("/"); self.assertIn(b"ps.length > 3", b); self.assertIn("Pocas partidas: el WR casi no dice nada".encode(), b)
+    def test_perfil_como_el_canvas(self):  # Perfil_Vino + acuerdo 21: anillos con referencia, tilt hoy, cuenta y campeones a la derecha
+        t = self.get("/")[1].decode()
+        for f in ("function aro(", "Tus campeones ahora", "Tilt hoy", "Win rate de temporada", "function cuentaCab(", 'vista === "perfil" ? perfil(s)'):
+            self.assertIn(f, t)
 
     def test_iconos_y_filas_nuevas(self):  # pedido del usuario: íconos por métrica, sin emoji, y filas con tu dato
         st, b = self.get("/"); t = b.decode()
         for k in ("nivel", "cs", "muertes", "kp", "vision", "oro", "dano", "objetivos", "linea", "tilt", "champselect", "perfil"):
             self.assertRegex(t, rf"\n  {k}: '<")
-        for f in ("Tu plan con", "Cumples", "Hasta el nivel 6", "Si te toca contra", "Lo que más te baja", "típico", 'class="falla"', 'aria-hidden="true"', 'role="img"'):
+        for f in ("Tu plan con", "Cumples", "Hasta el nivel 6", "Si te toca contra", "típico", 'aria-hidden="true"', 'role="img"'):
             self.assertIn(f, t)
         for f in ("Cómo jugarlo", "La sueles cumplir", 'class="div"', "Counters de tu"):  # pedido del usuario: fuera lo viejo
             self.assertNotIn(f, t)

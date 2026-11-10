@@ -11,20 +11,22 @@
 @font-face{font-family:Inter;src:url(/fonts/inter.woff2) format("woff2");font-weight:100 900;font-display:swap}
 :root{--bg:#24111A;--card:#36192A;--txt:#F2F4F7;--muted:#D2BAC4;--soft:#AE95A0;--line:#5A2D40;--dark:#0B0709;--dark2:#1A1014;--dark3:#2C1420;
 --acc:#F28DB0;--acc2:#F8C3D6;--amber:#F28DB0;--amberbg:#4A2236;--amberfg:#F8C3D6;--teal:#A8D8C0;--tealbg:#1F3A30;--tealfg:#A8D8C0;
---red:#FF8A8A;--redbg:#4A1E26;--redfg:#FFB3B3;--okbg:#1F3A30;--okfg:#A8D8C0;--neutro:#9A8290}
+--red:#FF8A8A;--redbg:#4A1E26;--redfg:#FFB3B3;--okbg:#1F3A30;--okfg:#A8D8C0;--neutro:#9A8290;
+--muted3:#CDD3DC;--dark4:#3D2130;--ondark:#FFFFFF;--ondark2:#B8BCC6;--ontint:#161A21;--ontint2:#3F4652}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--txt);font-family:Mulish,'Segoe UI',sans-serif;font-size:16px}
 .sub,small,p{font-family:Inter,'Segoe UI',sans-serif}  /* acuerdo 21: Inter en textos secundarios, Mulish en títulos y cifras */
 .app{display:flex;min-height:100vh}
-nav{width:101px;flex-shrink:0;background:var(--dark2);display:flex;flex-direction:column;align-items:center;padding:30px 0;gap:8px}
-nav button{width:76px;min-height:60px;border-radius:12px;border:1px solid transparent;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font:600 11px Mulish,'Segoe UI',sans-serif}
-nav button{color:var(--muted)}nav button:hover{color:var(--txt)}nav button[aria-current]{background:var(--dark3);border-color:var(--acc);color:#fff}
-main{flex:1 1 779px;max-width:779px;padding:57px 40px 40px;display:flex;flex-direction:column;gap:32px}
+nav{width:101px;flex-shrink:0;background:var(--card);display:flex;flex-direction:column;align-items:center;padding:30px 0 26px;gap:6px}
+nav .sep{width:44px;height:1px;background:rgba(255,255,255,.08);margin:4px 0}
+nav button{width:76px;padding:8px 0;border-radius:12px;border:none;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;font:400 11px Mulish,'Segoe UI',sans-serif}
+nav button{color:var(--muted3)}nav button:hover{color:var(--txt)}nav button[aria-current]{background:var(--dark);color:var(--ondark);font-weight:700;box-shadow:inset 3px 0 0 #F28DB0}
+main{flex:1 1 779px;max-width:779px;padding:48px 40px 40px;display:flex;flex-direction:column;gap:26px}
 h1{margin:0;font-size:28px}h2{margin:0;font-size:20px}
 .sub{color:var(--muted)}
-.card{background:linear-gradient(180deg,#44203A,#36192A);border-radius:12px;box-shadow:0 2px 4px rgba(0,0,0,.25),0 12px 32px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);padding:20px;display:flex;flex-direction:column;gap:12px}
+.card{background:linear-gradient(180deg,#44203A,#36192A);border-radius:16px;box-shadow:0 2px 4px rgba(0,0,0,.25),0 12px 32px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);padding:22px 30px;display:flex;flex-direction:column;gap:12px}
 .tres{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-.tres .card{min-height:240px}
+.tres .card{min-height:200px;padding:18px 20px}
 .cab{display:flex;align-items:center;gap:16px}
 .ico{width:58px;height:58px;border-radius:10px;background:var(--dark3);object-fit:cover}
 .big{display:flex;align-items:baseline;gap:8px;margin-top:8px}.big b{font-size:32px}.big span{color:var(--soft)}
@@ -37,7 +39,7 @@ h1{margin:0;font-size:28px}h2{margin:0;font-size:20px}
 .build{flex-direction:row;align-items:center;gap:20px;flex-wrap:wrap}
 .item{width:40px;height:40px;border-radius:8px;background:var(--dark3)}
 aside[hidden]{display:none}
-aside{flex:1 1 560px;background:var(--dark);color:#fff;border-radius:40px 0 0 40px;padding:50px 40px 40px;display:flex;flex-direction:column;gap:32px}
+aside{flex:1 1 560px;background:var(--dark);color:#fff;border-radius:40px 0 0 40px;padding:44px 36px 36px;display:flex;flex-direction:column;gap:24px}
 aside .sub{color:var(--muted)}
 .tile{height:82px;border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:12px;color:var(--txt)}
 .tile img{width:44px;height:44px;border-radius:8px}.tile span{font-size:12px;color:var(--muted)}
@@ -61,7 +63,7 @@ details summary{cursor:pointer;color:var(--muted)}
 .fila2 small{font-size:12px;color:var(--muted)}
 .tit{display:flex;align-items:center;gap:10px}
 /* launcher (Home_Vino) */
-.cab2{display:flex;justify-content:space-between;align-items:center;margin:-20px -20px 4px;padding:16px 20px;border-radius:12px 12px 0 0;background:linear-gradient(180deg,rgba(242,141,176,.2),rgba(242,141,176,0));border-bottom:1px solid var(--line)}
+.cab2{display:flex;justify-content:space-between;align-items:center;margin:-22px -30px 4px;padding:16px 30px;border-radius:16px 16px 0 0;background:linear-gradient(90deg,rgba(242,141,176,.2),rgba(242,141,176,0) 65%);border-bottom:1px solid rgba(255,255,255,.06)}
 .luz{width:64px;height:64px;border-radius:50%;background:var(--dark3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .luz i{width:16px;height:16px;border-radius:50%;background:var(--neutro)}.luz.on i{background:#A8D8C0;box-shadow:0 0 12px #A8D8C0}
 .mini{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px;border-radius:10px;background:var(--dark2);font-size:12px;color:var(--muted);min-width:64px}
@@ -122,6 +124,7 @@ nav .abajo{margin-top:auto}
 <div class="app">
 <nav aria-label="Secciones">
 <button id="b-inicio" aria-label="Inicio" aria-current="page" onclick="ver('inicio')"></button>
+<div class="sep" aria-hidden="true"></div>
 <button id="b-draft" aria-label="Draft" onclick="ver('draft')"></button>
 <button id="b-companion" aria-label="Champ select y partida" onclick="ver('companion')"></button>
 <button id="b-envivo" aria-label="En vivo" onclick="ver('envivo')"></button>
@@ -292,54 +295,68 @@ function fallo(c, z, u) {  // Perfil.dc: ícono, nombre, «Tú X · típico Y» 
     <span class="tag ${mal ? "red" : "ok"}" role="img" aria-label="${mal ? "Te baja" : "Te sube"}: ${esc(dif)}">${mal ? "▼" : "▲"} ${esc(dif)}</span></div>`;
 }
 
-function perfil(s) {  // ventana 2 del canvas: score, WR y muertes de las últimas 20, qué falla, tilt, cuenta y campeones
+function cuentaCab(s) {  // Home_Vino/Perfil_Vino: ícono de invocador con aro rosa, Riot ID y región · rol
+  const [id, ...resto] = String(s.perfil || "").split(" · "), nombre = id.includes("#"), rol = VS(s) && ROL[VS(s).pos];
+  return `<div style="display:flex;gap:20px;align-items:center">${s.icono != null ? `<img class="retrato2" src="/img/profileicon/${+s.icono}.png" alt="Ícono de invocador" onerror="this.style.visibility='hidden'">` : ""}
+    <div><h2 style="font-size:24px">${esc(nombre ? id : "Sin cuenta")}</h2><span class="sub">${esc(nombre ? [s.region, rol].filter(Boolean).join(" · ") || resto.join(" · ") : "Abre el cliente de LoL")}</span></div></div>`;
+}
+
+function rangoCard(s, completo) {  // emblema + rango; win rate de temporada contra la meta (completo: V-D, escala y cuánto falta)
+  const rg = s.rango, t = s.rendimiento && s.rendimiento.tilt, wr = rg && rg.n ? rg.wr / 100 : t ? t.base.wr : null;
+  if (!rg && wr == null) return "";
+  const x = w => Math.max(0, Math.min(100, (w - .45) / .2 * 100)), tier = rg && rg.tier.toLowerCase();
+  const txt = rg ? [rg.tier[0] + rg.tier.slice(1).toLowerCase(), rg.division, `${rg.lp} LP`].filter(Boolean).join(" ") : "";
+  const falta = wr != null ? Math.ceil(60 - wr * 100) : null;
+  return `<div class="est" style="gap:14px">
+    ${rg ? `<div style="display:flex;gap:16px;align-items:center"><img src="/img/rango/${esc(tier)}.png" alt="Emblema ${esc(txt)}" style="width:56px;height:56px;object-fit:contain;transform:scale(2.6)" onerror="this.style.display='none'">
+      <div><b style="font-size:22px">${esc(txt)}</b><br><span class="sub" style="font-size:13px">${completo && rg.n ? `${rg.wins} V · ${rg.losses} D · ${rg.n} partidas` : "Meta: Challenger"}</span></div></div>` : ""}
+    ${wr != null ? `<div style="display:flex;justify-content:space-between;align-items:baseline"><span class="sub">${completo ? "Win rate de temporada" : "Win rate"}</span><span><b style="font-size:${completo ? 28 : 20}px">${pct(wr)}</b> <span class="sub" style="font-size:13px">· meta 60%</span></span></div>
+    <span class="tuboH" style="flex:none;width:100%" role="img" aria-label="Win rate ${pct(wr)}, meta 60%"><i style="width:${x(wr)}%;background:linear-gradient(90deg,#3E7A62,#A8D8C0)"></i><u style="left:${x(.6)}%"></u></span>
+    ${completo ? `<div class="escala"><span>45%</span><span>50%</span><span>55%</span><span>60%</span><span>65%</span></div>
+    <span class="sub" style="font-size:14px">${falta > 0 ? `Faltan ${falta} punto${falta === 1 ? "" : "s"} para la meta.` : "Ya estás en la meta: sostenla."}</span>` : ""}` : ""}</div>`;
+}
+
+function aro(f, ref, col, tam = 76) {  // acuerdo 21: anillo con raya de referencia (en vez de frasco); f y ref en 0–1
+  const r = tam / 2 - 9, c = 2 * Math.PI * r, a = (ref ?? 0) * 2 * Math.PI - Math.PI / 2, m = tam / 2;
+  return `<svg viewBox="0 0 ${tam} ${tam}" width="${tam}" height="${tam}" aria-hidden="true" style="flex:none">
+    <circle cx="${m}" cy="${m}" r="${r}" fill="none" stroke="#2C1420" stroke-width="9"/>
+    <circle class="arco" cx="${m}" cy="${m}" r="${r}" fill="none" stroke="${col}" stroke-width="9" stroke-linecap="round" transform="rotate(-90 ${m} ${m})" style="--c:${c};stroke-dasharray:${c};stroke-dashoffset:${c * (1 - Math.max(0, Math.min(1, f || 0)))}"/>
+    ${ref != null ? `<line x1="${m + (r - 9) * Math.cos(a)}" y1="${m + (r - 9) * Math.sin(a)}" x2="${m + (r + 9) * Math.cos(a)}" y2="${m + (r + 9) * Math.sin(a)}" stroke="#F2F4F7" stroke-width="2"/>` : ""}</svg>`;
+}
+
+function perfil(s) {  // Perfil_Vino (+ acuerdo 21): score, win rate y errores con anillo; qué cambiar; tilt hoy; cuenta y campeones
   const R = s.rendimiento;
-  if (!R) return `<div><h1>Tu rendimiento</h1><span class="sub">${esc(s.perfil)}</span></div><div class="card"><span class="sub">Sin partidas en disco (o calculando…).</span></div>`;
-  const r = R.resumen, t = R.tilt, ps = r.partidas, v = ps.filter(p => p.win).length, wr = ps.length ? v / ps.length : null;
-  const dif = r.ultimas20 != null && r.anteriores != null ? r.ultimas20 - r.anteriores : null;
-  const media = {};  // media de cada componente (z contra tu rol) en estas partidas; las 3 peores
-  ps.forEach(p => Object.entries(p.comp).forEach(([c, z]) => media[c] = (media[c] || 0) + z / ps.length));
-  const orden = Object.entries(media).sort((a, b) => a[1] - b[1]), U = r.unidades || {};
-  const base = t.base.wr, x = w => Math.max(0, Math.min(100, (w - .45) / .2 * 100));  // escala 45–65%
-  const pool = Object.entries(r.por_campeon).slice(0, 5);
-  const d25 = ps.map(p => p.muertes14_25).filter(d => d != null), m25 = d25.length ? d25.reduce((a, b) => a + b, 0) / d25.length : null;
-  return `
-  <div><h1>Tu rendimiento</h1><span class="sub">Últimas ${ps.length} partidas · ${esc(s.perfil)}</span></div>
+  if (!R) return [`<div><h1>Tu rendimiento</h1><span class="sub">${esc(s.perfil)}</span></div><div class="card"><span class="sub">Sin partidas en disco (o calculando…).</span></div>`, cuentaCab(s) + rangoCard(s, true)];
+  const r = R.resumen, t = R.tilt, ps = r.partidas, v = ps.filter(p => p.win).length, wr = ps.length ? v / ps.length : null, V = VS(s);
+  const base = s.rango && s.rango.n ? s.rango.wr / 100 : t.base.wr, E = V && V.errores, rep = E ? Object.keys(ERR).filter(k => (E.partidas[k] || 0) > 0) : [], peor = E && E.n ? Math.max(0, ...rep.map(k => E.partidas[k])) / E.n : 0;
+  const fecha = ps.length && ps[ps.length - 1].fecha ? " · " + esc(ps[ps.length - 1].fecha) : "";
+  const main = `
+  <div><h1>Tu rendimiento</h1><span class="sub">Últimas ${ps.length} partidas${fecha}</span></div>
   <div class="tres">
-    <div class="card"><b>Score</b><div class="big"><b>${r.ultimas20 ?? "–"}</b><span>/ 100</span></div>
-      ${ps.length ? `<span class="tag ${r.ultimas20 >= r.ref ? "ok" : "amber"}">${r.ultimas20 >= r.ref ? "▲ Sobre" : "▼ Bajo"} lo típico de tu rol (${r.ref})</span>` : '<span class="tag amber">Sin partidas</span>'}
-      <span class="pie">${dif != null ? `Antes ${r.anteriores}: <b>${signo(dif, 1)}</b>.` : ""} 50 = un jugador típico de tu rol en esa partida.</span></div>
-    <div class="card"><b>Win rate</b><div class="big"><b>${wr != null ? pct(wr) : "–"}</b><span>${v} de ${ps.length}</span></div>
-      ${wr != null && base != null ? `<span class="tag ${wr >= base ? "ok" : "red"}">${wr >= base ? "▲" : "▼"} Tu temporada: ${pct(base)}</span>` : ""}
-      ${ps.length > 3 ? `<span class="pie">${ps.length} partidas mueven el WR ±${Math.round(196 * Math.sqrt(0.25 / ps.length))} puntos por azar (95%): mira la tendencia.</span>` : ps.length ? `<span class="pie">Pocas partidas: el WR casi no dice nada.</span>` : ""}</div>
-    <div class="card"><b>Tendencia</b><div class="big"><b>${r.tendencia.length ? r.tendencia[r.tendencia.length - 1] : "–"}</b><span>score del último bloque</span></div>
-      <svg role="img" aria-label="Score medio por bloque de 20 partidas" viewBox="0 0 100 40" style="width:100%;height:60px">${(() => {
-        const ts = r.tendencia.filter(z => z != null), lo = Math.min(...ts, 45), hi = Math.max(...ts, 55);
-        const pt = ts.map((z, i) => `${ts.length > 1 ? i / (ts.length - 1) * 100 : 50},${40 - (z - lo) / (hi - lo) * 40}`).join(" ");
-        return `<line x1="0" x2="100" y1="${40 - (50 - lo) / (hi - lo) * 40}" y2="${40 - (50 - lo) / (hi - lo) * 40}" stroke="#5A2D40"/><polyline points="${pt}" fill="none" stroke="#C9B0F0" stroke-width="2"/>`;
-      })()}</svg><span class="pie">Score medio por bloque de 20 partidas, la más vieja a la izquierda; la raya es 50.</span></div>
+    <div class="card" style="flex-direction:row;align-items:center;gap:14px;min-width:0;padding:18px">${aro((r.ultimas20 ?? 0) / 100, .5, "#C9B0F0")}
+      <div style="min-width:0"><b class="tit">${ic("perfil", 16)} Score</b><div class="big" style="white-space:nowrap"><b>${r.ultimas20 != null ? Math.round(r.ultimas20) : "–"}</b><span>/ 100</span></div>
+      <span style="color:${r.ultimas20 >= r.ref ? "var(--teal)" : "#C9B0F0"};font-weight:700;font-size:14px">${r.ultimas20 >= r.ref ? "▲ Sobre lo típico" : "Típico de tu rol"}</span></div></div>
+    <div class="card" style="flex-direction:row;align-items:center;gap:14px;min-width:0;padding:18px">${aro(wr, base, "#F28DB0")}
+      <div style="min-width:0"><b class="tit">${ic("trofeo", 16)} Win rate</b><div class="big" style="white-space:nowrap"><b>${wr != null ? pct(wr) : "–"}</b><span>${v} de ${ps.length}</span></div>
+      ${wr != null && base != null ? `<span style="color:${wr >= base ? "var(--teal)" : "var(--acc)"};font-weight:700;font-size:14px">${wr >= base ? "▲ sobre" : "▼ bajo"} tu ${pct(base)}</span>` : ""}</div></div>
+    <div class="card" style="flex-direction:row;align-items:center;gap:14px;min-width:0;padding:18px">${aro(peor, null, "#FF8A8A")}
+      <div style="min-width:0"><b class="tit">${ic("alerta", 16)} Errores</b><div class="big" style="white-space:nowrap"><b>${rep.length}</b><span>repetidos</span></div>
+      <button class="btn" style="padding:6px 12px;font-size:14px;white-space:nowrap" onclick="ver('errores')">Ver cuáles →</button></div></div>
   </div>
-  ${VS(s) ? `<div class="card" style="gap:4px"><div class="cab2"><h2>Qué cambiar</h2><span class="sub" style="font-size:12px">la que más te cuesta, arriba · tus últimas 20</span></div>
-    ${VS(s).reglas.map(reglaCumple).join("")}
-    <button class="atajo" onclick="ver('errores')">Ver tus errores repetidos <span>→</span></button></div>` : ""}
-  <div class="card"><div class="cab2"><h2>Qué está fallando</h2><span class="sub" style="font-size:12px">${ps.length ? `Últimas ${ps.length} contra lo típico de tu rol` : ""}</span></div>
-    <span>${orden.length && orden[0][1] < 0 ? `Lo que más te baja: <b>${esc((COMP[orden[0][0]] || [orden[0][0]])[0].toLowerCase())}</b>` : ps.length ? "Nada te baja de lo típico de tu rol." : "Sin partidas todavía."}</span>
-    ${orden.length ? `<div class="falla">${orden.slice(0, 3).map(([c, z]) => fallo(c, z, U[c])).join("")}</div>` : ""}</div>
-  <div class="tres">
-    <div class="card"><b class="tit"><span class="ic red">${ic("muertes")}</span>Muertes 14–25</b><div class="big"><b>${m25 != null ? m25.toFixed(1) : "–"}</b><span>por partida</span></div>
-      ${m25 != null ? `<span class="tag ${m25 <= 2 ? "ok" : "red"}">${m25 <= 2 ? "✓" : "✕"} Meta: 2 o menos</span>` : ""}
-      <span class="pie">Media en ${d25.length} de las ${ps.length} con timeline. Meta del plan para el mid game.</span></div>
-    <div class="card"><b class="tit"><span class="ic amber">${ic("tilt")}</span>Tilt hoy</b>
-      <div class="big"><b>${t.racha}</b><span>derrota${t.racha === 1 ? "" : "s"} seguida${t.racha === 1 ? "" : "s"}</span></div>
-      ${t.racha >= 2 ? '<span class="tag red">✕ Para: descansa 15 min</span>' : `<span class="tag ok">${t.hoy.length} partida${t.hoy.length === 1 ? "" : "s"} hoy</span>`}
-      <span class="pie">Tras 2 derrotas seguidas en una sesión: ${t.tras2.v}-${t.tras2.n - t.tras2.v}${t.tras2.wr != null ? ` (${pct(t.tras2.wr)}, Wilson ${pct(t.tras2.ic[0])}–${pct(t.tras2.ic[1])})` : ""}${t.pocas ? " · pista: pocas partidas" : ""}. Llegaste a 2 seguidas ${t.llegas} veces.</span></div>
-    <div class="card"><b class="tit"><span class="ic teal">${ic("trofeo")}</span>Tu cuenta</b><span class="sub">${esc(s.perfil)}</span>
-      <div class="big"><b>${base != null ? pct(base) : "–"}</b><span>${t.base.n} partidas · meta 60%</span></div>
-      ${base != null ? `<div class="barra"><div class="punto" style="left:${x(base)}%"></div><div class="marca" style="left:${x(.6)}%"></div></div>
-      <div class="escala" style="color:var(--muted)"><span>45</span><span>50</span><span>55</span><span>60</span><span>65</span></div>` : ""}</div>
-  </div>
-  <div class="card"><h2>Tus campeones</h2>
-    ${pool.map(([c, d]) => `<div class="fila" style="border-color:var(--line)"><span>${img("champion", c, "item", c)} <b>${esc(c)}</b></span><span>${pct(d.wr)} · ${d.n} partidas · score ${d.score}</span></div>`).join("")}</div>`;
+  ${V ? `<div class="card" style="gap:4px;flex:1"><div class="cab2"><h2>Qué cambiar</h2><span class="sub" style="font-size:12px">${V.reglas.length} reglas · la que más te cuesta, arriba</span></div>
+    ${V.reglas.map((x, i) => reglaCumple(x, i, true)).join("")}</div>` : ""}
+  <div class="card" style="flex-direction:row;align-items:center;gap:20px"><h2 style="white-space:nowrap">Tilt hoy</h2>
+    <span class="tag ${t.racha >= 2 ? "red" : "ok"}">${t.racha >= 2 ? `${t.racha} derrotas seguidas` : t.hoy.length ? `${t.hoy.length} partida${t.hoy.length === 1 ? "" : "s"} hoy` : "Sin partidas hoy"}</span>
+    <span>${t.tras2.n ? `Tras 2 derrotas seguidas, la siguiente fue ${t.tras2.v}-${t.tras2.n - t.tras2.v}. ${t.racha >= 2 ? "Hoy, para." : "Si llegas a 2, descansa."}` : "Si llegas a 2 derrotas seguidas, descansa 15 minutos."}</span></div>`;
+  const cs = V ? V.campeones.slice(0, 4) : [];
+  const aside = `${cuentaCab(s)}${rangoCard(s, true)}
+  ${cs.length ? `<div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="font-size:22px">Tus campeones ahora</h2><span class="sub" style="font-size:13px">forma y matchup</span></div>
+  ${cs.map(x => `<div class="est" style="flex-direction:row;gap:14px;align-items:flex-start;padding:16px">${img("champion", x.champ, "item", x.champ)}
+    <div style="flex:1;display:flex;flex-direction:column;gap:4px"><span><b style="font-size:17px">${esc(x.champ)}</b> <span class="sub" style="font-size:13px">${esc(ROL[x.pos] || x.pos)} · ${pct(x.wr)}</span></span>
+      <span style="display:flex;gap:8px;align-items:center">${forma(x.forma)}<span class="sub" style="font-size:12px">últimas 5</span></span>
+      <span style="font-size:13px">Mejor vs: ${esc(x.mejor.join(", ") || "—")}</span></div>
+    ${x.etiqueta ? `<span class="tag ${ETQ[x.etiqueta] ?? ""}">${esc(x.etiqueta)}</span>` : ""}</div>`).join("")}` : ""}`;
+  return [main, aside];
 }
 
 const HORA = new Intl.DateTimeFormat("es", {hour: "2-digit", minute: "2-digit"}), FECHA = new Intl.DateTimeFormat("es", {day: "numeric", month: "short"});
@@ -474,9 +491,9 @@ function campeonesV(s) {  // Campeones_Vino: pool en tarjetas con anillo; panel 
   return [main, aside];
 }
 
-function reglaCumple(r, i) {  // fila de regla con «Cumples N/M» y tubo horizontal (Perfil «Qué cambiar», Campeones)
+function reglaCumple(r, i, num) {  // num: badge 1, 2, 3 (Perfil_Vino) en vez del ícono;  // fila de regla con «Cumples N/M» y tubo horizontal (Perfil «Qué cambiar», Campeones)
   const f = r.n ? r.ok / r.n : null, col = f == null ? "#9A8290,#9A8290" : f >= .5 ? "#3E7A62,#A8D8C0" : "#9A2E3A,#FF8A8A";
-  return `<div class="fila2" style="${i === 0 ? "border:none" : ""}"><span class="ic ${f != null && f < .5 ? "red" : "teal"}">${ic(r.metrica)}</span>
+  return `<div class="fila2" style="${i === 0 ? "border:none" : ""}">${num ? `<span class="num" style="width:36px;height:36px;border-radius:50%;background:var(--dark3);font-size:15px">${i + 1}</span>` : `<span class="ic ${f != null && f < .5 ? "red" : "teal"}">${ic(r.metrica)}</span>`}
     <div class="txt"><b>${esc(r.texto)}</b><small>${esc(r.numero)}</small></div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="sub" style="font-size:12px">${f == null ? "sin dato" : `Cumples <b style="color:var(--txt)">${r.ok}/${r.n}</b>`}</span>
     <span class="tuboH" style="flex:none;width:140px" role="img" aria-label="${f == null ? "sin dato" : `Cumples ${r.ok} de ${r.n}`}"><i style="width:${(f || 0) * 100}%;background:linear-gradient(90deg,${col})"></i></span></div></div>`;
@@ -605,7 +622,7 @@ async function tick() {
       const vista = elegida || (s.fase === "ChampSelect" ? (s.draft ? "companion" : "draft") : EN_PARTIDA.includes(s.fase) || s.fin || s.revision ? "envivo" : "inicio");
       for (const b of VISTAS) document.getElementById("b-" + b).toggleAttribute("aria-current", vista === b);
       const [m, a] = vista === "inicio" ? inicio(s) : vista === "draft" ? draftV(s) : vista === "envivo" ? envivo(s) : vista === "campeones" ? campeonesV(s)
-        : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? draftV(s) : vista === "perfil" ? [perfil(s), ""] : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida
+        : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? draftV(s) : vista === "perfil" ? perfil(s) : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida
       const av = s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "";
       document.getElementById("main").innerHTML = av + m;
       const as = document.getElementById("aside"); as.innerHTML = a; as.hidden = !a;
@@ -617,9 +634,20 @@ async function tick() {
   }
 }
 const VISTAS = ["inicio", "draft", "companion", "envivo", "perfil", "partidas", "campeones", "errores", "ajustes"];
-for (const [b, i, t] of [["inicio", "casa", "Inicio"], ["draft", "draft", "Draft"], ["companion", "champselect", "Selección"], ["envivo", "envivo", "En vivo"], ["perfil", "perfil", "Perfil"],
-                         ["partidas", "partidas", "Partidas"], ["campeones", "campeones", "Campeones"], ["errores", "alerta", "Errores"], ["ajustes", "ajustes", "Ajustes"]])
-  document.getElementById("b-" + b).innerHTML = ic(i, 24) + t;
+const NAV = {  // íconos de la barra lateral, tal cual Home_Vino (Inicio = logo: 28 px y rosa; el resto 22 px)
+  inicio: ["Inicio", '<path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/>'],
+  draft: ["Draft", '<path d="M14.5 17.5L3 6V3h3l11.5 11.5"/><path d="M13 19l6-6"/><path d="M16 16l4 4"/><path d="M19 21l2-2"/><path d="M14.5 6.5L18 3h3v3l-3.5 3.5"/><path d="M5 14l4 4"/><path d="M7 17l-3 3"/><path d="M3 19l2 2"/>'],
+  companion: ["Selección", '<circle cx="12" cy="8" r="4"/><path d="M5 21v-1a7 7 0 0 1 14 0v1"/><path d="M16 4l2-2M8 4L6 2"/>'],
+  envivo: ["En vivo", '<circle cx="12" cy="12" r="9"/><path d="M10 8l6 4-6 4z"/>'],
+  perfil: ["Perfil", '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>'],
+  partidas: ["Partidas", '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>'],
+  campeones: ["Campeones", '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/>'],
+  errores: ["Errores", '<path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/>'],
+  ajustes: ["Ajustes", '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>']};
+for (const [b, [t, p]] of Object.entries(NAV)) {
+  const n = b === "inicio" ? 28 : 22;
+  document.getElementById("b-" + b).innerHTML = `<svg aria-hidden="true" width="${n}" height="${n}" viewBox="0 0 24 24" fill="none" stroke="${b === "inicio" ? "#F28DB0" : "currentColor"}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>${t}`;
+}
 tick(); setInterval(tick, 2000);
 </script>
 </body>
