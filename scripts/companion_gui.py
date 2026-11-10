@@ -118,6 +118,21 @@ def perfil(r=None, cuenta=None):
         return "sin historial todavía"
 
 
+def puede_descargar():
+    """Tu RIOT_KEY o tu código de acceso al backend de Racha: con cualquiera de los dos se bajan tus partidas."""
+    return hay_key() or companion.acceso(REPO) is not None
+
+
+def guardar_acceso(token):
+    """Guarda tu código de acceso (lo da quien administra el backend). Solo letras, números y guiones: ValueError si no."""
+    import re
+    if not isinstance(token, str) or not re.fullmatch(r"[A-Za-z0-9-]{6,64}", token): raise ValueError("código inválido")
+    f = REPO / "datos" / "cache" / "acceso.json"
+    try: d = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError): d = {}
+    f.parent.mkdir(parents=True, exist_ok=True); f.write_text(json.dumps({**d, "token": token}), encoding="utf-8")
+
+
 def hay_key():
     if os.environ.get("RIOT_KEY"): return True
     try:
@@ -149,7 +164,7 @@ def post_partida(q):
 
 
 def _post_partida(q):
-    if not hay_key(): return  # beta sin key: la foto en vivo del final ya basta; no avisar de una descarga que no puede ser
+    if not puede_descargar(): return  # beta sin key: la foto en vivo del final ya basta; no avisar de una descarga que no puede ser
     q.put(("post_espera", "Esperando a que Riot publique la partida…")); time.sleep(60)
     for intento in range(4):
         code, _ = script("descargar.py", "5")

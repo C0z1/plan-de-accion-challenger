@@ -13,18 +13,28 @@ def key_de_usuario():  # variable de usuario de Windows (setx), por si la termin
         return None
 
 
-KEY = os.environ.get("RIOT_KEY") or key_de_usuario() or sys.exit("Falta RIOT_KEY en el entorno")  # nunca commitear la key
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import companion  # noqa: E402  (lcu y acceso al backend; solo lectura)
+
+KEY = os.environ.get("RIOT_KEY") or (None if os.environ.get("RACHA_SOLO_BACKEND") else key_de_usuario())  # nunca commitear la key
+PROXY = None if KEY else companion.acceso()  # sin key propia: el backend de Racha con tu código de acceso
+if not KEY and not PROXY: sys.exit("Falta RIOT_KEY o tu código de acceso de Racha (Ajustes → Cuenta)")
 def riot_id():
     """RIOT_ID del entorno o, si no está, la cuenta con sesión en el cliente de LoL (LCU, solo lectura)."""
     if os.environ.get("RIOT_ID"): return os.environ["RIOT_ID"]
-    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-    from companion import lcu
-    s = lcu("/lol-summoner/v1/current-summoner") or {}
+    s = companion.lcu("/lol-summoner/v1/current-summoner") or {}
     return f"{s['gameName']}#{s['tagLine']}" if s.get("gameName") and s.get("tagLine") else None
 
 
 NAME, _, TAG = (riot_id() or sys.exit('Falta tu cuenta: abre el cliente de LoL o define RIOT_ID="Nombre#TAG"')).rpartition("#")
-PLATAFORMA = os.environ.get("RIOT_REGION", "la1").lower()
+def plataforma():
+    """RIOT_REGION, o la del cliente de LoL (platformId de tu historial, solo lectura), o la1."""
+    if os.environ.get("RIOT_REGION"): return os.environ["RIOT_REGION"]
+    h = companion.lcu("/lol-match-history/v1/products/lol/current-summoner/matches?begIndex=0&endIndex=0") or {}
+    return str(h.get("platformId") or "la1")
+
+
+PLATAFORMA = plataforma().lower()
 RUTA = {"na1": "americas", "br1": "americas", "la1": "americas", "la2": "americas", "euw1": "europe", "eun1": "europe",
         "tr1": "europe", "ru": "europe", "me1": "europe", "kr": "asia", "jp1": "asia", "oc1": "sea", "sg2": "sea",
         "tw2": "sea", "vn2": "sea"}.get(PLATAFORMA) or sys.exit(f"RIOT_REGION desconocida: {PLATAFORMA}")
@@ -36,9 +46,14 @@ RAW.mkdir(parents=True, exist_ok=True)
 
 
 def get(url):
+    global KEY, PROXY
     fallos = 0
     while True:
-        req = urllib.request.Request(url, headers={"X-Riot-Token": KEY, "User-Agent": "plan-challenger"})  # Riot 403 al UA de urllib
+        if PROXY:  # https://<host>.api.riotgames.com/<path> → <api>/v1/riot/<host>/<path>, con tu código en vez de la key
+            host, _, path = url[len("https://"):].partition(".api.riotgames.com")
+            req = urllib.request.Request(f"{PROXY[0]}/v1/riot/{host}{path}", headers={"X-Racha-Token": PROXY[1], "User-Agent": "racha"})
+        else:
+            req = urllib.request.Request(url, headers={"X-Riot-Token": KEY, "User-Agent": "plan-challenger"})  # Riot 403 al UA de urllib
         try:
             with urllib.request.urlopen(req, timeout=30) as r:
                 return json.load(r)
@@ -46,6 +61,12 @@ def get(url):
             if e.code == 429:  # rate limit de dev key: esperar lo que pida Riot
                 time.sleep(int(e.headers.get("Retry-After", 10)))
                 continue
+            if PROXY and e.code in (401, 503):  # código inválido o la key del servidor caducó: no abrir el portal de Riot
+                print("\nTu código de acceso no sirve (revísalo en Ajustes)." if e.code == 401 else
+                      "\nEl servidor de Racha no puede hablar con Riot ahora: avísale a quien te dio el código.", file=sys.stderr)
+                sys.exit(2)
+            if KEY and e.code in (401, 403) and (alt := companion.acceso()):  # tu key caducó pero tienes código: al backend
+                KEY, PROXY = None, alt; continue
             if e.code in (401, 403):  # companion.py lee el código 2
                 print(f"\nRiot respondió {e.code}: renueva RIOT_KEY (la dev key caduca en ~24 h). "
                       "Copia la key nueva del portal (setx RIOT_KEY <key>) y córrelo otra vez.", file=sys.stderr)

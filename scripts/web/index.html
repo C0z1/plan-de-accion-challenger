@@ -688,7 +688,9 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
     <div style="display:flex;flex-direction:column;gap:26px">
       <div class="card"><div class="cab2"><h2>Cuenta</h2></div>
         ${fila("Riot ID", esc([String(s.perfil || "").split(" · ")[0], s.region].filter(Boolean).join(" · ")) || "Abre el cliente de LoL", '<span class="sub" style="font-size:12px">la del cliente</span>')}
-        ${fila("Partidas descargadas", V ? `${V.total} · última: ${esc(ult)}` : s.cliente ? `${s.cliente.length} del cliente (sin descargar)` : "sin datos", '<button class="btn2" onclick="recargar()">Recargar</button>')}</div>
+        ${fila("Partidas descargadas", V ? `${V.total} · última: ${esc(ult)}` : s.cliente ? `${s.cliente.length} del cliente (sin descargar)` : "sin datos", '<span style="display:flex;gap:8px"><button class="btn2" onclick="descargar()">Descargar</button><button class="btn2" onclick="recargar()">Recargar</button></span>')}
+        ${fila("Código de acceso", "Te lo da quien administra Racha. Con él se bajan tus partidas sin key de Riot.", '<span style="display:flex;gap:8px"><input id="acceso" type="password" autocomplete="off" aria-label="Código de acceso" placeholder="código" style="width:130px;background:var(--dark3);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:8px 10px;font:inherit"><button class="btn2" onclick="guardarAcceso()">Guardar</button></span>')}
+        ${s.descarga ? `<span class="sub" style="font-size:13px" role="status">${esc(s.descarga)}</span>` : ""}</div>
       <div class="card"><div class="cab2"><h2>Apariencia</h2></div>
         ${fila("Reducir movimiento", "Tubos y anillos sin ola ni brillo.", tog("t-rm", rm, false, "quieto()"))}
         ${fila("Siempre encima en partida", "La franja queda sobre el juego (en modo sin bordes).", tog("t-overlay", aj.overlay !== false, false, `ajuste('overlay',${aj.overlay === false})`))}
@@ -702,6 +704,14 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
 }
 async function ajuste(clave, on) {
   try { await fetch("/api/ajuste", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({clave, on})}); } catch (e) {}
+  v = -1; tick();
+}
+async function descargar() {
+  try { await fetch("/api/descargar", {method: "POST", headers: {"X-HTC": "1"}}); } catch (e) {}
+}
+async function guardarAcceso() {
+  const t = (document.getElementById("acceso") || {}).value || "";
+  try { await fetch("/api/acceso", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({token: t.trim()})}); } catch (e) {}
   v = -1; tick();
 }
 async function recargar() {
@@ -725,6 +735,7 @@ let v = -1;
 async function tick() {
   try {
     const s = await (await fetch("/api/estado")).json();
+    if (document.activeElement && document.activeElement.tagName === "INPUT") return;  // no borrar lo que estás escribiendo
     if (s.v !== v) {
       v = s.v;
       if (s.fase !== ultFase) { if (ultFase !== undefined) elegida = null; ultFase = s.fase; }

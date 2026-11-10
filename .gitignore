@@ -11,3 +11,5 @@ build/
 *.spec
 .playwright-mcp/
 .playwright-mcp/
+backend/node_modules/
+backend/.wrangler/

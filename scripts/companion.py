@@ -40,6 +40,21 @@ def rango(s):
             "lp": q.get("leaguePoints") or 0, "wins": v, "losses": d, "n": v + d, "wr": round(100 * v / (v + d)) if v + d else None}
 
 
+# Backend de Racha (backend/worker.js en Cloudflare): con tu código de acceso, la app baja tus partidas sin RIOT_KEY.
+# Se fija al desplegar; RACHA_API (entorno) o "api" en datos/cache/acceso.json lo cambian.
+API_DEF = ""
+
+
+def acceso(base=None):
+    """(api, token) para el backend de Racha, o None. Token: RACHA_TOKEN o datos/cache/acceso.json (lo guarda Ajustes)."""
+    f = pathlib.Path(base or DIR.parent) / "datos" / "cache" / "acceso.json"
+    try: d = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError): d = {}
+    api = (os.environ.get("RACHA_API") or d.get("api") or API_DEF).rstrip("/")
+    token = os.environ.get("RACHA_TOKEN") or d.get("token")
+    return (api, token) if api and token else None
+
+
 COLAS = {420: "Solo/Duo", 440: "Flex", 400: "Normal", 430: "Normal", 490: "Rápida", 480: "Rápida", 450: "ARAM"}
 
 

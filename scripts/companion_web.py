@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
+          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
 VERSION = "0.6.0"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -113,6 +113,24 @@ def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la c
     r = None if gui.ajeno(gui.CUENTA[0]) else rendimiento_rapido()  # historial de otra cuenta: no mostrarlo como tuyo
     with LOCK: ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1)
     if r is not None: tus_builds()
+
+
+DESCARGANDO = threading.Lock()
+
+
+def descargar_todo(n=100):
+    """Baja tus últimas n partidas (descargar.py, con tu key o tu código) y recalcula todo; el avance va a «descarga»."""
+    if not DESCARGANDO.acquire(blocking=False): return  # ya hay una en curso
+    try:
+        def aviso(t):
+            with LOCK: ESTADO.update(descarga=t, v=ESTADO["v"] + 1)
+        if not gui.puede_descargar(): return aviso("Falta tu código de acceso (o una RIOT_KEY).")
+        aviso("Descargando tus partidas… puede tardar unos minutos la primera vez.")
+        code, out = gui.script("descargar.py", str(n))
+        if code in (0, 3):
+            aviso("Listo: " + (out.strip().splitlines() or [""])[-1]); refrescar()
+        else: aviso((out.strip().splitlines() or [f"falló ({code})"])[-1])
+    finally: DESCARGANDO.release()
 
 
 def tus_builds():
@@ -227,6 +245,13 @@ class H(http.server.BaseHTTPRequestHandler):
         # X-HTC obliga a un preflight CORS que no contestamos: otra web no puede mandar este POST, aunque el Host cuadre
         if self.headers.get("Host", "").split(":")[0] not in ("127.0.0.1", "localhost") or self.headers.get("X-HTC") != "1":
             return self.enviar(403, b"", "text/plain")
+        if self.path == "/api/descargar":  # «Descargar mis partidas»: con tu key o tu código de acceso, en su hilo
+            threading.Thread(target=descargar_todo, daemon=True).start(); return self.enviar(200, b"{}", "application/json")
+        if self.path == "/api/acceso":
+            try: gui.guardar_acceso(json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 200)))["token"])
+            except (ValueError, KeyError, TypeError, OSError): return self.enviar(400, b"", "text/plain")
+            with LOCK: ESTADO.update(descarga="Código guardado. Ya puedes descargar tus partidas.", v=ESTADO["v"] + 1)
+            return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/recargar":  # Ajustes_Vino «Recargar»: vuelve a leer tus partidas del disco
             threading.Thread(target=refrescar, daemon=True).start(); return self.enviar(200, b"{}", "application/json")
         if self.path not in ("/api/autoarranque", "/api/ajuste"): return self.enviar(404, b"", "text/plain")

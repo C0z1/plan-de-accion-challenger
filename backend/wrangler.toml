@@ -1,0 +1,5 @@
+name = "racha-api"
+main = "worker.js"
+compatibility_date = "2025-10-01"
+
+# Secretos (nunca aquí): npx wrangler secret put RIOT_KEY  ·  npx wrangler secret put ACCESOS
