@@ -62,7 +62,7 @@ export default {
     const cache = caches.default, clave = new Request(riot);
     let r = await cache.match(clave);
     if (r) return new Response(r.body, {status: r.status, headers: {"content-type": "application/json; charset=utf-8", "x-racha-cache": "hit"}});
-    const res = await fetch(riot, {headers: {"X-Riot-Token": env.RIOT_KEY, "User-Agent": "racha.gg"}});
+    const res = await fetch(riot, {headers: {"X-Riot-Token": (env.RIOT_KEY || "").trim(), "User-Agent": "racha.gg"}});
     const cuerpo = await res.text();
     if (res.status === 429) return json({error: "límite de Riot"}, 429, {"retry-after": res.headers.get("retry-after") || "10"});
     if (res.status === 401 || res.status === 403) return json({error: "la key del servidor caducó"}, 503);  // no culpar al amigo

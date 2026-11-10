@@ -42,7 +42,7 @@ def rango(s):
 
 # Backend de Racha (backend/worker.js en Cloudflare): con tu código de acceso, la app baja tus partidas sin RIOT_KEY.
 # Se fija al desplegar; RACHA_API (entorno) o "api" en datos/cache/acceso.json lo cambian.
-API_DEF = ""
+API_DEF = "https://racha-api.racha-api.workers.dev"
 
 
 def acceso(base=None):

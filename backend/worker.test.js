@@ -63,3 +63,9 @@ test("salud sin código y solo GET", async () => {
   const post = new Request("https://racha.test/v1/salud", {method: "POST"});
   assert.equal((await worker.fetch(post, e.env, e.ctx)).status, 405);
 });
+
+test("la key del secreto se limpia (un salto de línea de la terminal no la rompe)", async () => {
+  const e = entorno(); e.env.RIOT_KEY = "RGAPI-x" + String.fromCharCode(13, 10);
+  await worker.fetch(pedir("/v1/riot/americas/lol/match/v5/matches/LA1_2"), e.env, e.ctx);
+  assert.equal(e.llamadas[0][1].headers["X-Riot-Token"], "RGAPI-x");
+});
