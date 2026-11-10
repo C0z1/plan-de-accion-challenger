@@ -1,6 +1,6 @@
 """Descarga partidas de Solo/Duo de Riot API a datos/raw/.
 Uso: RIOT_KEY=... [RIOT_ID="Nombre#TAG"] [RIOT_REGION=la1] python scripts/descargar.py [N]
-(por defecto cozi#1134 en la1; RIOT_REGION es la plataforma: na1, la1, la2, br1, euw1, eun1, tr1, ru, me1, kr, jp1, oc1, sg2, tw2, vn2)"""
+(sin RIOT_ID usa la cuenta con sesión en el cliente de LoL; RIOT_REGION por defecto la1; RIOT_REGION es la plataforma: na1, la1, la2, br1, euw1, eun1, tr1, ru, me1, kr, jp1, oc1, sg2, tw2, vn2)"""
 import json, os, sys, time, urllib.request, urllib.error, urllib.parse, pathlib, webbrowser
 
 
@@ -14,7 +14,16 @@ def key_de_usuario():  # variable de usuario de Windows (setx), por si la termin
 
 
 KEY = os.environ.get("RIOT_KEY") or key_de_usuario() or sys.exit("Falta RIOT_KEY en el entorno")  # nunca commitear la key
-NAME, _, TAG = os.environ.get("RIOT_ID", "cozi#1134").rpartition("#")
+def riot_id():
+    """RIOT_ID del entorno o, si no está, la cuenta con sesión en el cliente de LoL (LCU, solo lectura)."""
+    if os.environ.get("RIOT_ID"): return os.environ["RIOT_ID"]
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    from companion import lcu
+    s = lcu("/lol-summoner/v1/current-summoner") or {}
+    return f"{s['gameName']}#{s['tagLine']}" if s.get("gameName") and s.get("tagLine") else None
+
+
+NAME, _, TAG = (riot_id() or sys.exit('Falta tu cuenta: abre el cliente de LoL o define RIOT_ID="Nombre#TAG"')).rpartition("#")
 PLATAFORMA = os.environ.get("RIOT_REGION", "la1").lower()
 RUTA = {"na1": "americas", "br1": "americas", "la1": "americas", "la2": "americas", "euw1": "europe", "eun1": "europe",
         "tr1": "europe", "ru": "europe", "me1": "europe", "kr": "asia", "jp1": "asia", "oc1": "sea", "sg2": "sea",

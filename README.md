@@ -1,66 +1,95 @@
-# HTC (How to Climb)
+# HTC · How to Climb
 
-Aplicación local de código abierto para jugadores de League of Legends que quieren subir de rango con sus propios datos. Descarga tus partidas de Solo/Duo, calcula estadísticas y reglas accionables, y te las muestra en una ventana mientras juegas. Todo en Python estándar, sin dependencias.
+**Tu coach de League of Legends, hecho con tus propias partidas.**
 
-## Para quién
+HTC es una app de escritorio para Windows, de código abierto. Descarga tus partidas de Solo/Duo, encuentra qué te hace ganar y qué te hace perder, y te lo muestra en el momento justo: en el champ select, durante la partida y al terminarla. Se abre sola cuando abres LoL.
 
-Para un jugador individual que quiere revisar sus propias partidas y seguir reglas concretas para subir su win rate. No es un servicio ni una herramienta de análisis de terceros: corre en tu equipo, con tu cuenta y con tu propia key de desarrollador de Riot.
+No te da consejos genéricos. Todo lo que dice sale de tus partidas («con 0 muertes sin objetivo ganas el 81%, con 2 o más, el 27%»).
 
-## Qué muestra
+## Cómo te acompaña en una partida
 
-La ventana local tiene nueve vistas:
+| Momento | Qué ves |
+|---|---|
+| Abres LoL | **Inicio**: estado del cliente y un resumen de tu cuenta. |
+| Champ select | **Draft**: qué pickear de tu pool contra tu rival de línea y por qué. Cuando él pickea, **Selección**: tu récord contra él, tu WR y «Tu plan con <campeón>», 3 reglas con cuántas veces las cumples. |
+| En partida | **En vivo**: tu nivel y CS contra los de tu rival, tus muertes desde el minuto 14, sus ítems y los objetivos (dragón, barón, heraldo, torres) con sus timers. Se actualiza cada 30 s. |
+| Al terminar | Tu KDA contra tu rival, si cumpliste la meta de muertes y, con key de Riot, la revisión completa de la partida. |
 
-- **Inicio** — estado del cliente y punto de entrada a la app.
-- **Draft** — recomendación de pick y matchup contra tu rival de línea.
-- **Selección** — tu plan con el campeón elegido y qué estás cumpliendo.
-- **En vivo** — tu rival de línea (nivel, KDA, CS, ítems) y los objetivos de la partida.
-- **Perfil** — tu rendimiento: score, win rate y tendencia.
-- **Partidas** — historial de tus últimas partidas con score.
-- **Campeones** — tu pool y su desempeño en la temporada.
-- **Errores** — errores repetidos, con el minuto para buscarlos en el replay.
-- **Ajustes** — partidas descargadas y arranque con Windows.
+Además, siempre a mano:
 
-## Instalar y correr
+- **Perfil**: score, WR, tendencia, tilt del día y tus 3 puntos más débiles contra lo típico de tu rol.
+- **Partidas**: historial con resultado, KDA, score y el factor que más pesó.
+- **Campeones**: cómo te va con cada uno esta temporada.
+- **Errores**: los errores que repites («Morir sin objetivo», «Pelea perdida sin ti», …), con el minuto para buscarlos en el replay.
+- **Ajustes**: partidas descargadas y arranque con Windows.
 
-**Windows (app empaquetada):** ejecuta el instalador `HTC-Setup-*.exe`; se instala por usuario, sin permisos de administrador. También puedes correr `dist/HTC/HTC.exe` sin instalar.
+## Instalar
 
-**Desde el código** (necesita Python 3, solo librería estándar):
+**Windows:** descarga `HTC-Setup-<versión>.exe` y ejecútalo. Se instala solo para tu usuario, sin permisos de administrador, y puede arrancar con Windows para abrirse sola junto a LoL.
+
+**Desde el código** (Python 3, solo la librería estándar, sin `pip install`):
 
 ```bash
-python scripts/companion_web.py          # abre la ventana local con el cliente abierto
-python scripts/companion_web.py --demo   # demo sin cliente: recorre las fases
+git clone https://github.com/C0z1/plan-de-accion-challenger.git
+cd plan-de-accion-challenger
+python scripts/companion_web.py          # con el cliente de LoL abierto
+python scripts/companion_web.py --demo   # sin cliente: recorre las fases con datos de ejemplo
 ```
 
-Para descargar y analizar tus partidas hace falta una `RIOT_KEY` de desarrollador (ver abajo). El detalle de los scripts de análisis está en [`docs/USO.md`](docs/USO.md).
+## Configurar tu cuenta
 
-## Qué APIs usa y cómo
+HTC usa la Riot API con **tu propia key**. Las partidas se quedan en tu equipo.
 
-HTC solo consulta, en lectura, tres fuentes:
+1. Consigue una key en [developer.riotgames.com](https://developer.riotgames.com). La de desarrollo caduca cada 24 h.
+2. Guárdala junto con tu cuenta como variables de usuario de Windows (no hace falta guardarlas en ningún archivo):
+   ```powershell
+   setx RIOT_KEY "RGAPI-..."
+   setx RIOT_REGION "la1"      # na1, la1, la2, br1, euw1, eun1, tr1, ru, me1, kr, jp1, oc1, sg2, tw2, vn2
+   setx RIOT_ID "TuNombre#TAG"  # opcional: sin esto usa la cuenta con sesión en el cliente de LoL
+   ```
+3. Baja tus partidas (100 por defecto):
+   ```bash
+   python scripts/descargar.py 100
+   ```
+4. Opcional: copia `config.ejemplo.json` a `config.json` para fijar tu pool de campeones y tu meta de minions al 10. Si no lo haces, HTC toma como pool tus 3 campeones más jugados.
 
-- **Riot API (REST)** con la key de desarrollador **del propio usuario** (`RIOT_KEY`): `match-v5` (partidas y timelines), `account-v1` (resolver el PUUID) y `league-v4` (rango). Solo baja partidas de la cuenta que tú indicas.
-- **LCU (League Client Update API)**: API local del cliente en `127.0.0.1`, **solo lectura**, para la fase de la partida, la sesión de champ select y tu rango actual.
-- **Live Client Data API**: API local en `127.0.0.1:2999` (sin autenticación), **solo lectura**, para los datos de la partida en curso (nivel, oro, ítems, CS, eventos).
+Sin key, HTC funciona igual en el champ select y en partida con las partidas que ya bajaste. Lo único que no sale es la revisión completa al terminar.
 
-No automatiza ninguna acción del cliente: no elige, no banea, no acepta colas y no envía comandos al cliente (solo peticiones de lectura). Usa únicamente datos propios y públicos, y no da ventaja injusta: toda la información ya la tiene el jugador en pantalla.
+Opciones avanzadas (otra cuenta, carpetas, lockfile del cliente) y los scripts de análisis: [`docs/USO.md`](docs/USO.md).
 
-## Privacidad
+## Juego limpio y privacidad
 
-Todo es local: los datos quedan en tu equipo. No se suben a git ni se comparten — `datos/raw/` (partidas crudas), `config.json` (tu configuración) y `.env` están en `.gitignore`.
+HTC solo **lee** datos, de tres fuentes:
+
+- **Riot API** (`match-v5`, `account-v1`, `league-v4`), con tu key y solo para tu cuenta.
+- **API local del cliente (LCU)**, en `127.0.0.1`: la fase de la partida, el champ select y tu rango.
+- **Live Client Data API**, en `127.0.0.1:2999`: los datos de la partida en curso.
+
+No pickea, no banea, no acepta colas ni envía comandos al cliente. Solo muestra información que ya tienes en pantalla o en tu historial, así que no da ventajas injustas.
+
+Todo se queda en tu equipo. `datos/raw/` (tus partidas), `config.json` y `.env` están en `.gitignore`.
+
+## Contribuir
+
+Los issues y PRs son bienvenidos.
+
+```bash
+python -m unittest discover scripts   # sin red, sin key y sin partidas (usa scripts/fixtures)
+```
+
+GitHub Actions corre las pruebas en Windows y Ubuntu en cada push. Reglas del código: Python estándar sin dependencias, nada que escriba en el cliente, y ninguna cifra en la app sin un análisis que la respalde.
+
+Estructura:
+
+- `scripts/companion_web.py`: la app (servidor local y ventana).
+- `scripts/vistas.py` y `scripts/web/`: las vistas.
+- `scripts/companion.py`: lectura del cliente y de la partida en vivo.
+- `scripts/descargar.py`: la descarga de partidas.
+- `instalador/`: el build y el instalador (PyInstaller + Inno Setup).
 
 ## Licencia
 
-MIT. Ver `LICENSE`.
-
-## Notas del proyecto
-
-Documentación interna del caso de estudio y del trabajo del repositorio:
-
-- `PIZARRON.md` — estado vivo del trabajo y hallazgos.
-- `CLAUDE.md` — instrucciones de trabajo del repositorio.
-- `PLAN.md` — plan de acción del caso de estudio.
-- `BITACORA.md` — bitácora de sesiones.
-- `RESUMEN-NOCHE.md` — resumen del turno nocturno.
-- `riot.txt` — verificación para Riot.
+[MIT](LICENSE).
 
 ## Aviso legal
 

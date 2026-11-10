@@ -321,8 +321,7 @@ class App:
             self.tk.Label(f, text=val.replace("-", "−"), bg=BG, fg=color, font=(MONO, 10, "bold")).pack(side="right", padx=10)
         if r.get("racha"): self.reglas("Racha de oro bajo al 14", r["racha"], MAL, MAL)
         self.reglas("Detalle", [f"Muertes antes del 14: {r['m14']} · control wards: {r['cw']}.",
-                                f"Score {r.get('score', '-')} (50 = típico de tu rol en la partida; ver python scripts/score.py).",
-                                "Minuto a minuto: python scripts/partida.py --early"], ACENTO, ACENTO)
+                                f"Score {r.get('score', '-')} (50 = típico de tu rol en la partida; ver python scripts/score.py)."], ACENTO, ACENTO)
 
     def ver_key(self):
         k = hay_key(); self.key.config(text="key ok" if k else "falta RIOT_KEY", fg=MUTED if k else MAL)

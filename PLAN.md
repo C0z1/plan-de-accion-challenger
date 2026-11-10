@@ -1,7 +1,7 @@
 # Plan de acción v2 (2026-11-07)
 
 Basado en 282 partidas de Solo/Duo (abril a octubre 2026, Riot API), ahora con **timeline** (minuto a minuto) y `challenges`.
-Detalle: [`datos/analisis-2026-11-07.md`](datos/analisis-2026-11-07.md) (general) y [`datos/analisis-timeline-2026-11-07.md`](datos/analisis-timeline-2026-11-07.md) (timeline). Los porcentajes entre paréntesis son intervalos de confianza del 95% (Wilson).
+Detalle: en el historial de git (análisis de la temporada y del timeline, borrados del repo público el 2026-11-10). Los porcentajes entre paréntesis son intervalos de confianza del 95% (Wilson).
 
 **Cambios respecto a la v1:** se quitan las metas de KP y visión (no separan victorias de derrotas: KP es 41% en ambas, visión 1.01 contra 0.93). La métrica central pasa a ser **el oro contra tu rival y las muertes antes del minuto 14**. Las reglas que salían de muestras chicas quedan como "pistas", no como reglas.
 

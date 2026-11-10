@@ -23,6 +23,7 @@ Sesión en vivo con el usuario, 2026-11-09. Canvas: https://claude.ai/artifact/R
 18. **Animaciones**: frascos (métricas), anillos (campeones), ítems con marco vivo + core sutil, «Hasta el nivel 6», medallones de nivel, minion vino diminuto (CS), tachas rojas (muertes). Todo quieto con reducir movimiento.
 19. **Ajustes sin key de Riot** (producción); paleta Vino oscuro / Vino claro (claro sin diseñar).
 20. Minion: dibujo vectorial propio basado en el Ranged Minion de Order (no el modelo de Riot).
+21. **Ajustes del 2026-11-10** (pedidos del usuario, canvas v105): «Tus campeones ahora» con fichas V/D en vez de cuadritos; Perfil cambia los 3 frascos verticales por **anillos** con raya de referencia; **Inter** en textos largos/secundarios y Mulish en títulos y cifras; números de «Contra»/«Tu» a 26 px; CS con el **ícono PNG del caster** (CommunityDragon `bluerange_circle.png`, reemplaza el minion vectorial del acuerdo 20); muertes desde el 14 con **calaveras**; en «Tu build» el ítem que estás comprando va **al final**, 56 px, borde punteado rosa grueso con pulso, «Comprando: …».
 
 ## Sigue abierto
 - «All-in con su definitiva» y «Ese minuto juega bajo torre» no salen de ningún dato. Hay que quitarlas o escribirlas en `datos/matchups-notas.json`.

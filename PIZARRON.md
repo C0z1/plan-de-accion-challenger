@@ -41,9 +41,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
-- **Estado:** revisado 45f63e8 (iter 8): correcto — `VIVO[0]=0` en `--fondo` abre la ventana con la primera fase (sin carrera); `otro_htc`/`main` con HTC vivo y puerto muerto/basura OK (5 pruebas en `test_ds_launcher.py`); sintaxis de `htc.iss` (`PrepareToInstall` + `[UninstallRun]`) correcta contra la API de Inno. Suite **244 OK**.
-- **Siguiente:** (Opus) regenerar el instalador `HTC-Setup-0.3.7.exe` (ISCC) antes de la revisión de Riot.
-- **Actualizado:** 2026-11-09 23:16 (turno 9, revisión 45f63e8)
+- **Estado:** limpieza del repo para público (pedido del usuario): borré 56 archivos que HTC no usa (20 scripts de análisis, 23 `datos/analisis-*.md`, 3 `datos/plan-opus-*.md`, `datos/2026-11-07.md`, 7 artboards viejos, `RESUMEN-NOCHE.md`, `TARJETA.md`); README reescrito y `docs/USO.md` + mapa del repo sin menciones a lo borrado. Suite **251 OK**. Detalle en `datos/deepseek-limpieza.md`.
+- **Siguiente:** (Opus) revisar el diff de la limpieza, quitar el enlace roto de `PLAN.md` a `datos/analisis-*.md` si quiere, y hacer commit; regenerar el instalador (ISCC).
+- **Actualizado:** 2026-11-10 (limpieza del repo)
 
 ### Diseñador
 - **Estado:** diseño Vino entregado a Opus para la primera build: 10 pantallas en `datos/diseno/canvas/project/*_Vino.dc.html` (+ `Minions_Variantes`, `Tubos_Kit`). Traspaso en `datos/notas-equipo.md` («ENTREGA FINAL»).
@@ -51,57 +51,21 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 - **Iteración 1 (noche):** sin cambios de diseño; idea 2 de DeepSeek ya cubierta (n/20 en las tarjetas). Consulta a DeepSeek bloqueada por el harness.
 - **Iteración 2 (noche):** Vino claro propuesto en `datos/diseno-acuerdos.md` (contraste AA sin medir).
 - **Iteración 3 (noche):** revisión de la build de En vivo («Tu rival», «Objetivos») en `datos/diseno-auditoria.md` §6; 3 pedidos a Opus en notas.
-- **Actualizado:** 2026-11-09 (noche, iteración 3)
+- **Sesión en vivo (2026-11-10):** retomada con el usuario; contexto al día en `datos/diseno-contexto.md`.
+- **Actualizado:** 2026-11-10
 
 ## Mapa del repo
 | Archivo | Qué es | Dueño |
 |---|---|---|
 | `PLAN.md` | Plan de acción vigente | Opus |
 | `scripts/descargar.py` | Baja partidas y timelines de la Riot API a `datos/raw/` | Opus |
-| `scripts/analizar.py` | Estadísticas agregadas → `datos/analisis-*.md` | Opus |
-| `scripts/timeline.py` | Análisis de timeline (muertes, oro por minuto) | Opus |
 | `scripts/draft.py` | Guía de matchups (sin args) o recomendación de pick: `draft.py <rival> [rol]`; `ficha()` da por qué el pick, cuidado con el rival y counters como dict | Opus |
-| `scripts/recorrido_ficha.py` | Champ select en texto contra tus N rivales más frecuentes de un rol, para revisar lo que ve el usuario: `recorrido_ficha.py [rol] [N]` | Opus |
-| `scripts/corte6.py` | ¿Tu media de nivel al 6 contra un rival anticipa la siguiente partida contra él? (leave-one-out, cortes 0 a −0.5) | Opus |
-| `datos/analisis-corte6-*.md` | Salida de `corte6.py` | Opus |
-| `scripts/anticipa.py` | ¿Cada medida de «Cuidado con el rival» anticipa la próxima partida contra él? (LOO y temporal, permutación, MSE) | Opus |
-| `datos/analisis-anticipa-*.md` | Salida de `anticipa.py` | Opus |
 | `datos/matchups-notas.json` | Opcional, a mano: `{"Rival": "nota" o ["…"]}`; sale en `ficha()["cuidado"]["notas"]` (si no existe, nada) | Usuario |
-| `datos/analisis-aviso-muertes-*.md` | Verificación del aviso de muertes 14–25 (WR por número de muertes, con y sin equipo arriba) | Opus |
-| `datos/analisis-matchups-*.md` | Guía de matchups y bans generada por `draft.py` | Opus |
 | `scripts/revision.py` | Últimas N partidas contra las metas del plan (✅/❌), racha de oro < 0 al 14 (3+ de las últimas 5) con 2 sugerencias, y tabla por partida: `revision.py [N]` | Opus |
-| `datos/analisis-revision-*.md` | Salida de `revision.py 20` | Opus |
-| `scripts/midgame.py` | Mid game en partidas con la línea ganada al 14: oro del equipo, muertes 14–25 (pick-off, objetivo perdido, zona) | Opus |
-| `datos/analisis-midgame-*.md` | Salida de `midgame.py` | Opus |
-| `scripts/rol.py` | Mid contra top (y demás roles): WR, línea, conversión, campeones, tendencia, permutación | Opus |
-| `datos/analisis-rol-*.md` | Salida de `rol.py` | Opus |
-| `scripts/convertir.py` | Línea ganada al 14 por campeón y V/D de uno: `convertir.py [Campeón]` (por defecto tu más jugado) | Opus |
-| `datos/analisis-convertir-*.md` | Salida de `convertir.py` | Opus |
-| `scripts/linea.py` | Línea perdida al 14: muertes por gank/1v1, CS, XP, por campeón y V/D: `linea.py [Campeón]` | Opus |
-| `datos/analisis-linea-*.md` | Salida de `linea.py` | Opus |
-| `scripts/xp.py` | XP vs rival 2–14 minuto a minuto según tu estado (muerto, matas al rival, base, fuera, línea) | Opus |
-| `datos/analisis-xp-*.md` | Salida de `xp.py` | Opus |
-| `scripts/castigo.py` | Línea perdida: cómo muere tu rival antes del 14 (tú solo, con jungla, sin ti), XP tuya contra ajena, WR | Opus |
-| `datos/analisis-castigo-*.md` | Salida de `castigo.py` | Opus |
-| `scripts/placas.py` | Placas reales del timeline en tu línea (tuyas, del equipo, perdidas) contra WR, a igual oro y por campeón | Opus |
-| `datos/analisis-placas-*.md` | Salida de `placas.py` | Opus |
-| `scripts/nivel6.py` | Diferencia de nivel con tu rival 0–14: muertes/kills por 10 min (con y sin jungla rival), zona de la muerte (arriba contra igual), carrera al 2 y al 6 | Opus |
-| `datos/analisis-nivel-*.md` | Salida de `nivel6.py` | Opus |
-| `scripts/early.py` | Qué separa V/D en el early por campeón (challenges + timeline @14, permutación y q de BH, control a igual oro) | Opus |
-| `datos/analisis-early-*.md` | Salida de `early.py` | Opus |
-| `scripts/partida.py` | Replay en datos de una partida (min 12–26, o 0–12 con `--early`) o de las últimas derrotas con la línea ganada: `partida.py [id [--early] | --ultimas N]` | Opus |
-| `datos/analisis-decisiones-*.md` | Revisión de decisiones en derrotas con la línea ganada | Opus |
-| `scripts/objetivos.py` | Presencia en objetivos, minuto de los ganks y muertes del late a igual oro | Opus |
-| `datos/analisis-objetivos-*.md` | Salida de `objetivos.py` | Opus |
-| `scripts/muertes6.py` | Muertes antes del 6: tipo (1v1/gank), nivel al 3 y al 6, WR y oro @14, por campeón y rival, últimas 10 | Opus |
-| `datos/analisis-muertes6-*.md` | Salida de `muertes6.py` | Opus |
-| `scripts/wards.py` | Control wards: tú y los 1,431 jugadores de línea ajenos (gank <14 y WR, a igual oro y por rol) | Opus |
-| `datos/analisis-wards-*.md` | Salida de `wards.py` | Opus |
 | `scripts/companion.py` | Lee el cliente de LoL (solo lectura): en champ select corre `draft.py` contra tu rival; al terminar, `descargar.py 5` + `revision.py 1`; en partida, avisos de nivel (5–7), minions (10) y muertes desde el 14 (2+ antes del 25); al terminar, una línea de la última foto en vivo (`resumen_fin()`, sin key). `rango()` da tu LP del cliente (sin key). `--fixture <carpeta>` para probar | Opus |
 | `scripts/companion_web.py` | Companion con UI web local (diseño del canvas): servidor en 127.0.0.1 con `/api/estado`, íconos de Data Dragon en caché; abre Edge `--app`. `--demo`, `--no-abrir` | Opus |
 | `scripts/web/index.html` | La página del companion (champ select del canvas; polling a `/api/estado`) | Opus |
 | `scripts/humo_exe.py` | Humo de la build: corre `Companion.exe --demo --no-abrir`, busca su puerto y comprueba `/api/estado`; sale 0 si responde | Opus |
-| `scripts/sin_objetivo.py` | ¿«Morir 14–25 sin objetivo» separa V/D? Ventana de solo después contra ±60 s, WR por número de momentos | Opus |
 | `scripts/test_vistas.py` | Pruebas de `vistas.errores` (pelea perdida sin ti, frame sin tu id) con timelines sintéticos | Opus |
 | `scripts/test_companion_web.py` | Pruebas del servidor web (estado JSON, HTTP, Host, imágenes) sin red ni navegador | Opus |
 | `datos/vivo/` | Fotos en vivo de la Live Client Data API que guarda `companion.py` (una línea JSON cada 30 s; en `.gitignore`) | Opus |
@@ -109,9 +73,7 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `scripts/fixtures/vivo/allgamedata.json` | Foto sintética de la Live Client Data API (min 6, Ekko 5 contra Zed 6; nombres inventados) | Opus |
 | `scripts/test_companion.py` | Pruebas sin red: `python -m unittest discover scripts` (incluye `Robusto`: lockfile, timeouts, JSON cortado, reinicio a media partida) | Opus |
 | `scripts/score.py` | Score por partida contra tu equipo y la partida (8 componentes en z contra los 10, corregido por rol; 50 = típico): tendencia, V/D, duelo con tu rival de línea, por campeón, qué te baja: `score.py [N]`; `score.resumen(n)` lo da como dict; `score.tilt()` da hoy, racha y WR tras 2 derrotas seguidas | Opus |
-| `datos/analisis-score-*.md` | Salida de `score.py` | Opus |
 | `scripts/builds.py` | Build de los mejores (Challenger/GM de la1 y kr, Riot API) y la tuya (`datos/raw`): `builds.py <Campeón> [rol]` o `--pool`; `guardado_dict()` la da como dict para la GUI | Opus |
-| `datos/analisis-builds-*.md` | Salida de `builds.py --pool` | Opus |
 | `datos/meta/` | Caché de Riot API y Data Dragon, y `builds.json` que lee `draft.py` (en `.gitignore`) | Opus |
 | `scripts/test_builds.py` | Pruebas de `builds.py` con la Riot API simulada | Opus |
 | `scripts/test_score.py` | Pruebas de `score.py` y de la columna Score de `revision.py` | Opus |
@@ -124,8 +86,6 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 | `datos/notas-equipo.md` | Detalle de cada turno y de cada revisión | Ambos (solo agregar) |
 | `BITACORA.md` | Sesiones jugadas por el usuario | DeepSeek |
 | `PIZARRON.md` | Este pizarrón | Ambos (cada quien su sección) |
-| `RESUMEN-NOCHE.md` | Resumen del turno nocturno para el usuario | Opus |
-| `TARJETA.md` | Reglas del PLAN en una página, para jugar | Opus |
 
 ## Hallazgos (con datos)
 - 2026-11-07 · Opus: cierre del turno 2: companion, descargar robusto y 17 pruebas; falta champ select real.
