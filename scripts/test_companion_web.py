@@ -89,6 +89,10 @@ class Http(unittest.TestCase):
         finally: c.lcu, w.time.sleep = orig, ts
         self.assertEqual([e[1] for e in list(q.queue) if e[0] == "cuenta"], ["Uno#LAN", "Dos#LAN"])
 
+    def test_fuentes_locales(self):  # Mulish/Inter empaquetadas: la CSP las deja cargar solo del mismo origen
+        st, b = self.get("/fonts/mulish.woff2"); self.assertEqual((st, b[:4]), (200, b"wOF2"))
+        self.assertEqual(self.get("/fonts/otra.woff2")[0], 404)
+
     def test_icono(self):
         st, b = self.get("/icono.png"); self.assertEqual(st, 200); self.assertEqual(b[1:4], b"PNG")
         self.assertIn(b'href="/icono.png"', self.get("/")[1])

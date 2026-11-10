@@ -179,7 +179,7 @@ class H(http.server.BaseHTTPRequestHandler):
 
     def enviar(self, code, cuerpo, tipo):
         self.send_response(code); self.send_header("Content-Type", tipo); self.send_header("Cache-Control", "no-store")
-        self.send_header("Content-Security-Policy", "default-src 'none'; img-src 'self'; connect-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'")
+        self.send_header("Content-Security-Policy", "default-src 'none'; img-src 'self'; font-src 'self'; connect-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'")
         self.end_headers(); self.wfile.write(cuerpo)
 
     def do_GET(self):
@@ -187,6 +187,8 @@ class H(http.server.BaseHTTPRequestHandler):
         if self.headers.get("Host", "").split(":")[0] not in ("127.0.0.1", "localhost"): return self.enviar(403, b"", "text/plain")
         VIVO[0] = time.time()
         if self.path == "/": return self.enviar(200, (WEB / "index.html").read_bytes(), "text/html; charset=utf-8")
+        if m := re.fullmatch(r"/fonts/(mulish|inter)\.woff2", self.path):  # empaquetadas (OFL): la CSP no deja cargar Google Fonts
+            return self.enviar(200, (WEB / "fonts" / f"{m.group(1)}.woff2").read_bytes(), "font/woff2")
         if self.path in ("/icono.png", "/favicon.ico"): return self.enviar(200, (WEB / "icono.png").read_bytes(), "image/png")  # ícono de la ventana de Edge --app
         if self.path == "/api/estado": return self.enviar(200, estado().encode(), "application/json; charset=utf-8")
         if m := re.fullmatch(r"/img/(champion|item)/(\w{1,40})\.png", self.path):

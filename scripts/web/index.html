@@ -7,11 +7,14 @@
 <meta name="theme-color" content="#1A0C13">
 <meta name="color-scheme" content="dark">
 <style>
+@font-face{font-family:Mulish;src:url(/fonts/mulish.woff2) format("woff2");font-weight:200 1000;font-display:swap}
+@font-face{font-family:Inter;src:url(/fonts/inter.woff2) format("woff2");font-weight:100 900;font-display:swap}
 :root{--bg:#24111A;--card:#36192A;--txt:#F2F4F7;--muted:#D2BAC4;--soft:#AE95A0;--line:#5A2D40;--dark:#0B0709;--dark2:#1A1014;--dark3:#2C1420;
 --acc:#F28DB0;--acc2:#F8C3D6;--amber:#F28DB0;--amberbg:#4A2236;--amberfg:#F8C3D6;--teal:#A8D8C0;--tealbg:#1F3A30;--tealfg:#A8D8C0;
 --red:#FF8A8A;--redbg:#4A1E26;--redfg:#FFB3B3;--okbg:#1F3A30;--okfg:#A8D8C0;--neutro:#9A8290}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--txt);font-family:Mulish,'Segoe UI',sans-serif;font-size:16px}
+.sub,small,p{font-family:Inter,'Segoe UI',sans-serif}  /* acuerdo 21: Inter en textos secundarios, Mulish en títulos y cifras */
 .app{display:flex;min-height:100vh}
 nav{width:101px;flex-shrink:0;background:var(--dark2);display:flex;flex-direction:column;align-items:center;padding:30px 0;gap:8px}
 nav button{width:76px;min-height:60px;border-radius:12px;border:1px solid transparent;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font:600 11px Mulish,'Segoe UI',sans-serif}
