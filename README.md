@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/C0z1/plan-de-accion-challenger/releases/latest"><img src="https://img.shields.io/badge/Descargar_para_Windows-gratis-F28DB0?style=for-the-badge&logo=windows&logoColor=white&labelColor=44203A" alt="Descargar para Windows, gratis"></a>
+  <a href="https://github.com/C0z1/racha.gg/releases/latest"><img src="https://img.shields.io/badge/Descargar_para_Windows-gratis-F28DB0?style=for-the-badge&logo=windows&logoColor=white&labelColor=44203A" alt="Descargar para Windows, gratis"></a>
 </p>
 
 <p align="center">
@@ -90,13 +90,13 @@ Pasa con las apps nuevas que todavía no tienen firma digital. Dale a <b>Más in
 <details>
 <summary><b>Está en beta: ¿qué falta?</b></summary>
 <br>
-El champ select y la partida en vivo ya funcionan. Tu historial completo (Perfil, Errores, Campeones) llega en la próxima versión. Las imágenes muestran el diseño con datos de ejemplo. ¿Encontraste algo raro? <a href="https://github.com/C0z1/plan-de-accion-challenger/issues">Cuéntanos</a>.
+El champ select y la partida en vivo ya funcionan. Tu historial completo (Perfil, Errores, Campeones) llega en la próxima versión. Las imágenes muestran el diseño con datos de ejemplo. ¿Encontraste algo raro? <a href="https://github.com/C0z1/racha.gg/issues">Cuéntanos</a>.
 </details>
 
 <br>
 
 <p align="center">
-  <a href="https://github.com/C0z1/plan-de-accion-challenger/releases/latest"><img src="https://img.shields.io/badge/Descargar_Racha-F28DB0?style=for-the-badge&logo=windows&logoColor=white&labelColor=44203A" alt="Descargar Racha"></a>
+  <a href="https://github.com/C0z1/racha.gg/releases/latest"><img src="https://img.shields.io/badge/Descargar_Racha-F28DB0?style=for-the-badge&logo=windows&logoColor=white&labelColor=44203A" alt="Descargar Racha"></a>
 </p>
 
 ---
