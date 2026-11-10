@@ -16,8 +16,8 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
-VERSION = "0.7.0"  # HTC; también invalida la caché de rendimiento
+          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "reporte": None, "invitacion": None, "v": 0}
+VERSION = "0.8.0"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
 PUERTO = gui.REPO / "datos" / "cache" / "htc.port"  # el HTC que ya corre: otro arranque abre su ventana en vez de duplicarse
@@ -42,7 +42,8 @@ def evento(e):
         s = {"fase": e[1]}
         if FONDO[0] and ESTADO["fase"] in (None, "inicio") and e[1] is not None and time.time() - VIVO[0] > 6:
             abrir(URL[0])  # el cliente acaba de abrir y no hay ventana de HTC (si la hubiera, preguntaría cada 2 s)
-        if e[1] == "ChampSelect": s.update(draft=None, fin=None, meta=None, pos=None)
+        if e[1] == "ChampSelect": s.update(draft=None, fin=None, meta=None, pos=None); USADO.add("champ_select")
+        if e[1] == "InProgress" and ESTADO["ajustes"].get("overlay", True): USADO.add("overlay")
         if e[1] in ("Lobby", "Matchmaking", "ReadyCheck"): s.update(aviso=None, perfil=gui.perfil(ESTADO["rango"], ESTADO["cuenta"]))
     elif tipo == "draft": s = {"draft": {**draft_json(e[1], e[2]), "probable": bool(e[3]) if len(e) > 3 else False}}
     elif tipo == "meta": s = {"meta": {**e[1], "texto": gui.texto_meta(e[1]), "recibido": time.time()}}  # «recibido»: el overlay descuenta los timers
@@ -50,7 +51,7 @@ def evento(e):
     elif tipo == "post_espera": s = {"espera": e[1]}
     elif tipo == "revision":
         s = {"revision": e[1], "fin": None, "espera": None, "perfil": gui.perfil(ESTADO["rango"], ESTADO["cuenta"])}
-        threading.Thread(target=refrescar, daemon=True).start()
+        USADO.add("revision"); threading.Thread(target=refrescar, daemon=True).start(); threading.Thread(target=ping, daemon=True).start()
     elif tipo == "rango": s = {"rango": e[1] or ESTADO["rango"]}; s["perfil"] = gui.perfil(s["rango"], ESTADO["cuenta"])
     elif tipo == "cuenta":  # la cuenta con sesión en el cliente: manda sobre perfil.json (un amigo, u otra cuenta en tu PC)
         gui.CUENTA[0] = e[1]; s = {"cuenta": e[1], "perfil": gui.perfil(ESTADO["rango"], e[1]), "icono": e[2] if len(e) > 2 else None}
@@ -113,7 +114,7 @@ def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la c
     r = None if gui.ajeno(gui.CUENTA[0]) else rendimiento_rapido()  # historial de otra cuenta: no mostrarlo como tuyo
     with LOCK: ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1)
     if r is not None: tus_builds(); vistas_previas(r)
-    sync_nube()
+    builds_del_backend(); sync_nube()
 
 
 def nube_publica():
@@ -211,6 +212,56 @@ def tus_builds():
         nuevo = max((p.stat().st_mtime for p in raw.glob("*_*.json")), default=0)
         if nuevo and (not f.exists() or f.stat().st_mtime < nuevo): builds.guardar_tuyas()
     except Exception: pass
+
+
+BAJADA = [0.0]  # cuándo se bajaron por última vez las builds del backend
+USADO, PING = set(), [None]  # qué partes de Racha se usaron hoy · día del último ping
+
+
+def builds_del_backend(cada=3600):
+    """A lo más una vez por hora: las builds de los onetricks del top que subió el admin (sin key) y si eres admin
+    (para mostrar «Invitar amigos» en Ajustes). Un fallo no tumba nada."""
+    import builds
+    if time.time() - BAJADA[0] < cada: return
+    BAJADA[0] = time.time()
+    try: builds.bajar()
+    except Exception: pass
+    try: admin = companion.backend("GET", "/v1/admin/invitados", base=gui.REPO)
+    except Exception: admin = None  # 403 = no eres admin; sin red, igual
+    with LOCK: ESTADO.update(admin=admin, v=ESTADO["v"] + 1)
+
+
+def ping():
+    """Métricas anónimas (solo si las prendiste en Ajustes): una vez al día, al terminar una partida, qué partes usaste.
+    Sin Riot ID, sin correo y sin código: el backend solo suma contadores por día, versión y región."""
+    hoy = time.strftime("%Y-%m-%d")
+    if not gui.ajustes().get("metricas") or PING[0] == hoy: return
+    with LOCK: region = ESTADO.get("plataforma")
+    try: companion.backend("POST", "/v1/ping", {"version": VERSION, "region": region or "?", **{k: k in USADO for k in ("overlay", "champ_select", "revision")}}, gui.REPO)
+    except Exception: return
+    PING[0] = hoy; USADO.clear()
+
+
+def reportar(texto, vista):
+    """Manda tu reporte privado (lo lee solo quien administra Racha) con la versión, la pantalla, la fase y el último aviso."""
+    with LOCK: fase, aviso = ESTADO.get("fase"), ESTADO.get("descarga")
+    cuerpo = {"texto": (texto.strip() + (f"\n\nÚltimo aviso en pantalla: {aviso}" if aviso else ""))[:4000], "version": VERSION, "vista": vista, "fase": fase}
+    try: ok = companion.backend("POST", "/v1/reporte", cuerpo, gui.REPO) is not None
+    except Exception: ok = False
+    msg = "Gracias: tu reporte llegó." if ok else "No se pudo mandar (¿sin internet o sin código/sesión?). Puedes abrir un issue en GitHub."
+    with LOCK: ESTADO.update(reporte=msg, v=ESTADO["v"] + 1)
+
+
+def invitar(nombre, email):
+    """Admin: crea el código de un amigo (y permite su correo de Google). El código solo se muestra esta vez."""
+    import urllib.error
+    try: r = companion.backend("POST", "/v1/admin/invitados", {"nombre": nombre, "email": email or None}, gui.REPO); err = None
+    except urllib.error.HTTPError as e:
+        r, err = None, {400: "Nombre o correo inválidos.", 403: "Solo quien administra Racha puede invitar.", 409: "Ya invitaste a alguien con ese nombre."}.get(e.code, f"El servidor respondió {e.code}.")
+    except Exception: r, err = None, "Sin conexión con el servidor."
+    BAJADA[0] = 0  # la lista de invitados se vuelve a pedir
+    with LOCK: ESTADO.update(invitacion=r or {"error": err}, v=ESTADO["v"] + 1)
+    builds_del_backend()
 
 
 def vigilar_cuenta(q, cada=10):
@@ -359,6 +410,14 @@ class H(http.server.BaseHTTPRequestHandler):
             except (ValueError, KeyError, TypeError, OSError): return self.enviar(400, b"", "text/plain")
             with LOCK: ESTADO.update(descarga="Código guardado. Ya puedes descargar tus partidas.", conectado=True, v=ESTADO["v"] + 1)
             threading.Thread(target=primera_vez, daemon=True).start()  # con el cliente abierto, empieza a bajar sola
+            return self.enviar(200, b"{}", "application/json")
+        if self.path in ("/api/reporte", "/api/invitar"):
+            try:
+                d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 6000)))
+                a, b = str(d.get("texto") or d.get("nombre") or "").strip(), str(d.get("vista") or d.get("email") or "").strip()
+            except (ValueError, TypeError, AttributeError): return self.enviar(400, b"", "text/plain")
+            if not a: return self.enviar(400, b"", "text/plain")
+            threading.Thread(target=reportar if self.path == "/api/reporte" else invitar, args=(a, b), daemon=True).start()
             return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/recargar":  # Ajustes_Vino «Recargar»: vuelve a leer tus partidas del disco, con aviso
             def recargar():

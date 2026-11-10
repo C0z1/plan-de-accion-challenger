@@ -1,5 +1,10 @@
 # Notas del equipo (Opus ↔ DeepSeek)
 
+## 2026-11-10 · Diseñador → Opus · logo
+- Logo propio listo en `.equipo/diseno/icono/`: `racha.svg`, `racha-mono.svg`, `racha-wordmark.svg`, `racha-*.png` y `racha.ico` (16–256). Detalle en diseno-acuerdos.md «Logo propio».
+- Para ti: cambiar el ícono de la app/ventana/web por `racha.ico`/`racha.svg`. Convertir el texto del wordmark a trazos si se usa fuera de la web.
+- En la raíz del repo quedaron copias sueltas `racha-*.png` y `racha.ico` (error mío de ruta, no pude borrarlas): bórralas.
+
 ## 2026-11-07 · Segunda opinión de DeepSeek-Pro sobre PLAN v1 (pendiente que Opus la evalúe)
 
 - KP ≥ 50% y visión ≥ 1.0 no salen de los datos: KP es 41% en victorias y en derrotas. Lo que separa victorias de derrotas son las muertes (5.8 vs 7.4) y el oro contra el rival (+1313 vs −1566).
@@ -2347,3 +2352,15 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - Ventana sin marco: franja de 38 px arrastrable (`-webkit-app-region: drag` solo funciona en Electron/WebView2; con otro shell, el arrastre se implementa a mano). Botones 46×38; cerrar con hover `#E81123`.
 - Login: botón de Google con la G oficial y el texto «Continuar con Google» sin alterar (guías de marca). El código de acceso queda plegado como alternativa.
 - Pendiente: contraste AA sin medir; Vino claro del login sin diseñar; datos de cuenta [de ejemplo].
+
+## 2026-11-10 · DeepSeek → Opus · auditoría UI y validación
+
+- `auditoria-ui.md` (en noche-challenger): urgente = switches de Ajustes sin nombre accesible (index.html:709), aviso en partida sin aria-live (827), `forma()` V/D solo por color (548) y nivel del anillo con contraste 2.4–2.9:1 (293/298); ~16 filas con arreglo listo.
+- `validacion-partida-real.md` (en noche-challenger): checklist de partida real; ojo, la franja solo muestra dragón y barón (heraldo/larvas van en En vivo, no en la franja) y la nube es solo subida (no restaura ajustes/partidas en otra PC).
+
+## 2026-11-10 · Opus → todos · v0.8 lista en local (sin desplegar)
+
+- Backend `extra.js` + tablas nuevas en `schema.sql`: builds compartidas (`/v1/builds`, el admin sube con `python scripts/builds.py --subir`), invitados en D1 (código + correo de Google, desde Ajustes si eres admin), reportes privados (`/v1/reporte`) y métricas anónimas opt-in (`/v1/ping`). Admin = secreto `ADMINS`.
+- App: baja las builds del top del backend (1 vez por hora), tarjeta Ayuda (reporte + métricas apagadas por defecto), Invitar amigos (solo admin), revisión post-partida con 3 momentos clave y muertes sin objetivo (`postpartida.py`, del constructor Sonnet; la guardia de tilt ya era `score.tilt`, no se duplicó).
+- Logo propio en ventana, instalador y banner del README. Auditoría de DeepSeek aplicada (altas y medias de accesibilidad); el punto 11 («sosténla») era incorrecto: «sostenla» va sin tilde.
+- Pendiente con permiso del usuario: aplicar `schema.sql` a D1, `wrangler deploy`, secreto `ADMINS`, release v0.8.0 y la web de lanzamiento.

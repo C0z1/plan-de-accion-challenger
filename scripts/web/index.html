@@ -136,7 +136,8 @@ details.alt summary{cursor:pointer;color:var(--muted);font-size:14px;padding:6px
 .mini2{width:20px;height:20px;border-radius:4px}
 .fases{flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.fases small{font-size:11px;color:var(--muted)}.fases small.ahora{color:var(--txt);font-weight:700}
 .dos{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
-.tog{width:48px;height:28px;border-radius:14px;border:none;background:var(--dark3);position:relative;cursor:pointer;flex-shrink:0}
+.tog{width:48px;height:28px;border-radius:14px;border:1px solid var(--soft);background:var(--dark3);position:relative;cursor:pointer;flex-shrink:0}
+*:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .tog i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s}
 .tog[aria-checked=true]{background:var(--acc)}.tog[aria-checked=true] i{left:24px}.tog:disabled{opacity:.4;cursor:default}
 .mvp{font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px}
@@ -295,7 +296,7 @@ function xpAro(champ, nivel, rival) {  // EnPartida_Vino: anillo de nivel (74 px
     <svg width="74" height="74" viewBox="0 0 74 74" style="position:absolute;inset:0;transform:rotate(-90deg)"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>
       <circle cx="37" cy="37" r="32" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="4"/><circle class="arco" cx="37" cy="37" r="32" fill="none" stroke="url(#${id})" stroke-width="4" stroke-linecap="round" style="--c:${c};stroke-dasharray:${c};stroke-dashoffset:${c * (1 - f)}"/></svg>
     ${champ ? img("champion", champ, "", "").replace('class=""', 'style="position:absolute;inset:9px;width:56px;height:56px;border-radius:50%"') : ""}
-    <b style="position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);min-width:26px;height:22px;border-radius:11px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#24111A;background:linear-gradient(135deg,${a},${b})">${nivel ?? "?"}</b></div>`;
+    <b style="position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);min-width:26px;height:22px;border-radius:11px;display:grid;place-items:center;font-size:13px;font-weight:800;color:#24111A;background:${a}">${nivel ?? "?"}</b></div>`;
 }
 
 const CALAVERA = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.4 1 4.4 2.6 5.8V20a1 1 0 0 0 1 1h8.8a1 1 0 0 0 1-1v-3.2A7.9 7.9 0 0 0 20 11a8 8 0 0 0-8-8z"/><circle cx="9" cy="11.5" r="1.6"/><circle cx="15" cy="11.5" r="1.6"/><path d="M10 21v-2.5M14 21v-2.5"/></svg>';
@@ -545,7 +546,7 @@ function anillo(champ, wr, tam = 150) {  // Draft_Vino/Campeones_Vino: halo que 
       <circle class="arco" cx="${m}" cy="${m}" r="${r}" fill="none" stroke="url(#${id})" stroke-width="7" stroke-linecap="round" style="--c:${c};stroke-dasharray:${c};stroke-dashoffset:${c * (1 - (wr || 0))}"/></svg>
     ${img("champion", champ, "retrato", "")}</div>`;
 }
-const forma = f => `<span class="forma">${f.map(w => `<i class="${w ? "v" : "d"}" title="${w ? "Victoria" : "Derrota"}"></i>`).join("")}</span>`;
+const forma = f => `<span class="forma">${f.map(w => `<i class="${w ? "v" : "d"}" role="img" aria-label="${w ? "Victoria" : "Derrota"}" title="${w ? "Victoria" : "Derrota"}"></i>`).join("")}</span>`;
 const ETQ = {"Pickéalo": "ok", "Estable": "amber", "Bajando": "red", "Evítalo vs sus counters": "red", "Pocas partidas": ""};
 const FASE_CS = {PLANNING: "planeación", BAN_PICK: "bans y picks", FINALIZATION: "últimos segundos", GAME_STARTING: "cargando"};
 const ROLMIN = {TOP: "top", JUNGLE: "jungla", MIDDLE: "mid", BOTTOM: "bot", UTILITY: "support"};
@@ -699,16 +700,18 @@ function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estad
   ${f ? "" : rivalC + objC}
   ${f ? `<div class="est"><span class="sub">Al terminar</span><b>${esc(f.texto || "")}</b>${f.cotejo === false ? '<span class="tag red">No cuadran tus muertes con los eventos</span>' : ""}</div>` : ""}
   ${s.revision ? `<div class="est"><span class="sub">Revisión (Riot)</span><b>${esc(s.revision.champ)} ${esc(s.revision.kda || "")} · score ${esc(s.revision.score)}</b><span class="sub">Oro al 14 ${esc(s.revision.oro)} · CS al 14 ${esc(s.revision.cs)}</span></div>` : ""}
+  ${s.revision && (s.revision.momentos || []).length ? `<div class="est"><span class="sub">3 momentos clave${s.revision.libres ? ` · ${s.revision.libres[0]} de ${s.revision.libres[1]} muertes sin objetivo a cambio` : ""}</span>
+    <ol style="margin:4px 0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px">${s.revision.momentos.map(m => `<li>${esc(m)}</li>`).join("")}</ol></div>` : ""}
   ${s.espera ? `<div class="est"><span class="sub">${esc(s.espera)}</span></div>` : ""}`;
   return [main, aside];
 }
 
+const tog = (id, on, dis, fn, nom) => `<button class="tog" role="switch" aria-checked="${on}" ${dis ? "disabled" : ""} id="${id}" aria-label="${nom}" onclick="${fn}"><i></i></button>`;
+const fila = (t, sub, extra) => `<div class="filaV"><div class="txt"><b>${t}</b><small>${sub}</small></div>${extra}</div>`;
 function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida (todo se guarda en tu equipo)
   const V = VS(s), a = s.autoarranque, rm = document.documentElement.classList.contains("quieto"), aj = s.ajustes || {};
   const ult = V ? new Date(V.ultima).toLocaleString("es", {dateStyle: "medium", timeStyle: "short"}) : null;
-  const tog = (id, on, dis, fn) => `<button class="tog" role="switch" aria-checked="${on}" ${dis ? "disabled" : ""} id="${id}" onclick="${fn}"><i></i></button>`;
-  const fila = (t, sub, extra) => `<div class="filaV"><div class="txt"><b>${t}</b><small>${sub}</small></div>${extra}</div>`;
-  const av = (k, t, sub) => fila(t, sub, tog("t-" + k, aj[k] !== false, false, `ajuste('${k}',${aj[k] === false})`));
+  const av = (k, t, sub) => fila(t, sub, tog("t-" + k, aj[k] !== false, false, `ajuste('${k}',${aj[k] === false})`, t));
   return [`
   <div><h1>Ajustes</h1><span class="sub">Racha · racha.gg</span></div>
   <div class="dos">
@@ -719,18 +722,52 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
         ${s.descarga && !/Google/.test(s.descarga) ? `<span class="sub" style="font-size:13px;margin:-4px 0 4px 16px" role="status" aria-live="polite">${esc(s.descarga)}</span>` : ""}
         ${loginNube(s)}
         <details class="alt"><summary>Usar un código de acceso</summary>
-          ${fila("Código de acceso", s.conectado && !s.nube ? "Conectado a racha.gg: tus partidas se bajan solas." : "Te lo da quien administra Racha.", (s.conectado && !s.nube ? '<span class="tag ok" style="align-self:center">✓ Conectado</span> ' : "") + '<span style="display:flex;gap:8px"><input id="acceso" type="password" autocomplete="off" aria-label="Código de acceso" placeholder="código" style="width:130px;height:40px;background:var(--dark3);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:8px 10px;font:inherit"><button class="btn2" onclick="guardarAcceso()">Guardar</button></span>')}</details>
+          ${fila("Código de acceso", s.conectado && !s.nube ? "Conectado a racha.gg: tus partidas se bajan solas." : "Te lo da quien administra Racha.", (s.conectado && !s.nube ? '<span class="tag ok" style="align-self:center">✓ Conectado</span> ' : "") + '<span style="display:flex;gap:8px"><input id="acceso" type="password" autocomplete="off" aria-label="Código de acceso" placeholder="código" style="width:130px;height:40px;background:var(--dark3);border:1px solid var(--soft);border-radius:10px;color:var(--txt);padding:8px 10px;font:inherit"><button class="btn2" onclick="guardarAcceso()">Guardar</button></span>')}</details>
 </div>
       <div class="card"><div class="cab2"><h2>Apariencia</h2></div>
-        ${fila("Reducir movimiento", "Tubos y anillos sin ola ni brillo.", tog("t-rm", rm, false, "quieto()"))}
-        ${fila("Siempre encima en partida", "La franja queda sobre el juego (en modo sin bordes).", tog("t-overlay", aj.overlay !== false, false, `ajuste('overlay',${aj.overlay === false})`))}
-        ${fila("Arrancar con Windows", a == null ? "Solo en la versión instalada." : "Corre en segundo plano y se abre sola cuando abres LoL.", tog("t-auto", !!a, a == null, "autoarranque(!" + !!a + ")"))}</div>
+        ${fila("Reducir movimiento", "Tubos y anillos sin ola ni brillo.", tog("t-rm", rm, false, "quieto()", "Reducir movimiento"))}
+        ${fila("Siempre encima en partida", "La franja queda sobre el juego (en modo sin bordes).", tog("t-overlay", aj.overlay !== false, false, `ajuste('overlay',${aj.overlay === false})`, "Siempre encima en partida"))}
+        ${fila("Arrancar con Windows", a == null ? "Solo en la versión instalada." : "Corre en segundo plano y se abre sola cuando abres LoL.", tog("t-auto", !!a, a == null, "autoarranque(!" + !!a + ")", "Arrancar con Windows"))}</div>
     </div>
     <div class="card" style="align-self:flex-start"><div class="cab2"><h2>Avisos en partida</h2></div>
       ${av("aviso_nivel", "Nivel 6 con nivel abajo", "Te avisa al llegar al 6 si vas abajo de tu rival.")}
       ${av("aviso_minions", "Minions al 10", "Si vas bajo tu meta de config.json al minuto 10.")}
       ${av("aviso_muertes", "Muertes del 14 al 25", "Al llegar a 2 muertes desde el 14.")}</div>
+    ${ayudaV(s, aj)}
   </div>`, ""];
+}
+const CAMPO = "width:100%;box-sizing:border-box;background:var(--dark3);border:1px solid var(--soft);border-radius:10px;color:var(--txt);padding:10px 12px;font:inherit";
+let borrador = "";  // lo que llevas escrito del reporte (sobrevive a que la pantalla se redibuje)
+function ayudaV(s, aj) {  // v0.8: reportes privados, métricas opcionales y, solo para el admin, invitar amigos
+  const inv = s.invitacion;
+  const lista = Array.isArray(s.admin) ? s.admin : null;
+  return `<div class="card" style="align-self:flex-start;display:flex;flex-direction:column;gap:12px"><div class="cab2"><h2>Ayuda</h2></div>
+      <label for="reporte" class="sub" style="font-size:14px">¿Algo falló o se ve raro? Cuéntalo: lo lee solo quien administra Racha, sin tu Riot ID ni tu correo.</label>
+      <textarea id="reporte" rows="3" maxlength="3500" oninput="borrador=this.value" placeholder="Qué hacías y qué pasó" style="${CAMPO};resize:vertical">${esc(borrador)}</textarea>
+      <span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn2" onclick="reportar()">Mandar reporte</button>
+        <a class="sub" style="font-size:13px;color:var(--acc)" href="https://github.com/C0z1/racha.gg/issues/new" target="_blank" rel="noopener">o abre un issue en GitHub</a></span>
+      ${s.reporte ? `<span class="sub" style="font-size:13px" role="status" aria-live="polite">${esc(s.reporte)}</span>` : ""}
+      ${fila("Mandar métricas anónimas", "Una vez al día: versión, región y si usaste overlay, selección o revisión. Nada que te identifique.", tog("t-metricas", aj.metricas === true, false, `ajuste('metricas',${aj.metricas !== true})`, "Mandar métricas anónimas"))}
+    </div>${lista ? `
+    <div class="card" style="align-self:flex-start;display:flex;flex-direction:column;gap:12px"><div class="cab2"><h2>Invitar amigos</h2></div>
+      <span class="sub" style="font-size:14px">Crea su código de acceso y, si pones su correo, también puede entrar con Google. Mientras la app de Google esté en prueba, agrega ese correo también como usuario de prueba en Google Cloud.</span>
+      <span style="display:flex;gap:8px;flex-wrap:wrap"><input id="inv-nombre" aria-label="Nombre del amigo" placeholder="nombre" autocomplete="off" style="${CAMPO};width:130px">
+        <input id="inv-email" type="email" aria-label="Correo de Google del amigo (opcional)" placeholder="correo de Google (opcional)" autocomplete="off" style="${CAMPO};flex:1;min-width:180px">
+        <button class="btn2" onclick="invitar()">Invitar</button></span>
+      ${inv ? `<span class="sub" style="font-size:14px" role="status" aria-live="polite">${inv.error ? esc(inv.error) : `Código de <b>${esc(inv.nombre)}</b>: <code style="user-select:all;color:var(--acc)">${esc(inv.codigo)}</code> · cópialo ahora, no se vuelve a mostrar.`}</span>` : ""}
+      <span class="sub" style="font-size:13px">${lista.length ? "Invitados: " + lista.map(i => esc(i.nombre) + (i.email ? " (" + esc(i.email) + ")" : "")).join(", ") : "Aún no invitas a nadie desde aquí."}</span>
+    </div>` : ""}`;
+}
+async function reportar() {
+  if (!borrador.trim()) return;
+  try { const r = await fetch("/api/reporte", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({texto: borrador, vista: "ajustes"})}); if (r.ok) borrador = ""; } catch (e) {}
+  v = -1; tick();
+}
+async function invitar() {
+  const val = id => ((document.getElementById(id) || {}).value || "").trim();
+  if (!val("inv-nombre")) return;
+  try { await fetch("/api/invitar", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({nombre: val("inv-nombre"), email: val("inv-email")})}); } catch (e) {}
+  v = -1; tick();
 }
 const G_LOGO = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
 function quienBuild(b) {  // «Build de Faker (KR, #2 Challenger, 2000 LP)»: el onetrick del top cuya build es
@@ -813,18 +850,18 @@ async function tick() {
     const r = await fetch("/api/estado?desde=" + v);
     if (r.status === 304) return;  // nada cambió
     const s = await r.json();
-    if (document.activeElement && document.activeElement.tagName === "INPUT") return;  // no borrar lo que estás escribiendo
+    if (document.activeElement && ["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;  // no borrar lo que estás escribiendo
     if (s.v !== v) {
       v = s.v;
       if (s.fase !== ultFase) { if (ultFase !== undefined) elegida = null; ultFase = s.fase; }
       const vista = elegida || (s.fase === "ChampSelect" ? (s.draft ? "companion" : "draft") : EN_PARTIDA.includes(s.fase) || s.fin || s.revision ? "envivo" : "inicio");
-      for (const b of VISTAS) document.getElementById("b-" + b).toggleAttribute("aria-current", vista === b);
+      for (const b of VISTAS) { const e = document.getElementById("b-" + b); vista === b ? e.setAttribute("aria-current", "page") : e.removeAttribute("aria-current"); }
       const [m, a] = vista === "inicio" ? inicio(s) : vista === "draft" ? draftV(s) : vista === "envivo" ? envivo(s) : vista === "campeones" ? campeonesV(s)
         : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? (s.previa ? champSelect({...s, draft: s.previa}) : draftV(s)) : vista === "perfil" ? perfil(s) : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida
       document.getElementById("barra-v").hidden = !s.sin_marco; document.body.classList.toggle("sin-marco", !!s.sin_marco);
       if (s.sin_marco && !recortada) { recortada = true; recortar(); }
       const nv = s.nueva ? `<div class="aviso teal" role="status">Hay una versión nueva de Racha (${esc(s.nueva.version)}). <a href="${esc(s.nueva.url)}" target="_blank" rel="noopener" style="color:inherit;font-weight:800">Descárgala aquí →</a></div>` : "";
-      const av = nv + (s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "");
+      const av = nv + (s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}" role="status">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "");
       const mn = document.getElementById("main"); mn.classList.toggle("ancho", !a); mn.innerHTML = av + m;  // sin columna derecha (Partidas_Vino): a todo el ancho
       const as = document.getElementById("aside"); as.innerHTML = a; as.hidden = !a;
     }

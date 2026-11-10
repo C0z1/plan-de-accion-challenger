@@ -63,13 +63,22 @@ def ultima_partida():
         info = json.loads(f.read_text())["info"]; ps = info["participants"]
         me = next(p for p in ps if p["puuid"] == puuid)
         opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
-        return dict(kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", min=info["gameDuration"] // 60,
-                    rival=opp["championName"] if opp else None)
+        out = dict(kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", min=info["gameDuration"] // 60,
+                   rival=opp["championName"] if opp else None)
     except (OSError, ValueError, KeyError, StopIteration): return {}
+    try:  # revisión post-partida (postpartida.py): 3 momentos clave y muertes sin objetivo, si hay timeline
+        import postpartida
+        m, tl = json.loads(f.read_text()), json.loads((RAW / "timeline" / f.name).read_text())
+        libres = postpartida.muertes_sin_objetivo(m, tl, puuid)
+        out.update(momentos=[x["texto"] for x in postpartida.momentos(m, tl, puuid)],
+                   libres=[libres["n"], libres["total"]] if libres["total"] else None)
+    except (OSError, ValueError): pass
+    return out
 
 
 AJUSTES_F = REPO / "datos" / "cache" / "ajustes.json"
-AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "aviso_muertes": True}  # Ajustes_Vino
+AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "aviso_muertes": True,  # Ajustes_Vino
+               "metricas": False}  # métricas anónimas: solo si el amigo las prende (v0.8)
 
 
 def ajustes():

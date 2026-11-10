@@ -60,3 +60,12 @@ Mismos nombres de variable que Vino oscuro; solo cambian los valores.
 ## Para Opus
 - `scripts/web/index.html` debe usar el copy 68 → 43 en la meta 14+.
 - Ícono de campeón con `'` o espacio (Kai'Sa, Nunu & Willump): la ruta `/img/champion/\w+` no los acepta.
+
+## Logo propio (Diseñador, 2026-11-10)
+Reemplaza al minion (personaje de Riot). Carpeta `.equipo/diseno/icono/`.
+- Cuatro barras ascendentes = racha de victorias; sin degradados ni personajes (se lee a 16 px).
+- Lienzo 256: fondo `#24111A` x=8..248, rx 56. Barras de 38 px, paso 46, base y=206, x=34/80/126/172, alturas 56/92/128/164, rx 9.
+- Colores de izquierda a derecha: `#A33A63`, `#F28DB0`, `#F8C3D6`, `#A8D8C0` (verde = victoria).
+- `racha-mono.svg`: barras `#24111A`, sin fondo, para fondos claros.
+- `racha-wordmark.svg` (640×256): logo + «Racha» Mulish 800, 120 px, `#F28DB0`, x=280. Mulish no va incrustada: la web ya la carga; fuera de la web cae a Segoe UI.
+- Raster: `hacer-racha.py` (Pillow) genera `racha-{16,24,32,48,64,128,256}.png` y `racha.ico`.

@@ -1,6 +1,7 @@
 """Build de los mejores con un campeón, y la tuya contra la suya.
 Uso: python scripts/builds.py <Campeón> [rol]     (rol: top, mid, jungla, bot, support; sin rol, cualquiera)
      python scripts/builds.py --pool              (tus campeones con 10+ partidas → datos/analisis-builds-<fecha>.md)
+     python scripts/builds.py --subir             (admin: sube las de los mejores de builds.json al backend, para todos)
 
 Fuentes:
   Los mejores: Riot API (necesita RIOT_KEY). Challenger y Grandmaster de LAN (la1) y Corea (kr), de más a menos LP;
@@ -313,6 +314,43 @@ def guardar_tuyas(minimo=10):
     return n
 
 
+def _backend(metodo, ruta, cuerpo=None):
+    import companion
+    return companion.backend(metodo, ruta, cuerpo, BASE)
+
+
+def subir():
+    """Admin: sube las builds de los mejores (no «tu build») de builds.json al backend. Devuelve cuántas."""
+    try: d = json.loads((META / "builds.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError): return 0
+    mejores = {k: v for k, v in d.items() if k.count("|") == 1 and v}
+    if mejores: _backend("PUT", "/v1/builds", mejores)
+    return len(mejores)
+
+
+def bajar():
+    """Las builds de los mejores que subió el admin, mezcladas en builds.json sin pisar las que ya calculaste tú
+    con tu key; así un amigo sin key también las ve en champ select. Devuelve cuántas bajó; un fallo no tumba nada."""
+    f = META / "builds.json"
+    try: d = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError): d = {}
+    try:
+        lista = _backend("GET", "/v1/builds") or []
+        bajadas = d.get("_bajadas") or {}  # clave → ts de la versión bajada
+        n = 0
+        for b in lista:
+            k = b.get("clave", "")
+            if k in d and k not in bajadas or bajadas.get(k, -1) >= (b.get("ts") or 0): continue  # la propia o ya al día
+            r = _backend("GET", "/v1/builds/" + urllib.request.quote(k, safe=""))
+            if r and r.get("datos"): d[k] = r["datos"]; bajadas[k] = b.get("ts") or 0; n += 1
+    except (OSError, ValueError, urllib.error.URLError): return 0
+    if n:
+        d["_bajadas"] = bajadas
+        META.mkdir(parents=True, exist_ok=True)
+        tmp = f.with_suffix(".tmp"); tmp.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8"); tmp.replace(f)
+    return n
+
+
 def guardado_dict(campeon, pos):
     """La build que dejó `--pool` (sin red) como dict para la GUI: el resumen de `resumir` más `fuente` ("mejores" o "tu")
     y, en la de los mejores, `primer` = {item, si: [V, n], no: [V, n]} (tu récord con su primer ítem y con otro); o None."""
@@ -338,7 +376,10 @@ def guardado(campeon, pos):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2: sys.exit(__doc__)
-    if sys.argv[1] == "--pool":
+    if sys.argv[1] == "--subir":
+        try: print(f"Listo: {subir()} builds subidas al backend.")
+        except urllib.error.HTTPError as e: sys.exit("El backend no aceptó las builds" + (" (solo el admin puede subirlas)." if e.code == 403 else f" ({e.code})."))
+    elif sys.argv[1] == "--pool":
         partes, guarda = [f"# Builds de los mejores contra la tuya ({datetime.now():%Y-%m-%d})\n"], {}
         for ch, pos in pool():
             t, rt, tu = informe(ch, pos); partes.append(t)

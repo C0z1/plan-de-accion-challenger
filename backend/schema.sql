@@ -21,3 +21,28 @@ CREATE TABLE IF NOT EXISTS resumenes (
   resumen    TEXT NOT NULL,      -- JSON chico: campeón, resultado, KDA, score, reglas, error
   PRIMARY KEY (google_sub, match_id)
 );
+-- v0.8 (todo gratis): builds compartidas, invitaciones, reportes privados y métricas anónimas
+CREATE TABLE IF NOT EXISTS builds (
+  clave TEXT PRIMARY KEY,        -- «Campeón|POSICIÓN» (como builds.json)
+  datos TEXT NOT NULL,           -- JSON del resumen de la build de los onetricks del top
+  ts    INTEGER
+);
+CREATE TABLE IF NOT EXISTS invitados (
+  nombre TEXT PRIMARY KEY,
+  codigo TEXT NOT NULL UNIQUE,   -- código de acceso (también sirve sin Google)
+  email  TEXT,                   -- correo de Google permitido (opcional)
+  creado INTEGER
+);
+CREATE TABLE IF NOT EXISTS reportes (
+  id      INTEGER PRIMARY KEY AUTOINCREMENT,
+  ts      INTEGER,
+  version TEXT, vista TEXT, fase TEXT,
+  texto   TEXT                   -- lo que escribió el amigo + el error en pantalla; sin Riot ID ni correo
+);
+CREATE TABLE IF NOT EXISTS metricas (
+  dia     TEXT NOT NULL,         -- AAAA-MM-DD
+  version TEXT NOT NULL,
+  region  TEXT NOT NULL,
+  usos    INTEGER DEFAULT 0, overlay INTEGER DEFAULT 0, champ_select INTEGER DEFAULT 0, revision INTEGER DEFAULT 0,
+  PRIMARY KEY (dia, version, region)
+);

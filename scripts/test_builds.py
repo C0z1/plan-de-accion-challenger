@@ -120,6 +120,28 @@ class Riot(unittest.TestCase):
         f.write_text(json.dumps({"Yone|MIDDLE": r, "Yone|MIDDLE|tu": r}), encoding="utf-8")
         self.assertTrue(builds.guardado("Yone", "MIDDLE")[0].startswith("Los mejores"))  # la de los mejores manda
 
+    def test_subir_y_bajar_del_backend(self):  # v0.8: el admin sube las de los mejores; los amigos sin key las bajan
+        f = pathlib.Path(self.tmp.name) / "builds.json"
+        r = builds.resumir([builds.build_de(*partida(), "yo", ITEMS)], ITEMS, {})
+        f.write_text(json.dumps({"Yone|MIDDLE": r, "Yone|MIDDLE|tu": r}), encoding="utf-8")
+        llamadas = []
+        with mock.patch.object(builds, "_backend", lambda m, ruta, c=None: llamadas.append((m, ruta, c))):
+            self.assertEqual(builds.subir(), 1)
+        self.assertEqual(list(llamadas[0][2]), ["Yone|MIDDLE"])  # «tu build» no se sube
+        servidor = {"/v1/builds": [{"clave": "Yone|MIDDLE", "ts": 5}, {"clave": "Ahri|MIDDLE", "ts": 5}],
+                    "/v1/builds/Ahri%7CMIDDLE": {"datos": dict(r, n=99)}}
+        pedidas = []
+        def falso(m, ruta, c=None): pedidas.append(ruta); return servidor.get(ruta)
+        with mock.patch.object(builds, "_backend", falso):
+            self.assertEqual(builds.bajar(), 1)  # Yone ya la calculaste tú: no se pisa
+            self.assertEqual(builds.bajar(), 0)  # ya al día: no se vuelve a pedir
+        self.assertNotIn("/v1/builds/Yone%7CMIDDLE", pedidas)
+        d = json.loads(f.read_text(encoding="utf-8"))
+        self.assertEqual((d["Ahri|MIDDLE"]["n"], d["Yone|MIDDLE"]["n"]), (99, r["n"]))
+        self.assertEqual(builds.guardado_dict("Ahri", "MIDDLE")["fuente"], "mejores")
+        def caido(m, ruta, c=None): raise urllib.error.URLError("sin red")
+        with mock.patch.object(builds, "_backend", caido): self.assertEqual(builds.bajar(), 0)
+
     def test_guardado_dict_y_primer_item(self):
         self.assertIsNone(builds.guardado_dict("Yone", "MIDDLE"))
         r = builds.resumir([builds.build_de(*partida(), "yo", ITEMS)], ITEMS, {})

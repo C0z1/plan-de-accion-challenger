@@ -58,6 +58,16 @@ def acceso(base=None):
     return (api, token) if api and token else None
 
 
+def backend(metodo, ruta, cuerpo=None, base=None, timeout=20):
+    """JSON del backend de Racha con tu código o tu sesión de Google; None si no hay acceso. Lanza urllib.error si falla."""
+    a = acceso(base)
+    if not a: return None
+    h = {"Content-Type": "application/json", "User-Agent": "racha"}
+    h.update({"Authorization": "Bearer " + a[1]} if len(a[1]) == 64 else {"X-Racha-Token": a[1]})  # sesión o código
+    req = urllib.request.Request(a[0] + ruta, data=None if cuerpo is None else json.dumps(cuerpo).encode(), headers=h, method=metodo)
+    with urllib.request.urlopen(req, timeout=timeout) as r: return json.load(r)
+
+
 COLAS = {420: "Solo/Duo", 440: "Flex", 400: "Normal", 430: "Normal", 490: "Rápida", 480: "Rápida", 450: "ARAM"}
 
 

@@ -3,6 +3,8 @@
 // y lo manda aquí con el `verifier`. El Worker lo cambia por el id_token directo con Google (el secreto del cliente
 // vive solo aquí) y, si el correo está en GOOGLE_EMAILS, emite una sesión propia de 90 días.
 
+import {correoInvitado} from "./extra.js";
+
 const DIAS90 = 90 * 86400;
 const json = (cuerpo, status = 200) => new Response(JSON.stringify(cuerpo), {status, headers: {"content-type": "application/json; charset=utf-8"}});
 const ahora = () => Math.floor(Date.now() / 1000);
@@ -47,7 +49,7 @@ async function login(request, env) {
   const p = payloadJWT((await r.json()).id_token);
   if (!p || p.aud !== env.GOOGLE_CLIENT_ID || !["accounts.google.com", "https://accounts.google.com"].includes(p.iss) || p.exp < ahora() || !p.email_verified)
     return json({error: "identidad de Google inválida"}, 401);
-  if (!permitido(p.email, env.GOOGLE_EMAILS)) return json({error: "Tu correo no está invitado a Racha. Pídele acceso a quien te invitó."}, 403);
+  if (!permitido(p.email, env.GOOGLE_EMAILS) && !await correoInvitado(p.email, env)) return json({error: "Tu correo no está invitado a Racha. Pídele acceso a quien te invitó."}, 403);
   const t = ahora(), token = tokenNuevo();
   await env.DB.prepare("INSERT INTO usuarios (google_sub, email, nombre, creado, ultima) VALUES (?, ?, ?, ?, ?) ON CONFLICT(google_sub) DO UPDATE SET email = excluded.email, nombre = excluded.nombre, ultima = excluded.ultima")
     .bind(p.sub, p.email, p.name || "", t, t).run();

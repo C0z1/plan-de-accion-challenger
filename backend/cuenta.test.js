@@ -89,3 +89,46 @@ test("config pública con el client_id", async () => {
   const {env, ctx} = entorno();
   assert.equal((await (await worker.fetch(req("/v1/config"), env, ctx)).json()).google_client_id, "cliente-racha");
 });
+
+// v0.8: builds compartidas, invitados, reportes y métricas (extra.js)
+const conCodigo = (path, codigo, opt = {}) => { const r = req(path, opt); r.headers.set("x-racha-token", codigo); return r; };
+
+test("admin sube builds y un invitado las lee; un no-admin no puede subir", async () => {
+  const {env, ctx} = entorno(); env.ACCESOS = "cozi:codigo-admin1,beto:codigo-beto1"; env.ADMINS = "cozi";
+  const builds = {"Ahri|MIDDLE": {items: [1, 2], jugadores: ["X#KR"]}};
+  assert.equal((await worker.fetch(conCodigo("/v1/builds", "codigo-beto1", {method: "PUT", body: builds}), env, ctx)).status, 403);
+  assert.equal((await worker.fetch(conCodigo("/v1/builds", "codigo-admin1", {method: "PUT", body: {"../x": {}}}), env, ctx)).status, 400);
+  assert.equal((await worker.fetch(conCodigo("/v1/builds", "codigo-admin1", {method: "PUT", body: builds}), env, ctx)).status, 200);
+  const b = await (await worker.fetch(conCodigo("/v1/builds/" + encodeURIComponent("Ahri|MIDDLE"), "codigo-beto1"), env, ctx)).json();
+  assert.deepEqual(b.datos.items, [1, 2]);
+  assert.equal((await (await worker.fetch(conCodigo("/v1/builds", "codigo-beto1"), env, ctx)).json())[0].clave, "Ahri|MIDDLE");
+  assert.equal((await worker.fetch(conCodigo("/v1/builds/" + encodeURIComponent("Zed|MIDDLE"), "codigo-beto1"), env, ctx)).status, 404);
+  assert.equal((await worker.fetch(req("/v1/builds"), env, ctx)).status, 401);
+});
+
+test("invitar por correo: el código nuevo entra al proxy y el correo puede iniciar sesión", async () => {
+  const {env, ctx} = entorno({...ID, email: "carla@gmail.com", sub: "g-2"}); env.ACCESOS = "cozi:codigo-admin1"; env.ADMINS = "cozi";
+  assert.equal((await worker.fetch(req("/v1/login", {method: "POST", body: LOGIN}), env, ctx)).status, 403);  // aún no invitada
+  const inv = await (await worker.fetch(conCodigo("/v1/admin/invitados", "codigo-admin1", {method: "POST", body: {nombre: "Carla", email: "Carla@Gmail.com"}}), env, ctx)).json();
+  assert.equal(inv.nombre, "carla"); assert.match(inv.codigo, /^[0-9a-f]{24}$/);
+  assert.equal((await worker.fetch(conCodigo("/v1/admin/invitados", "codigo-admin1", {method: "POST", body: {nombre: "carla"}}), env, ctx)).status, 409);
+  assert.equal((await worker.fetch(conCodigo("/v1/riot/americas/lol/match/v5/matches/LA1_9", inv.codigo), env, ctx)).status, 200);
+  assert.equal((await worker.fetch(req("/v1/login", {method: "POST", body: LOGIN}), env, ctx)).status, 200);  // ya invitada
+  const ls = await (await worker.fetch(conCodigo("/v1/admin/invitados", "codigo-admin1"), env, ctx)).json();
+  assert.equal(ls[0].codigo, undefined);  // el código no se vuelve a mostrar
+  assert.equal((await worker.fetch(conCodigo("/v1/admin/invitados", inv.codigo), env, ctx)).status, 403);  // el invitado no es admin
+  await worker.fetch(conCodigo("/v1/admin/invitados/carla", "codigo-admin1", {method: "DELETE"}), env, ctx);
+  assert.equal((await worker.fetch(conCodigo("/v1/riot/americas/lol/match/v5/matches/LA1_9", inv.codigo), env, ctx)).status, 401);
+});
+
+test("reportes privados y métricas anónimas: solo el admin los lee", async () => {
+  const {env, ctx} = entorno(); env.ACCESOS = "cozi:codigo-admin1,beto:codigo-beto1"; env.ADMINS = "cozi";
+  assert.equal((await worker.fetch(conCodigo("/v1/reporte", "codigo-beto1", {method: "POST", body: {texto: ""}}), env, ctx)).status, 400);
+  assert.equal((await worker.fetch(conCodigo("/v1/reporte", "codigo-beto1", {method: "POST", body: {texto: "no carga", version: "0.8.0", vista: "partidas"}}), env, ctx)).status, 200);
+  for (const o of [true, false]) await worker.fetch(conCodigo("/v1/ping", "codigo-beto1", {method: "POST", body: {version: "0.8.0", region: "la1", overlay: o}}), env, ctx);
+  assert.equal((await worker.fetch(conCodigo("/v1/admin/reportes", "codigo-beto1"), env, ctx)).status, 403);
+  const rep = await (await worker.fetch(conCodigo("/v1/admin/reportes", "codigo-admin1"), env, ctx)).json();
+  assert.equal(rep[0].texto, "no carga"); assert.ok(!JSON.stringify(rep).includes("beto"));  // no guarda quién
+  const met = await (await worker.fetch(conCodigo("/v1/admin/metricas", "codigo-admin1"), env, ctx)).json();
+  assert.deepEqual([met[0].usos, met[0].overlay, met[0].region], [2, 1, "la1"]);
+});

@@ -6,6 +6,7 @@
 // - Las partidas y timelines no cambian: se guardan en la caché del borde y casi no gastan key.
 
 import {cuenta, usuarioDeSesion} from "./cuenta.js";
+import {extra, codigoInvitado} from "./extra.js";
 
 const RUTEO = new Set(["americas", "europe", "asia", "sea"]);
 const PLATAFORMAS = new Set(["na1", "la1", "la2", "br1", "euw1", "eun1", "tr1", "ru", "me1", "kr", "jp1", "oc1", "sg2", "tw2", "vn2"]);
@@ -56,9 +57,12 @@ export default {
     const url = new URL(request.url);
     const c = await cuenta(request, env, url);  // /v1/login y /v1/yo… (cuenta en la nube)
     if (c) return c;
+    const e = await extra(request, env, url, quienEs);  // builds, reportes, métricas y admin
+    if (e) return e;
     if (request.method !== "GET") return json({error: "solo GET"}, 405);
     if (url.pathname === "/v1/salud") return json({ok: true, version: 1});
-    const quien = quienEs(request.headers.get("x-racha-token"), env.ACCESOS) || await usuarioDeSesion(request, env);  // código o sesión de Google
+    const tok = request.headers.get("x-racha-token");
+    const quien = quienEs(tok, env.ACCESOS) || await codigoInvitado(tok, env) || await usuarioDeSesion(request, env);  // código o sesión de Google
     if (!quien) return json({error: "código de acceso inválido"}, 401);
     const d = destino(url);
     if (!d) return json({error: "consulta no permitida"}, 404);
