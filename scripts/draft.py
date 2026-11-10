@@ -135,7 +135,17 @@ def datos_draft(rival, pos):
     import builds  # sin red: lo que dejó `builds.py --pool` en datos/meta/builds.json
     return dict(nombre=nombre, conocido=bool(en), vs=vs, en=en, filas=filas, avisos=avisos(filas, nombre, pos),
                 build=builds.guardado(filas[0]["champ"], pos) if filas else [],
-                build_dict=builds.guardado_dict(filas[0]["champ"], pos) if filas else None)
+                build_dict=_con_comparacion(builds.guardado_dict(filas[0]["champ"], pos), filas[0]["champ"], pos) if filas else None)
+
+
+def _con_comparacion(b, champ, pos):
+    """La build de los mejores con `vs_tu`: en qué difiere la tuya (comparar.py, de DeepSeek); un fallo no la quita."""
+    if not b or b.get("fuente") != "mejores": return b
+    try:
+        import comparar
+        c = comparar.comparar(champ, pos)
+        return {**b, "vs_tu": c["frase"]} if c and c.get("frase") else b
+    except Exception: return b
 
 
 def avisos(filas, nombre, pos):

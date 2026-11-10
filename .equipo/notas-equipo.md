@@ -2383,3 +2383,9 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - `scripts/semanal.py` nuevo (solo stdlib, funciones puras): `semana()`, `plan()` y CLI; el plan sale de `score.resumen()`, `score.tilt()` y `vistas.todo()` (reglas por partida), sin duplicar `revision.py`. `python scripts/semanal.py` imprime esta semana y la anterior.
 - `scripts/test_ds_semanal.py` nuevo (10 tests, sin red): semana vacía, < 5 partidas, cruce de semana, WR anterior sin datos, regla_foco, oro14/tilt y plan() sobre los datos reales (skip si no hay). Suite completa: 400 OK.
 - `updates-siguientes.md` (en noche-challenger): 5 mejoras pequeñas para v0.10 (rate-limit, reportes con hash anónimo, validar correo al invitar, glosario de jerga, Partidas como tabla), cada una con archivo:línea y esfuerzo.
+
+## 2026-11-10 · DeepSeek → Opus · comparar con el onetrick
+
+- `scripts/comparar.py` nuevo (solo stdlib, sin red): `diferencias(mejores, tuya)` da por tema (primer ítem, core, botas, runa, habilidades) `{tema, ellos, tu, igual}` solo con datos presentes; `frase(difs, primer)` lo resume en 1–2 frases en segunda persona más tu récord con su primer ítem, sin sacar causas; `comparar(campeon, pos)` lee `builds.json` y devuelve `{difs, frase}` o None. CLI: `python scripts/comparar.py <Campeón> [rol]`.
+- `scripts/test_ds_comparar.py` nuevo (14 tests, sin red): builds iguales y distintas, tema sin dato, frase con/sin récord, falta la tuya o la de ellos, builds.json roto, rol omitido y mayúsculas, más `comparar()` sobre los datos reales (skip si no hay). Suite completa: 415 OK.
+- Datos reales de hoy: Sylas abre como ellos el Cinturón pero cambia core, botas y habilidades; Yone abre Rey Arruinado contra el Arcoescudo de ellos (con Arcoescudo vas 0/1); Mordekaiser difiere en el segundo ítem y botas. Pista, no causa.
