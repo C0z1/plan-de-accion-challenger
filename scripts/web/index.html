@@ -117,7 +117,12 @@ main.ancho{max-width:none}
 .barra-v .bot{display:flex;margin-right:8px}.barra-v button{width:46px;height:38px;border:none;background:none;color:#D2BAC4;display:grid;place-items:center;cursor:pointer}
 .barra-v button:hover{background:rgba(255,255,255,.08);color:#fff}.barra-v button:active{background:rgba(255,255,255,.14)}
 .barra-v button.cerrar:hover{background:#E81123;color:#fff}.barra-v button.cerrar:active{background:#B30E1C}.barra-v button:focus-visible{outline:2px solid #F28DB0;outline-offset:-2px}
+.barra-v[hidden]{display:none}
 body.sin-marco{padding-top:38px}body.sin-marco .app{min-height:calc(100vh - 38px)}
+.gbtn{height:40px;border-radius:20px;padding:0 12px;border:1px solid #747775;background:#fff;color:#1F1F1F;display:flex;align-items:center;gap:10px;font:500 14px Roboto,'Segoe UI',sans-serif;cursor:pointer}
+.gbtn:hover{box-shadow:inset 0 0 0 99px rgba(48,48,48,.08)}.gbtn:focus-visible{outline:2px solid #F28DB0;outline-offset:2px;box-shadow:inset 0 0 0 99px rgba(48,48,48,.12)}
+.btn2.salir{color:#D2BAC4}.btn2.salir:hover{background:rgba(217,96,106,.16);border-color:#D9606A;color:#FFB4BA}
+details.alt summary{cursor:pointer;color:var(--muted);font-size:14px;padding:6px 2px}details.alt[open] summary{margin-bottom:8px}
 .camps{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .campc{align-items:flex-start;border:1px solid transparent;color:var(--txt);font:inherit;cursor:pointer;text-align:left;min-height:410px;justify-content:space-between}.campc.sel{border-color:var(--acc)}
 .pool{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.poolc{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px;border-radius:12px;background:var(--dark2)}
@@ -711,7 +716,9 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
       <div class="card"><div class="cab2"><h2>Cuenta</h2></div>
         ${fila("Riot ID", esc([String(s.perfil || "").split(" · ")[0], s.region].filter(Boolean).join(" · ")) || "Abre el cliente de LoL", '<span class="sub" style="font-size:12px">la del cliente</span>')}
         ${fila("Partidas descargadas", V ? `${V.total} · última: ${esc(ult)}` : s.cliente ? `${s.cliente.length} del cliente (sin descargar)` : "sin datos", '<span style="display:flex;gap:8px"><button class="btn2" onclick="descargar()">Descargar</button><button class="btn2" onclick="recargar()">Recargar</button></span>')}
-        ${fila("Código de acceso", s.conectado ? "Conectado a racha.gg: tus partidas se bajan solas." : "Te lo da quien administra Racha. Con él se bajan tus partidas sin key de Riot.", (s.conectado ? '<span class="tag ok" style="align-self:center">✓ Conectado</span> ' : "") + '<span style="display:flex;gap:8px"><input id="acceso" type="password" autocomplete="off" aria-label="Código de acceso" placeholder="código" style="width:130px;background:var(--dark3);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:8px 10px;font:inherit"><button class="btn2" onclick="guardarAcceso()">Guardar</button></span>')}
+        ${loginNube(s)}
+        <details class="alt"><summary>Usar un código de acceso</summary>
+          ${fila("Código de acceso", s.conectado && !s.nube ? "Conectado a racha.gg: tus partidas se bajan solas." : "Te lo da quien administra Racha.", (s.conectado && !s.nube ? '<span class="tag ok" style="align-self:center">✓ Conectado</span> ' : "") + '<span style="display:flex;gap:8px"><input id="acceso" type="password" autocomplete="off" aria-label="Código de acceso" placeholder="código" style="width:130px;height:40px;background:var(--dark3);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:8px 10px;font:inherit"><button class="btn2" onclick="guardarAcceso()">Guardar</button></span>')}</details>
         ${s.descarga ? `<span class="sub" style="font-size:13px" role="status">${esc(s.descarga)}</span>` : ""}</div>
       <div class="card"><div class="cab2"><h2>Apariencia</h2></div>
         ${fila("Reducir movimiento", "Tubos y anillos sin ola ni brillo.", tog("t-rm", rm, false, "quieto()"))}
@@ -723,6 +730,37 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
       ${av("aviso_minions", "Minions al 10", "Si vas bajo tu meta de config.json al minuto 10.")}
       ${av("aviso_muertes", "Muertes del 14 al 25", "Al llegar a 2 muertes desde el 14.")}</div>
   </div>`, ""];
+}
+const G_LOGO = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+function loginNube(s) {  // Ajustes_Login_Vino (acuerdo 23): sin sesión, el botón de Google; con sesión, tu cuenta en la nube
+  const n = s.nube;
+  if (!n) return `<div class="filaV" style="flex-wrap:wrap;gap:14px;padding:16px"><span style="width:44px;height:44px;border-radius:50%;background:rgba(242,141,176,.14);display:grid;place-items:center;color:var(--acc)" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H7a5 5 0 1 1 .9-9.9A6 6 0 0 1 19 11a4 4 0 0 1-1.5 8z"/></svg></span>
+      <div class="txt" style="flex:1;min-width:180px"><b style="font-size:17px">Guarda tu cuenta en la nube</b><small>Tu Riot ID, tus ajustes y tus partidas, en cualquier PC.</small></div>
+      <button class="gbtn" onclick="google()">${G_LOGO}<span>Continuar con Google</span></button></div>
+    ${s.descarga && /Google/.test(s.descarga) ? `<span class="sub" style="font-size:13px" role="status">${esc(s.descarga)}</span>` : ""}`;
+  const hace = n.sync ? Math.max(0, Math.round((Date.now() / 1000 - n.sync) / 60)) : null;
+  return `<div class="filaV" style="flex-direction:column;align-items:stretch;gap:12px;padding:16px">
+    <div style="display:flex;gap:14px;align-items:center"><span style="width:48px;height:48px;border-radius:50%;background:#F28DB0;color:#24111A;display:grid;place-items:center;font:800 20px Mulish,sans-serif" aria-hidden="true">${esc((n.nombre || n.email || "?")[0].toUpperCase())}</span>
+      <div class="txt" style="flex:1"><b style="font-size:17px">${esc(n.nombre || n.email)}</b><small>${esc(n.email)}</small></div>
+      <span class="tag" style="background:rgba(127,184,158,.16);color:#A8D8C0;align-self:center">✓ Sincronizada</span></div>
+    <div style="height:1px;background:var(--line)"></div>
+    <span class="sub" style="font-size:14px">Tu cuenta está guardada en la nube${hace == null ? "" : ` · última sincronización ${hace < 1 ? "hace un momento" : "hace " + hace + " min"}`}</span>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn2" style="color:var(--acc);border-color:rgba(242,141,176,.5)" onclick="nube('sync')">Sincronizar ahora</button>
+      <button class="btn2 salir" onclick="nube('salir')">Cerrar sesión</button>
+      <button class="btn2 salir" onclick="if(confirmarBorrado())nube('borrar')">Borrar mis datos de la nube</button></div></div>`;
+}
+let borrarArmado = 0;
+function confirmarBorrado() {  // dos clics en 5 s (sin diálogos del navegador)
+  if (Date.now() - borrarArmado < 5000) { borrarArmado = 0; return true; }
+  borrarArmado = Date.now(); const b = event && event.target; if (b) { const t = b.textContent; b.textContent = "¿Seguro? Toca otra vez"; setTimeout(() => b.textContent = t, 5000); }
+  return false;
+}
+async function google() {
+  try { const r = await fetch("/api/google", {method: "POST", headers: {"X-HTC": "1"}}); if (!r.ok) throw 0; } catch (e) {}
+}
+async function nube(accion) {
+  try { await fetch(accion === "sync" ? "/api/google/sync" : "/api/google/" + accion, {method: "POST", headers: {"X-HTC": "1"}}); } catch (e) {}
+  v = -1; tick();
 }
 async function ajuste(clave, on) {
   try { await fetch("/api/ajuste", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({clave, on})}); } catch (e) {}

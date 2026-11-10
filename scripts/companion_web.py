@@ -6,7 +6,7 @@ Uso:
   python scripts/companion_web.py --no-abrir no abre ventana (para pruebas)
   python scripts/companion_web.py --fondo    en segundo plano (arranca con Windows): abre la ventana sola al abrir el cliente de LoL
 Sin --fondo, el servidor se cierra solo si la ventana deja de preguntar 60 s. Si ya hay un HTC abierto, abre su ventana y sale."""
-import http.server, json, pathlib, queue, re, shutil, subprocess, sys, threading, time, urllib.request, webbrowser
+import html, http.server, json, pathlib, queue, re, shutil, subprocess, sys, threading, time, urllib.parse, urllib.request, webbrowser
 
 import companion_gui as gui  # noqa: E402  (trae REPO, sys.path del .exe y el trabajador)
 from companion_gui import companion
@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
+          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
 VERSION = "0.6.1"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -56,7 +56,7 @@ def evento(e):
         gui.CUENTA[0] = e[1]; s = {"cuenta": e[1], "perfil": gui.perfil(ESTADO["rango"], e[1]), "icono": e[2] if len(e) > 2 else None}
         threading.Thread(target=refrescar, daemon=True).start()  # si el historial en disco es de otra cuenta, se oculta
     elif tipo == "cliente": s = {"cliente": e[1]}
-    elif tipo == "region": s = {"region": e[1]}
+    elif tipo == "region": s = {"region": e[1], **({"plataforma": e[2]} if len(e) > 2 else {})}
     elif tipo == "crono": s = {"crono": e[1]}
     elif tipo == "aviso": s = {"aviso": e[1]}
     elif tipo == "pos": s = {"pos": e[1]}  # champ select antes de ver al rival: la ventana Draft
@@ -113,6 +113,23 @@ def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la c
     r = None if gui.ajeno(gui.CUENTA[0]) else rendimiento_rapido()  # historial de otra cuenta: no mostrarlo como tuyo
     with LOCK: ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1)
     if r is not None: tus_builds(); vistas_previas(r)
+    sync_nube()
+
+
+def nube_publica():
+    """Lo que la página puede ver de tu sesión (sin el token)."""
+    import nube
+    s = nube.sesion()
+    return {k: s.get(k) for k in ("email", "nombre", "sync")} if s else None
+
+
+def sync_nube():
+    """Sube a tu cuenta en la nube tu Riot ID, tus ajustes y el resumen de tus partidas (si iniciaste sesión)."""
+    import nube
+    if not nube.sesion(): return
+    with LOCK: e = dict(ESTADO)
+    nube.sincronizar(None if gui.ajeno(gui.CUENTA[0]) else e.get("rendimiento"), e.get("cuenta"), e.get("plataforma"), e.get("ajustes"))
+    with LOCK: ESTADO.update(nube=nube_publica(), v=ESTADO["v"] + 1)
 
 
 def vistas_previas(r):
@@ -206,7 +223,7 @@ def vigilar_cuenta(q, cada=10):
         if s.get("gameName") and (nueva or vuelta % 6 == 0):  # tus últimas partidas del cliente (sin key): al conectar y cada minuto
             h = companion.lcu("/lol-match-history/v1/products/lol/current-summoner/matches?begIndex=0&endIndex=19")
             if h:
-                q.put(("region", REGION.get(str(h.get("platformId") or "").upper(), h.get("platformId"))))
+                q.put(("region", REGION.get(str(h.get("platformId") or "").upper(), h.get("platformId")), str(h.get("platformId") or "").lower()))
                 if not gui.NOMBRES: gui.NOMBRES.update(companion.nombres_lcu())
                 m = m or {**gui.NOMBRES, **companion.nombres()}; q.put(("cliente", companion.historial(h, m)))
         vuelta += 1; time.sleep(cada)
@@ -287,6 +304,17 @@ class H(http.server.BaseHTTPRequestHandler):
         if m := re.fullmatch(r"/fonts/(mulish|inter)\.woff2", self.path):  # empaquetadas (OFL): la CSP no deja cargar Google Fonts
             return self.enviar(200, (WEB / "fonts" / f"{m.group(1)}.woff2").read_bytes(), "font/woff2")
         if self.path in ("/icono.png", "/favicon.ico"): return self.enviar(200, (WEB / "icono.png").read_bytes(), "image/png")  # ícono de la ventana de Edge --app
+        if self.path.startswith("/oauth?"):  # Google vuelve aquí tras «Continuar con Google» (el navegador del usuario)
+            import nube
+            q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
+            try:
+                nube.completar((q.get("code") or [""])[0], (q.get("state") or [""])[0], self.server.server_address[1])
+                with LOCK: ESTADO.update(nube=nube_publica(), v=ESTADO["v"] + 1)
+                threading.Thread(target=sync_nube, daemon=True).start()
+                msg = "Listo: tu cuenta de Racha quedó guardada en la nube. Ya puedes cerrar esta pestaña y volver a Racha."
+            except (ValueError, OSError) as e: msg = str(e) if isinstance(e, ValueError) else "No pude hablar con el servidor de Racha."
+            pagina = f'<!doctype html><meta charset="utf-8"><title>Racha</title><body style="margin:0;display:grid;place-items:center;height:100vh;background:#24111A;color:#F2F4F7;font:600 18px Segoe UI,sans-serif"><p style="max-width:460px;text-align:center">{html.escape(msg)}</p>'
+            return self.enviar(200, pagina.encode(), "text/html; charset=utf-8")
         if self.path == "/api/estado" or self.path.startswith("/api/estado?"):
             if self.path == f"/api/estado?desde={ESTADO['v']}":  # nada cambió desde la última vez: sin cuerpo (auditoría de DeepSeek)
                 self.send_response(304); self.send_header("Cache-Control", "no-store"); self.end_headers(); return
@@ -299,6 +327,19 @@ class H(http.server.BaseHTTPRequestHandler):
         # X-HTC obliga a un preflight CORS que no contestamos: otra web no puede mandar este POST, aunque el Host cuadre
         if self.headers.get("Host", "").split(":")[0] not in ("127.0.0.1", "localhost") or self.headers.get("X-HTC") != "1":
             return self.enviar(403, b"", "text/plain")
+        if self.path in ("/api/google", "/api/google/salir", "/api/google/borrar", "/api/google/sync"):
+            import nube
+            if self.path == "/api/google":
+                try: url = nube.iniciar(self.server.server_address[1])
+                except (OSError, ValueError): url = None
+                if not url: return self.enviar(503, b'{"error":"sin servidor o sin cliente de Google"}', "application/json")
+                webbrowser.open(url); return self.enviar(200, b"{}", "application/json")
+            if self.path == "/api/google/sync": threading.Thread(target=sync_nube, daemon=True).start()
+            else:
+                try: nube.borrar_todo() if self.path.endswith("borrar") else nube.salir()
+                except (OSError, ValueError): return self.enviar(502, b"", "text/plain")
+                with LOCK: ESTADO.update(nube=None, v=ESTADO["v"] + 1)
+            return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/ventana":  # botones y arrastre de la franja propia (la ventana ya no tiene barra de Windows)
             import ventana
             try: ventana.accion(json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 100)))["accion"])
@@ -322,6 +363,7 @@ class H(http.server.BaseHTTPRequestHandler):
             try: a = gui.guardar_ajuste(d.get("clave"), on)
             except (ValueError, OSError): return self.enviar(400, b"", "text/plain")
             with LOCK: ESTADO.update(ajustes=a, v=ESTADO["v"] + 1)
+            threading.Thread(target=sync_nube, daemon=True).start()  # tus ajustes también van a la nube
             return self.enviar(200, json.dumps(a).encode(), "application/json")
         a = autoarranque(on)
         with LOCK: ESTADO.update(autoarranque=a, v=ESTADO["v"] + 1)
@@ -369,7 +411,7 @@ def main(argv=None):
     srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H); url = f"http://127.0.0.1:{srv.server_port}/"
     URL[0], FONDO[0] = url, "--fondo" in argv
     if FONDO[0]: VIVO[0] = 0  # aún no hay ventana: si el cliente ya está abierto, la primera fase la abre
-    ESTADO["autoarranque"] = autoarranque()
+    ESTADO["autoarranque"] = autoarranque(); ESTADO["nube"] = nube_publica()
     if unico:
         try: PUERTO.parent.mkdir(parents=True, exist_ok=True); PUERTO.write_text(str(srv.server_port))
         except OSError: pass

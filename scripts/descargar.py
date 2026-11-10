@@ -51,7 +51,8 @@ def get(url):
     while True:
         if PROXY:  # https://<host>.api.riotgames.com/<path> → <api>/v1/riot/<host>/<path>, con tu código en vez de la key
             host, _, path = url[len("https://"):].partition(".api.riotgames.com")
-            req = urllib.request.Request(f"{PROXY[0]}/v1/riot/{host}{path}", headers={"X-Racha-Token": PROXY[1], "User-Agent": "racha"})
+            cred = {"Authorization": "Bearer " + PROXY[1]} if len(PROXY[1]) == 64 else {"X-Racha-Token": PROXY[1]}  # sesión de Google o código
+            req = urllib.request.Request(f"{PROXY[0]}/v1/riot/{host}{path}", headers={**cred, "User-Agent": "racha"})
         else:
             req = urllib.request.Request(url, headers={"X-Riot-Token": KEY, "User-Agent": "plan-challenger"})  # Riot 403 al UA de urllib
         try:

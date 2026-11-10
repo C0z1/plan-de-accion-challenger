@@ -52,6 +52,9 @@ def acceso(base=None):
     except (OSError, ValueError): d = {}
     api = (os.environ.get("RACHA_API") or d.get("api") or API_DEF).rstrip("/")
     token = os.environ.get("RACHA_TOKEN") or d.get("token")
+    if not token:  # sin código: la sesión de Google (datos/cache/sesion.json), que el backend acepta igual
+        try: token = json.loads((pathlib.Path(base or DIR.parent) / "datos" / "cache" / "sesion.json").read_text(encoding="utf-8")).get("token")
+        except (OSError, ValueError, AttributeError): token = None
     return (api, token) if api and token else None
 
 
