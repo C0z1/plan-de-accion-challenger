@@ -81,8 +81,34 @@ def yo_rival(d):
     yo = (d or {}).get("activePlayer") or {}; ids = {yo.get("riotId"), yo.get("summonerName")} - {None, ""}  # null al cargar
     ps = (d or {}).get("allPlayers") or []
     me = next((p for p in ps if {p.get("riotId"), p.get("summonerName")} & ids), None)
-    if not me or not me.get("position"): return me, None
+    if not me or me.get("position") in (None, "", "NONE"): return me, None  # ARAM y modos sin líneas: «NONE», no hay rival de línea
     return me, next((p for p in ps if p.get("position") == me["position"] and p.get("team") != me.get("team")), None)
+
+
+def grieta(d):
+    """True en la Grieta del Invocador (CLASSIC): dragón, barón y reglas de línea solo tienen sentido ahí."""
+    return (((d or {}).get("gameData") or {}).get("gameMode") or "CLASSIC") == "CLASSIC"
+
+
+def kda(p):
+    s = (p or {}).get("scores") or {}
+    return f"{s.get('kills') or 0}/{s.get('deaths') or 0}/{s.get('assists') or 0}"
+
+
+def meta_aram(d, me):
+    """ARAM y modos sin líneas: {modo, minuto, campeon, nivel, kda, kills, torres, amenazas}. amenazas = los 3 rivales más
+    fuertes ahora (kills, luego asistencias, luego menos muertes) con su KDA, nivel e ítems: a quién cuidar en la pelea."""
+    ps, yo = (d or {}).get("allPlayers") or [], me.get("team")
+    o = objetivos(d, me)
+    sc = lambda p: p.get("scores") or {}
+    rivales = sorted((p for p in ps if p.get("team") != yo),
+                     key=lambda p: (-(sc(p).get("kills") or 0), -(sc(p).get("assists") or 0), sc(p).get("deaths") or 0))
+    return {"modo": "ARAM", "minuto": int(((d.get("gameData") or {}).get("gameTime") or 0) // 60), "campeon": me.get("championName"),
+            "nivel": me.get("level"), "kda": kda(me), "kills": [o["tuyos"]["kills"], o["rival"]["kills"]],
+            "torres": [o["tuyos"]["torres"], o["rival"]["torres"]],
+            "amenazas": [{"campeon": p.get("championName"), "kda": kda(p), "nivel": p.get("level"),
+                          "items": [[i["itemID"], i.get("displayName") or ""] for i in p.get("items") or [] if i.get("itemID") and not i.get("consumable")][:6]}
+                         for p in rivales[:3]]}
 
 
 def meta_fase(d, m10=None):
@@ -91,6 +117,7 @@ def meta_fase(d, m10=None):
     cs_meta solo con el campeón de minions10 de config.json. La Live Client Data no trae el oro del rival: no hay «oro al 14»."""
     me, rival = yo_rival(d)
     if not me: return None
+    if not grieta(d): return meta_aram(d, me)
     if m10 is None: m10 = minions10()
     rs = (rival or {}).get("scores") or {}
     return {"minuto": int(((d.get("gameData") or {}).get("gameTime") or 0) // 60), "campeon": me.get("championName"),
@@ -185,7 +212,7 @@ def aviso_muertes(d):
     """Del 14 al 25, al llegar a 2 muertes desde el 14: el aviso; si no, None. 0–2 muertes del 14 al 25 → 68%, 3+ → 43%
     en tus 282 partidas (datos/analisis-aviso-muertes-*.md; con línea y equipo ≥ 0 al 14, 82% contra 57%)."""
     t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
-    if not 840 <= t < 1500 or (n := muertes14(d) or 0) < 2: return None
+    if not grieta(d) or not 840 <= t < 1500 or (n := muertes14(d) or 0) < 2: return None
     return (f"Min {int(t // 60)}: {n} muertes desde el 14. Juega con objetivo: no pelees si no sale un dragón, heraldo o torre; "
             "la meta es 2 o menos del 14 al 25.")
 
@@ -206,7 +233,7 @@ def aviso_minions(d, m10=None):
     Sylas con 69+ minions de línea al 10 → 74%, con ≤ 68 → 32% (early.py). creepScore en vivo incluye monstruos (en mid, pocos)."""
     if m10 is None: m10 = minions10()
     t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
-    if not m10 or not 600 <= t <= 660: return None  # 60 s de ventana: la foto de cada 30 s siempre cae dentro
+    if not m10 or not grieta(d) or not 600 <= t <= 660: return None  # 60 s de ventana: la foto de cada 30 s siempre cae dentro
     me, _ = yo_rival(d)
     if not me or me.get("championName") != m10["campeon"]: return None
     cs = (me.get("scores") or {}).get("creepScore") or 0

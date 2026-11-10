@@ -146,7 +146,11 @@ def _post_partida(q):
 
 
 def texto_meta(mf):
-    """«Min 7 · Nv 6 contra 7 (Zed) · CS 52 (meta 69 al 10)» desde companion.meta_fase()."""
+    """«Min 7 · Nv 6 contra 7 (Zed) · CS 52 (meta 69 al 10)» desde companion.meta_fase(); en ARAM, kills y la amenaza."""
+    if mf.get("modo") == "ARAM":
+        a = (mf.get("amenazas") or [{}])[0]
+        return " · ".join([f"Min {mf['minuto']}", f"Kills {mf['kills'][0]}–{mf['kills'][1]}", f"Tu KDA {mf['kda']}"]
+                          + ([f"Cuidado con {a['campeon']} {a['kda']}"] if a.get("campeon") else []))
     t = [f"Min {mf['minuto']}", f"Nv {mf['nivel'] or '?'}"]
     if mf["rival"]: t[-1] += f" contra {mf['nivel_rival'] or '?'} ({mf['rival']})"
     t.append(f"CS {mf['cs'] if mf['cs'] is not None else '?'}" + (f" (meta {mf['cs_meta']} al 10)" if mf["cs_meta"] and mf["minuto"] < 11 else ""))

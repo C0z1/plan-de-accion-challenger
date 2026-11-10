@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <title>HTC · How to Climb</title>
 <link rel="icon" type="image/png" href="/icono.png">
+<meta name="theme-color" content="#1A0C13">
+<meta name="color-scheme" content="dark">
 <style>
 :root{--bg:#24111A;--card:#36192A;--txt:#F2F4F7;--muted:#D2BAC4;--soft:#AE95A0;--line:#5A2D40;--dark:#0B0709;--dark2:#1A1014;--dark3:#2C1420;
 --acc:#F28DB0;--acc2:#F8C3D6;--amber:#F28DB0;--amberbg:#4A2236;--amberfg:#F8C3D6;--teal:#A8D8C0;--tealbg:#1F3A30;--tealfg:#A8D8C0;
@@ -496,9 +498,27 @@ function erroresV(s) {  // Errores_Vino: los 3 errores repetidos con sus momento
   return [main, aside];
 }
 
+function envivoAram(s, m) {  // ARAM y modos sin líneas: marcador, tu KDA y a quién cuidar en la pelea
+  const [tu, ellos] = m.kills || [0, 0], [tt, te] = m.torres || [0, 0], am = m.amenazas || [];
+  const main = `
+  <div><h1>En partida · ARAM</h1><span class="sub">${esc(m.campeon || "")} · minuto ${m.minuto ?? 0}</span></div>
+  <div class="card"><div class="cab2"><h2>Marcador</h2><span class="sub" style="font-size:12px">se actualiza cada 30 s</span></div>
+    <div style="display:flex;gap:40px;align-items:baseline"><div><span class="sub">Kills</span><br><b style="font-size:44px;color:var(--teal)">${tu}</b> <span class="sub" style="font-size:22px">vs</span> <b style="font-size:44px;color:var(--red)">${ellos}</b></div>
+      <div><span class="sub">Torres</span><br><b style="font-size:30px">${tt} – ${te}</b></div></div></div>
+  <div class="card"><div class="cab2"><h2>Tú</h2><span class="sub" style="font-size:12px">nivel ${m.nivel ?? "?"}</span></div>
+    <div style="display:flex;gap:16px;align-items:center">${img("champion", m.campeon, "item", m.campeon)}<b style="font-size:30px">${esc(m.kda || "")}</b></div></div>`;
+  const aside = `
+  <div><span class="sub">Cuidado con</span><h2 style="font-size:28px">${am[0] ? esc(am[0].campeon) : "—"}</h2><span class="sub">los rivales más fuertes ahora</span></div>
+  ${am.map((a, i) => `<div class="est" style="gap:10px"><div style="display:flex;align-items:center;gap:14px">${img("champion", a.campeon, "item", a.campeon)}
+    <div style="flex:1"><b style="font-size:17px">${i + 1}. ${esc(a.campeon)}</b><br><span class="sub">${esc(a.kda)} · nivel ${a.nivel ?? "?"}</span></div></div>
+    ${(a.items || []).length ? `<div style="display:flex;gap:8px;flex-wrap:wrap">${a.items.map(([id, n]) => img("item", id, "item", n)).join("")}</div>` : ""}</div>`).join("")}`;
+  return [main, aside];
+}
+
 function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estado en vivo; al terminar, la línea final
   const m = s.meta, f = s.fin;
   if (!m && !f) return [otraFase(s), ""];
+  if (m && !f && m.modo === "ARAM") return envivoAram(s, m);
   const x = f || m, min = x.minuto ?? 0, reglas = [];
   const est = (ok, cuando) => min < cuando ? ["▲ Ahora", "amber"] : ok ? ["✓ Cumplida", "ok"] : ["✕ Fallada", "red"];
   if (x.nivel != null && x.nivel_rival != null) reglas.push([`Llega al 6 sin nivel abajo`, `Nivel ${x.nivel} contra ${x.nivel_rival} de ${esc(x.rival || "tu rival")}`, ...est(x.nivel >= x.nivel_rival, 6), 6]);

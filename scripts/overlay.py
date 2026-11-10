@@ -15,6 +15,10 @@ def partes(meta, ahora):
     """[(texto, color)] de la franja, o [] sin datos. meta = ESTADO["meta"] (companion.meta_fase + «recibido»): los
     timers llegan cada 30 s; entre fotos se descuentan con el reloj local."""
     if not meta: return []
+    if meta.get("modo") == "ARAM":  # sin líneas ni dragón: el marcador, la amenaza y tu KDA
+        (tu, ellos), a = meta.get("kills") or [0, 0], (meta.get("amenazas") or [{}])[0]
+        cuidado = [(f"Cuidado {a['campeon']} {a['kda']}", AMBAR)] if a.get("campeon") else []
+        return [(f"Kills {tu} vs {ellos}", ROSA if tu < ellos else TXT)] + cuidado + [(f"Tu KDA {meta.get('kda', '')}", TXT)]
     o, edad = meta.get("objetivos") or {}, max(0.0, ahora - (meta.get("recibido") or ahora))
     out = []
     for nombre, k in (("Dragón", "dragon"), ("Barón", "baron")):
