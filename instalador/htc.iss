@@ -1,6 +1,6 @@
 ; Instalador de HTC: por usuario (sin admin) en %LOCALAPPDATA%\Programs\HTC.
 ; Los datos (datos/, config.json) se crean junto al exe y no se borran al desinstalar.
-#define Version "0.3.6"
+#define Version "0.3.7"
 [Setup]
 AppId={{6B1F0C2E-4D1A-4C8E-9E57-48544301C11B}
 AppName=HTC
@@ -39,3 +39,15 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 [Run]
 Filename: "{app}\HTC.exe"; Parameters: "--fondo"; Flags: nowait runhidden; Tasks: inicio
 Filename: "{app}\HTC.exe"; Description: "Abrir HTC"; Flags: nowait postinstall skipifsilent
+
+[UninstallRun]
+Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM HTC.exe"; Flags: runhidden; RunOnceId: "CerrarHTC"
+
+[Code]
+// HTC en --fondo no tiene ventana: el Restart Manager no lo cierra y HTC.exe queda bloqueado al actualizar
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var R: Integer;
+begin
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM HTC.exe', '', SW_HIDE, ewWaitUntilTerminated, R);
+  Result := '';
+end;

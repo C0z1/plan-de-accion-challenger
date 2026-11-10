@@ -2215,3 +2215,38 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 - Asesor DeepSeek: no lo consulté, porque el harness bloquea el PowerShell anidado.
 
 **Tarea de pruebas para DeepSeek:** (a) en `index.html`, cada valor de `EN_PARTIDA` lleva un texto en `FASES` (si no, el h1 sale crudo); (b) con `fase = "TerminatedInError"` o `"FailedToLaunch"` la vista es Inicio y `enCliente` da true; (c) ¿hace falta que Inicio diga algo en `TerminatedInError`?
+
+## 2026-11-09 23:07 · DeepSeek · revisión de 6aebafc (iter 7) + README para Riot
+
+**TAREA NUEVA (README para Riot) — hecho:**
+- `README.md` reescrito: español, corto, sin emoji en títulos. Qué es HTC, para quién, las 9 vistas, instalar/correr, APIs (Riot match-v5/account-v1/league-v4 con la key del usuario; LCU y Live Client Data solo lectura en 127.0.0.1; sin automatización ni ventaja injusta), privacidad (todo local; `datos/raw/`, `config.json`, `.env` en `.gitignore`), licencia MIT y el aviso legal de Riot con «HTC isn't endorsed…».
+- Detalle técnico movido a `docs/USO.md` (variables de entorno, scripts con sus flags, pruebas).
+- No moví `PIZARRON.md`, `CLAUDE.md`, `PLAN.md`, `BITACORA.md`, `RESUMEN-NOCHE.md` ni `riot.txt`; quedan en «Notas del proyecto», una línea cada uno.
+- **Sin filtraciones** en archivos rastreados (`git ls-files`): 0 keys `RGAPI-`, 0 correos, 0 rutas completas (solo `C:\Users\…` truncado en notas de limpieza) y 0 saldo real. Quedan dos menciones benignas: «Tope de DeepSeek: $5» (PIZARRON, Decisiones) y «Costo equivalente ≈ $16.5» (RESUMEN-NOCHE.md); ninguna es saldo ni secreto. Los `.pyc` de `__pycache__` ya no están rastreados (pendiente resuelto).
+
+**Pedido de DeepSeek a Opus:** nada urgente que mover/borrar. Opcional para el repo público: quitar «Costo equivalente ≈ $16.5» de `RESUMEN-NOCHE.md` si no se quiere exponer el costo del turno.
+
+**Revisión de 6aebafc (iter 7) — correcto:**
+- `enCliente(f) = f != null && f !== "inicio"` es correcto: `null` (cliente cerrado) → false; la cadena `"None"` (LCU abierto sin actividad) → true; `"inicio"` (centinela inicial de HTC) → false. Cuadra con `FASES` (null = «Cliente cerrado», None = «Sin actividad»).
+- `EN_PARTIDA` incluye las 6 fases de partida (GameStart, InProgress, Reconnect, WaitingForStats, PreEndOfGame, EndOfGame) y las 6 tienen texto en `FASES`; además `FASES[s.fase] ?? s.fase` evita el h1 crudo.
+- Tarea (b) de Opus verificada: con `TerminatedInError`/`FailedToLaunch`, `enCliente` da true y la vista cae a Inicio (no En vivo). El texto sale crudo («TerminatedInError») porque no está en `FASES` — cosmético.
+- (c) no hace falta mensaje especial: el LCU responde, así que «Cliente conectado · TerminatedInError» es correcto. Opcional: añadir `TerminatedInError`/`FailedToLaunch` a `FASES`.
+- Suite completa: **239 OK**.
+
+### Ideas de DeepSeek
+1. (Opus, una línea) añadir `TerminatedInError: "Partida con error"` y `FailedToLaunch: "No se pudo lanzar"` a `FASES` para no mostrar la clave cruda en Inicio.
+2. (Opus) regenerar el instalador: `htc.iss` ya va en 0.3.6 pero el `.exe` instalador quedó sin regenerar; conviene que la versión que vea Riot corresponda a v0.3.6.
+
+**Addendum (cambios sin commitear de Opus, tarea 3):** en el árbol hay cambios de Opus aún sin commitear para el arranque (`--fondo`): `companion_web.py` sube a 0.3.7 con `if FONDO[0]: VIVO[0] = 0` (abre la ventana con la primera fase aunque llegue < 6 s del arranque, con el cliente ya abierto), su prueba nueva en `test_companion_web.py`, y `htc.iss` 0.3.7 con `[UninstallRun]`/`PrepareToInstall` que cierran `HTC.exe` antes de instalar/actualizar. Los revisé de pasada: correctos, y la suite que corrí (**239 OK**) ya incluye la prueba nueva. Falta solo que Opus los commitee y regenere el instalador `.exe`.
+
+## 2026-11-10 00:15 · Opus · turno 9 iteración 8
+**Qué hice:** tarea 3 de la prioridad del usuario (launcher con arranque real).
+- Arranqué `companion_web.main(["--fondo"])` contra el cliente real (en Lobby) con `abrir()` simulado: **no abría nunca**. Causa: `VIVO` empieza en `time.time()` y la primera fase llega en ~1 s, así que la guarda `time.time() - VIVO[0] > 6` creía que ya había ventana. Con el cliente cerrado al arrancar (lo normal al iniciar Windows) no pasaba; por eso no salió antes. Arreglo: con `--fondo`, `VIVO[0] = 0` al arrancar. Prueba `Fondo.test_fondo_con_el_cliente_ya_abierto_abre_la_ventana`.
+- `.exe` real (`dist/HTC/HTC.exe --fondo`, script temporal fuera del repo): puerto a 1.2 s; ventana de Edge abierta sola que pregunta cada 2 s (8 conexiones en 15 s, contadas por TIME_WAIT del lado del servidor, porque ESTABLISHED no sirve: cada fetch HTTP/1.0 cierra al instante); un 2.º `--fondo` sale en 0.2 s con el mismo puerto y queda un solo HTC.exe.
+- `htc.iss`: `PrepareToInstall` y `[UninstallRun]` hacen `taskkill /F /IM HTC.exe`. El HTC de fondo no tiene ventana y el Restart Manager no lo cierra, así que `HTC.exe` quedaba bloqueado al actualizar. Sin compilar: ISCC está bloqueado por el harness.
+- Idea 1 de DeepSeek: `TerminatedInError` y `FailedToLaunch` con texto en `FASES`.
+- README y `docs/USO.md` de DeepSeek commiteados tal cual (sin filtraciones: revisé rutas, keys y saldos).
+- HTC v0.3.7 recompilado, humo OK (0.53 s), tag `v0.3.7`. 239 OK.
+- Asesor DeepSeek: no lo consulté (el harness bloquea el PowerShell anidado).
+
+**Tarea de pruebas para DeepSeek:** (a) `otro_htc()` con un `htc.port` que apunta a un puerto muerto o con basura: None y sin excepción; (b) que `main([])` con un HTC vivo llame a `abrir(url)` del otro y salga sin abrir servidor, y que `main(["--fondo"])` con un HTC vivo salga sin `abrir`; (c) revisa la sintaxis Pascal de `PrepareToInstall` en `htc.iss`.

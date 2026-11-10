@@ -162,7 +162,7 @@ const ICON = {
 const ic = (n, t = 22, label = "") => `<svg ${label ? `role="img" aria-label="${label}"` : 'aria-hidden="true"'} width="${t}" height="${t}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICON[n] || ICON.alerta}</svg>`;
 const ROL = {TOP: "Top", JUNGLE: "Jungla", MIDDLE: "Mid", BOTTOM: "Bot", UTILITY: "Support"};
 const FASES = {null: "Cliente cerrado", None: "Sin actividad", Lobby: "En lobby", Matchmaking: "Buscando partida", ReadyCheck: "Partida encontrada",
-  ChampSelect: "Champ select", GameStart: "Cargando partida", InProgress: "En partida", Reconnect: "Reconectando", WaitingForStats: "Fin de partida", PreEndOfGame: "Fin de partida", EndOfGame: "Fin de partida", inicio: "Iniciando…"};
+  ChampSelect: "Champ select", GameStart: "Cargando partida", InProgress: "En partida", Reconnect: "Reconectando", WaitingForStats: "Fin de partida", PreEndOfGame: "Fin de partida", EndOfGame: "Fin de partida", TerminatedInError: "Partida con error", FailedToLaunch: "No se pudo lanzar la partida", inicio: "Iniciando…"};
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
 const signo = (v, d = 0) => v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d);
 const pct = p => Math.round(p * 100) + "%";

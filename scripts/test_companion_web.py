@@ -1,5 +1,5 @@
 """Pruebas de companion_web.py sin red, sin cliente ni navegador: estado JSON y HTTP servido."""
-import http.client, http.server, json, threading, unittest
+import http.client, http.server, json, pathlib, threading, unittest
 from unittest import mock
 
 import companion_web as w
@@ -166,6 +166,19 @@ class Fondo(unittest.TestCase):
             w.evento(("fase", "Lobby")); a.assert_not_called()       # la ventana sigue preguntando
             w.FONDO[0], w.VIVO[0] = False, 0; w.ESTADO["fase"] = None
             w.evento(("fase", "Lobby")); a.assert_not_called()       # sin --fondo nunca abre sola
+
+    def test_fondo_con_el_cliente_ya_abierto_abre_la_ventana(self):
+        # bug real: arrancar --fondo con LoL abierto no abría nada (la primera fase llegaba en < 6 s del arranque)
+        import tempfile
+        class Fin(Exception): pass
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(w, "otro_htc", return_value=None), \
+                mock.patch.object(w, "PUERTO", pathlib.Path(d) / "htc.port"), mock.patch.object(w, "autoarranque"), \
+                mock.patch.object(w, "refrescar"), mock.patch.object(w.gui, "trabajador"), \
+                mock.patch.object(w.time, "sleep", side_effect=Fin), mock.patch.object(w, "abrir") as a, \
+                mock.patch.object(w.gui, "perfil", return_value="x"):
+            with self.assertRaises(Fin): w.main(["--fondo"])
+            a.assert_not_called()                                      # --fondo no abre al arrancar...
+            w.ESTADO["fase"] = "inicio"; w.evento(("fase", "Lobby")); a.assert_called_once()  # ...sino con la primera fase
 
 
 class Post(unittest.TestCase):

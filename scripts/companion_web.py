@@ -17,7 +17,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "espera": None, "rango": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
-VERSION = "0.3.6"  # HTC; también invalida la caché de rendimiento
+VERSION = "0.3.7"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
 PUERTO = gui.REPO / "datos" / "cache" / "htc.port"  # el HTC que ya corre: otro arranque abre su ventana en vez de duplicarse
@@ -215,6 +215,7 @@ def main(argv=None):
         return
     srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H); url = f"http://127.0.0.1:{srv.server_port}/"
     URL[0], FONDO[0] = url, "--fondo" in argv
+    if FONDO[0]: VIVO[0] = 0  # aún no hay ventana: si el cliente ya está abierto, la primera fase la abre
     ESTADO["autoarranque"] = autoarranque()
     if unico:
         try: PUERTO.parent.mkdir(parents=True, exist_ok=True); PUERTO.write_text(str(srv.server_port))
