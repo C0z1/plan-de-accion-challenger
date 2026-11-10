@@ -185,7 +185,9 @@ DESCARGANDO = threading.Lock()
 
 def descargar_todo(n=100):
     """Baja tus últimas n partidas (descargar.py, con tu key o tu código) y recalcula todo; el avance va a «descarga»."""
-    if not DESCARGANDO.acquire(blocking=False): return  # ya hay una en curso
+    if not DESCARGANDO.acquire(blocking=False):  # ya hay una en curso
+        with LOCK: ESTADO.update(descarga="Ya se están bajando tus partidas…", v=ESTADO["v"] + 1)
+        return
     try:
         def aviso(t):
             with LOCK: ESTADO.update(descarga=t, v=ESTADO["v"] + 1)
@@ -195,7 +197,8 @@ def descargar_todo(n=100):
         aviso("Descargando tus partidas… puede tardar unos minutos la primera vez.")
         code, out = gui.script("descargar.py", str(n))
         if code in (0, 3):
-            aviso("Listo: " + (out.strip().splitlines() or [""])[-1]); refrescar()
+            ult = (out.strip().splitlines() or [""])[-1].strip()
+            aviso("Listo: " + (ult[len("listo: "):] if ult.lower().startswith("listo: ") else ult) + " al día."); refrescar()
         else: aviso((out.strip().splitlines() or [f"falló ({code})"])[-1])
     finally: DESCARGANDO.release()
 
@@ -357,8 +360,12 @@ class H(http.server.BaseHTTPRequestHandler):
             with LOCK: ESTADO.update(descarga="Código guardado. Ya puedes descargar tus partidas.", conectado=True, v=ESTADO["v"] + 1)
             threading.Thread(target=primera_vez, daemon=True).start()  # con el cliente abierto, empieza a bajar sola
             return self.enviar(200, b"{}", "application/json")
-        if self.path == "/api/recargar":  # Ajustes_Vino «Recargar»: vuelve a leer tus partidas del disco
-            threading.Thread(target=refrescar, daemon=True).start(); return self.enviar(200, b"{}", "application/json")
+        if self.path == "/api/recargar":  # Ajustes_Vino «Recargar»: vuelve a leer tus partidas del disco, con aviso
+            def recargar():
+                with LOCK: ESTADO.update(descarga="Recalculando tus estadísticas…", v=ESTADO["v"] + 1)
+                refrescar()
+                with LOCK: ESTADO.update(descarga="Listo: tus estadísticas están al día.", v=ESTADO["v"] + 1)
+            threading.Thread(target=recargar, daemon=True).start(); return self.enviar(200, b"{}", "application/json")
         if self.path not in ("/api/autoarranque", "/api/ajuste"): return self.enviar(404, b"", "text/plain")
         try: d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 200))); on = d["on"]
         except (ValueError, KeyError, TypeError): return self.enviar(400, b"", "text/plain")

@@ -716,10 +716,11 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
       <div class="card"><div class="cab2"><h2>Cuenta</h2></div>
         ${fila("Riot ID", esc([String(s.perfil || "").split(" · ")[0], s.region].filter(Boolean).join(" · ")) || "Abre el cliente de LoL", '<span class="sub" style="font-size:12px">la del cliente</span>')}
         ${fila("Partidas descargadas", V ? `${V.total} · última: ${esc(ult)}` : s.cliente ? `${s.cliente.length} del cliente (sin descargar)` : "sin datos", '<span style="display:flex;gap:8px"><button class="btn2" onclick="descargar()">Descargar</button><button class="btn2" onclick="recargar()">Recargar</button></span>')}
+        ${s.descarga && !/Google/.test(s.descarga) ? `<span class="sub" style="font-size:13px;margin:-4px 0 4px 16px" role="status" aria-live="polite">${esc(s.descarga)}</span>` : ""}
         ${loginNube(s)}
         <details class="alt"><summary>Usar un código de acceso</summary>
           ${fila("Código de acceso", s.conectado && !s.nube ? "Conectado a racha.gg: tus partidas se bajan solas." : "Te lo da quien administra Racha.", (s.conectado && !s.nube ? '<span class="tag ok" style="align-self:center">✓ Conectado</span> ' : "") + '<span style="display:flex;gap:8px"><input id="acceso" type="password" autocomplete="off" aria-label="Código de acceso" placeholder="código" style="width:130px;height:40px;background:var(--dark3);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:8px 10px;font:inherit"><button class="btn2" onclick="guardarAcceso()">Guardar</button></span>')}</details>
-        ${s.descarga ? `<span class="sub" style="font-size:13px" role="status">${esc(s.descarga)}</span>` : ""}</div>
+</div>
       <div class="card"><div class="cab2"><h2>Apariencia</h2></div>
         ${fila("Reducir movimiento", "Tubos y anillos sin ola ni brillo.", tog("t-rm", rm, false, "quieto()"))}
         ${fila("Siempre encima en partida", "La franja queda sobre el juego (en modo sin bordes).", tog("t-overlay", aj.overlay !== false, false, `ajuste('overlay',${aj.overlay === false})`))}
@@ -777,6 +778,7 @@ function recortar() {  // la barra que Edge dibuja por dentro = outerHeight - in
 window.addEventListener("resize", () => { if (recortada) recortar(); });
 async function descargar() {
   try { await fetch("/api/descargar", {method: "POST", headers: {"X-HTC": "1"}}); } catch (e) {}
+  v = -1; tick();
 }
 async function guardarAcceso() {
   const t = (document.getElementById("acceso") || {}).value || "";
@@ -785,6 +787,7 @@ async function guardarAcceso() {
 }
 async function recargar() {
   try { await fetch("/api/recargar", {method: "POST", headers: {"X-HTC": "1"}}); } catch (e) {}
+  v = -1; tick();
 }
 async function autoarranque(on) {
   try { await fetch("/api/autoarranque", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({on})}); } catch (e) {}
