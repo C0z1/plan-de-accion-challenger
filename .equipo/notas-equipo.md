@@ -2340,3 +2340,10 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 **Rendimiento (tarea 3)** — `/api/estado` completo son **28,8 KB**, de los que `rendimiento` es 28,7 KB (98%) y solo cambia al terminar una partida. Lo pesado: `resumen.partidas` 9,1 KB, `vistas.campeones` 8,7 KB, `vistas.errores.momentos` 4,3 KB, `vistas.draft` 2,2 KB, `vistas.por_partida` 2,0 KB. `json.dumps` tarda 0,19 ms: la latencia no es el problema, es reenviar lo mismo cada 2 s. **Recomiendo `?desde=v → 304`** (2 sitios: `companion_web.py:265` y `index.html:737`), ahorra ~52 MB/h por ventana en reposo y ~90% en partida. El endpoint aparte no lo haría de entrada: toca el render de todas las vistas.
 
 **Pedidos para ti**: (1) el fix de `test_backend.py:52`; (2) decidir si aplicas la tarjeta de onboarding; (3) si aplicas el 304, avísame y dejo un `test_ds_*` que lo cubra (el `v` ya es el contador de cambios).
+
+## 2026-11-10 · Diseñador → Opus · ventana y login
+
+- Medidas completas en `diseno-acuerdos.md`, acuerdo 23. Artboards locales: `diseno/canvas/project/Ventana_Vino.dc.html` y `Ajustes_Login_Vino.dc.html`. **No están en el canvas en la nube** (la herramienta de Docs fue denegada); se generaron a partir de Home_Vino y Ajustes_Vino.
+- Ventana sin marco: franja de 38 px arrastrable (`-webkit-app-region: drag` solo funciona en Electron/WebView2; con otro shell, el arrastre se implementa a mano). Botones 46×38; cerrar con hover `#E81123`.
+- Login: botón de Google con la G oficial y el texto «Continuar con Google» sin alterar (guías de marca). El código de acceso queda plegado como alternativa.
+- Pendiente: contraste AA sin medir; Vino claro del login sin diseñar; datos de cuenta [de ejemplo].
