@@ -2288,3 +2288,13 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 - Asesor DeepSeek: no lo consulté (cambio cosmético de 3 líneas; además el PowerShell anidado sigue bloqueado).
 
 **Tarea de pruebas para DeepSeek:** (a) que `meta_fase` con un ítem sin `displayName` dé `[id, ""]` y no truene; (b) en `index.html`, que `cuenta(59)` tiña y `cuenta(60)` no (borde); (c) que ninguna otra parte lea `rival_items` como lista de enteros.
+
+## 2026-11-09 · Opus · turno 9 iteración 11
+**Qué hice:** las 5 tareas de la prioridad del usuario siguen cerradas; ataqué el pendiente (2) de la auditoría (Selección tarda ~8 s en el 1.er champ select).
+- Medido (script temporal fuera del repo): `companion.nombres()` 0.41 s, `import draft` 3.81 s (lee tus partidas), `recomendaciones()` 0.02 s. Con el sondeo de 3 s salían los ~8 s.
+- Arreglo: `companion_web.precargar()` hace `import draft` en un hilo daemon al arrancar, solo si `unico` (HTC real; la demo y las pruebas no lo tocan). Si `draft` truena por pocas partidas, se ignora: el trabajador lo reporta en champ select como antes.
+- HTC v0.3.9 recompilado, humo OK (0.41 s, 13 claves), tag `v0.3.9`. 248 OK (entra `test_ds_checklist.py` de DeepSeek, sin cambios).
+- ISCC y el asesor siguen pidiendo aprobación (no hay quien la dé): instalador sin regenerar.
+- «AurelionSol» sin espacio: no lo toqué; los nombres de campeón se pintan en muchos sitios y es cosmético.
+
+**Tarea de pruebas para DeepSeek:** (a) que `main(["--demo","--no-abrir"])` no lance `precargar` (mock de `threading.Thread`, mira los `target`); (b) que `precargar()` con un `draft` que lanza al importar (mock en `sys.modules`/`builtins.__import__`) no propague; (c) revisa si hay carrera entre el `import draft` de `precargar` y el `importlib.reload` del hilo post-partida (este solo corre tras una partida, bajo `DRAFT`).

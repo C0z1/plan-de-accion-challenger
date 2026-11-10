@@ -17,7 +17,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "espera": None, "rango": None, "rendimiento": None, "pos": None, "autoarranque": None, "v": 0}
-VERSION = "0.3.8"  # HTC; también invalida la caché de rendimiento
+VERSION = "0.3.9"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
 PUERTO = gui.REPO / "datos" / "cache" / "htc.port"  # el HTC que ya corre: otro arranque abre su ventana en vez de duplicarse
@@ -106,6 +106,11 @@ def bombear(q):
 def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la cola
     r = rendimiento_rapido()
     with LOCK: ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1)
+
+
+def precargar():  # import draft lee tus ~300 partidas (~4 s): al arrancar, para que el primer champ select no lo espere
+    try: import draft  # noqa: F401
+    except Exception: pass  # sin partidas suficientes truena; el trabajador lo reporta al llegar a champ select
 
 
 def estado():
@@ -223,6 +228,7 @@ def main(argv=None):
     q = queue.Queue()
     threading.Thread(target=bombear, args=(q,), daemon=True).start()
     threading.Thread(target=refrescar, daemon=True).start()
+    if unico: threading.Thread(target=precargar, daemon=True).start()
     threading.Thread(target=demo if "--demo" in argv else gui.trabajador, args=(q,), daemon=True).start()
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     print(url, flush=True)
