@@ -105,7 +105,7 @@ details.otras[open]>div{background:var(--dark2);border-radius:10px;padding:8px 1
 .forma{display:flex;gap:4px;margin-top:6px}.forma i{width:12px;height:12px;border-radius:3px;background:#FF8A8A}.forma i.v{background:#A8D8C0}
 .filtro{border:1px solid var(--line);background:var(--dark2);color:var(--txt);border-radius:999px;padding:6px 14px;font:700 13px Mulish,sans-serif;cursor:pointer}.filtro.on{background:var(--acc);color:var(--ontint);border-color:var(--acc)}
 .pfila{display:grid;grid-template-columns:4px minmax(150px,1.5fr) 70px minmax(140px,1.3fr) 150px 160px minmax(120px,1.2fr) 64px;gap:14px;align-items:center;padding:10px 14px 10px 0;border-radius:10px;background:var(--dark2)}
-.pfila.cab{background:none;font-size:12px;color:var(--muted)}.pfila.sel{box-shadow:0 0 0 1px var(--acc) inset}.pfila .res{align-self:stretch;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.pfila.cab{background:none;font-size:12px;color:var(--muted)}.pfila.sel{box-shadow:0 0 0 1px var(--acc) inset}.pfila .res{align-self:stretch;border-radius:4px}
 .fch{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--dark3);color:var(--muted)}
 .fch.ok{background:var(--okbg);color:var(--okfg)}.fch.red{background:var(--redbg);color:var(--redfg)}
 .btn2{border:1px solid var(--line);background:none;color:var(--txt);border-radius:10px;padding:8px 14px;font:700 13px Mulish,sans-serif;cursor:pointer}
@@ -242,7 +242,7 @@ function champSelect(s) {
       <div class="card">${d.recs.map(r => `<div class="fila" style="border-color:var(--line)"><b>${esc(r.rival || "?")}</b><span>${r.filas && r.filas.length ? esc(r.filas[0].champ) + " " + pct(r.filas[0].est) : "sin datos"}</span></div>`).join("")}</div>`, ""];
   const fi = rec.ficha;
   if (!rec.conocido || !fi) return [`<h1>Selección de campeón</h1><span class="sub">${esc(pos)} · contra ${esc(rec.rival || "?")}</span>
-      <div class="card"><b>${esc(rec.rival || "?")} no aparece en tus partidas</b><span class="sub">Va tu WR por campeón en el rol.</span></div>`, ""];
+      <div class="card"><b>${esc(rec.rival || "?")} no aparece en tus partidas</b><span class="sub">Va tu win rate por campeón en el rol.</span></div>`, ""];
   const pq = fi.por_que, c = fi.cuidado, b = rec.build_dict, wr = s.rango && s.rango.n ? s.rango.wr / 100 : null;
   const main = `
   <div><h1>Selección de campeón</h1><span class="sub">${d.previa ? "Vista previa contra tu rival más frecuente · " : d.probable ? "Rival de línea probable (Riot oculta los roles enemigos) · " : ""}${esc(pos)} · ${esc(fi.champ)} contra ${esc(fi.rival)}</span></div>
@@ -251,8 +251,8 @@ function champSelect(s) {
       <div class="big"><b>${pq.v}-${pq.n - pq.v}</b><span>con ${esc(fi.champ)}</span></div>
       <span class="pie">${pq.pocas ? "Pocas partidas: pista" : `${pq.n} partidas contra él`}</span></div>
     <div class="card stat"><div class="cab">${img("champion", fi.champ, "ico40")}<b>Tu ${esc(fi.champ)}</b></div>
-      <div class="big"><b>${pct(pq.wr_rol)}</b><span>${wr != null ? "tu WR " + pct(wr) : pq.n_rol + " partidas"}</span></div>
-      <span class="tuboH" style="flex:none;width:100%;margin-top:auto" role="img" aria-label="WR con ${esc(fi.champ)} ${pct(pq.wr_rol)}${wr != null ? ", tu WR " + pct(wr) : ""}"><i style="width:${pq.wr_rol * 100}%;background:linear-gradient(90deg,#A33A63,#F8C3D6)"></i>${wr != null ? `<u style="left:${wr * 100}%"></u>` : ""}</span></div>
+      <div class="big"><b>${pct(pq.wr_rol)}</b><span>${wr != null ? "tu win rate " + pct(wr) : pq.n_rol + " partidas"}</span></div>
+      <span class="tuboH" style="flex:none;width:100%;margin-top:auto" role="img" aria-label="Win rate con ${esc(fi.champ)} ${pct(pq.wr_rol)}${wr != null ? ", tu win rate " + pct(wr) : ""}"><i style="width:${pq.wr_rol * 100}%;background:linear-gradient(90deg,#A33A63,#F8C3D6)"></i>${wr != null ? `<u style="left:${wr * 100}%"></u>` : ""}</span></div>
     <div class="card stat"><div class="cab" style="justify-content:space-between"><b>Hasta el nivel 6</b><span class="sub" style="font-size:12px">vs ${esc(c.rival)}</span></div>
       <div class="seis" role="img" aria-label="Del nivel 1 al 6: juega seguro hasta el 6">${[1, 2, 3, 4, 5].map(k => `<span>${k}</span>`).join("")}<span class="meta6">6</span></div>
       <span class="pie">${c.muertes6 != null ? `Mueres antes del 6: <b>${c.muertes6.toFixed(1)}</b> por partida vs él${c.ref.muertes6 != null ? ` (tu media ${c.ref.muertes6.toFixed(1)})` : ""}` : "Juega seguro hasta el 6."}</span></div>
@@ -272,12 +272,12 @@ function champSelect(s) {
   const otras = rec.filas.slice(1, 4);
   const aside = `
   <div style="display:flex;gap:20px;align-items:center">${img("champion", fi.champ, "retrato2", fi.champ)}
-    <div style="flex:1"><span class="sub" style="font-size:13px">Pickea</span><h2 style="font-size:30px">${esc(fi.champ)}</h2>
+    <div style="flex:1"><span class="sub" style="font-size:13px">Elige</span><h2 style="font-size:30px">${esc(fi.champ)}</h2>
       <span class="sub" style="display:flex;align-items:center;gap:6px">${esc(pos)} contra ${img("champion", fi.rival, "ico20", fi.rival)} ${esc(fi.rival)}</span></div>
     ${otras.length ? `<details class="otras"><summary>Otras ${otras.length}</summary>${otras.map(f => `<div class="fila"><b>${esc(f.champ)}</b><span>${esc(f.vd)} · ${pct(f.est)}</span></div>`).join("")}</details>` : ""}</div>
   <div class="est" style="gap:12px"><div style="display:flex;justify-content:space-between;align-items:center"><span>Estimado contra ${esc(fi.rival)}</span>
       <span style="display:flex;align-items:center;gap:8px"><b style="font-size:26px">${pct(est)}</b>${rec.filas[0] && rec.filas[0].champ === fi.champ ? '<span class="tag" style="background:var(--acc);color:var(--ontint)">Mejor pick</span>' : ""}</span></div>
-    <span class="tuboH" style="flex:none;width:100%" role="img" aria-label="Estimado ${pct(est)}${wr != null ? ", tu WR " + pct(wr) : ""}"><i style="width:${x(est)}%;background:linear-gradient(90deg,#3E7A62,#A8D8C0)"></i>${wr != null ? `<u style="left:${x(wr)}%"></u>` : ""}</span>
+    <span class="tuboH" style="flex:none;width:100%" role="img" aria-label="Estimado ${pct(est)}${wr != null ? ", tu win rate " + pct(wr) : ""}"><i style="width:${x(est)}%;background:linear-gradient(90deg,#3E7A62,#A8D8C0)"></i>${wr != null ? `<u style="left:${x(wr)}%"></u>` : ""}</span>
     <div class="escala"><span>40%</span><span>50%</span><span>60%</span><span>70%</span></div>
     <span class="sub" style="font-size:13px">${esc(pq.frase)}</span></div>
   <div style="display:flex;justify-content:space-between;align-items:baseline"><h2 style="font-size:22px">Si te toca contra…</h2><span class="sub" style="font-size:13px">CS al 14</span></div>
@@ -470,21 +470,21 @@ function partidas(s) {  // Partidas_Vino: filtros, historial en tabla (score, re
   const sel = ps.find(p => p.archivo === partSel) || vis[0] || ps[0];
   const chip = (k, t) => `<button class="filtro ${partFiltro === k ? "on" : ""}" onclick="partFiltro='${k}';v=-1;tick()">${t}</button>`;
   const fila = p => { const i = info(p);
-    return `<div class="pfila ${p === sel ? "sel" : ""}"><span class="res" style="background:${p.win ? "var(--teal)" : "var(--red)"}"></span>
-      <span style="display:flex;gap:10px;align-items:center;min-width:0">${img("champion", p.campeon, "item", p.campeon)}<span style="min-width:0"><b>${esc(p.campeon)}</b><br><span class="sub" style="font-size:12px">${p.rival ? "vs " + esc(p.rival) + " · " : ""}${esc(p.fecha)}</span></span></span>
-      <b>${esc(p.kda)}</b>
-      <span style="display:flex;align-items:center;gap:10px"><span class="tuboH" style="flex:1"><i style="width:${Math.max(0, Math.min(100, p.score))}%;background:linear-gradient(90deg,#5E4590,#C9B0F0)"></i></span><b>${Math.round(p.score)}</b></span>
-      <span style="display:flex;gap:6px">${[0, 1, 2, 3].map(k => ficha(i.reglas[k])).join("")}</span>
-      <span>${puestoTag(p)}</span>
-      <span style="font-size:13px;color:${i.error ? "var(--red)" : "var(--muted)"}">${i.error ? esc((ERR[i.error.clave] || [i.error.clave])[0].replace(/ del 14 al 25$/, "")) + " · min " + esc(i.error.minuto.split(":")[0]) : "—"}</span>
-      <button class="btn2" onclick="partSel='${esc(p.archivo)}';v=-1;tick()">Ver</button></div>`; };
+    return `<div class="pfila ${p === sel ? "sel" : ""}" role="row" ${p === sel ? 'aria-current="true"' : ""}><span class="res" role="presentation" style="background:${p.win ? "var(--teal)" : "var(--red)"}"></span>
+      <span role="cell" style="display:flex;gap:10px;align-items:center;min-width:0">${img("champion", p.campeon, "item", p.campeon)}<span style="min-width:0"><b>${esc(p.campeon)}</b><br><span class="sub" style="font-size:12px">${p.rival ? "vs " + esc(p.rival) + " · " : ""}${esc(p.fecha)}</span></span></span>
+      <b role="cell">${esc(p.kda)}</b>
+      <span role="cell" style="display:flex;align-items:center;gap:10px"><span class="tuboH" style="flex:1"><i style="width:${Math.max(0, Math.min(100, p.score))}%;background:linear-gradient(90deg,#5E4590,#C9B0F0)"></i></span><b>${Math.round(p.score)}</b></span>
+      <span role="cell" style="display:flex;gap:6px">${[0, 1, 2, 3].map(k => ficha(i.reglas[k])).join("")}</span>
+      <span role="cell">${puestoTag(p)}</span>
+      <span role="cell" style="font-size:13px;color:${i.error ? "var(--red)" : "var(--muted)"}">${i.error ? esc((ERR[i.error.clave] || [i.error.clave])[0].replace(/ del 14 al 25$/, "")) + " · min " + esc(i.error.minuto.split(":")[0]) : "—"}</span>
+      <span role="cell"><button class="btn2" aria-label="Ver partida de ${esc(p.campeon)}, ${esc(p.fecha)}" onclick="partSel='${esc(p.archivo)}';v=-1;tick()">Ver</button></span></div>`; };
   const i = info(sel), mal = RG.map((t, k) => i.reglas[k] === false ? t : null).filter(Boolean);
   const mejora = [...(i.error ? [[`${(ERR[i.error.clave] || [i.error.clave])[0]} al min ${i.error.minuto.split(":")[0]}`, (ERR[i.error.clave] || [, , ""])[2]]] : []), ...mal.map(t => [t, "Regla del plan que no cumpliste en esta partida."])].slice(0, 3);
   return `
   <div><h1>Partidas</h1><span class="sub">Últimas ${ps.length} · ${v}-${ps.length - v} · MVP en ${mvp} · peor del equipo en ${peor}</span></div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">${chip("todas", "Todas")}${chip("errores", "Con errores")}${RG.map((t, k) => chip(String(k), `${k + 1} · ${CORTA[V.reglas[k].metrica] || t.slice(0, 18)}`)).join("")}</div>
-  <div class="card" style="gap:8px"><div class="cab2"><h2>Historial</h2><span class="sub" style="font-size:12px">la más reciente arriba</span></div>
-    <div class="pfila cab"><span></span><span>Partida</span><span>KDA</span><span>Score (50 = tu rol)</span><span>Reglas 1–${RG.length}</span><span>En tu equipo</span><span>Error</span><span></span></div>
+  <div class="card" style="gap:8px" role="table" aria-label="Historial de partidas"><div class="cab2" role="presentation"><h2>Historial</h2><span class="sub" style="font-size:12px">la más reciente arriba</span></div>
+    <div class="pfila cab" role="row"><span role="presentation"></span><span role="columnheader">Partida</span><span role="columnheader">KDA</span><span role="columnheader">Score (50 = tu rol)</span><span role="columnheader">Reglas 1–${RG.length}</span><span role="columnheader">En tu equipo</span><span role="columnheader">Error</span><span role="columnheader"><span class="sr">Ver</span></span></div>
     ${vis.map(fila).join("") || '<span class="sub">Ninguna partida con ese filtro.</span>'}</div>
   <div class="card"><div class="cab2"><h2>${esc(sel.campeon)}${sel.rival ? " vs " + esc(sel.rival) : ""} · ${esc(sel.fecha)} · ${sel.win ? "Victoria" : "Derrota"}</h2><span class="sub" style="font-size:12px">la partida seleccionada</span></div>
     <div class="tres" style="grid-template-columns:1fr 1fr 1.6fr">
@@ -569,7 +569,7 @@ let ANI = 0;  // ids únicos de los degradados de cada anillo
 function anillo(champ, wr, tam = 150) {  // Draft_Vino/Campeones_Vino: halo que pulsa, órbita punteada con punto, arco en degradado y retrato
   const m = tam / 2, r = tam * .4, c = 2 * Math.PI * r, id = "an" + (++ANI);
   const [a, b] = wr == null ? ["#9A8290", "#5A2D40"] : wr >= .55 ? ["#A8D8C0", "#3E7A62"] : wr >= .5 ? ["#F8C3D6", "#A33A63"] : ["#FF8A8A", "#9A2E3A"];
-  return `<div class="anillo" style="width:${tam}px;height:${tam}px" role="img" aria-label="${esc(champ)}${wr != null ? ", " + pct(wr) + " de WR" : ""}">
+  return `<div class="anillo" style="width:${tam}px;height:${tam}px" role="img" aria-label="${esc(champ)}${wr != null ? ", " + pct(wr) + " de win rate" : ""}">
     <div class="pulso"></div>
     <svg class="orbita" viewBox="0 0 ${tam} ${tam}" width="${tam}" height="${tam}"><circle cx="${m}" cy="${m}" r="${m - 3}" fill="none" stroke="${a}" stroke-opacity=".35" stroke-width="1" stroke-dasharray="2 7"/><circle cx="${m}" cy="3" r="2.5" fill="${a}"/></svg>
     <svg viewBox="0 0 ${tam} ${tam}" width="${tam}" height="${tam}" style="transform:rotate(-90deg)"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs>
@@ -590,13 +590,13 @@ function draftV(s) {  // Draft_Vino: fase de bans y picks antes de ver a tu riva
     ${s.fase === "ChampSelect" && s.crono ? `<span style="border:1px solid var(--acc);border-radius:10px;padding:10px 16px;font-weight:700;font-size:18px" aria-label="Tiempo de la fase">${(() => { const t = Math.max(0, Math.round(s.crono.ms / 1000 - (Date.now() / 1000 - s.crono.t))); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); })()}</span>` : ""}</div>
   <div class="card"><div class="cab2"><h2>Banea</h2><span class="sub" style="font-size:12px">contra quien peor te va en ${esc(rol)}</span></div>
     ${d.bans.length ? d.bans.map(b => `<div class="filaV">${img("champion", b.rival, "item", b.rival)}<div class="txt"><b>${esc(b.rival)} <span class="tag red">${b.v}-${b.n - b.v}</span></b><small>${esc(b.por_que)}</small></div></div>`).join("")
-      : '<span class="sub">Ningún rival con 3+ partidas en el rol te baja del WR.</span>'}</div>
+      : '<span class="sub">Ningún rival con 3+ partidas en el rol te baja del win rate.</span>'}</div>
   <div class="card"><div class="cab2"><h2>Tu pool para ${esc(rol)}</h2><span class="sub" style="font-size:12px">antes de ver al rival</span></div>
     <div class="pool">${d.pool.map((p, i) => `<div class="poolc"><b>${esc(p.champ)}</b>${anillo(p.champ, p.wr, 120)}<div><b style="font-size:26px">${pct(p.wr)}</b> <span class="sub" style="font-size:13px">${p.n} partidas</span></div>
       ${p.n < 10 ? '<span class="tag" style="background:var(--dark4);color:var(--muted)">Pocas partidas</span>' : i === d.pool.reduce((m, x, j, a) => x.wr > a[m].wr ? j : m, 0) ? '<span class="tag ok">El más seguro</span>' : ""}</div>`).join("") || '<span class="sub">Menos de 5 partidas por campeón en este rol.</span>'}</div></div>`;
   const aside = `
   <span class="sub" style="font-size:13px;margin-bottom:-12px">Rival de línea</span>
-  <div style="display:flex;gap:20px;align-items:center"><span class="espera">?</span><div><h2 style="font-size:26px">Esperando su pick…</h2><span class="sub">Cuando tu rival de línea pickee, Racha pasa a Selección con tu mejor pick.</span></div></div>
+  <div style="display:flex;gap:20px;align-items:center"><span class="espera">?</span><div><h2 style="font-size:26px">Esperando su pick…</h2><span class="sub">Cuando tu rival de línea elija, Racha pasa a Selección con tu mejor pick.</span></div></div>
   <div style="display:flex;justify-content:space-between;align-items:baseline"><h2>Rivales frecuentes en ${esc(rol)}</h2><span class="sub" style="font-size:12px">últimos 3 meses</span></div>
   ${d.frecuentes.map(f => `<div class="filaV oscura">${img("champion", f.rival, "item", f.rival)}<b style="flex:1">${esc(f.rival)}</b><span><b style="color:${f.v * 2 >= f.n ? "var(--teal)" : "var(--red)"}">${f.v}-${f.n - f.v}</b> <span class="sub" style="font-size:12px">tu récord</span></span></div>`).join("") || '<span class="sub">Sin rivales recientes.</span>'}`;
   return [main, aside];
@@ -766,10 +766,21 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
       ${av("aviso_muertes", "Muertes del 14 al 25", "Al llegar a 2 muertes desde el 14.")}
       ${av("aviso_regreso", "Plan de regreso", "Del min 10 al 14, si vas abajo de nivel: un consejo para igualar.")}</div>
     ${ayudaV(s, aj)}
+    ${glosarioV()}
   </div>`, ""];
 }
 const CAMPO = "width:100%;box-sizing:border-box;background:var(--dark3);border:1px solid var(--soft);border-radius:10px;color:var(--txt);padding:10px 12px;font:inherit";
 let borrador = "";  // lo que llevas escrito del reporte (sobrevive a que la pantalla se redibuje)
+function glosarioV() {  // v0.9: términos del juego y de Racha, una línea cada uno
+  const t = [["Pick", "elegir campeón (o el campeón que elegiste)."], ["Ban", "campeón que se prohíbe antes de elegir: nadie puede usarlo."],
+    ["Tradear", "intercambiar golpes con tu rival en la línea."], ["Roamear", "dejar tu línea un rato para ayudar a otra."],
+    ["Farmear / CS", "matar minions y monstruos para ganar oro; CS es cuántos llevas."],
+    ["Score", "de 0 a 100: compara tu partida con los 10 jugadores en daño, oro, participación en kills, muertes, visión, CS, objetivos y ventaja de línea, ajustado a tu rol. 50 es lo típico de tu rol."],
+    ["Estimado", "tu win rate con ese campeón, corregido: con pocas partidas se acerca al win rate general del campeón, para que 2 victorias seguidas no engañen."],
+    ["Oro al 14", "el oro que llevas al minuto 14, cuando suelen acabar las líneas."], ["Rival de línea", "quien juega tu mismo rol en el equipo contrario."]];
+  return `<details class="card alt" style="align-self:flex-start"><summary>Glosario</summary>
+    <dl style="margin:12px 0 0;display:flex;flex-direction:column;gap:8px">${t.map(([a, d]) => `<div><dt style="display:inline;font-weight:700">${a}:</dt> <dd class="sub" style="display:inline;margin:0;font-size:14px">${d}</dd></div>`).join("")}</dl></details>`;
+}
 function ayudaV(s, aj) {  // v0.8: reportes privados, métricas opcionales y, solo para el admin, invitar amigos
   const inv = s.invitacion;
   const lista = Array.isArray(s.admin) ? s.admin : null;
