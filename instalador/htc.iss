@@ -1,4 +1,4 @@
-﻿; Instalador de HTC: por usuario (sin admin) en %LOCALAPPDATA%\Programs\HTC.
+; Instalador de HTC: por usuario (sin admin) en %LOCALAPPDATA%\Programs\HTC.
 ; Los datos (datos/, config.json) se crean junto al exe y no se borran al desinstalar.
 #define Version "0.4.1"
 [Setup]

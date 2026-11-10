@@ -68,15 +68,34 @@ def ultima_partida():
     except (OSError, ValueError, KeyError, StopIteration): return {}
 
 
-def perfil(r=None):
-    """«gameName#tag · Master 15 LP · 120-100 (55%)»: el rango r (companion.rango, fresco del cliente) si lo hay; si no, el de perfil.json."""
+CUENTA = [None]  # «gameName#tag» con sesión en el cliente (la pone companion_web.vigilar_cuenta)
+
+
+def dueno():
+    """«gameName#tag» de la cuenta cuyas partidas están en disco (perfil.json), o None."""
+    try: a = json.loads((RAW / "perfil.json").read_text())["account"]; return f"{a['gameName']}#{a['tagLine']}"
+    except (OSError, ValueError, KeyError, TypeError): return None
+
+
+def ajeno(cuenta):
+    """True si el cliente tiene otra cuenta que la de las partidas en disco: ese historial no es de quien juega."""
+    d = dueno()
+    return bool(cuenta and d and cuenta.casefold() != d.casefold())
+
+
+def perfil(r=None, cuenta=None):
+    """«gameName#tag · Master 15 LP · 120-100 (55%)». La cuenta con sesión en el cliente manda; el rango r (fresco del
+    cliente) gana al de perfil.json, que solo se usa si es de esa misma cuenta."""
+    tx = lambda x: " ".join(y for y in (x["tier"].title(), x["division"], f"{x['lp']} LP") if y) + (f" · {x['wins']}-{x['losses']} ({x['wr']}%)" if x["n"] else "")
+    if cuenta and ajeno(cuenta): return f"{cuenta} · {tx(r)}" if r else cuenta
     try:
         d = json.loads((RAW / "perfil.json").read_text()); a = d["account"]
         solo = next((e for e in d["league"] if e["queueType"] == "RANKED_SOLO_5x5"), None)
         rango = f"{solo['tier'].title()} {solo.get('rank', '') if solo['tier'] not in ('MASTER', 'GRANDMASTER', 'CHALLENGER') else ''} {solo['leaguePoints']} LP".replace("  ", " ") if solo else "sin rango"
-        if r: rango = " ".join(x for x in (r["tier"].title(), r["division"], f"{r['lp']} LP") if x) + (f" · {r['wins']}-{r['losses']} ({r['wr']}%)" if r["n"] else "")
-        return f"{a['gameName']}#{a['tagLine']} · {rango}"
-    except (OSError, ValueError, KeyError): return "sin historial todavía"
+        return f"{a['gameName']}#{a['tagLine']} · {tx(r) if r else rango}"
+    except (OSError, ValueError, KeyError, TypeError):
+        if cuenta: return f"{cuenta} · {tx(r)}" if r else cuenta  # amigo sin partidas descargadas: su cuenta y rango, del cliente
+        return "sin historial todavía"
 
 
 def hay_key():
@@ -88,6 +107,7 @@ def hay_key():
 
 def recomendaciones(pos, rivales):
     """[(rival, datos_draft | None)] usando draft.py (lo recarga si hay partidas nuevas)."""
+    if ajeno(CUENTA[0]): return [(r, None) for r in rivales]  # tus partidas en disco son de otra cuenta: no recomendar con ellas
     try: import draft
     except (AssertionError, OSError, ValueError, KeyError): return [(r, None) for r in rivales]  # sin partidas ni perfil.json (beta sin key): rival «sin datos», no un error
     with DRAFT: return [(r, dict(draft.datos_draft(r, pos), ficha=draft.ficha(r, pos)) if r else None) for r in rivales]

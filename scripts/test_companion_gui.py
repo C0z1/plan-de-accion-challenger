@@ -39,6 +39,41 @@ class TestPerfil(unittest.TestCase):
             finally: g.RAW = orig
 
 
+class TestCuentaDelCliente(unittest.TestCase):  # v0.5: la cuenta con sesión en el cliente manda sobre perfil.json
+    R = {"tier": "DIAMOND", "division": "IV", "lp": 53, "wins": 10, "losses": 8, "n": 18, "wr": 56}
+
+    def con_perfil(self, prueba, escribir=True):
+        import tempfile
+        with tempfile.TemporaryDirectory() as t:
+            orig, g.RAW = g.RAW, pathlib.Path(t)
+            try:
+                if escribir: (g.RAW / "perfil.json").write_text(json.dumps({"account": {"gameName": "cozi", "tagLine": "1134"},
+                    "league": [{"queueType": "RANKED_SOLO_5x5", "tier": "MASTER", "rank": "I", "leaguePoints": 15}]}))
+                prueba()
+            finally: g.RAW = orig
+
+    def test_otra_cuenta_no_hereda_nombre_ni_rango(self):
+        def p():
+            self.assertTrue(g.ajeno("Zeriously#LAN")); self.assertFalse(g.ajeno("COZI#1134")); self.assertFalse(g.ajeno(None))
+            self.assertEqual(g.perfil(self.R, "Zeriously#LAN"), "Zeriously#LAN · Diamond IV 53 LP · 10-8 (56%)")
+            self.assertEqual(g.perfil(None, "Zeriously#LAN"), "Zeriously#LAN")
+            self.assertEqual(g.perfil(None, "cozi#1134"), "cozi#1134 · Master 15 LP")
+        self.con_perfil(p)
+
+    def test_amigo_sin_partidas_ve_su_cuenta(self):
+        def p():
+            self.assertEqual(g.perfil(self.R, "Amigo#LAN"), "Amigo#LAN · Diamond IV 53 LP · 10-8 (56%)")
+            self.assertEqual(g.perfil(), "sin historial todavía"); self.assertFalse(g.ajeno("Amigo#LAN"))
+        self.con_perfil(p, escribir=False)
+
+    def test_otra_cuenta_no_recibe_recomendaciones_ajenas(self):
+        def p():
+            orig, g.CUENTA[0] = g.CUENTA[0], "Zeriously#LAN"
+            try: self.assertEqual(g.recomendaciones("MIDDLE", ["Ahri"]), [("Ahri", None)])
+            finally: g.CUENTA[0] = orig
+        self.con_perfil(p)
+
+
 class TestLineasFicha(unittest.TestCase):
     REF = dict(n=50, oro14=-118, cs14=-3, xp14=-50, nivel6=0.0, muertes6=0.6)
 

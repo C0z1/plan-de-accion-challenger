@@ -72,6 +72,23 @@ class Http(unittest.TestCase):
         for t in ("Tu rival", "Objetivos", "desde el 20:00"): self.assertIn(t.encode(), b)
         st, b = self.get("/api/estado"); self.assertEqual(st, 200); self.assertIn("fase", json.loads(b))
 
+    def test_vigilar_cuenta_avisa_solo_al_cambiar(self):
+        import queue
+        c, q, n = w.companion, queue.Queue(), iter(range(6))
+        cuentas = ["Uno", "Uno", None, "Dos"]
+        def lcu(path):
+            if "summoner" in path:
+                i = next(n)
+                if i >= len(cuentas): raise KeyboardInterrupt
+                return {"gameName": cuentas[i], "tagLine": "LAN"} if cuentas[i] else None
+            return None
+        orig, c.lcu, ts = c.lcu, lcu, w.time.sleep
+        w.time.sleep = lambda s: None
+        try:
+            with self.assertRaises(KeyboardInterrupt): w.vigilar_cuenta(q)
+        finally: c.lcu, w.time.sleep = orig, ts
+        self.assertEqual([e[1] for e in list(q.queue) if e[0] == "cuenta"], ["Uno#LAN", "Dos#LAN"])
+
     def test_icono(self):
         st, b = self.get("/icono.png"); self.assertEqual(st, 200); self.assertEqual(b[1:4], b"PNG")
         self.assertIn(b'href="/icono.png"', self.get("/")[1])
