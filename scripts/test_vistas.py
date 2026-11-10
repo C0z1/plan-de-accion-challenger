@@ -1,4 +1,4 @@
-"""Pruebas de vistas.errores: sin_pelea solo si tu equipo pierde la pelea, y un frame sin tu id no truena."""
+"""Pruebas de vistas.errores: sin_pelea solo si tu equipo pierde la pelea, sin_objetivo a ±60 s, y un frame sin tu id no truena."""
 import json, os, pathlib, sys, tempfile, unittest
 
 AQUI = pathlib.Path(__file__).resolve().parent
@@ -31,6 +31,13 @@ class SinPelea(unittest.TestCase):
     def test_solo_cuenta_si_tu_equipo_pierde(self):
         self.assertEqual(correr(pelea([3, 4, 5]))["partidas"]["sin_pelea"], 1)  # caen 2 tuyos y 1 rival: perdida
         self.assertEqual(correr(pelea([5, 6, 3]))["partidas"]["sin_pelea"], 0)  # la gana tu equipo sin ti: no es error
+
+    def test_sin_objetivo_mira_60s_antes_y_despues(self):
+        muerte = {"type": "CHAMPION_KILL", "timestamp": 900000, "victimId": 1, "killerId": 2}
+        drag = lambda t: {"type": "ELITE_MONSTER_KILL", "timestamp": t, "killerTeamId": 100}
+        n = lambda evs: correr([{"events": evs}])["partidas"]["sin_objetivo"]
+        self.assertEqual(n([drag(850000), muerte]), 0)  # moriste asegurando el dragón: no es error
+        self.assertEqual(n([drag(830000), muerte]), 1)  # 70 s antes: ya no cuenta como objetivo
 
     def test_frame_sin_tu_id_no_truena(self):
         frames = [{"events": []} for _ in range(6)] + [{"events": [], "participantFrames": {"2": {"level": 6}}}]

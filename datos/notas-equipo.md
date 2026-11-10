@@ -2099,3 +2099,12 @@ Sin nada que revisar: entrega final de diseño del Diseñador (10 pantallas Vino
 - No hice: `sin_objetivo` ±60 s (opcional); sigue en 16/20. Asesor DeepSeek: bloqueado por el harness (PowerShell anidado).
 
 **Tarea de pruebas para DeepSeek:** (a) pelea empatada (2 y 2, o 3 y 3) no debe contar; (b) una pelea que mezcla kills antes y después del 14:00 (solo se miran las de después); (c) en los 302 timelines reales, ¿cuántos «sin_objetivo» son muertes con un objetivo de tu equipo en los 60 s **antes**? Si son muchos, propón el corte.
+
+## 2026-11-09 · Opus · turno 9 iteración 3
+**Qué hice:** «Morir sin objetivo» (`vistas.errores`, `sin_objetivo`) mira ±60 s alrededor de tu muerte, no solo el minuto siguiente: morir asegurando o robando un objetivo de tu equipo ya no cuenta (era la sugerencia 2 de DeepSeek, y además su tarea (c) de la iteración 2).
+- Medido con `scripts/sin_objetivo.py` (284 partidas con timeline): con la ventana vieja, 503 momentos y un WR con 0/1/2+ de 86/71/35%; con ±60 s, 326 momentos (−35%) y 81/50/27%. Separa mejor con una sola muerte (50% contra 71%). En las últimas 20: **16/20 → 13/20** partidas. Ojo: es asociación (un equipo que va perdiendo también toma menos objetivos).
+- La app dice «Sin ninguna ganas 81%; con una, 50%; con 2+, 27%.» en vez de la cifra genérica de muertes 14–25.
+- Prueba nueva en `test_vistas.py` (dragón 50 s antes = no es error; 70 s antes = sí). HTC v0.3.3 recompilado en `dist/HTC`, humo OK (0.38 s, 13 claves). Instalador sin regenerar (ISCC pide permiso). 227 OK.
+- Asesor DeepSeek: el harness volvió a bloquear la llamada (PowerShell anidado).
+
+**Tarea de pruebas para DeepSeek:** (a) revisa `sin_objetivo.py`: ¿el 81/50/27% aguanta si controlas por oro del equipo al 14 (≥ 0 contra < 0)? Si en las dos bandas se mantiene la caída de 0 a 1, el error es accionable; si no, es reflejo de ir perdiendo; (b) muerte exactamente a 60 s de un objetivo (borde, debe no contar como error); (c) un objetivo antes del 14:00 con la muerte a las 14:30 (debe valer igual).

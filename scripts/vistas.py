@@ -100,7 +100,7 @@ def draft_rol(pos, dias=90):
 def errores(gs, n=20):
     """Errores_Vino: los 3 errores repetidos en tus últimas n partidas con timeline, cada uno con sus momentos
     [{campeon, rival, minuto «mm:ss», archivo}]. gs = score.partidas()[0].
-    sin_objetivo: tu muerte del 14 al 25 sin dragón/heraldo/barón/torre de tu equipo en el minuto siguiente.
+    sin_objetivo: tu muerte del 14 al 25 sin dragón/heraldo/barón/torre de tu equipo en el minuto antes ni en el siguiente.
     abajo_6: kill en la que participas (o mueres) del 5:30 al 7:00 con menos nivel que tu rival al minuto 6.
     sin_pelea: pelea del 14 en adelante (3+ muertes en 30 s) que tu equipo pierde (más muertes suyas), sin kill, asistencia ni muerte tuya."""
     mm = lambda ms: f"{ms // 60000}:{ms // 1000 % 60:02d}"
@@ -123,7 +123,7 @@ def errores(gs, n=20):
         obj = [e["timestamp"] for e in ev if (e["type"] == "ELITE_MONSTER_KILL" and e.get("killerTeamId") == eq)
                or (e["type"] == "BUILDING_KILL" and e.get("teamId") not in (None, eq))]
         for e in kills:
-            if e.get("victimId") == yo and 14 * 60000 <= e["timestamp"] < 25 * 60000 and not any(0 <= t - e["timestamp"] <= 60000 for t in obj):
+            if e.get("victimId") == yo and 14 * 60000 <= e["timestamp"] < 25 * 60000 and not any(-60000 <= t - e["timestamp"] <= 60000 for t in obj):  # ±60 s: morir asegurando o robando no cuenta (scripts/sin_objetivo.py)
                 out["sin_objetivo"].append({**base, "minuto": mm(e["timestamp"])})
         if opp and len(fr) > 6:
             pf = fr[6].get("participantFrames") or {}

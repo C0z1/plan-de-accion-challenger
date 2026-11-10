@@ -95,6 +95,24 @@ class TestServidor(unittest.TestCase):
         self.assertIn(b'vista === "inicio" ? inicio(s)', cuerpo)
         self.assertIn(b': "inicio"', cuerpo)  # la fase por defecto (fuera de champ select/partida) cae en Inicio
 
+    def test_seleccion_sin_cosas_viejas(self):  # turno 9 (c): fuera «Cómo jugarlo», la barra divergente y los counters viejos
+        _, _, cuerpo = self.s.get("/")
+        for viejo in ("Cómo jugarlo", 'class="div"', "La sueles cumplir", "Counters de tu"):
+            self.assertNotIn(viejo.encode("utf-8"), cuerpo)
+
+    def test_plan_sin_tu_al_final_y_sin_dato_tuyo(self):  # turno 9 (a): reglas sin dato van al final con «sin dato tuyo»
+        _, _, cuerpo = self.s.get("/")
+        self.assertIn(b"(a.n ? a.ok / a.n : 2)", cuerpo)  # 2 = centinela que manda «sin dato» al final (ok/n en 0..1)
+        self.assertIn(b"n: r.tu ? r.tu.n : 0", cuerpo)
+        self.assertIn("sin dato tuyo".encode("utf-8"), cuerpo)
+
+    def test_fallo_unidades_vacio_y_componente_desconocido(self):  # turno 9 (b): sin unidades cae a «contra tu rol» con z
+        _, _, cuerpo = self.s.get("/")
+        self.assertIn("contra tu rol".encode("utf-8"), cuerpo)
+        self.assertIn(b"signo(z, 2)", cuerpo)                      # sin unidades: muestra la desviación z
+        self.assertIn(b'COMP[c] || [c, "alerta", v => v, "", ""]', cuerpo)  # componente fuera de COMP no truena
+        self.assertIn(b"DEC[c] ?? 1", cuerpo)
+
 
 class TestEstado(unittest.TestCase):
     def test_evento_fase_resetea_draft(self):
