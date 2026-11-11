@@ -19,6 +19,7 @@ cd backend && node --test
 ```bash
 cd backend
 npx wrangler login                 # abre el navegador: entra o crea tu cuenta de Cloudflare (gratis)
+npx wrangler d1 execute racha --remote --file schema.sql   # tablas (base nueva); en una base que ya existe, cada migraciones/00X_*.sql UNA vez y ANTES del deploy
 npx wrangler deploy                # publica https://racha-api.<tu-subdominio>.workers.dev
 npx wrangler secret put RIOT_KEY   # pega tu Personal API Key de Riot (no queda en ningún archivo)
 npx wrangler secret put ACCESOS    # nombre:código,nombre:código  (uno por amigo; para quitar a alguien, vuelve a ponerlo sin él)
