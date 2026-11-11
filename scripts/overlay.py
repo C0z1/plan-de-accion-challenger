@@ -21,25 +21,44 @@ def partes(meta, ahora, aj=None):
         cuidado = [(f"Cuidado {a['campeon']} {a['kda']}", AMBAR)] if a.get("campeon") else []
         return [(("▼ " if tu < ellos else "") + f"Kills {tu} vs {ellos}", ROSA if tu < ellos else TXT)] + cuidado + [(f"Tu KDA {meta.get('kda', '')}", TXT)]
     o, edad = meta.get("objetivos") or {}, max(0.0, ahora - (meta.get("recibido") or ahora))
-    out = []
+    minuto, c = meta.get("minuto") or 0, {}  # c: pieza → (texto, color); luego se eligen por fase
     for nombre, k in (("Dragón", "dragon"), ("Barón", "baron")):
         if k not in o or not on("franja_objetivos"): continue
-        if o[k] is None: out.append((f"{nombre} vivo", ROSA)); continue
-        falta = o[k] - edad
-        out.append((f"{nombre} {reloj(falta)}", AMBAR if falta < 60 else TXT))
+        if o[k] is None: c[k] = (f"{nombre} vivo", ROSA); continue
+        falta = max(0, o[k] - edad)
+        if falta < 60: c[k] = (f"! {nombre} {reloj(falta)}", AMBAR)  # «!» además del color: urgente
+        else: c[k] = (f"{nombre} {reloj(falta)}", TXT)
+        c[k + "_falta"] = falta
     if on("franja_linea") and meta.get("nivel") is not None and meta.get("nivel_rival") is not None:
-        d = meta["nivel"] - meta["nivel_rival"]
-        out.append((("▼ " if d < 0 else "") + f"Nv {meta['nivel']} vs {meta['nivel_rival']}" + (f" {meta['rival']}" if meta.get("rival") else ""), ROSA if d < 0 else TXT))
+        d = meta["nivel"] - meta["nivel_rival"]; c["abajo_nv"] = d < 0
+        c["nivel"] = (("▼ " if d < 0 else "") + f"Nv {meta['nivel']} vs {meta['nivel_rival']}" + (f" {meta['rival']}" if meta.get("rival") else ""), ROSA if d < 0 else TXT)
     if on("franja_linea") and meta.get("cs") is not None and meta.get("rival_cs") is not None:
-        out.append((("▼ " if meta["cs"] < meta["rival_cs"] else "") + f"CS {meta['cs']} vs {meta['rival_cs']}", ROSA if meta["cs"] < meta["rival_cs"] else TXT))
-    m14, minuto = meta.get("muertes14"), meta.get("minuto") or 0
+        c["cs"] = (("▼ " if meta["cs"] < meta["rival_cs"] else "") + f"CS {meta['cs']} vs {meta['rival_cs']}", ROSA if meta["cs"] < meta["rival_cs"] else TXT)
+    m14 = meta.get("muertes14")
     if on("franja_regla") and m14 is not None and 14 <= minuto < 25:  # tu regla que más pesa (≤ 2 muertes del 14 al 25), a la vista toda la fase
-        out.append((("▼ " if m14 > 2 else "") + f"Muertes 14–25: {m14}/2", ROSA if m14 > 2 else AMBAR if m14 == 2 else TXT))
+        c["regla"] = (("▼ " if m14 > 2 else "") + f"Muertes 14–25: {m14}/2", ROSA if m14 > 2 else AMBAR if m14 == 2 else TXT)
     oro = meta.get("oro") or {}
-    if on("franja_linea") and oro.get("tu") is not None and oro.get("rival") is not None:  # oro en ítems (lo de Tab), redondeado: el detalle no cambia la decisión
-        d = round((oro["tu"] - oro["rival"]) / 50) * 50
-        out.append((("▼ " if d < 0 else "") + f"Oro {d:+d}", ROSA if d < 0 else TXT))
-    return out
+    dif = lambda a, b: round((a - b) / 50) * 50  # oro en ítems (lo de Tab), redondeado: el detalle no cambia la decisión
+    if on("franja_linea") and oro.get("tu") is not None and oro.get("rival") is not None:
+        d = dif(oro["tu"], oro["rival"]); c["oro"] = (("▼ " if d < 0 else "") + f"Oro {d:+d}", ROSA if d < 0 else TXT)
+    if oro.get("equipo") is not None and oro.get("equipo_rival") is not None:
+        d = dif(oro["equipo"], oro["equipo_rival"]); c["oro_equipo"] = (("▼ " if d < 0 else "") + f"Equipo {d:+d}", ROSA if d < 0 else TXT)
+    return elegir(c, minuto)
+
+
+MAX_PIEZAS = 4  # más que esto no se lee de reojo en partida (plan en partida, F6)
+ORDEN = ("regla", "nivel", "cs", "oro", "oro_equipo", "dragon", "baron")  # orden fijo en pantalla: el ojo aprende dónde mirar
+
+
+def elegir(c, minuto):
+    """Las MAX_PIEZAS más importantes para la fase de la partida, en el orden fijo de ORDEN."""
+    pronto = lambda k, s: k in c and (c.get(k + "_falta") is None or c[k + "_falta"] <= s)  # vivo, o sale en ≤ s segundos
+    if minuto < 6: prio = ["nivel", "cs", "regla"] + (["dragon"] if pronto("dragon", 90) else [])
+    elif minuto < 14: prio = ["regla", "oro", "cs", "dragon"] + (["nivel"] if c.get("abajo_nv") else [])
+    elif minuto < 25: prio = ["regla", "dragon"] + (["baron"] if pronto("baron", 180) else []) + ["oro_equipo"]
+    else: prio = (["baron"] if pronto("baron", 180) else []) + ["dragon", "oro_equipo"]
+    elegidas = [k for k in prio if k in c][:MAX_PIEZAS]
+    return [c[k] for k in ORDEN if k in elegidas]
 
 
 def atravesable(root):

@@ -10,7 +10,8 @@ META = {"nivel": 11, "nivel_rival": 12, "rival": "Ahri", "cs": 71, "rival_cs": 1
         "objetivos": {"dragon": 90, "baron": None}, "oro": {"tu": 7400, "rival": 7900}}
 
 
-def textos(aj): return " | ".join(t for t, _ in overlay.partes(META, 1000.0, aj))
+def textos(aj):  # todas las fases juntas: cada fase enseña piezas distintas (F6)
+    return " | ".join(t for m in (3, 9, 20) for t, _ in overlay.partes({**META, "minuto": m}, 1000.0, aj))
 
 
 class Piezas(unittest.TestCase):

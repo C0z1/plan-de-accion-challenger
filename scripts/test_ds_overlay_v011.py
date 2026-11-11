@@ -133,9 +133,10 @@ class Partes(unittest.TestCase):
         self.assertEqual(self.c(0, 18)["Muertes 14–25: 0/2"], overlay.TXT)
 
     def test_oro_enorme_y_negativo_no_tumba(self):
-        self.assertEqual(dict(overlay.partes({**self.META, "oro": {"tu": 10**9, "rival": 0}}, 1000.0))["Oro +1000000000"], overlay.TXT)
-        self.assertEqual(dict(overlay.partes({**self.META, "oro": {"tu": 0, "rival": 10**9}}, 1000.0))["▼ Oro -1000000000"], overlay.ROSA)
-        self.assertEqual(dict(overlay.partes({**self.META, "oro": {"tu": -5000, "rival": 0}}, 1000.0))["▼ Oro -5000"], overlay.ROSA)
+        m = {**self.META, "minuto": 8}  # el oro de línea se ve del 6 al 14 (prioridad por fase, F6)
+        self.assertEqual(dict(overlay.partes({**m, "oro": {"tu": 10**9, "rival": 0}}, 1000.0))["Oro +1000000000"], overlay.TXT)
+        self.assertEqual(dict(overlay.partes({**m, "oro": {"tu": 0, "rival": 10**9}}, 1000.0))["▼ Oro -1000000000"], overlay.ROSA)
+        self.assertEqual(dict(overlay.partes({**m, "oro": {"tu": -5000, "rival": 0}}, 1000.0))["▼ Oro -5000"], overlay.ROSA)
 
 
 @unittest.skipUnless(VIVO.exists() and any(VIVO.glob("*.jsonl")), "sin datos/vivo")
