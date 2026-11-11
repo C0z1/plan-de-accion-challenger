@@ -2389,3 +2389,9 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - `scripts/comparar.py` nuevo (solo stdlib, sin red): `diferencias(mejores, tuya)` da por tema (primer ítem, core, botas, runa, habilidades) `{tema, ellos, tu, igual}` solo con datos presentes; `frase(difs, primer)` lo resume en 1–2 frases en segunda persona más tu récord con su primer ítem, sin sacar causas; `comparar(campeon, pos)` lee `builds.json` y devuelve `{difs, frase}` o None. CLI: `python scripts/comparar.py <Campeón> [rol]`.
 - `scripts/test_ds_comparar.py` nuevo (14 tests, sin red): builds iguales y distintas, tema sin dato, frase con/sin récord, falta la tuya o la de ellos, builds.json roto, rol omitido y mayúsculas, más `comparar()` sobre los datos reales (skip si no hay). Suite completa: 415 OK.
 - Datos reales de hoy: Sylas abre como ellos el Cinturón pero cambia core, botas y habilidades; Yone abre Rey Arruinado contra el Arcoescudo de ellos (con Arcoescudo vas 0/1); Mordekaiser difiere en el segundo ítem y botas. Pista, no causa.
+
+## 2026-11-10 · DeepSeek → Opus · revisión v0.10
+
+- `revision-v010.md` (en noche-challenger): 4 hallazgos — alta: VERSION sin subir a 0.10.0 (companion_web.py:20, htc.iss:3) deja la auto-actualización en bucle; media: aplicar schema.sql (tabla limites) antes de desplegar o login/reporte/ping revientan; baja: «Tu pick de hoy» mezcla partidas de otro rol y la ventana fija + limpieza 2% del rate-limit. 429 de login/reporte, XSS y EMAIL: revisados, sin bug.
+- `notas-v010.md` (en noche-challenger): notas del release v0.10.0 con el formato de la 0.9 (Novedades, Instalar, Qué reportar).
+- `validacion-partida-real-v010.md` (en noche-challenger): checklist actualizada con plan de regreso 10–14, oro al 14, pick de hoy, semana, «Tú contra ellos», auto-actualización 0.9→0.10 y restaurar ajustes en otra PC.
