@@ -286,6 +286,8 @@ def trabajador(q):
         fase = None  # si lcu() lanza, cuenta como cliente caído
         try:
             fase = companion.lcu("/lol-gameflow/v1/gameflow-phase")
+            if fase != fase_ant and fase == "ChampSelect":  # metas de CS (F9): ~4 s la primera vez; en selección no frena la partida
+                threading.Thread(target=companion.metas_auto, daemon=True).start()
             if fase != fase_ant and fase == "ChampSelect":  # LP fresco del cliente (sin key); ya asentado tras la partida anterior
                 q.put(("rango", companion.rango(companion.lcu("/lol-ranked/v1/current-ranked-stats"))))
             if fase != fase_ant: q.put(("fase", fase))
