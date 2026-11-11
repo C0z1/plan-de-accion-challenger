@@ -23,18 +23,27 @@ def _win():
     return ctypes, wintypes, u
 
 
-def buscar(titulo="Racha"):
-    """HWND visible de la ventana de Edge cuyo título es exactamente `titulo`, o None."""
+WS_CAPTION = 0x00C00000
+
+
+def es_racha(u, ctypes, h, titulo="Racha"):
+    """¿h es una ventana visible de Edge cuyo título es exactamente `titulo`?"""
+    n = u.GetWindowTextLengthW(h)
+    if not n or not u.IsWindowVisible(h): return False
+    t = ctypes.create_unicode_buffer(n + 1); u.GetWindowTextW(h, t, n + 1)
+    c = ctypes.create_unicode_buffer(64); u.GetClassNameW(h, c, 64)
+    return t.value == titulo and c.value == CLASE_EDGE
+
+
+def buscar(titulo="Racha", con_barra=False):
+    """HWND visible de la ventana de Edge cuyo título es exactamente `titulo`, o None. con_barra: solo una que aún tenga la
+    barra de Windows, es decir, la recién abierta (si Racha se abre dos veces, la primera ya no la tiene: lo vio el usuario)."""
     w = _win()
     if not w: return None
     ctypes, wintypes, u = w
     hallada = []
     def cb(h, _):
-        n = u.GetWindowTextLengthW(h)
-        if n and u.IsWindowVisible(h):
-            t = ctypes.create_unicode_buffer(n + 1); u.GetWindowTextW(h, t, n + 1)
-            c = ctypes.create_unicode_buffer(64); u.GetClassNameW(h, c, 64)
-            if t.value == titulo and c.value == CLASE_EDGE: hallada.append(h)
+        if es_racha(u, ctypes, h, titulo) and (not con_barra or u.GetWindowLongPtrW(h, -16) & WS_CAPTION): hallada.append(h)
         return True
     u.EnumWindows(ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)(cb), 0)
     return hallada[0] if hallada else None
@@ -46,9 +55,9 @@ def sin_marco(segundos=15, al_listo=None):
     if not w: return
     _, _, u = w
     fin = time.time() + segundos
-    while time.time() < fin and not (h := buscar()): time.sleep(0.3)
+    while time.time() < fin and not (h := buscar(con_barra=True)): time.sleep(0.3)
     if not h: return
-    GWL_STYLE, WS_CAPTION = -16, 0x00C00000
+    GWL_STYLE = -16
     u.SetWindowLongPtrW(h, GWL_STYLE, u.GetWindowLongPtrW(h, GWL_STYLE) & ~WS_CAPTION)
     u.SetWindowPos(h, 0, 0, 0, 0, 0, 0x0027)  # NOMOVE | NOSIZE | NOZORDER | FRAMECHANGED
     HWND[0] = h
@@ -58,9 +67,11 @@ def sin_marco(segundos=15, al_listo=None):
 def recortar(alto_css, dpr):
     """Edge dibuja su propia barra dentro de la ventana (quitar WS_CAPTION no basta: lo vio el usuario). La página mide
     cuánto ocupa (outerHeight - innerHeight, en px CSS) y aquí se recorta esa franja de arriba con una región."""
-    w, h = _win(), HWND[0]
-    if not w or not h or not (0 < alto_css <= 80) or not (0.5 <= dpr <= 4): return False
+    w = _win()
+    if not w or not (0 < alto_css <= 80) or not (0.5 <= dpr <= 4): return False
     ctypes, wintypes, u = w
+    h = objetivo(u, ctypes)
+    if not h: return False
     try:  # Edge extiende el marco de DWM dentro de la ventana para su barra (con efecto vidrio) y esa zona ignora la
         # región: sin esto queda una franja blanca vacía (probado en la PC del usuario, Windows 11)
         class MARGINS(ctypes.Structure): _fields_ = [("l", ctypes.c_int), ("r", ctypes.c_int), ("t", ctypes.c_int), ("b", ctypes.c_int)]
@@ -78,16 +89,26 @@ def recortar(alto_css, dpr):
     return True
 
 
+def objetivo(u, ctypes):
+    """La ventana de Racha a la que van los botones: la que está al frente (la del clic, aunque haya dos abiertas); si no,
+    la última que se dejó sin barra, si sigue existiendo."""
+    f = u.GetForegroundWindow()
+    if f and es_racha(u, ctypes, f): HWND[0] = f; return f
+    return HWND[0] if HWND[0] and u.IsWindow(HWND[0]) else None
+
+
 def accion(nombre, alto=0, dpr=1):
     """minimizar / maximizar (alterna) / cerrar / arrastrar (sigue al mouse mientras el botón izquierdo esté apretado)."""
     if nombre not in ACCIONES: raise ValueError(nombre)
-    w, h = _win(), HWND[0]
-    if not w or not h: return False
+    w = _win()
+    if not w: return False
     ctypes, wintypes, u = w
+    if nombre == "recortar": return recortar(alto, dpr)
+    h = objetivo(u, ctypes)
+    if not h: return False
     if nombre == "minimizar": u.ShowWindow(h, 6)
     elif nombre == "maximizar": u.ShowWindow(h, 9 if u.IsZoomed(h) else 3)
     elif nombre == "cerrar": u.PostMessageW(h, 0x0010, 0, 0)
-    elif nombre == "recortar": return recortar(alto, dpr)
     else:
         if u.IsZoomed(h): return True  # maximizada no se arrastra
         p, r = wintypes.POINT(), wintypes.RECT()
