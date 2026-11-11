@@ -18,7 +18,7 @@ def pieza_aviso(aviso, ahora):
     return (aviso["corto"], AMBAR)
 
 
-def partes(meta, ahora, aj=None):
+def partes(meta, ahora, aj=None, regla=None):
     """[(texto, color)] de la franja, o [] sin datos. meta = ESTADO["meta"] (companion.meta_fase + «recibido»): los
     timers llegan cada 30 s; entre fotos se descuentan con el reloj local."""
     if not meta: return []
@@ -41,8 +41,10 @@ def partes(meta, ahora, aj=None):
         c["nivel"] = (("▼ " if d < 0 else "") + f"Nv {meta['nivel']} vs {meta['nivel_rival']}" + (f" {meta['rival']}" if meta.get("rival") else ""), ROSA if d < 0 else TXT)
     if on("franja_linea") and meta.get("cs") is not None and meta.get("rival_cs") is not None:
         c["cs"] = (("▼ " if meta["cs"] < meta["rival_cs"] else "") + f"CS {meta['cs']} vs {meta['rival_cs']}", ROSA if meta["cs"] < meta["rival_cs"] else TXT)
-    m14 = meta.get("muertes14")
-    if on("franja_regla") and m14 is not None and 14 <= minuto < 25:  # tu regla que más pesa (≤ 2 muertes del 14 al 25), a la vista toda la fase
+    m14, de_nivel = meta.get("muertes14"), (regla or {}).get("metrica") == "nivel"
+    if on("franja_regla") and de_nivel and minuto < 8 and "nivel" in c:  # F3: tu regla de hoy es la del nivel al 6
+        nv = c.pop("nivel"); c["regla"] = (nv[0].replace("Nv ", "Regla Nv 6: ", 1), nv[1])
+    if on("franja_regla") and not de_nivel and m14 is not None and 14 <= minuto < 25:  # tu regla que más pesa (≤ 2 muertes del 14 al 25), a la vista toda la fase
         c["regla"] = (("▼ " if m14 > 2 else "") + f"Muertes 14–25: {m14}/2", ROSA if m14 > 2 else AMBAR if m14 == 2 else TXT)
     oro = meta.get("oro") or {}
     dif = lambda a, b: round((a - b) / 50) * 50  # oro en ítems (lo de Tab), redondeado: el detalle no cambia la decisión
@@ -60,7 +62,7 @@ ORDEN = ("regla", "nivel", "cs", "oro", "oro_equipo", "dragon", "baron")  # orde
 def elegir(c, minuto):
     """Las MAX_PIEZAS más importantes para la fase de la partida, en el orden fijo de ORDEN."""
     pronto = lambda k, s: k in c and (c.get(k + "_falta") is None or c[k + "_falta"] <= s)  # vivo, o sale en ≤ s segundos
-    if minuto < 6: prio = ["nivel", "cs", "regla"] + (["dragon"] if pronto("dragon", 90) else [])
+    if minuto < 6: prio = ["regla", "nivel", "cs"] + (["dragon"] if pronto("dragon", 90) else [])
     elif minuto < 14: prio = ["regla", "oro", "cs", "dragon"] + (["nivel"] if c.get("abajo_nv") else [])
     elif minuto < 25: prio = ["regla", "dragon"] + (["baron"] if pronto("baron", 180) else []) + ["oro_equipo"]
     else: prio = (["baron"] if pronto("baron", 180) else []) + ["dragon", "oro_equipo"]
@@ -110,7 +112,8 @@ def correr(leer, seguir, x=0.22, y=6):
         s = leer() or {}
         encendido = (s.get("ajustes") or {}).get("overlay", True)  # Ajustes_Vino: «Siempre encima en partida»
         aj = s.get("ajustes") or {}
-        ps = partes(s.get("meta"), time.time(), aj) if s.get("fase") == "InProgress" and encendido else []
+        regla = (((s.get("rendimiento") or {}).get("vistas") or {}).get("regla_hoy"))  # F3: la tuya, no la del autor
+        ps = partes(s.get("meta"), time.time(), aj, regla) if s.get("fase") == "InProgress" and encendido else []
         if ps and (pa := pieza_aviso(s.get("aviso"), time.time())): ps = ps + [pa]  # el aviso corto, al final y por 12 s
         if ps == ultimo[0] and ps: return  # nada cambió: no se crean widgets cada segundo (plan en partida, F6)
         ultimo[0] = ps

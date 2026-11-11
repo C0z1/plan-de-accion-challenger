@@ -189,12 +189,23 @@ def pick_hoy(games, pos, base):
     return dict(champ=c, v=v, n=len(rs), est=round(est(rs), 3), forma=_forma(rs), base=round(base, 3))
 
 
+EN_VIVO = ("muertes", "nivel")  # reglas que la partida en vivo puede contar (muertes 14–25 y nivel al 6)
+
+
+def regla_hoy(reglas):
+    """F3: tu regla de hoy en partida = de las que se cuentan en vivo, la que más fallas en tus últimas 20 (reglas ya viene
+    ordenada así por reglas_perfil). None sin datos: la franja usa entonces la de muertes como consejo."""
+    r = next((x for x in reglas or [] if x.get("metrica") in EN_VIVO and x.get("n")), None)
+    return {k: r[k] for k in ("metrica", "texto", "numero", "ok", "n")} if r else None
+
+
 def todo(resumen):
     """Lo que necesitan las ventanas, para guardarlo junto a rendimiento()."""
     gs = score.partidas()[0]
     pos = Counter(g["pos"] for g in draft.games[-50:]).most_common(1)[0][0]
     cs = campeones()
-    return dict(campeones=cs, hoy=pick_hoy(draft.games, pos, draft.base), reglas=reglas_perfil([p["comp"] for p in resumen["partidas"]]),
+    rg = reglas_perfil([p["comp"] for p in resumen["partidas"]])
+    return dict(campeones=cs, hoy=pick_hoy(draft.games, pos, draft.base), reglas=rg, regla_hoy=regla_hoy(rg),
                 draft={p: draft_rol(p) for p in ("TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY")}, pos=pos, errores=(e := errores(gs)), por_partida=por_partida(resumen, e),
                 total=len(draft.games), ultima=max(g["t"] for g in draft.games))
 

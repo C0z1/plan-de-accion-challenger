@@ -290,4 +290,28 @@ class AvisoEnFranja(unittest.TestCase):  # F1: el corto sale en la franja 12 s; 
 
 
 
+
+class ReglaHoy(unittest.TestCase):  # F3: en la franja va TU regla que más fallas, no la del autor
+    def test_elige_la_medible_que_mas_fallas(self):
+        try: import vistas
+        except Exception as e: self.skipTest(f"vistas necesita datos: {e}")
+        rs = [dict(metrica="kp", texto="KP", numero="x", ok=1, n=20), dict(metrica="nivel", texto="Nv", numero="y", ok=5, n=20, minuto="6"),
+              dict(metrica="muertes", texto="M", numero="z", ok=15, n=20)]  # ya ordenadas de la que más cuesta a la que menos
+        self.assertEqual(vistas.regla_hoy(rs), dict(metrica="nivel", texto="Nv", numero="y", ok=5, n=20))  # kp no se cuenta en vivo
+        self.assertIsNone(vistas.regla_hoy([dict(metrica="nivel", texto="Nv", numero="y", ok=None, n=0)]))
+        self.assertIsNone(vistas.regla_hoy(None))
+
+    def test_franja_con_regla_de_nivel(self):
+        import overlay
+        meta = {"nivel": 5, "nivel_rival": 6, "rival": "Zed", "cs": 40, "rival_cs": 44, "minuto": 4, "muertes14": None, "objetivos": {}}
+        t = [x for x, _ in overlay.partes(meta, 0, None, {"metrica": "nivel"})]
+        self.assertEqual(t[0], "▼ Regla Nv 6: 5 vs 6 Zed")
+        self.assertFalse(any(x.startswith(("Nv", "▼ Nv")) for x in t))  # no se repite como pieza de línea
+        t = [x for x, _ in overlay.partes({**meta, "minuto": 18, "muertes14": 1}, 0, None, {"metrica": "nivel"})]
+        self.assertFalse(any("Muertes" in x for x in t))  # tu regla es la del nivel: el contador de muertes no ocupa lugar
+        t = [x for x, _ in overlay.partes({**meta, "minuto": 18, "muertes14": 1}, 0, None, None)]
+        self.assertIn("Muertes 14–25: 1/2", t)  # sin datos tuyos: la de muertes como consejo
+
+
+
 if __name__ == "__main__": unittest.main()
