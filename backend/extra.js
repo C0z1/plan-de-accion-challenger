@@ -55,10 +55,23 @@ async function cuerpo(request) { try { return await request.json(); } catch { re
 export async function extra(request, env, url, quienEs) {
   // Rutas /v1/builds, /v1/reporte, /v1/ping y /v1/admin/…; null si no son de aquí
   const ruta = url.pathname, m = request.method, DB = env.DB;
-  if (!/^\/v1\/(builds|reporte|ping|admin)(\/|$)/.test(ruta)) return null;
+  if (!/^\/v1\/(builds|reporte|ping|admin|grupo)(\/|$)/.test(ruta)) return null;
   const q = await quien(request, env, quienEs);
   if (!q) return json({error: "código de acceso inválido"}, 401);
 
+  if (ruta === "/v1/grupo" && m === "GET") {  // tabla del grupo: solo quien la activó en Ajustes (ajustes.grupo = true)
+    const {results: us} = await DB.prepare("SELECT google_sub, riot_id FROM usuarios WHERE json_extract(ajustes, '$.grupo') = 1 AND riot_id IS NOT NULL LIMIT 50").bind().all();
+    const semana = Date.now() - 7 * 864e5, out = [];
+    for (const u of us || []) {
+      const {results: rs} = await DB.prepare("SELECT ts, resumen FROM resumenes WHERE google_sub = ? ORDER BY ts DESC LIMIT 20").bind(u.google_sub).all();
+      const ps = (rs || []).map(r => ({ts: r.ts, ...JSON.parse(r.resumen)}));
+      const sem = ps.filter(p => p.ts >= semana), sc = ps.map(p => p.score).filter(x => typeof x === "number");
+      out.push({riot_id: u.riot_id, yo: q.id === "g:" + u.google_sub, semana: [sem.filter(p => p.win).length, sem.length],
+                ultimas: [ps.filter(p => p.win).length, ps.length], score: sc.length ? Math.round(sc.reduce((a, b) => a + b, 0) / sc.length) : null});
+    }
+    out.sort((a, b) => (b.ultimas[1] ? b.ultimas[0] / b.ultimas[1] : 0) - (a.ultimas[1] ? a.ultimas[0] / a.ultimas[1] : 0));
+    return json(out);
+  }
   if (ruta === "/v1/builds" && m === "GET") {
     const {results} = await DB.prepare("SELECT clave, ts FROM builds ORDER BY clave").bind().all();
     return json(results || []);

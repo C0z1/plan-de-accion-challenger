@@ -78,7 +78,8 @@ def ultima_partida():
 
 AJUSTES_F = REPO / "datos" / "cache" / "ajustes.json"
 AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "aviso_muertes": True, "aviso_regreso": True,  # Ajustes_Vino
-               "metricas": False}  # métricas anónimas: solo si el amigo las prende (v0.8)
+               "metricas": False,  # métricas anónimas: solo si el amigo las prende (v0.8)
+               "grupo": False}  # aparecer en la tabla del grupo (Riot ID y win rate a los demás): solo si lo prende
 
 
 def ajustes():

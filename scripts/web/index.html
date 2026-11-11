@@ -497,6 +497,16 @@ function partidas(s) {  // Partidas_Vino: filtros, historial en tabla (score, re
 
 const ROL_VIVO = "";
 const DIAS = new Intl.DateTimeFormat("es", {weekday: "long", day: "numeric", month: "long"});
+function grupoCard(g) {  // «Tu grupo» (/v1/grupo): los amigos que activaron la tabla en Ajustes, mejor win rate arriba
+  if (!g || !g.length) return "";
+  const wr = ([v, n]) => n ? `${v}-${n - v} · ${pct(v / n)}` : "sin partidas";
+  return `<div class="est" style="gap:8px"><span class="sub" id="grupo-t">Tu grupo · win rate en las últimas 20 de cada uno</span>
+    <ol aria-labelledby="grupo-t" style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px">
+      ${g.map((x, i) => `<li style="display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;padding:6px 8px;border-radius:10px;${x.yo ? "background:rgba(242,141,176,.12)" : ""}">
+        <b class="sub">${i + 1}</b><span><b style="font-size:14px">${esc(String(x.riot_id).split("#")[0])}</b>${x.yo ? ' <span class="sub" style="font-size:12px">(tú)</span>' : ""}<br>
+          <small class="sub">7 días: ${wr(x.semana)}${x.score != null ? ` · score ${x.score}` : ""}</small></span>
+        <span style="font-size:13px;white-space:nowrap">${wr(x.ultimas)}</span></li>`).join("")}</ol></div>`;
+}
 function hoyCard(V) {  // «Tu pick de hoy» (vistas.pick_hoy): el campeón de tu rol con mejor WR estimado
   const h = V && V.hoy; if (!h) return "";
   return `<div class="card"><div class="cab2"><h2>Tu pick de hoy</h2><span class="sub" style="font-size:12px">tu rol · ${h.n} partidas</span></div>
@@ -554,7 +564,8 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
   <div class="est"><span class="sub">Atajos</span>
     <button class="atajo" onclick="ver('perfil')">${VS(s) ? `Qué cambiar (${VS(s).reglas.length} reglas)` : "Qué está fallando"} <span>→</span></button>
     <button class="atajo" onclick="ver('errores')">Tus errores repetidos <span>→</span></button>
-    <button class="atajo" onclick="ver('partidas')">Últimas partidas <span>→</span></button></div>`;
+    <button class="atajo" onclick="ver('partidas')">Últimas partidas <span>→</span></button></div>
+  ${grupoCard(s.grupo)}`;
   return [main, aside];
 }
 const enCliente = f => f != null && f !== "inicio";  // null = cliente cerrado; "inicio" = Racha aún no lo ha leído; cualquier otra fase del LCU (GameStart, Reconnect…) es cliente abierto
@@ -792,6 +803,7 @@ function ayudaV(s, aj) {  // v0.8: reportes privados, métricas opcionales y, so
       <span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn2" onclick="reportar()">Mandar reporte</button>
         <a class="sub" style="font-size:13px;color:var(--acc)" href="https://github.com/C0z1/racha.gg/issues/new" target="_blank" rel="noopener">o abre un issue en GitHub</a></span>
       ${s.reporte ? `<span class="sub" style="font-size:13px" role="status" aria-live="polite">${esc(s.reporte)}</span>` : ""}
+      ${fila("Aparecer en la tabla del grupo", s.nube ? "Tus amigos de Racha verán tu Riot ID, tu win rate y tu score. Nunca tu correo." : "Necesitas iniciar sesión con Google (la tabla usa tu cuenta en la nube).", tog("t-grupo", aj.grupo === true, !s.nube, `ajuste('grupo',${aj.grupo !== true})`, "Aparecer en la tabla del grupo"))}
       ${fila("Mandar métricas anónimas", "Una vez al día: versión, región y si usaste overlay, selección o revisión. Nada que te identifique.", tog("t-metricas", aj.metricas === true, false, `ajuste('metricas',${aj.metricas !== true})`, "Mandar métricas anónimas"))}
     </div>${lista ? `
     <div class="card" style="align-self:flex-start;display:flex;flex-direction:column;gap:12px"><div class="cab2"><h2>Invitar amigos</h2></div>

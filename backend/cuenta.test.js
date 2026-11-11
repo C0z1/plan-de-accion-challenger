@@ -157,3 +157,18 @@ test("límites: login por IP, reportes y ping por usuario; correo inválido al i
   assert.equal(met[0].usos, 3);  // los pings de más se ignoran sin error
   for (const email of ["a@b", "sin-arroba", "x@y.c"]) assert.equal((await worker.fetch(conCodigo("/v1/admin/invitados", "codigo-admin1", {method: "POST", body: {nombre: "z" + email.length, email}}), env, ctx)).status, 400);
 });
+
+test("tabla del grupo: solo quien la activó, con su récord de 7 días y de sus últimas 20", async () => {
+  const {env, ctx} = entorno(); env.ACCESOS = "beto:codigo-beto1";
+  const {token} = await (await worker.fetch(req("/v1/login", {method: "POST", body: LOGIN}), env, ctx)).json();
+  await worker.fetch(req("/v1/yo/riot", {method: "PUT", body: {riot_id: "Ana#LAN", region: "la1"}, token}), env, ctx);
+  const ahora = Date.now(), viejo = ahora - 10 * 864e5;
+  await worker.fetch(req("/v1/yo/resumenes", {method: "PUT", body: [{match_id: "LA1_1", ts: ahora, resumen: {win: true, score: 60}}, {match_id: "LA1_2", ts: viejo, resumen: {win: false, score: 40}}], token}), env, ctx);
+  assert.deepEqual(await (await worker.fetch(conCodigo("/v1/grupo", "codigo-beto1"), env, ctx)).json(), []);  // aún no la activa
+  await worker.fetch(req("/v1/yo/ajustes", {method: "PUT", body: {grupo: true}, token}), env, ctx);
+  const g = await (await worker.fetch(conCodigo("/v1/grupo", "codigo-beto1"), env, ctx)).json();
+  assert.deepEqual(g, [{riot_id: "Ana#LAN", yo: false, semana: [1, 1], ultimas: [1, 2], score: 50}]);
+  assert.equal((await (await worker.fetch(req("/v1/grupo", {token}), env, ctx)).json())[0].yo, true);
+  assert.ok(!JSON.stringify(g).includes("gmail"));  // nunca el correo
+  assert.equal((await worker.fetch(req("/v1/grupo"), env, ctx)).status, 401);
+});

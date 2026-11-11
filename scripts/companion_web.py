@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "reporte": None, "invitacion": None, "v": 0}
+          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "reporte": None, "invitacion": None, "v": 0}
 VERSION = "0.10.0"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -280,7 +280,9 @@ def builds_del_backend(cada=3600):
     except Exception: pass
     try: admin = companion.backend("GET", "/v1/admin/invitados", base=gui.REPO)
     except Exception: admin = None  # 403 = no eres admin; sin red, igual
-    with LOCK: ESTADO.update(admin=admin, v=ESTADO["v"] + 1)
+    try: grupo = companion.backend("GET", "/v1/grupo", base=gui.REPO)
+    except Exception: grupo = None
+    with LOCK: ESTADO.update(admin=admin, grupo=grupo if isinstance(grupo, list) else None, v=ESTADO["v"] + 1)
 
 
 def ping():
@@ -488,7 +490,10 @@ class H(http.server.BaseHTTPRequestHandler):
             try: a = gui.guardar_ajuste(d.get("clave"), on)
             except (ValueError, OSError): return self.enviar(400, b"", "text/plain")
             with LOCK: ESTADO.update(ajustes=a, v=ESTADO["v"] + 1)
-            threading.Thread(target=sync_nube, daemon=True).start()  # tus ajustes también van a la nube
+            def subir(clave=d.get("clave")):  # tus ajustes también van a la nube; la tabla del grupo se pide de nuevo al cambiarla
+                sync_nube()
+                if clave == "grupo": BAJADA[0] = 0; builds_del_backend()
+            threading.Thread(target=subir, daemon=True).start()
             return self.enviar(200, json.dumps(a).encode(), "application/json")
         a = autoarranque(on)
         with LOCK: ESTADO.update(autoarranque=a, v=ESTADO["v"] + 1)

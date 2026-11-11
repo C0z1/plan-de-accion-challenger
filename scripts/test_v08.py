@@ -156,4 +156,23 @@ class SintaxisJS(unittest.TestCase):  # un salto de línea suelto en un texto ro
 
 
 
+
+class Grupo(unittest.TestCase):  # la tabla del grupo llega con la consulta horaria; sin red o sin acceso, nada
+    def setUp(self): self.viejo = dict(w.ESTADO); w.BAJADA[0] = 0
+    def tearDown(self): w.ESTADO.clear(); w.ESTADO.update(self.viejo); w.BAJADA[0] = 0
+
+    def test_grupo_en_estado(self):
+        fila = {"riot_id": "Ana#LAN", "yo": False, "semana": [1, 1], "ultimas": [3, 5], "score": 55}
+        falso = lambda m, ruta, c=None, base=None: [fila] if ruta == "/v1/grupo" else []
+        with mock.patch.object(w.companion, "backend", falso), mock.patch("builds.bajar", lambda: 0):
+            w.builds_del_backend()
+        self.assertEqual(w.ESTADO["grupo"], [fila])
+        def caido(*a, **k): raise urllib.error.URLError("x")
+        w.BAJADA[0] = 0
+        with mock.patch.object(w.companion, "backend", caido), mock.patch("builds.bajar", lambda: 0):
+            w.builds_del_backend()
+        self.assertIsNone(w.ESTADO["grupo"])
+
+
+
 if __name__ == "__main__": unittest.main()
