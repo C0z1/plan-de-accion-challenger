@@ -153,10 +153,11 @@ class PostBackend(unittest.TestCase):
             w.descargar_todo(); rf.assert_not_called()
 
     def test_descargar_sin_puede_no_corre_script(self):
-        with mock.patch.object(w.gui, "puede_descargar", return_value=False), \
-                mock.patch.object(w.gui, "script") as sc:
-            w.descargar_todo(); sc.assert_not_called()
-            self.assertEqual(w.ESTADO["descarga"], "Falta tu código de acceso (o una RIOT_KEY).")
+        import cliente_v5  # sin invitación ni key: no corre descargar.py; baja las 20 del cliente (simulado: no toca tu cliente)
+        with mock.patch.object(w.gui, "puede_descargar", return_value=False), mock.patch.object(w.gui, "script") as sc, \
+                mock.patch.object(cliente_v5, "descargar", return_value=(0, "Tus partidas del cliente ya estaban bajadas.")) as cl:
+            w.descargar_todo(); sc.assert_not_called(); cl.assert_called_once()
+            self.assertIn("ya estaban bajadas", w.ESTADO["descarga"])
 
     def test_descargar_dos_post_llama_una_vez(self):
         entro, siga, hecho = threading.Event(), threading.Event(), threading.Event()

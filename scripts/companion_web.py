@@ -262,10 +262,11 @@ def buscar_version():
 
 
 def primera_vez():
-    """Un amigo con código de acceso y sin partidas: su historial se baja solo al abrir Racha (no tiene que buscar el botón)."""
+    """Alguien sin partidas: su historial se baja solo al abrir Racha con LoL abierto (con invitación, hasta 100 por el
+    servidor; sin ella, las últimas 20 desde su cliente)."""
     import os
     raw = pathlib.Path(os.environ.get("DATOS_DIR") or gui.REPO / "datos" / "raw")
-    if not gui.puede_descargar() or any(raw.glob("*_*.json")): return
+    if any(raw.glob("*_*.json")): return  # sin invitación también: se bajan las del cliente (descargar_todo)
     if not (companion.lcu("/lol-summoner/v1/current-summoner") or {}).get("gameName"): return  # sin cliente: se reintenta al abrir LoL
     descargar_todo()
 
@@ -318,7 +319,13 @@ def descargar_todo(n=100):
     try:
         def aviso(t):
             with LOCK: ESTADO.update(descarga=t, v=ESTADO["v"] + 1)
-        if not gui.puede_descargar(): return aviso("Falta tu código de acceso (o una RIOT_KEY).")
+        if not gui.puede_descargar():  # sin invitación ni key: tus últimas 20 desde tu propio cliente de LoL
+            import cliente_v5
+            aviso("Bajando tus últimas 20 partidas desde tu cliente de LoL…")
+            nuevas, msg = cliente_v5.descargar()
+            aviso(msg + (" Con una invitación o tu propia key se bajan hasta 100." if nuevas or "ya estaban" in msg else ""))
+            if nuevas: refrescar()
+            return
         if gui.ajeno(gui.CUENTA[0]):  # el historial de esta PC es de otra cuenta: bajarlo pisaría su perfil.json
             return aviso("Esta PC guarda el historial de otra cuenta: para el tuyo, usa Racha en tu PC.")
         aviso("Descargando tus partidas… puede tardar unos minutos la primera vez.")
