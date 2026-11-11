@@ -51,9 +51,20 @@ def atravesable(root):
     except (AttributeError, OSError): pass  # fuera de Windows: ventana normal
 
 
-def pos_y(pos, alto_pantalla, alto_franja, margen=6):
-    """Coordenada y de la franja: arriba (por defecto) o abajo del todo."""
-    return max(0, alto_pantalla - alto_franja - margen) if pos == "abajo" else margen
+def pos_y(pos, alto_pantalla, alto_franja, margen=6, util=1.0):
+    """Coordenada y de la franja: arriba (por defecto) o abajo, sobre la barra de tareas (util = fracción de alto sin ella)."""
+    return max(0, int(alto_pantalla * util) - alto_franja - margen) if pos == "abajo" else margen
+
+
+def fraccion_util():
+    """Alto del área de trabajo de Windows / alto de pantalla (ambos de la misma API: no importa la escala de DPI); 1.0 si falla."""
+    try:
+        import ctypes, ctypes.wintypes
+        r = ctypes.wintypes.RECT()
+        if ctypes.windll.user32.SystemParametersInfoW(0x30, 0, ctypes.byref(r), 0):  # SPI_GETWORKAREA
+            return max(0.5, min(1.0, r.bottom / ctypes.windll.user32.GetSystemMetrics(1)))  # SM_CYSCREEN
+    except Exception: pass
+    return 1.0
 
 
 def correr(leer, seguir, x=0.22, y=6):
@@ -75,7 +86,7 @@ def correr(leer, seguir, x=0.22, y=6):
             tk.Label(fila, text=t, fg=c, bg=BG, font=("Segoe UI Semibold", 11)).pack(side="left")
         if ps:  # se recoloca cada segundo: cambiar «franja_pos» en partida mueve la franja al instante
             root.update_idletasks()
-            root.geometry(f"+{int(root.winfo_screenwidth() * x)}+{pos_y(aj.get('franja_pos'), root.winfo_screenheight(), root.winfo_reqheight(), y)}")
+            root.geometry(f"+{int(root.winfo_screenwidth() * x)}+{pos_y(aj.get('franja_pos'), root.winfo_screenheight(), root.winfo_reqheight(), y, fraccion_util())}")
             if not visible[0]: root.deiconify(); root.attributes("-topmost", True); visible[0] = True
         elif visible[0]: root.withdraw(); visible[0] = False
         root.after(1000, tick)

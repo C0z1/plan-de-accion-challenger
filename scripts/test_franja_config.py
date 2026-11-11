@@ -27,6 +27,8 @@ class Piezas(unittest.TestCase):
     def test_pos_y(self):
         self.assertEqual(overlay.pos_y("arriba", 1080, 30), 6); self.assertEqual(overlay.pos_y(None, 1080, 30), 6)
         self.assertEqual(overlay.pos_y("abajo", 1080, 30), 1044); self.assertEqual(overlay.pos_y("abajo", 20, 30), 0)
+        self.assertEqual(overlay.pos_y("abajo", 1080, 30, 6, 0.95), 990)  # encima de la barra de tareas (5 % de la pantalla)
+        self.assertTrue(0.5 <= overlay.fraccion_util() <= 1.0)
 
 
 class Ajustes(unittest.TestCase):
