@@ -529,8 +529,8 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
   const hoy = t ? t.hoy : (delCliente(s) || []).filter(g => new Date(g.ts).toDateString() === new Date().toDateString()).reverse()
     .map(g => ({...g, fecha: HORA.format(new Date(g.ts))})), v = hoy.filter(g => g.win).length;
   const d25 = ps.filter(p => p.muertes14_25 != null), ok = d25.filter(p => p.muertes14_25 <= 2).length, f = d25.length ? ok / d25.length : 0;
-  const pasos = !s.conectado && !s.rendimiento ? `<div class="card" style="box-shadow:0 0 0 1px var(--acc) inset"><div class="cab2"><h2>Tus 3 pasos</h2><span class="sub" style="font-size:12px">para ver tu historial</span></div>
-    ${[["Abre el cliente de LoL y entra a tu cuenta.", enCliente(s.fase)], ["En Ajustes pega tu código de acceso.", s.conectado], ["Dale a Descargar y listo.", !!s.rendimiento]].map(([t, ok], i) =>
+  const pasos = !s.rendimiento ? `<div class="card" style="box-shadow:0 0 0 1px var(--acc) inset"><div class="cab2"><h2>Tus 3 pasos</h2><span class="sub" style="font-size:12px">para ver tu historial</span></div>
+    ${[["En Ajustes, entra con Google o pega tu código de acceso.", s.conectado || !!s.nube], ["Escribe tu Riot ID (Nombre#TAG) o abre el cliente de LoL: con eso buscamos tus partidas.", enCliente(s.fase) || !!s.cuenta], ["Dale a Descargar y listo.", !!s.rendimiento]].map(([t, ok], i) =>
       `<div class="filaV" style="padding:10px 14px"><span class="num" style="width:32px;height:32px;border-radius:50%;background:${ok ? "var(--okbg)" : "var(--dark4)"};color:${ok ? "var(--okfg)" : "var(--acc2)"};font-size:14px">${ok ? "✓" : i + 1}</span><b style="flex:1;font-size:15px">${t}</b></div>`).join("")}
     <button class="btn" style="align-self:flex-start" onclick="ver('ajustes')">Ir a Ajustes</button></div>` : "";
   const main = `

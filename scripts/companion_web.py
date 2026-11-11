@@ -250,6 +250,17 @@ def primera_vez():
 DESCARGANDO = threading.Lock()
 
 
+def rango_api(puuid, region):
+    """Tu solo/dúo de la Riot API (league-v4 por el backend) en el formato de companion.rango; None sin dato."""
+    import re
+    if not puuid or not re.fullmatch(r"[A-Za-z0-9_-]{20,100}", str(puuid)): return None
+    try: es = companion.backend("GET", f"/v1/riot/{region}/lol/league/v4/entries/by-puuid/{puuid}", base=gui.REPO) or []
+    except Exception: return None
+    return companion.rango({"queues": [{"queueType": e.get("queueType"), "tier": e.get("tier"), "division": e.get("rank"),
+                                        "leaguePoints": e.get("leaguePoints"), "wins": e.get("wins"), "losses": e.get("losses")}
+                                       for e in es if isinstance(e, dict)]})
+
+
 def buscar_cuenta(riot_id, region):
     """Comprueba que el Riot ID existe (Riot API por el backend, o con tu key) y lo guarda; luego baja sus partidas.
     Es el «inicio de sesión» posible hoy: el oficial de Riot (RSO) solo se da a apps con production key aprobada."""
@@ -265,7 +276,10 @@ def buscar_cuenta(riot_id, region):
         if e.code == 404: gui.CUENTA_F.unlink(missing_ok=True); return False, f"No existe la cuenta {c['riot_id']} en esa región."
         r = None
     except OSError: r = None
-    with LOCK: ESTADO.update(cuenta=ESTADO.get("cuenta") or c["riot_id"], v=ESTADO["v"] + 1)
+    rango = rango_api(r.get("puuid"), c["region"]) if isinstance(r, dict) else None  # tu rango ya, sin esperar la descarga
+    with LOCK:
+        cuenta = ESTADO.get("cuenta") or c["riot_id"]
+        ESTADO.update(cuenta=cuenta, **({"rango": rango, "perfil": gui.perfil(rango, cuenta)} if rango else {}), v=ESTADO["v"] + 1)
     threading.Thread(target=descargar_todo, daemon=True).start()
     hallada = r and r.get("gameName")
     return True, (f"Encontrada: {r['gameName']}#{r.get('tagLine', tag)}. Bajando tus partidas…" if hallada

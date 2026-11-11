@@ -368,4 +368,22 @@ class CuentaPorRiotId(unittest.TestCase):  # sin el cliente abierto: tu Riot ID 
 
 
 
+
+class RangoPorApi(unittest.TestCase):  # al buscar tu nick, el rango llega de la Riot API (league-v4) sin esperar la descarga
+    def test_convierte_league_v4(self):
+        es = [{"queueType": "RANKED_FLEX_SR", "tier": "GOLD", "rank": "I", "leaguePoints": 3, "wins": 1, "losses": 1},
+              {"queueType": "RANKED_SOLO_5x5", "tier": "MASTER", "rank": "I", "leaguePoints": 15, "wins": 186, "losses": 157}]
+        rutas = []
+        def falso(m, ruta, c=None, base=None): rutas.append(ruta); return es
+        with mock.patch.object(w.companion, "backend", falso):
+            r = w.rango_api("a" * 78, "la1")
+        self.assertEqual((r["tier"], r["division"], r["lp"], r["n"], r["wr"]), ("MASTER", None, 15, 343, 54))
+        self.assertEqual(rutas, ["/v1/riot/la1/lol/league/v4/entries/by-puuid/" + "a" * 78])
+        with mock.patch.object(w.companion, "backend", lambda *a, **k: []):
+            self.assertIsNone(w.rango_api("a" * 78, "la1"))  # sin ranked: nada
+        self.assertIsNone(w.rango_api("../../x", "la1"))  # un puuid raro no arma rutas
+        self.assertIsNone(w.rango_api(None, "la1"))
+
+
+
 if __name__ == "__main__": unittest.main()
