@@ -485,4 +485,25 @@ class RevisionV013(unittest.TestCase):  # arreglos de la revisión de DeepSeek a
 
 
 
+
+class PantallaCompleta(unittest.TestCase):  # con LoL en pantalla completa la franja no se ve: Racha lo detecta y avisa
+    def test_lee_game_cfg(self):
+        import companion
+        with tempfile.TemporaryDirectory() as d:
+            f = pathlib.Path(d) / "game.cfg"
+            f.write_text("[General]\nWindowMode=0\nWidth=1920\n", encoding="utf-8"); self.assertTrue(companion.pantalla_completa(f))
+            f.write_text("[General]\nWindowMode=2\n", encoding="utf-8"); self.assertFalse(companion.pantalla_completa(f))
+            f.write_text("[General]\nWidth=1920\n", encoding="utf-8"); self.assertIsNone(companion.pantalla_completa(f))
+            self.assertIsNone(companion.pantalla_completa(pathlib.Path(d) / "no-existe.cfg"))
+
+    def test_estado_en_seleccion(self):
+        viejo = dict(w.ESTADO)
+        try:
+            with mock.patch.object(w.companion, "pantalla_completa", lambda: True):
+                w.evento(("fase", "ChampSelect"))
+            self.assertTrue(w.ESTADO["pantalla_completa"])
+        finally: w.ESTADO.clear(); w.ESTADO.update(viejo)
+
+
+
 if __name__ == "__main__": unittest.main()

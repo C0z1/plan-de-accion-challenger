@@ -57,6 +57,16 @@ def importar_runas(nombre, pagina, leer=None, escribir=None):
     return (True, "Listo: la página de runas ya está en tu cliente.") if ok else (False, "El cliente no aceptó la página (¿llegaste al límite de páginas?).")
 
 
+def pantalla_completa(cfg=None):
+    """True si LoL está en «Pantalla completa» (WindowMode=0 en Config/game.cfg, junto al lockfile): ahí Windows no deja
+    dibujar nada encima del juego y la franja no se ve (lo vivió el usuario en un ARAM). None si no se puede leer."""
+    import re
+    try: txt = pathlib.Path(cfg or LOCK.parent / "Config" / "game.cfg").read_text(encoding="utf-8", errors="replace")
+    except OSError: return None
+    m = re.search(r"^\s*WindowMode\s*=\s*(\d+)", txt, re.M)
+    return None if not m else m.group(1) == "0"
+
+
 def rango(s):
     """Solo/dúo de /lol-ranked/v1/current-ranked-stats (fresco, sin key de Riot) como dict
     {tier, division, lp, wins, losses, n, wr}; division None en Master+ (la LCU da «NA»). None sin datos."""
