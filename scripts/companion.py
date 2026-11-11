@@ -139,6 +139,27 @@ def meta_aram(d, me):
                          for p in rivales[:3]]}
 
 
+PRECIOS = {}  # itemID (str) → costo total de Data Dragon; se llena una vez
+
+
+def precios():
+    """Costo total de cada ítem (Data Dragon, en caché de disco). El «price» de la Live Client Data es el costo de
+    combinar (Sheen marca 650 y cuesta 900), así que no sirve para sumar oro."""
+    if not PRECIOS:
+        try:
+            import builds
+            PRECIOS.update({k: (v.get("gold") or {}).get("total") or 0 for k, v in builds.ddragon()[0].items()})
+        except Exception: pass  # sin Data Dragon: sin oro por ítems (la franja no lo muestra)
+    return PRECIOS
+
+
+def valor_items(p, pr=None):
+    """Oro en ítems de un jugador (lo mismo que se ve con Tab): suma de costos totales; None si no hay precios."""
+    pr = precios() if pr is None else pr
+    if not pr: return None
+    return sum((pr.get(str(i.get("itemID"))) or 0) * (i.get("count") or 1) for i in (p or {}).get("items") or [])
+
+
 def meta_fase(d, m10=None):
     """La meta de la fase como números para la GUI: {minuto, campeon, nivel, rival, nivel_rival, cs, cs_meta, muertes14}; None sin tu jugador.
     muertes14: tus muertes desde el 14:00 (None antes del 14; meta ≤ 2 hasta el 25).
@@ -155,7 +176,19 @@ def meta_fase(d, m10=None):
             "rival_kda": f"{rs.get('kills') or 0}/{rs.get('deaths') or 0}/{rs.get('assists') or 0}" if rival else None,
             "rival_cs": rs.get("creepScore"), "rival_items": [[i["itemID"], i.get("displayName") or ""] for i in (rival or {}).get("items") or [] if i.get("itemID") and not i.get("consumable") and i.get("slot") != 6][:6],  # slot 6 = trinket
             "objetivos": objetivos(d, me), "t": int(((d.get("gameData") or {}).get("gameTime") or 0)), "kda": kda(me),
+            "oro": oro_lineas(d, me, rival),
             "items": [[i["itemID"], i.get("displayName") or ""] for i in me.get("items") or [] if i.get("itemID") and not i.get("consumable") and i.get("slot") != 6][:6]}
+
+
+def oro_lineas(d, me, rival, pr=None):
+    """Oro en ítems: {tu, rival, equipo, equipo_rival}; None sin precios. Solo lo visible en la tabla (Tab) de la partida."""
+    pr = precios() if pr is None else pr
+    if not pr: return None
+    ps = (d or {}).get("allPlayers") or []
+    v = lambda p: valor_items(p, pr)
+    return {"tu": v(me), "rival": v(rival) if rival else None,
+            "equipo": sum(v(p) for p in ps if p.get("team") == me.get("team")),
+            "equipo_rival": sum(v(p) for p in ps if p.get("team") != me.get("team"))}
 
 
 def objetivos(d, me):

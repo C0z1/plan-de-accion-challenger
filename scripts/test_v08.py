@@ -175,4 +175,19 @@ class Grupo(unittest.TestCase):  # la tabla del grupo llega con la consulta hora
 
 
 
+
+class OroLineas(unittest.TestCase):  # A1: costo TOTAL de Data Dragon, no el «price» de la Live Client Data
+    def test_suma_con_precios_totales(self):
+        import companion
+        pr = {"3057": 900, "1055": 450, "2003": 50}
+        yo = {"team": "ORDER", "items": [{"itemID": 3057, "price": 650}, {"itemID": 2003, "count": 3}]}
+        ri = {"team": "CHAOS", "items": [{"itemID": 1055}]}
+        otro = {"team": "ORDER", "items": [{"itemID": 1055}]}
+        o = companion.oro_lineas({"allPlayers": [yo, ri, otro]}, yo, ri, pr)
+        self.assertEqual(o, {"tu": 1050, "rival": 450, "equipo": 1500, "equipo_rival": 450})
+        self.assertIsNone(companion.oro_lineas({"allPlayers": [yo]}, yo, None, {}))  # sin Data Dragon: nada
+        self.assertIsNone(companion.oro_lineas({"allPlayers": [yo]}, yo, None, pr)["rival"])
+
+
+
 if __name__ == "__main__": unittest.main()

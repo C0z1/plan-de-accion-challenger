@@ -31,6 +31,10 @@ def partes(meta, ahora):
         out.append((("▼ " if d < 0 else "") + f"Nv {meta['nivel']} vs {meta['nivel_rival']}" + (f" {meta['rival']}" if meta.get("rival") else ""), ROSA if d < 0 else TXT))
     if meta.get("cs") is not None and meta.get("rival_cs") is not None:
         out.append((("▼ " if meta["cs"] < meta["rival_cs"] else "") + f"CS {meta['cs']} vs {meta['rival_cs']}", ROSA if meta["cs"] < meta["rival_cs"] else TXT))
+    oro = meta.get("oro") or {}
+    if oro.get("tu") is not None and oro.get("rival") is not None:  # oro en ítems (lo de Tab), redondeado: el detalle no cambia la decisión
+        d = round((oro["tu"] - oro["rival"]) / 50) * 50
+        out.append((("▼ " if d < 0 else "") + f"Oro {d:+d}", ROSA if d < 0 else TXT))
     return out
 
 

@@ -16,6 +16,12 @@ class TestPartes(unittest.TestCase):
         self.assertEqual(p["▼ Nv 11 vs 12 Ahri"], overlay.ROSA)  # nivel abajo: rosa
         self.assertIn("Dragón 0:00", dict(overlay.partes(META, 2000.0)))  # nunca negativo
 
+    def test_oro_por_linea(self):  # oro en ítems (Tab) contra tu rival, redondeado a 50
+        p = dict(overlay.partes({**META, "oro": {"tu": 2500, "rival": 2830}}, 1000.0))
+        self.assertEqual(p["▼ Oro -350"], overlay.ROSA)
+        self.assertEqual(dict(overlay.partes({**META, "oro": {"tu": 10, "rival": 0}}, 1000.0))["Oro +0"], overlay.TXT)  # parejo: sin ▼
+        self.assertFalse(any(x.startswith(("Oro", "▼ Oro")) for x, _ in overlay.partes({**META, "oro": {"tu": 100, "rival": None}}, 1000.0)))
+
     def test_sin_datos(self):
         self.assertEqual(overlay.partes(None, 0), [])
         self.assertEqual([x for x, _ in overlay.partes({"objetivos": {}}, 0)], [])
