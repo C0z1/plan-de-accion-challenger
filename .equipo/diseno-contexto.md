@@ -40,3 +40,11 @@ Locales viejos (no usar): `Inv1`, `Inv5`, `Navy3`, `Perfil`, `ChampSelect*`; `Tu
 ## Lo próximo
 - Cambios chicos en vivo al canvas a pedido, respuesta en una línea; vigilar comentarios (watch activo).
 - Acuerdos nuevos a `.equipo/diseno-acuerdos.md`; al cerrar, bajar el canvas a `.equipo/diseno/canvas/project/`.
+
+## Ideas en el canvas (2026-11-10, fila «Ideas para Racha», y = −2968; sin aprobar)
+- `Idea_Overlay_Regreso`: overlay min 10–14 (Plan de regreso), «De vuelta» al igualar, moneda de oro al 14.
+- `Idea_Marca_Racha`: logo de barras animado (arranque/recalculando), monedas de «Racha de oro al 14», descanso de 15 min tras 2 derrotas.
+- `Idea_Postpartida`: línea de tiempo con oro vs rival y los 3 momentos de `postpartida.momentos()`.
+- Ojo: la app ahora se llama **Racha** (logo de 4 barras, `diseno/icono/racha.svg`); el `Icono_App` del minion quedó como alternativa.
+- Usuario (2026-11-10): le gustó el 2.º estado del overlay de regreso («De vuelta» al igualar); «Racha en movimiento» 2–3/5; post-partida sí pero sin gráfica (se veía «hardcodeada»). Pidió un estilo premium y único, igual en todas las pestañas.
+- Respuesta: lenguaje **Estela** (`Idea_Estela_Sistema`, `Idea_Inicio_Estela`, `Idea_Postpartida` rehecha sin ejes), fila y = −4432. Sin aprobar.

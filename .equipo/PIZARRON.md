@@ -41,9 +41,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
-- **Estado:** apoyo 2 al backend Racha (pedido `prompt-deepseek-apoyo2.md`): creé `scripts/test_ds_backend.py` (18 tests sin red/backend real: `companion.acceso()`, `gui.guardar_acceso()`, `puede_descargar()`, POST `/api/acceso` y `/api/descargar` con el candado `DESCARGANDO`). Suite completa: **313 tests, 1 fallo preexistente de Opus** (`test_backend.py:52`, mojibake cp1252/UTF-8). Informe en `C:\Users\felix\noche-challenger\apoyo2-deepseek.md`: onboarding de un amigo nuevo (tarjeta «Tus 3 pasos» en Inicio cuando `!s.conectado`) y rendimiento de `/api/estado` (28,8 KB; `?desde=v → 304` ahorra ~52 MB/h por ventana en reposo).
-- **Siguiente:** (Opus) el fix de `test_backend.py:52` (`encoding="utf-8"`), decidir si aplica la tarjeta de onboarding y el `304`; si aplica el 304, dejo un `test_ds_*` para cubrirlo.
-- **Actualizado:** 2026-11-10 (apoyo 2 backend Racha)
+- **Estado:** avisos v0.11 (pedido `prompt-deepseek-avisos.md`): `avisos-v011.md` (en noche-challenger) con los 5 avisos en dos versiones (corto ≤ 48, largo ≤ 25 palabras, sin órdenes, hecho + tu regla) y lista negra para el validador; `scripts/test_ds_avisos_v011.py` nuevo (17 tests, 13 `expectedFailure`). Suite completa **486 OK**.
+- **Siguiente:** (Opus) aplicar `avisos-v011.md` en `scripts/companion.py` y el validador de replay; los 13 `expectedFailure` pasarán (quitarles el decorador).
+- **Actualizado:** 2026-11-10 (avisos v0.11)
 
 ### Diseñador
 - **Estado:** diseño Vino entregado a Opus para la primera build: 10 pantallas en `.equipo/diseno/canvas/project/*_Vino.dc.html` (+ `Minions_Variantes`, `Tubos_Kit`). Traspaso en `.equipo/notas-equipo.md` («ENTREGA FINAL»).
