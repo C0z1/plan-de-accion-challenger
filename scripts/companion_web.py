@@ -17,7 +17,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "reporte": None, "invitacion": None, "v": 0}
-VERSION = "0.11.1"  # HTC; también invalida la caché de rendimiento
+VERSION = "0.12.0"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
 PUERTO = gui.REPO / "datos" / "cache" / "htc.port"  # el HTC que ya corre: otro arranque abre su ventana en vez de duplicarse
@@ -265,7 +265,7 @@ def buscar_cuenta(riot_id, region):
     """Comprueba que el Riot ID existe (Riot API por el backend, o con tu key) y lo guarda; luego baja sus partidas.
     Es el «inicio de sesión» posible hoy: el oficial de Riot (RSO) solo se da a apps con production key aprobada."""
     import urllib.error, urllib.parse
-    try: c = gui.guardar_cuenta(riot_id, region)
+    try: c = gui.validar_cuenta(riot_id, region)  # se guarda solo si existe: un TAG mal escrito no borra tu cuenta buena
     except ValueError: return False, "Escribe tu Riot ID como Nombre#TAG y elige tu región."
     nombre, _, tag = c["riot_id"].rpartition("#")
     ruta = "asia" if gui.RUTAS[c["region"]] == "sea" else gui.RUTAS[c["region"]]
@@ -273,9 +273,10 @@ def buscar_cuenta(riot_id, region):
     try:
         r = companion.backend("GET", f"/v1/riot/{ruta}/riot/account/v1/accounts/by-riot-id/{q(nombre, safe='')}/{q(tag, safe='')}", base=gui.REPO)
     except urllib.error.HTTPError as e:
-        if e.code == 404: gui.CUENTA_F.unlink(missing_ok=True); return False, f"No existe la cuenta {c['riot_id']} en esa región."
+        if e.code == 404: return False, f"No existe la cuenta {c['riot_id']} en esa región."
         r = None
     except OSError: r = None
+    gui.guardar_cuenta(c["riot_id"], c["region"])
     rango = rango_api(r.get("puuid"), c["region"]) if isinstance(r, dict) else None  # tu rango ya, sin esperar la descarga
     with LOCK:
         cuenta = ESTADO.get("cuenta") or c["riot_id"]

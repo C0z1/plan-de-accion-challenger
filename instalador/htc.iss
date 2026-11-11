@@ -1,6 +1,6 @@
 ; Instalador de HTC: por usuario (sin admin) en %LOCALAPPDATA%\Programs\HTC.
 ; Los datos (datos/, config.json) se crean junto al exe y no se borran al desinstalar.
-#define Version "0.11.1"
+#define Version "0.12.0"
 [Setup]
 AppId={{6B1F0C2E-4D1A-4C8E-9E57-48544301C11B}
 AppName=Racha

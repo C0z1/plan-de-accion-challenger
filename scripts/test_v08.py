@@ -359,7 +359,8 @@ class CuentaPorRiotId(unittest.TestCase):  # sin el cliente abierto: tu Riot ID 
         def no_existe(*a, **k): raise urllib.error.HTTPError("u", 404, "no", {}, None)
         with mock.patch.object(w.companion, "backend", no_existe):
             ok, msg = w.buscar_cuenta("nadie#000", "euw1")
-        self.assertFalse(ok); self.assertIn("No existe", msg); self.assertIsNone(w.gui.cuenta_guardada())  # no se guarda
+        self.assertFalse(ok); self.assertIn("No existe", msg)
+        self.assertEqual(w.gui.cuenta_guardada()["riot_id"], "cozi#1134")  # revisión de DeepSeek: un TAG mal escrito no borra la cuenta buena
         def caido(*a, **k): raise urllib.error.URLError("sin red")
         with mock.patch.object(w.companion, "backend", caido):
             ok, msg = w.buscar_cuenta("cozi#1134", "kr")

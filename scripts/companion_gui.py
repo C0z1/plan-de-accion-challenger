@@ -145,11 +145,17 @@ RUTAS = {"na1": "americas", "br1": "americas", "la1": "americas", "la2": "americ
 CUENTA_F = REPO / "datos" / "cache" / "cuenta.json"  # tu Riot ID guardado: para bajar tus partidas con el cliente cerrado
 
 
-def guardar_cuenta(riot_id, region):
-    """Guarda «Nombre#TAG» y la región (la1, euw1…) para usar Racha sin el cliente abierto. ValueError si no es válido."""
+def validar_cuenta(riot_id, region):
+    """{riot_id, region} limpios, o ValueError si el formato no es «Nombre#TAG» o la región no existe. No guarda nada."""
     import re
     riot_id, region = str(riot_id or "").strip(), str(region or "").strip().lower()
     if not re.fullmatch(r"[^#]{3,16}#[^#\s]{2,5}", riot_id) or region not in RUTAS: raise ValueError("Riot ID o región inválidos")
+    return {"riot_id": riot_id, "region": region}
+
+
+def guardar_cuenta(riot_id, region):
+    """Guarda «Nombre#TAG» y la región (la1, euw1…) para usar Racha sin el cliente abierto. ValueError si no es válido."""
+    c = validar_cuenta(riot_id, region); riot_id, region = c["riot_id"], c["region"]
     CUENTA_F.parent.mkdir(parents=True, exist_ok=True)
     CUENTA_F.write_text(json.dumps({"riot_id": riot_id, "region": region}, ensure_ascii=False), encoding="utf-8")
     return {"riot_id": riot_id, "region": region}

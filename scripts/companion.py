@@ -373,11 +373,16 @@ def minions10():
 _METAS = None  # {(campeón, rol): mínimo}, calculado una vez con tus partidas (draft.py las lee al importar, ~3 s la primera vez)
 
 
+_METAS_LOCK = __import__("threading").Lock()  # un solo hilo calcula: el de la partida espera al precálculo de la selección
+
+
 def metas_auto():
     global _METAS
     if _METAS is None:
-        try: import vistas, draft; _METAS = vistas.metas_cs(draft.games)
-        except Exception: _METAS = {}  # sin partidas suficientes draft.py truena al importar: sin meta, no tumba la partida
+        with _METAS_LOCK:
+            if _METAS is None:
+                try: import vistas, draft; _METAS = vistas.metas_cs(draft.games)
+                except Exception: _METAS = {}  # sin partidas suficientes draft.py truena al importar: sin meta, no tumba la partida
     return _METAS
 
 
