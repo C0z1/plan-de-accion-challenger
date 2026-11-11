@@ -132,7 +132,7 @@ def perfil(r=None, cuenta=None):
         return f"{a['gameName']}#{a['tagLine']} · {tx(r) if r else rango}"
     except (OSError, ValueError, KeyError, TypeError):
         if cuenta: return f"{cuenta} · {tx(r)}" if r else cuenta  # amigo sin partidas descargadas: su cuenta y rango, del cliente
-        return "sin historial todavía"
+        return tx(r) if r else "sin historial todavía"  # sin perfil.json ni cuenta todavía: al menos el rango del cliente
 
 
 def puede_descargar():

@@ -1,6 +1,9 @@
 """F9: meta de CS al 10 automática por campeón (mediana de tus victorias, 8+ partidas)."""
-import json, pathlib, sys, unittest
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import json, os, pathlib, sys, unittest
+AQUI = pathlib.Path(__file__).resolve().parent
+sys.path.insert(0, str(AQUI))
+if not (pathlib.Path(os.environ.get("DATOS_DIR") or AQUI.parent / "datos" / "raw") / "perfil.json").exists():
+    os.environ["DATOS_DIR"] = str(AQUI / "fixtures" / "datos")  # CI o clon nuevo: vistas importa draft, que lee perfil.json
 import companion, vistas
 
 FOTO = pathlib.Path(__file__).resolve().parent / "fixtures" / "vivo" / "allgamedata.json"
