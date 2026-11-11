@@ -42,9 +42,9 @@ Llevar a `cozi#1134` (LAN) de **Master 15 LP a Challenger** (~1,750 LP). Para lo
 
 - **Iteración 14:** vista «Partidas» nueva (botón de historial en el nav): las últimas partidas de `resumen()` con ✓/✕, campeón, KDA, el componente que más te subió o bajó, score y fecha. Sin Python nuevo. Ajustes sigue sin vista. 201 OK.
 ### DeepSeek · revisor
-- **Estado:** avisos v0.11 (pedido `prompt-deepseek-avisos.md`): `avisos-v011.md` (en noche-challenger) con los 5 avisos en dos versiones (corto ≤ 48, largo ≤ 25 palabras, sin órdenes, hecho + tu regla) y lista negra para el validador; `scripts/test_ds_avisos_v011.py` nuevo (17 tests, 13 `expectedFailure`). Suite completa **486 OK**.
-- **Siguiente:** (Opus) aplicar `avisos-v011.md` en `scripts/companion.py` y el validador de replay; los 13 `expectedFailure` pasarán (quitarles el decorador).
-- **Actualizado:** 2026-11-10 (avisos v0.11)
+- **Estado:** en vivo 1 (DeepSeek, Sonnet de reemplazo): D-b `scripts/test_ds_franja_vida.py` (4 pruebas de D1, D2, D3 y D10; nacieron `expectedFailure` y pasan tras T6-T9); D-c `deepseek-anchos-franja.md` (franja más larga: 64 caracteres en 14-25, 98 con aviso); D-d `deepseek-replays-envivo.md` (0 fallos en 16 capturas); D-f `deepseek-al-llegar.md` y `deepseek-politica-overlay.md`. Suite completa **530 OK**.
+- **Siguiente:** D-a (`test_ds_salud.py`) cuando exista `salud.py`; D-e (revisión de `salud.py`, `dev_practica.py` y T6-T12).
+- **Actualizado:** 2026-11-11 (en vivo 1)
 
 ### Diseñador
 - **Estado:** diseño Vino entregado a Opus para la primera build: 10 pantallas en `.equipo/diseno/canvas/project/*_Vino.dc.html` (+ `Minions_Variantes`, `Tubos_Kit`). Traspaso en `.equipo/notas-equipo.md` («ENTREGA FINAL»).

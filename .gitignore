@@ -6,6 +6,7 @@ datos/vivo/
 datos/meta/
 Companion.exe
 datos/cache/
+datos/salud/
 dist/
 build/
 *.spec

@@ -490,7 +490,7 @@ class H(http.server.BaseHTTPRequestHandler):
 
     def enviar(self, code, cuerpo, tipo):
         self.send_response(code); self.send_header("Content-Type", tipo); self.send_header("Cache-Control", "no-store")
-        self.send_header("Content-Security-Policy", "default-src 'none'; img-src 'self'; font-src 'self'; connect-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'")
+        self.send_header("Content-Security-Policy", "default-src 'none'; img-src 'self' data:; font-src 'self'; connect-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'")
         self.end_headers(); self.wfile.write(cuerpo)
 
     def do_GET(self):
@@ -680,8 +680,13 @@ def main(argv=None):
     if "--overlay" in argv or not ({"--demo", "--no-abrir", "--sin-overlay"} & set(argv)):
         def leer():
             with LOCK: return dict(ESTADO)
-        try: import overlay; overlay.correr(leer, seguir)  # franja en partida; ocupa el hilo principal (tkinter)
-        except Exception: pass  # sin tkinter o sin pantalla: HTC sigue sin overlay
+        def registrar(txt):  # D7: si la franja truena, que quede rastro (datos/salud/franja.log)
+            try:
+                f = gui.REPO / "datos" / "salud" / "franja.log"; f.parent.mkdir(parents=True, exist_ok=True)
+                with f.open("a", encoding="utf-8") as h: h.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {txt}\n")
+            except OSError: pass
+        try: import overlay; overlay.correr(leer, seguir, registrar=registrar)  # franja en partida; ocupa el hilo principal (tkinter)
+        except Exception as e: registrar(f"sin franja: {e!r}")  # sin tkinter o sin pantalla: HTC sigue sin overlay
     while seguir(): time.sleep(2)
     srv.shutdown()
 

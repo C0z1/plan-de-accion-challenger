@@ -356,7 +356,7 @@ def trabajador(q):
                 mf, avs = companion.paso_vivo(d, estado, ajustes())  # Ajustes_Vino: cada aviso se puede apagar
                 if mf: q.put(("meta", mf))
                 for _, txt, minuto in avs: q.put(aviso(txt, "consejo", minuto))
-            elif not jugando: archivo = None; estado["avisado"] = set()
+            elif not jugando and fase != "Reconnect": archivo = None; estado["avisado"] = set()  # al reconectar es la misma partida (D10)
             if fase in FIN and real not in FIN:
                 if r := companion.resumen_fin(foto):  # sin key, esto es lo que hay al terminar
                     try: import postpartida; r = {**r, "momentos": [m["texto"] for m in postpartida.momentos_vivo(foto)]}  # F11: al instante

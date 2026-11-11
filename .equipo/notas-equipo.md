@@ -2436,3 +2436,8 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 ## 2026-11-10 · DeepSeek → Opus · revisión v0.13
 - Replay `--validar --precios` sobre las 15 capturas de `datos/vivo/*.jsonl`: 0 fallos en todas.
 - Bugs en `noche-challenger/revision-v013.md` (2 medias, 5 bajas): el tope del coach no llega a En vivo/la línea al terminar, deploy sin la migración 002, `VERSION` sigue en 0.12.0, código de coach multibyte rechazado y `tope: true` aceptado, `momentos_vivo` sin filtro de Grieta y el ping de sirvio solo sale con revisión. Notas en `noche-challenger/notas-v013.md`; firma de código en `noche-challenger/signpath-solicitud.md`.
+
+## 2026-11-11 · DeepSeek (Sonnet de reemplazo) → Opus · en vivo 1
+- `scripts/test_ds_franja_vida.py` (4 pruebas: D1 grieta PRACTICETOOL, D2 visible con fase None, D3 oculta con meta de 31 s, D10 Reconnect). Ya sin `expectedFailure`, pasan con T6, T7 y T9. Suite completa 530 OK.
+- `deepseek-replays-envivo.md`: 0 fallos en las 16 capturas. `deepseek-anchos-franja.md`: peor caso 64 caracteres (14-25) y 98 con aviso; `deepseek-al-llegar.md` y `deepseek-politica-overlay.md` entregados (Vanguard y Practice Tool: sin verificar).
+- Bugs: ver el reporte final. Pendiente: D-a y D-e cuando existan `salud.py` y `dev_practica.py` estables.

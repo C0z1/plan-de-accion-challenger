@@ -89,6 +89,30 @@ def pos_y(pos, alto_pantalla, alto_franja, margen=6, util=1.0):
     return max(0, int(alto_pantalla * util) - alto_franja - margen) if pos == "abajo" else margen
 
 
+def rect_juego():
+    """(x0, y0, x1, y1) de la ventana del juego (RiotWindowClass) o None. Solo se lee su posición: nunca se le manda nada."""
+    try:
+        import ctypes, ctypes.wintypes
+        u = ctypes.windll.user32; h = u.FindWindowW("RiotWindowClass", None)
+        if not h or not u.IsWindowVisible(h) or u.IsIconic(h): return None
+        r = ctypes.wintypes.RECT(); u.GetWindowRect(h, ctypes.byref(r))
+        return (r.left, r.top, r.right, r.bottom) if r.right - r.left > 200 and r.bottom - r.top > 200 else None
+    except Exception: return None
+
+
+TOPE_DERECHO = 0.76  # el marcador del juego (kills, KDA, CS, reloj) empieza en ~0,78 del ancho (D9 del plan En vivo)
+
+
+def colocar(juego, pantalla, alto_franja, x=0.22, pos=None, margen=6, util=1.0, ancho_franja=0):
+    """(x, y) de la franja: relativa a la ventana del juego si se conoce (otro monitor, modo ventana); si no, a la pantalla
+    principal sin la barra de tareas (D4). Si no cabe antes del marcador (pantallas chicas, escala alta), se corre a la izquierda."""
+    if juego: x0, y0, x1, y1 = juego
+    else: x0, y0, (x1, y1) = 0, 0, pantalla
+    px = max(x0 + margen, min(int(x0 + (x1 - x0) * x), int(x0 + (x1 - x0) * TOPE_DERECHO) - ancho_franja))
+    if juego: return px, (y1 - alto_franja - margen if pos == "abajo" else y0 + margen)
+    return px, pos_y(pos, y1, alto_franja, margen, util)
+
+
 def fraccion_util():
     """Alto del área de trabajo de Windows / alto de pantalla (ambos de la misma API: no importa la escala de DPI); 1.0 si falla."""
     try:
@@ -100,25 +124,37 @@ def fraccion_util():
     return 1.0
 
 
-def correr(leer, seguir, x=0.22, y=6):
-    """Bucle de tkinter (hilo principal). leer() -> estado de HTC; seguir() -> False para cerrar. x = fracción del ancho."""
-    import tkinter as tk
-    root = tk.Tk(); root.withdraw(); root.overrideredirect(True); root.attributes("-topmost", True); root.attributes("-alpha", 0.88)
+FRESCA = 30  # s: la foto llega cada 10 s; sin foto nueva en 30 s el juego ya no responde y los timers mentirían
+
+
+def visible(s, ahora):
+    """La franja se dibuja solo en partida con datos frescos. Fase None (cliente de LoL cerrado o reiniciándose) o
+    Reconnect también: la partida sigue y la foto sigue llegando; si deja de llegar (juego cerrado), se oculta."""
+    recibido = (s.get("meta") or {}).get("recibido")
+    return ((s.get("ajustes") or {}).get("overlay", True) is not False and s.get("fase") in ("InProgress", None, "Reconnect")
+            and recibido is not None and ahora - recibido < FRESCA)
+
+
+def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None):
+    """Bucle de tkinter (hilo principal). leer() -> estado de HTC; seguir() -> False para cerrar. x = fracción del ancho.
+    registrar(txt): a dónde va un error de dibujo (una vez por texto)."""
+    import tkinter as tk, traceback
+    root = tk.Tk(); root.withdraw(); root.title("Racha franja"); root.overrideredirect(True); root.attributes("-topmost", True); root.attributes("-alpha", 0.88)
     root.configure(bg=BG); fila = tk.Frame(root, bg=BG, padx=10, pady=4); fila.pack()
-    root.update_idletasks(); atravesable(root); visible, ultimo = [False], [None]
+    root.update_idletasks(); atravesable(root); mostrada, ultimo, errores = [False], [None], set()
 
     def tick():
         if not seguir(): root.destroy(); return
         try: dibujar()
-        except Exception: pass  # un dato raro no congela la franja el resto de la partida (revisión de DeepSeek)
+        except Exception:  # un dato raro no congela la franja el resto de la partida (revisión de DeepSeek)
+            if (txt := traceback.format_exc(limit=2).strip().splitlines()[-1]) not in errores: errores.add(txt); registrar(txt)
         root.after(1000, tick)
 
     def dibujar():
         s = leer() or {}
-        encendido = (s.get("ajustes") or {}).get("overlay", True)  # Ajustes_Vino: «Siempre encima en partida»
         aj = s.get("ajustes") or {}
         regla = (((s.get("rendimiento") or {}).get("vistas") or {}).get("regla_hoy"))  # F3: la tuya, no la del autor
-        ps = partes(s.get("meta"), time.time(), aj, regla) if s.get("fase") == "InProgress" and encendido else []
+        ps = partes(s.get("meta"), time.time(), aj, regla) if visible(s, time.time()) else []
         if ps and (pa := pieza_aviso(s.get("aviso"), time.time())): ps = ps + [pa]  # el aviso corto, al final y por 12 s
         if ps == ultimo[0] and ps: return  # nada cambió: no se crean widgets cada segundo (plan en partida, F6)
         ultimo[0] = ps
@@ -128,8 +164,9 @@ def correr(leer, seguir, x=0.22, y=6):
             tk.Label(fila, text=t, fg=c, bg=BG, font=("Segoe UI Semibold", 11)).pack(side="left")
         if ps:  # se recoloca cada segundo: cambiar «franja_pos» en partida mueve la franja al instante
             root.update_idletasks()
-            root.geometry(f"+{int(root.winfo_screenwidth() * x)}+{pos_y(aj.get('franja_pos'), root.winfo_screenheight(), root.winfo_reqheight(), y, fraccion_util())}")
-            if not visible[0]: root.deiconify(); root.attributes("-topmost", True); visible[0] = True
-        elif visible[0]: root.withdraw(); visible[0] = False
+            px, py = colocar(rect_juego(), (root.winfo_screenwidth(), root.winfo_screenheight()), root.winfo_reqheight(), x, aj.get("franja_pos"), y, fraccion_util(), root.winfo_reqwidth())
+            root.geometry(f"+{px}+{py}")
+            if not mostrada[0]: root.deiconify(); root.attributes("-topmost", True); mostrada[0] = True
+        elif mostrada[0]: root.withdraw(); mostrada[0] = False
 
     tick(); root.mainloop()

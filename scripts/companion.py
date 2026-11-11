@@ -152,8 +152,8 @@ def yo_rival(d):
 
 
 def grieta(d):
-    """True en la Grieta del Invocador (CLASSIC): dragón, barón y reglas de línea solo tienen sentido ahí."""
-    return (((d or {}).get("gameData") or {}).get("gameMode") or "CLASSIC") == "CLASSIC"
+    """True en la Grieta del Invocador (CLASSIC, o la Herramienta de práctica): dragón, barón y reglas de línea solo tienen sentido ahí."""
+    return (((d or {}).get("gameData") or {}).get("gameMode") or "CLASSIC") in ("CLASSIC", "PRACTICETOOL")
 
 
 def kda(p):

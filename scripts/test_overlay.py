@@ -45,7 +45,44 @@ class TestPartes(unittest.TestCase):
         self.assertEqual([x for x, _ in overlay.partes({"objetivos": {}}, 0)], [])
 
 
+class TestVisible(unittest.TestCase):  # D2 + D3 del plan En vivo
+    def s(self, fase="InProgress", edad=5, overlay=True):
+        return {"fase": fase, "meta": {"recibido": 1000 - edad}, "ajustes": {"overlay": overlay}}
+
+    def test_en_partida_con_foto_fresca(self): self.assertTrue(overlay.visible(self.s(), 1000))
+
+    def test_cliente_cerrado_sigue_si_la_foto_llega(self):
+        self.assertTrue(overlay.visible(self.s(fase=None), 1000)); self.assertTrue(overlay.visible(self.s(fase="Reconnect"), 1000))
+
+    def test_foto_vieja_oculta(self): self.assertFalse(overlay.visible(self.s(edad=31), 1000))
+
+    def test_fuera_de_partida_o_apagada_oculta(self):
+        for s in (self.s(fase="EndOfGame"), self.s(fase="None"), self.s(fase="ChampSelect"), self.s(overlay=False), {"fase": "InProgress", "meta": {"recibido": None}}, {}):
+            self.assertFalse(overlay.visible(s, 1000), s)
+
+
+class TestColocar(unittest.TestCase):  # D4: la franja sigue a la ventana del juego
+    def test_juego_en_el_segundo_monitor(self):
+        self.assertEqual(overlay.colocar((1920, 0, 4480, 1440), (1920, 1080), 30), (1920 + int(2560 * 0.22), 6))
+        self.assertEqual(overlay.colocar((1920, 0, 4480, 1440), (1920, 1080), 30, pos="abajo"), (1920 + int(2560 * 0.22), 1440 - 30 - 6))
+
+    def test_no_pisa_el_marcador(self):  # D9: 719 px (peor caso medido a 1920) en un juego de 1366 se corre a la izquierda
+        x, _ = overlay.colocar((0, 0, 1366, 768), (1366, 768), 34, ancho_franja=719)
+        self.assertLessEqual(x + 719, int(1366 * overlay.TOPE_DERECHO)); self.assertGreaterEqual(x, 6)
+        self.assertEqual(overlay.colocar((0, 0, 1920, 1080), (1920, 1080), 34, ancho_franja=719)[0], int(1920 * 0.22))  # a 1920 cabe: no se mueve
+
+    def test_sin_juego_usa_la_pantalla_principal(self):
+        self.assertEqual(overlay.colocar(None, (1920, 1080), 30, pos="abajo", util=0.95), (int(1920 * 0.22), int(1080 * 0.95) - 36))
+
+
 class TestVentana(unittest.TestCase):
+    def test_error_de_dibujo_se_registra_una_vez(self):  # D7
+        try: import tkinter; tkinter.Tk().destroy()
+        except Exception: self.skipTest("sin pantalla")
+        vueltas, log = iter(range(3)), []
+        overlay.correr(lambda: 1 / 0, lambda: next(vueltas, None) is not None, x=5, registrar=log.append)
+        self.assertEqual(len(log), 1); self.assertIn("ZeroDivisionError", log[0])
+
     def test_abre_y_cierra_fuera_de_pantalla(self):
         try: import tkinter; tkinter.Tk().destroy()
         except Exception: self.skipTest("sin pantalla")  # CI Ubuntu sin display
