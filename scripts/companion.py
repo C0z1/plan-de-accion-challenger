@@ -341,12 +341,12 @@ def resumen_fin(d):
     return {**mf, "kda": f"{s.get('kills') or 0}/{s.get('deaths') or 0}/{s.get('assists') or 0}", "muertes14_25": muertes14(d, hasta=1500), "cotejo": cotejo}
 
 
-def linea_fin(r):
+def linea_fin(r, tope=2):
     """«Min 31 · Sylas 5/4/7 contra Zed · CS 245 · muertes del 14 al 25: 3 (meta ≤ 2) ✕» o None."""
     if not r: return None
     t = [f"Min {r['minuto']}", f"{r['campeon'] or '?'} {r['kda']}" + (f" contra {r['rival']}" if r["rival"] else ""), f"CS {r['cs'] if r['cs'] is not None else '?'}"]
     if r.get("cotejo") is False: t.append("no cuadran tus muertes con los eventos: el aviso del 14 al 25 no te cuenta, avísale a Opus")
-    elif r["muertes14_25"] is not None: t.append(f"muertes del 14 al 25: {r['muertes14_25']} (meta ≤ 2) {'✓' if r['muertes14_25'] <= 2 else '✕'}")
+    elif r["muertes14_25"] is not None: t.append(f"muertes del 14 al 25: {r['muertes14_25']} (meta ≤ {tope}) {'✓' if r['muertes14_25'] <= tope else '✕'}")
     return " · ".join(t)
 
 

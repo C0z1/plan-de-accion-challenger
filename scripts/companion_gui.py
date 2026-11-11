@@ -169,23 +169,25 @@ def cuenta_guardada():
 
 
 COACH_F = REPO / "datos" / "cache" / "coach.json"  # F12: la regla que te puso tu coach (prototipo, todo local)
-COACH_PREFIJO = "RACHA1."
+COACH_PREFIJO, COACH_MAX = "RACHA1.", 600  # 80 caracteres de texto con emojis caben (~475)
 
 
 def codigo_coach(texto, tope):
     """El código que el coach le pasa a su alumno: «≤ tope muertes del 14 al 25» con su texto. ValueError si no es válido."""
     import base64
     texto = " ".join(str(texto or "").split())
-    if not 3 <= len(texto) <= 80 or not isinstance(tope, int) or not 0 <= tope <= 5: raise ValueError("regla inválida")
+    if not 3 <= len(texto) <= 80 or type(tope) is not int or not 0 <= tope <= 5: raise ValueError("regla inválida")  # bool no vale
     crudo = json.dumps({"t": texto, "m": "muertes", "tope": tope}, ensure_ascii=False, separators=(",", ":")).encode()
-    return COACH_PREFIJO + base64.urlsafe_b64encode(crudo).decode().rstrip("=")
+    codigo = COACH_PREFIJO + base64.urlsafe_b64encode(crudo).decode().rstrip("=")
+    if len(codigo) > COACH_MAX: raise ValueError("regla demasiado larga")  # mismo tope al crear que al leer (texto con emojis)
+    return codigo
 
 
 def leer_codigo_coach(codigo):
     """{texto, metrica, tope} de un código de coach; ValueError si está mal o trae otra cosa."""
     import base64, binascii
     c = str(codigo or "").strip()
-    if not c.startswith(COACH_PREFIJO) or len(c) > 400: raise ValueError("código de coach inválido")
+    if not c.startswith(COACH_PREFIJO) or len(c) > COACH_MAX: raise ValueError("código de coach inválido")
     b = c[len(COACH_PREFIJO):]
     try: d = json.loads(base64.urlsafe_b64decode(b + "=" * (-len(b) % 4)))
     except (binascii.Error, ValueError, UnicodeDecodeError): raise ValueError("código de coach inválido")

@@ -459,4 +459,30 @@ class Coach(unittest.TestCase):  # F12 (prototipo): la regla del coach manda en 
 
 
 
+
+class RevisionV013(unittest.TestCase):  # arreglos de la revisión de DeepSeek a la v0.13
+    def test_codigo_coach_bordes(self):
+        import base64, json
+        g = w.gui
+        c = g.codigo_coach("\U0001F525" * 80, 1)  # 80 emojis: se crea y se puede leer
+        self.assertEqual(g.leer_codigo_coach(c)["tope"], 1)
+        with self.assertRaises(ValueError): g.codigo_coach("hola mundo", True)
+        malo = "RACHA1." + base64.urlsafe_b64encode(json.dumps({"t": "hola", "m": "muertes", "tope": True}).encode()).decode()
+        with self.assertRaises(ValueError): g.leer_codigo_coach(malo)
+
+    def test_linea_fin_con_tope(self):
+        import companion
+        r = {"campeon": "Yone", "kda": "3/2/1", "minuto": 30, "cs": 200, "rival": "Zed", "muertes14_25": 1}
+        self.assertIn("(meta ≤ 2) ✓", companion.linea_fin(r) or "")
+        self.assertIn("(meta ≤ 0) ✕", companion.linea_fin(r, 0) or "")
+
+    def test_momentos_solo_en_la_grieta(self):
+        import postpartida
+        d = {"activePlayer": {"riotId": "yo#1"}, "gameData": {"gameTime": 900, "gameMode": "ARAM"},
+             "allPlayers": [{"riotId": "yo#1", "riotIdGameName": "yo", "position": "", "team": "ORDER"}],
+             "events": {"Events": [{"EventName": "InhibKilled", "EventTime": 600.0, "KillerName": "yo", "InhibKilled": "Inhib_TChaos_L1_P1_1_0"}]}}
+        self.assertEqual(postpartida.momentos_vivo(d), [])
+
+
+
 if __name__ == "__main__": unittest.main()

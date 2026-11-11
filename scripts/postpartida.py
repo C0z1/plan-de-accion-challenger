@@ -117,7 +117,7 @@ def momentos_vivo(d):
     try:
         import companion
         me, _ = companion.yo_rival(d)
-        if not me: return []
+        if not me or not companion.grieta(d): return []  # ARAM y otros modos: sin la lógica de la Grieta
         ps, ev = (d or {}).get("allPlayers") or [], ((d or {}).get("events") or {}).get("Events") or []
         eq = {n: p.get("team") for p in ps for n in (p.get("riotIdGameName"), p.get("summonerName"), (p.get("riotId") or "").split("#")[0]) if n}
         eq.update({"Minion_T100": "ORDER", "Minion_T200": "CHAOS"})

@@ -303,6 +303,7 @@ function xpAro(champ, nivel, rival) {  // EnPartida_Vino: anillo de nivel (74 px
 
 const CALAVERA = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.4 1 4.4 2.6 5.8V20a1 1 0 0 0 1 1h8.8a1 1 0 0 0 1-1v-3.2A7.9 7.9 0 0 0 20 11a8 8 0 0 0-8-8z"/><circle cx="9" cy="11.5" r="1.6"/><circle cx="15" cy="11.5" r="1.6"/><path d="M10 21v-2.5M14 21v-2.5"/></svg>';
 
+let TOPE = 2;  // máximo de muertes del 14 al 25 (2, o el que puso tu coach)
 function franja(m, fin) {  // EnPartida_Vino: nivel con anillos (tú y tu rival), CS con el caster, muertes desde el 14 con calaveras
   const d = fin ? m.muertes14_25 : m.muertes14, dn = m.nivel != null && m.nivel_rival != null ? m.nivel - m.nivel_rival : null;
   const csM = m.cs_meta || null, csF = csM ? (m.cs || 0) / csM : Math.min(1, (m.cs || 0) / Math.max(1, (m.minuto || 1) * 8));
@@ -319,12 +320,12 @@ function franja(m, fin) {  // EnPartida_Vino: nivel con anillos (tú y tu rival)
     <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><b style="font-size:26px">${m.cs ?? "?"}${csM ? `<span class="sub" style="font-size:15px"> / ${csM}</span>` : ""}</b>
       ${csM ? `<span style="font-size:13px;font-weight:700;color:${(m.cs || 0) >= csM ? "var(--teal)" : "var(--red)"}">${(m.cs || 0) >= csM ? "✓ Meta cumplida" : "▼ Bajo la meta"}</span>` : `<span class="sub" style="font-size:13px">min ${m.minuto ?? 0}</span>`}</div></div>`;
   const marcas = Array.from({length: Math.max(3, (d || 0))}, (_, i) => i < (d || 0)
-    ? `<span style="color:${d > 2 ? "var(--red)" : "var(--acc)"}">${CALAVERA}</span>` : `<span style="color:var(--line);opacity:.8">${CALAVERA.replace('stroke-width="2"', 'stroke-width="1.5" stroke-dasharray="3 3"')}</span>`).join("");
-  const mu = `<div class="card stat" style="${d != null && d >= 2 && !fin ? "box-shadow:0 0 0 2px var(--acc) inset" : ""}"><div style="display:flex;justify-content:center;gap:6px;min-height:74px;align-items:center;margin-bottom:8px">${marcas}</div>
-    <span class="sub" style="text-align:center;font-size:12px;letter-spacing:.12em">${d == null ? "CUENTA DESDE EL 14" : "META: 2 O MENOS HASTA EL 25"}</span>
+    ? `<span style="color:${d > TOPE ? "var(--red)" : "var(--acc)"}">${CALAVERA}</span>` : `<span style="color:var(--line);opacity:.8">${CALAVERA.replace('stroke-width="2"', 'stroke-width="1.5" stroke-dasharray="3 3"')}</span>`).join("");
+  const mu = `<div class="card stat" style="${d != null && d >= TOPE && !fin ? "box-shadow:0 0 0 2px var(--acc) inset" : ""}"><div style="display:flex;justify-content:center;gap:6px;min-height:74px;align-items:center;margin-bottom:8px">${marcas}</div>
+    <span class="sub" style="text-align:center;font-size:12px;letter-spacing:.12em">${d == null ? "CUENTA DESDE EL 14" : `META: ${TOPE} O MENOS HASTA EL 25`}</span>
     <b class="tit" style="font-size:15px">${ic("muertes", 16)} ${fin ? "Muertes del 14 al 25" : "Muertes desde el 14"}</b>
-    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><b style="font-size:26px">${d ?? "–"}<span class="sub" style="font-size:15px"> / 2</span></b>
-      ${d != null ? `<span style="font-size:13px;font-weight:700;color:${d > 2 ? "var(--red)" : d === 2 ? "var(--acc)" : "var(--teal)"}">${d > 2 ? "✕ Pasada" : d === 2 ? "▲ Al límite" : "✓ Bien"}</span>` : ""}</div></div>`;
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><b style="font-size:26px">${d ?? "–"}<span class="sub" style="font-size:15px"> / ${TOPE}</span></b>
+      ${d != null ? `<span style="font-size:13px;font-weight:700;color:${d > TOPE ? "var(--red)" : d === TOPE ? "var(--acc)" : "var(--teal)"}">${d > TOPE ? "✕ Pasada" : d === TOPE ? "▲ Al límite" : "✓ Bien"}</span>` : ""}</div></div>`;
   return `<div class="tres">${nv}${cs}${mu}</div>`;
 }
 
@@ -712,8 +713,8 @@ function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estad
   if (x.nivel != null && x.nivel_rival != null) reglas.push([`Llega al 6 sin nivel abajo`, `Nivel ${x.nivel} contra ${x.nivel_rival} de ${esc(x.rival || "tu rival")}`, ...est(x.nivel >= x.nivel_rival, 6), 6]);
   if (x.cs_meta) reglas.push([`${x.cs_meta}+ minions al 10`, `${x.cs ?? "?"} CS · minuto ${min}`, ...est((x.cs ?? 0) >= x.cs_meta, 10), 10]);
   const d = f ? x.muertes14_25 : x.muertes14;
-  reglas.push([`Juega con objetivo: 2 muertes o menos del 14 al 25`, d == null ? "Cuenta desde el minuto 14." : `Llevas ${d} desde el 14 · meta: 2 o menos`,
-    ...(min < 14 ? ["Después", ""] : d > 2 ? ["✕ Fallada", "red"] : min < 25 && !f ? ["▲ Ahora", "amber"] : ["✓ Cumplida", "ok"]), 14]);
+  reglas.push([`Juega con objetivo: ${TOPE} muertes o menos del 14 al 25`, d == null ? "Cuenta desde el minuto 14." : `Llevas ${d} desde el 14 · meta: ${TOPE} o menos`,
+    ...(min < 14 ? ["Después", ""] : d > TOPE ? ["✕ Fallada", "red"] : min < 25 && !f ? ["▲ Ahora", "amber"] : ["✓ Cumplida", "ok"]), 14]);
   reglas.sort((a, b) => (b[3] === "amber") - (a[3] === "amber"));
   const fase = [[0, 6, "0–6"], [6, 10, "6–10"], [10, 14, "10–14"], [14, 25, "14–25"], [25, 40, "25+"]];
   const main = `
@@ -1005,6 +1006,7 @@ async function tick() {
     if (s.v !== v) {
       v = s.v;
       if (s.fase !== ultFase) { if (ultFase !== undefined) elegida = null; ultFase = s.fase; }
+      TOPE = (((s.rendimiento || {}).vistas || {}).regla_hoy || {}).tope ?? 2;  // F12: el tope de muertes de tu coach en toda la app
       const vista = elegida || (s.fase === "ChampSelect" ? (s.draft ? "companion" : "draft") : EN_PARTIDA.includes(s.fase) || s.fin || s.revision ? "envivo" : "inicio");
       for (const b of VISTAS) { const e = document.getElementById("b-" + b); vista === b ? e.setAttribute("aria-current", "page") : e.removeAttribute("aria-current"); }
       const [m, a] = vista === "inicio" ? inicio(s) : vista === "draft" ? draftV(s) : vista === "envivo" ? envivo(s) : vista === "campeones" ? campeonesV(s)

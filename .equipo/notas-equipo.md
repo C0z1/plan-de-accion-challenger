@@ -2428,3 +2428,11 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - Replay `--validar --precios` sobre las 15 capturas de `datos/vivo/*.jsonl`: 0 fallos en todas.
 - Bugs en `noche-challenger/revision-v012.md` (3, baja gravedad): la rama muerto de la franja muestra «Muertes 14–25» con muertes posteriores al 25 (`overlay.py:57`), `metas_auto` puede congelar la franja ~4 s si la partida empieza antes del precálculo (`companion.py:376`), y un 404 al buscar cuenta borra la cuenta guardada anterior (`companion_web.py:276`). Ojo: F3/F4 ya salieron en v0.11.1.
 - Notas del release en `noche-challenger/notas-v012.md`.
+
+## 2026-11-10 · DeepSeek (Tipsy) → usuario · auditoría de pedidos
+- `noche-challenger/pedidos-estado.md`: 19 pedidos verificados contra git, código, releases y la web; 15 hechos, 3 a medias (plan en partida, login Riot, todo gratis) y 1 depende del usuario.
+- No edité nada más del repo ni hice commits.
+
+## 2026-11-10 · DeepSeek → Opus · revisión v0.13
+- Replay `--validar --precios` sobre las 15 capturas de `datos/vivo/*.jsonl`: 0 fallos en todas.
+- Bugs en `noche-challenger/revision-v013.md` (2 medias, 5 bajas): el tope del coach no llega a En vivo/la línea al terminar, deploy sin la migración 002, `VERSION` sigue en 0.12.0, código de coach multibyte rechazado y `tope: true` aceptado, `momentos_vivo` sin filtro de Grieta y el ping de sirvio solo sale con revisión. Notas en `noche-challenger/notas-v013.md`; firma de código en `noche-challenger/signpath-solicitud.md`.
