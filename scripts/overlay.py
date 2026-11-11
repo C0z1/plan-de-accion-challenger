@@ -29,7 +29,7 @@ def partes(meta, ahora, aj=None, regla=None):
         return [(("▼ " if tu < ellos else "") + f"Kills {tu} vs {ellos}", ROSA if tu < ellos else TXT)] + cuidado + [(f"Tu KDA {meta.get('kda', '')}", TXT)]
     o, edad = meta.get("objetivos") or {}, max(0.0, ahora - (meta.get("recibido") or ahora))
     minuto, c = meta.get("minuto") or 0, {}  # c: pieza → (texto, color); luego se eligen por fase
-    for nombre, k in (("Dragón", "dragon"), ("Barón", "baron")):
+    for nombre, k in (("Anciano" if o.get("anciano") else "Dragón", "dragon"), ("Barón", "baron")):
         if k not in o or not on("franja_objetivos"): continue
         if o[k] is None: c[k] = (f"{nombre} vivo", ROSA); continue
         falta = max(0, o[k] - edad)

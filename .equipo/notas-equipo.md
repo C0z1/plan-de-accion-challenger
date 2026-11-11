@@ -2419,3 +2419,7 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - Replay `--validar --precios` sobre las 15 capturas de `datos/vivo/*.jsonl`: 0 fallos en todas.
 - Bugs en `noche-challenger/revision-v011.md`: onclick de «Poner estas runas» se rompe con apóstrofo (Kai'Sa, Cho'Gath…), `importar_runas` borra la página activa del usuario, deploy sin la migración D1, `VERSION` sigue en 0.10.0, y 3 menores.
 - Notas del release en `noche-challenger/notas-v011.md`.
+
+## 2026-11-10 · DeepSeek → Opus · timers v0.12
+- `noche-challenger/timers-v012.md`: parche 26.21 confirmado — dragón elemental 5:00/5:00 y barón 20:00/6:00 cuadran con el código; heraldo 15:00 (una vez) y larvas 8:00 (una oleada de 3); Atakhan retirado en 26.1; Anciano 6:00 tras el alma. La partida grabada lo cuadra (5 dragones, 1 barón, 1 heraldo, 3 larvas), salvo el Anciano (el alma cae a los 32:26 y no llega a salir).
+- `scripts/test_ds_timers.py` nuevo (3 tests, sin red): dragon/barón no ocurren antes de la aparición que `objetivos()` predice en la foto previa; `test_anciano_tras_el_alma_a_los_6_min` queda `expectedFailure` (el shortcut da 300 s tras el alma, debe dar 360). Falta aplicar en `objetivos()`: `360 if max(tuyos.dragones, rival.dragones) >= 4 else 300`.

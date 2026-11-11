@@ -273,11 +273,12 @@ def objetivos(d, me):
             r[l][tipo[n]] += 1
             if n in ult: ult[n] = e.get("EventTime") or 0
     t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
-    # shortcut: dragón 5:00 y cada 5 min, barón 20:00 y cada 6 (ni el Anciano ni cambios de parche); si cambia, ajustar aquí
+    # parche 26.21 (verificado por DeepSeek, timers-v012.md): dragón 5:00 y cada 5 min, Anciano 6 min tras el alma, barón 20:00 y cada 6; revisar si un parche los cambia
     def falta(u, primero, cada):  # segundos hasta que sale; None si ya está vivo
         s = (primero if u is None else u + cada) - t
         return round(s) if s > 0 else None
-    return {**r, "dragon": falta(ult["DragonKill"], 300, 300), "baron": falta(ult["BaronKill"], 1200, 360)}
+    alma = max(r["tuyos"]["dragones"], r["rival"]["dragones"]) >= 4  # tras el alma sale el Anciano, que reaparece cada 6 min
+    return {**r, "dragon": falta(ult["DragonKill"], 300, 360 if alma else 300), "baron": falta(ult["BaronKill"], 1200, 360), "anciano": alma}
 
 
 def aviso_nivel(d):
