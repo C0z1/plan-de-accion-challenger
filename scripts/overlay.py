@@ -44,8 +44,9 @@ def partes(meta, ahora, aj=None, regla=None):
     m14, de_nivel = meta.get("muertes14"), (regla or {}).get("metrica") == "nivel"
     if on("franja_regla") and de_nivel and minuto < 8 and "nivel" in c:  # F3: tu regla de hoy es la del nivel al 6
         nv = c.pop("nivel"); c["regla"] = (nv[0].replace("Nv ", "Regla Nv 6: ", 1), nv[1])
+    tope = (regla or {}).get("tope", 2)  # F12: tu coach puede poner otro tope de muertes
     if on("franja_regla") and not de_nivel and m14 is not None and 14 <= minuto < 25:  # tu regla que más pesa (≤ 2 muertes del 14 al 25), a la vista toda la fase
-        c["regla"] = (("▼ " if m14 > 2 else "") + f"Muertes 14–25: {m14}/2", ROSA if m14 > 2 else AMBAR if m14 == 2 else TXT)
+        c["regla"] = (("▼ " if m14 > tope else "") + f"Muertes 14–25: {m14}/{tope}", ROSA if m14 > tope else AMBAR if m14 == tope else TXT)
     oro = meta.get("oro") or {}
     dif = lambda a, b: round((a - b) / 50) * 50  # oro en ítems (lo de Tab), redondeado: el detalle no cambia la decisión
     if on("franja_linea") and oro.get("tu") is not None and oro.get("rival") is not None:
@@ -54,7 +55,7 @@ def partes(meta, ahora, aj=None, regla=None):
         d = dif(oro["equipo"], oro["equipo_rival"]); c["oro_equipo"] = (("▼ " if d < 0 else "") + f"Equipo {d:+d}", ROSA if d < 0 else TXT)
     if meta.get("muerto"):  # F4: muerto es el único momento con atención libre: tu regla y el próximo objetivo, nada más
         sig = min((k for k in ("dragon", "baron") if k in c), key=lambda k: c.get(k + "_falta", -1), default=None)
-        if "regla" not in c and m14 is not None and 14 <= minuto < 25: c["regla"] = (f"Muertes 14–25: {m14}/2", ROSA if m14 > 2 else TXT)  # pasado el 25 ya cuenta otras
+        if "regla" not in c and m14 is not None and 14 <= minuto < 25: c["regla"] = (f"Muertes 14–25: {m14}/{tope}", ROSA if m14 > tope else TXT)  # pasado el 25 ya cuenta otras
         return [c[k] for k in ("regla", sig) if k and c.get(k)]
     return elegir(c, minuto)
 

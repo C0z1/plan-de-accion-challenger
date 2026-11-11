@@ -168,6 +168,44 @@ def cuenta_guardada():
     return d if isinstance(d, dict) and d.get("riot_id") and d.get("region") in RUTAS else None
 
 
+COACH_F = REPO / "datos" / "cache" / "coach.json"  # F12: la regla que te puso tu coach (prototipo, todo local)
+COACH_PREFIJO = "RACHA1."
+
+
+def codigo_coach(texto, tope):
+    """El código que el coach le pasa a su alumno: «≤ tope muertes del 14 al 25» con su texto. ValueError si no es válido."""
+    import base64
+    texto = " ".join(str(texto or "").split())
+    if not 3 <= len(texto) <= 80 or not isinstance(tope, int) or not 0 <= tope <= 5: raise ValueError("regla inválida")
+    crudo = json.dumps({"t": texto, "m": "muertes", "tope": tope}, ensure_ascii=False, separators=(",", ":")).encode()
+    return COACH_PREFIJO + base64.urlsafe_b64encode(crudo).decode().rstrip("=")
+
+
+def leer_codigo_coach(codigo):
+    """{texto, metrica, tope} de un código de coach; ValueError si está mal o trae otra cosa."""
+    import base64, binascii
+    c = str(codigo or "").strip()
+    if not c.startswith(COACH_PREFIJO) or len(c) > 400: raise ValueError("código de coach inválido")
+    b = c[len(COACH_PREFIJO):]
+    try: d = json.loads(base64.urlsafe_b64decode(b + "=" * (-len(b) % 4)))
+    except (binascii.Error, ValueError, UnicodeDecodeError): raise ValueError("código de coach inválido")
+    if not isinstance(d, dict) or d.get("m") != "muertes": raise ValueError("código de coach inválido")
+    codigo_coach(d.get("t"), d.get("tope"))  # mismas reglas que al crearlo
+    return {"texto": " ".join(str(d["t"]).split()), "metrica": "muertes", "tope": d["tope"]}
+
+
+def guardar_coach(codigo):
+    r = leer_codigo_coach(codigo)
+    COACH_F.parent.mkdir(parents=True, exist_ok=True); COACH_F.write_text(json.dumps(r, ensure_ascii=False), encoding="utf-8")
+    return r
+
+
+def coach():
+    """La regla de tu coach guardada, o None."""
+    try: return leer_codigo_coach(codigo_coach((d := json.loads(COACH_F.read_text(encoding="utf-8")))["texto"], d["tope"]))
+    except (OSError, ValueError, KeyError, TypeError): return None
+
+
 def guardar_acceso(token):
     """Guarda tu código de acceso (lo da quien administra el backend). Solo letras, números y guiones: ValueError si no."""
     import re

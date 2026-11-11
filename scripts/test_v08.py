@@ -417,4 +417,46 @@ class Sirvio(unittest.TestCase):  # v0.13: «¿te sirvieron los avisos?», una r
 
 
 
+
+class Coach(unittest.TestCase):  # F12 (prototipo): la regla del coach manda en la franja y se arma el informe
+    def setUp(self):
+        self.d = tempfile.TemporaryDirectory(); self.addCleanup(self.d.cleanup)
+        p = mock.patch.object(w.gui, "COACH_F", pathlib.Path(self.d.name) / "coach.json"); p.start(); self.addCleanup(p.stop)
+
+    def test_codigo_ida_y_vuelta_y_manipulado(self):
+        import base64, json
+        g = w.gui
+        c = g.codigo_coach("  juega   por objetivo ", 1)
+        self.assertEqual(g.leer_codigo_coach(c), {"texto": "juega por objetivo", "metrica": "muertes", "tope": 1})
+        for malo in ("", "RACHA1.no-es-base64!!", "OTRO." + c[7:], c[:-4],
+                     "RACHA1." + base64.urlsafe_b64encode(json.dumps({"t": "x" * 200, "m": "muertes", "tope": 1}).encode()).decode(),
+                     "RACHA1." + base64.urlsafe_b64encode(json.dumps({"t": "hola", "m": "muertes", "tope": 9}).encode()).decode()):
+            with self.assertRaises(ValueError): g.leer_codigo_coach(malo)
+        with self.assertRaises(ValueError): g.codigo_coach("ab", 1)
+        self.assertIsNone(g.coach()); g.guardar_coach(c); self.assertEqual(g.coach()["tope"], 1)
+
+    def test_informe_y_regla_de_hoy(self):
+        r = {"vistas": {"regla_hoy": {"metrica": "nivel"}}, "resumen": {"partidas": [
+            {"fecha": "11-10", "campeon": "Yone", "rival": "Zed", "win": True, "muertes14_25": 1},
+            {"fecha": "11-09", "campeon": "Ekko", "rival": None, "win": False, "muertes14_25": 3},
+            {"fecha": "11-08", "campeon": "Sylas", "win": True, "muertes14_25": None}]}}
+        w.aplicar_coach(r, {"texto": "por objetivo", "metrica": "muertes", "tope": 1})
+        rh = r["vistas"]["regla_hoy"]
+        self.assertEqual((rh["metrica"], rh["tope"], rh["ok"], rh["n"], rh["coach"]), ("muertes", 1, 1, 2, True))
+        inf = r["vistas"]["informe_coach"]
+        self.assertIn("Cumplida en 1 de 2 partidas", inf); self.assertIn("Yone vs Zed · victoria · muertes 14–25: 1 cumplida", inf)
+        self.assertIn("Ekko vs ? · derrota · muertes 14–25: 3 fallada", inf)
+        self.assertIs(w.aplicar_coach(None, {"texto": "x", "tope": 1}), None)  # sin datos no revienta
+        sin = {"vistas": {"regla_hoy": None}, "resumen": {"partidas": []}}
+        with mock.patch.object(w.gui, "coach", lambda: None): self.assertIsNone(w.aplicar_coach(sin)["vistas"]["regla_hoy"])
+
+    def test_franja_con_tope_del_coach(self):
+        import overlay
+        meta = {"minuto": 18, "muertes14": 1, "objetivos": {}}
+        t = [x for x, _ in overlay.partes(meta, 0, None, {"metrica": "muertes", "tope": 1})]
+        self.assertIn("Muertes 14–25: 1/1", t)
+        self.assertIn("▼ Muertes 14–25: 2/1", [x for x, _ in overlay.partes({**meta, "muertes14": 2}, 0, None, {"metrica": "muertes", "tope": 1})])
+
+
+
 if __name__ == "__main__": unittest.main()

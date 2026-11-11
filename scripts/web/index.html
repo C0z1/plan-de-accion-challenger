@@ -802,6 +802,7 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
       ${av("aviso_regreso", "Plan de regreso", "Del min 10 al 14, si vas abajo de nivel: un consejo para igualar.")}
       ${av("aviso_pico", "Pico de poder del rival", "Cuando tu rival termina un ítem completo y te saca ventaja en ítems.")}</div>
     ${ayudaV(s, aj)}
+    ${coachV(s)}
     ${glosarioV()}
   </div>`, ""];
 }
@@ -874,6 +875,37 @@ async function buscarCuenta() {  // tu Riot ID: Racha comprueba que existe y baj
 async function sirvio(valor) {  // v0.13: va en las métricas opcionales como contador, nunca con tu identidad
   try { await fetch("/api/sirvio", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({valor})}); } catch (e) {}
   v = -1; tick();
+}
+let coachMsg = "", coachCodigo = "";
+function coachV(s) {  // F12 (prototipo): la regla que te pone tu coach manda en la franja y le mandas el informe
+  const c = s.coach, V = VS(s), inf = V && V.informe_coach;
+  return `<div class="card" style="align-self:flex-start;display:flex;flex-direction:column;gap:12px"><div class="cab2"><h2>Coach</h2><span class="sub" style="font-size:12px">prototipo</span></div>
+    ${c ? `<span class="sub" style="font-size:14px">Tu regla de hoy es la de tu coach: <b style="color:var(--txt)">${esc(c.texto)}</b> (≤ ${c.tope} muertes del 14 al 25).</span>
+      ${inf ? `<label for="coach-inf" class="sub" style="font-size:13px">Informe para mandarle:</label><textarea id="coach-inf" readonly rows="6" style="${CAMPO};resize:vertical;font-size:13px">${esc(inf)}</textarea>
+      <span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn2" onclick="copiarCampo('coach-inf', this)">Copiar informe</button><button class="btn2 salir" onclick="coachAccion({accion:'quitar'})">Quitar la regla</button></span>`
+        : `<button class="btn2 salir" style="align-self:flex-start" onclick="coachAccion({accion:'quitar'})">Quitar la regla</button>`}`
+    : `<span class="sub" style="font-size:14px">Si tu coach te dio un código, pégalo: su regla será tu regla de hoy en partida.</span>
+      <span style="display:flex;gap:8px;flex-wrap:wrap"><input id="coach-cod" aria-label="Código de tu coach" placeholder="RACHA1…" autocomplete="off" style="${CAMPO};flex:1;min-width:160px">
+        <button class="btn2" onclick="coachAccion({accion:'usar', codigo:(document.getElementById('coach-cod')||{}).value||''})">Usar</button></span>`}
+    <details class="alt"><summary>Soy coach: crear una regla para un alumno</summary>
+      <span style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><input id="coach-texto" aria-label="Texto de la regla" placeholder="Ej.: juega por objetivo, no persigas" maxlength="80" style="${CAMPO};flex:1;min-width:180px">
+        <select id="coach-tope" aria-label="Máximo de muertes del 14 al 25" style="${CAMPO};width:auto">${[0, 1, 2, 3, 4, 5].map(n => `<option value="${n}" ${n === 2 ? "selected" : ""}>≤ ${n} muertes 14–25</option>`).join("")}</select>
+        <button class="btn2" onclick="coachAccion({accion:'crear', texto:(document.getElementById('coach-texto')||{}).value||'', tope:+(document.getElementById('coach-tope')||{}).value})">Crear código</button></span>
+      ${coachCodigo ? `<span class="sub" style="font-size:13px">Pásale este código a tu alumno:</span><code id="coach-codigo" style="user-select:all;color:var(--acc);word-break:break-all">${esc(coachCodigo)}</code>` : ""}</details>
+    ${coachMsg ? `<span class="sub" style="font-size:13px" role="status" aria-live="polite">${esc(coachMsg)}</span>` : ""}</div>`;
+}
+async function coachAccion(cuerpo) {
+  try {
+    const r = await fetch("/api/coach", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify(cuerpo)}), d = await r.json();
+    if (!r.ok) coachMsg = d.error || "No se pudo.";
+    else if (cuerpo.accion === "crear") { coachCodigo = d.codigo; coachMsg = ""; }
+    else coachMsg = cuerpo.accion === "usar" ? "Listo: es tu regla de hoy." : "Regla quitada: vuelve la que más te cuesta.";
+  } catch (e) { coachMsg = "No se pudo hablar con Racha."; }
+  v = -1; tick();
+}
+async function copiarCampo(id, b) {
+  try { await navigator.clipboard.writeText(document.getElementById(id).value); b.textContent = "Copiado"; }
+  catch (e) { document.getElementById(id).select(); b.textContent = "Selecciónalo y cópialo con Ctrl+C"; }
 }
 let runasMsg = "";
 async function ponerRunas(champ, pos) {  // A5: solo con tu clic; Racha no elige, banea ni acepta por ti

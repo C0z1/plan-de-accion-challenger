@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "reporte": None, "invitacion": None, "v": 0}
+          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
 VERSION = "0.12.0"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -126,8 +126,26 @@ def bombear(q):
     while True: evento(q.get())
 
 
+def aplicar_coach(r, c=None):
+    """F12: con una regla de tu coach, ESA es tu regla de hoy (franja y En vivo) y se arma el informe para mandarle.
+    Se aplica después de la caché (cambiar de coach no exige recalcular nada). Devuelve r."""
+    c = gui.coach() if c is None else c
+    V = (r or {}).get("vistas")
+    if not c or not isinstance(V, dict): return r
+    ps = [p for p in ((r.get("resumen") or {}).get("partidas") or [])[:20] if p.get("muertes14_25") is not None]
+    ok = sum(p["muertes14_25"] <= c["tope"] for p in ps)
+    V["regla_hoy"] = {"metrica": "muertes", "tope": c["tope"], "coach": True, "texto": f"Regla de tu coach: {c['texto']}",
+                      "numero": f"La cumpliste en {ok} de tus últimas {len(ps)} partidas (≤ {c['tope']} muertes del 14 al 25)." if ps else "Aún no hay partidas con este dato.",
+                      "ok": ok, "n": len(ps)}
+    V["informe_coach"] = "\n".join([f"Racha · informe para tu coach ({time.strftime('%Y-%m-%d')})", f"Regla: {c['texto']} (≤ {c['tope']} muertes del 14 al 25)",
+                                     f"Cumplida en {ok} de {len(ps)} partidas", ""] +
+                                    [f"{p.get('fecha', '?')} · {p.get('campeon', '?')} vs {p.get('rival') or '?'} · {'victoria' if p.get('win') else 'derrota'} · "
+                                     f"muertes 14–25: {p['muertes14_25']} {'cumplida' if p['muertes14_25'] <= c['tope'] else 'fallada'}" for p in ps])
+    return r
+
+
 def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la cola
-    r = None if gui.ajeno(gui.CUENTA[0]) else rendimiento_rapido()  # historial de otra cuenta: no mostrarlo como tuyo
+    r = None if gui.ajeno(gui.CUENTA[0]) else aplicar_coach(rendimiento_rapido())  # historial de otra cuenta: no mostrarlo como tuyo
     with LOCK: ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1)
     if r is not None: vistas_previas(r); tus_builds()  # tu build propia relee las timelines: al final (auditoría de rendimiento)
     builds_del_backend(); sync_nube()
@@ -525,6 +543,19 @@ class H(http.server.BaseHTTPRequestHandler):
             with LOCK: ESTADO.update(descarga="Código guardado. Ya puedes descargar tus partidas.", conectado=True, v=ESTADO["v"] + 1)
             threading.Thread(target=primera_vez, daemon=True).start()  # con el cliente abierto, empieza a bajar sola
             return self.enviar(200, b"{}", "application/json")
+        if self.path == "/api/coach":  # F12: crear un código (si eres coach), usar uno (alumno) o quitarlo
+            try: d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 1000))); acc = d.get("accion")
+            except (ValueError, TypeError, AttributeError): return self.enviar(400, b"", "text/plain")
+            try:
+                if acc == "crear": res = {"codigo": gui.codigo_coach(d.get("texto"), int(d.get("tope")))}
+                elif acc == "usar": res = {"regla": gui.guardar_coach(d.get("codigo"))}
+                elif acc == "quitar": gui.COACH_F.unlink(missing_ok=True); res = {}
+                else: return self.enviar(400, b"", "text/plain")
+            except (ValueError, TypeError): return self.enviar(400, json.dumps({"error": "Revisa el código o la regla."}).encode(), "application/json")
+            if acc != "crear":
+                with LOCK: ESTADO.update(coach=gui.coach(), v=ESTADO["v"] + 1)
+                threading.Thread(target=refrescar, daemon=True).start()
+            return self.enviar(200, json.dumps(res, ensure_ascii=False).encode(), "application/json")
         if self.path == "/api/sirvio":  # una respuesta por partida: sí / no / no los vi
             try: v = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 100))).get("valor")
             except (ValueError, TypeError, AttributeError): v = None
