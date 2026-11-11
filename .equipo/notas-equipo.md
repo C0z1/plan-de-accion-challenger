@@ -2395,3 +2395,7 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - `revision-v010.md` (en noche-challenger): 4 hallazgos — alta: VERSION sin subir a 0.10.0 (companion_web.py:20, htc.iss:3) deja la auto-actualización en bucle; media: aplicar schema.sql (tabla limites) antes de desplegar o login/reporte/ping revientan; baja: «Tu pick de hoy» mezcla partidas de otro rol y la ventana fija + limpieza 2% del rate-limit. 429 de login/reporte, XSS y EMAIL: revisados, sin bug.
 - `notas-v010.md` (en noche-challenger): notas del release v0.10.0 con el formato de la 0.9 (Novedades, Instalar, Qué reportar).
 - `validacion-partida-real-v010.md` (en noche-challenger): checklist actualizada con plan de regreso 10–14, oro al 14, pick de hoy, semana, «Tú contra ellos», auto-actualización 0.9→0.10 y restaurar ajustes en otra PC.
+
+## 2026-11-10 · DeepSeek · docs010
+- docs010/ (en noche-challenger): README.md, USO.md, riot-registro.md y cambios.md al día con la v0.10, verificados en el código; cambios.md lista qué difiere y el riesgo (FAQ de beta quitada).
+- No leí .env, config.json ni datos/cache/*.json; sin commits ni otros cambios en el repo.
