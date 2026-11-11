@@ -108,7 +108,7 @@ class Dorado(unittest.TestCase):
             fallos = replay.validar(replay.repetir(replay.cargar(FIX / "partida_completa.jsonl")))
         self.assertEqual([f for f in fallos if "piezas en la franja" not in f], [])
 
-    @unittest.expectedFailure  # pasa cuando Opus aplique F6 (tope de 4 piezas)
+    # F6 aplicado: la franja nunca pasa de 4 piezas en la partida real
     def test_max_piezas_en_la_partida(self):
         with replay.sin_precios():
             self.assertEqual(replay.validar(replay.repetir(replay.cargar(FIX / "partida_completa.jsonl"))), [])

@@ -1,70 +1,70 @@
-00:00 | franja: Dragón 5:00 · Barón 20:00 · Nv 1 vs 1 Yunara · CS 0 vs 0 | aviso: 
-00:20 | franja: Dragón 4:40 · Barón 19:40 · Nv 1 vs 1 Yunara · CS 0 vs 0 | aviso: 
-00:50 | franja: Dragón 4:09 · Barón 19:09 · Nv 1 vs 1 Yunara · CS 0 vs 0 | aviso: 
-01:20 | franja: Dragón 3:39 · Barón 18:39 · Nv 1 vs 1 Yunara · CS 0 vs 0 | aviso: 
-01:51 | franja: Dragón 3:09 · Barón 18:09 · Nv 2 vs 2 Yunara · CS 0 vs 0 | aviso: 
-02:21 | franja: Dragón 2:39 · Barón 17:39 · Nv 2 vs 2 Yunara · ▼ CS 0 vs 10 | aviso: 
-02:51 | franja: Dragón 2:08 · Barón 17:08 · Nv 3 vs 3 Yunara · CS 10 vs 10 | aviso: 
-03:21 | franja: Dragón 1:38 · Barón 16:38 · Nv 3 vs 3 Yunara · ▼ CS 10 vs 20 | aviso: 
-03:52 | franja: Dragón 1:08 · Barón 16:08 · Nv 4 vs 3 Yunara · CS 20 vs 20 | aviso: 
-04:22 | franja: Dragón 0:38 · Barón 15:38 · Nv 4 vs 4 Yunara · CS 20 vs 20 | aviso: 
-04:52 | franja: Dragón 0:08 · Barón 15:08 · Nv 4 vs 4 Yunara · CS 30 vs 30 | aviso: 
-05:22 | franja: Dragón vivo · Barón 14:37 · Nv 5 vs 5 Yunara · CS 40 vs 30 | aviso: 
-05:52 | franja: Dragón vivo · Barón 14:07 · Nv 5 vs 5 Yunara · CS 40 vs 40 | aviso: 
-06:22 | franja: Dragón vivo · Barón 13:37 · Nv 5 vs 5 Yunara · CS 50 vs 40 | aviso: 
-06:53 | franja: Dragón vivo · Barón 13:07 · Nv 5 vs 5 Yunara · CS 50 vs 50 | aviso: 
-07:23 | franja: Dragón vivo · Barón 12:37 · Nv 6 vs 6 Yunara · CS 60 vs 50 | aviso: 
-07:53 | franja: Dragón 4:41 · Barón 12:06 · Nv 6 vs 6 Yunara · CS 60 vs 60 | aviso: 
-08:23 | franja: Dragón 4:10 · Barón 11:36 · Nv 6 vs 6 Yunara · CS 70 vs 60 | aviso: 
-08:54 | franja: Dragón 3:40 · Barón 11:06 · Nv 6 vs 6 Yunara · CS 70 vs 60 | aviso: 
-09:24 | franja: Dragón 3:10 · Barón 10:36 · Nv 6 vs 6 Yunara · CS 70 vs 60 | aviso: 
-09:54 | franja: Dragón 2:40 · Barón 10:05 · Nv 7 vs 7 Yunara · CS 80 vs 70 | aviso: 
-10:24 | franja: Dragón 2:09 · Barón 9:35 · Nv 7 vs 7 Yunara · CS 80 vs 70 | aviso: 
-10:55 | franja: Dragón 1:39 · Barón 9:05 · Nv 7 vs 7 Yunara · CS 80 vs 80 | aviso: 
-11:25 | franja: Dragón 1:09 · Barón 8:35 · Nv 7 vs 7 Yunara · CS 90 vs 80 | aviso: 
-11:55 | franja: Dragón 0:39 · Barón 8:05 · Nv 8 vs 7 Yunara · CS 90 vs 80 | aviso: 
-12:25 | franja: Dragón 0:09 · Barón 7:34 · Nv 8 vs 8 Yunara · CS 100 vs 90 | aviso: 
-12:55 | franja: Dragón vivo · Barón 7:04 · Nv 8 vs 8 Yunara · CS 100 vs 90 | aviso: 
-13:25 | franja: Dragón vivo · Barón 6:34 · Nv 8 vs 8 Yunara · CS 110 vs 100 | aviso: 
-13:56 | franja: Dragón vivo · Barón 6:04 · Nv 8 vs 8 Yunara · CS 110 vs 100 | aviso: 
-14:26 | franja: Dragón vivo · Barón 5:34 · Nv 9 vs 9 Yunara · CS 120 vs 110 · Muertes 14–25: 0/2 | aviso: 
-14:56 | franja: Dragón 4:53 · Barón 5:03 · Nv 9 vs 9 Yunara · CS 120 vs 110 · Muertes 14–25: 0/2 | aviso: 
-15:26 | franja: Dragón 4:22 · Barón 4:33 · Nv 9 vs 9 Yunara · CS 120 vs 120 · Muertes 14–25: 1/2 | aviso: 
-15:56 | franja: Dragón 3:52 · Barón 4:03 · Nv 9 vs 9 Yunara · CS 130 vs 120 · Muertes 14–25: 1/2 | aviso: 
-16:27 | franja: Dragón 3:22 · Barón 3:33 · ▼ Nv 9 vs 10 Yunara · CS 130 vs 120 · Muertes 14–25: 1/2 | aviso: 
-16:57 | franja: Dragón 2:52 · Barón 3:03 · Nv 10 vs 10 Yunara · CS 140 vs 120 · Muertes 14–25: 2/2 | aviso: Min 16: 2 muertes desde el 14. Juega con objetivo: no pelees si no sale un dragón, heraldo o torre; la meta es 2 o menos del 14 al 25.
-17:27 | franja: Dragón 2:22 · Barón 2:32 · Nv 10 vs 10 Yunara · CS 140 vs 130 · Muertes 14–25: 2/2 | aviso: 
-17:57 | franja: Dragón 1:51 · Barón 2:02 · Nv 10 vs 10 Yunara · CS 150 vs 130 · Muertes 14–25: 2/2 | aviso: 
-18:28 | franja: Dragón 1:21 · Barón 1:32 · Nv 10 vs 10 Yunara · CS 150 vs 140 · Muertes 14–25: 2/2 | aviso: 
-18:58 | franja: Dragón 0:51 · Barón 1:02 · Nv 11 vs 10 Yunara · CS 160 vs 150 · Muertes 14–25: 2/2 | aviso: 
-19:28 | franja: Dragón 0:21 · Barón 0:32 · Nv 11 vs 11 Yunara · CS 160 vs 150 · ▼ Muertes 14–25: 3/2 | aviso: 
-19:58 | franja: Dragón vivo · Barón 0:01 · Nv 11 vs 11 Yunara · CS 160 vs 150 · ▼ Muertes 14–25: 3/2 | aviso: 
-20:28 | franja: Dragón vivo · Barón vivo · Nv 11 vs 11 Yunara · CS 160 vs 150 · ▼ Muertes 14–25: 3/2 | aviso: 
-20:59 | franja: Dragón vivo · Barón vivo · Nv 11 vs 11 Yunara · CS 170 vs 160 · ▼ Muertes 14–25: 3/2 | aviso: 
-21:29 | franja: Dragón vivo · Barón vivo · ▼ Nv 11 vs 12 Yunara · CS 170 vs 170 · ▼ Muertes 14–25: 3/2 | aviso: 
-21:59 | franja: Dragón 4:49 · Barón vivo · ▼ Nv 11 vs 12 Yunara · CS 170 vs 170 · ▼ Muertes 14–25: 4/2 | aviso: 
-22:29 | franja: Dragón 4:19 · Barón vivo · ▼ Nv 11 vs 12 Yunara · CS 170 vs 170 · ▼ Muertes 14–25: 4/2 | aviso: 
-23:00 | franja: Dragón 3:49 · Barón vivo · ▼ Nv 11 vs 12 Yunara · CS 180 vs 180 · ▼ Muertes 14–25: 4/2 | aviso: 
-23:30 | franja: Dragón 3:18 · Barón vivo · Nv 12 vs 12 Yunara · CS 180 vs 180 · ▼ Muertes 14–25: 4/2 | aviso: 
-24:00 | franja: Dragón 2:48 · Barón vivo · ▼ Nv 12 vs 13 Yunara · CS 190 vs 180 · ▼ Muertes 14–25: 5/2 | aviso: 
-24:30 | franja: Dragón 2:18 · Barón vivo · ▼ Nv 12 vs 13 Yunara · CS 190 vs 180 · ▼ Muertes 14–25: 5/2 | aviso: 
-25:00 | franja: Dragón 1:48 · Barón vivo · ▼ Nv 12 vs 13 Yunara · CS 200 vs 180 | aviso: 
-25:31 | franja: Dragón 1:18 · Barón vivo · Nv 13 vs 13 Yunara · CS 200 vs 190 | aviso: 
-26:01 | franja: Dragón 0:47 · Barón vivo · Nv 13 vs 13 Yunara · CS 200 vs 190 | aviso: 
-26:31 | franja: Dragón 0:17 · Barón vivo · Nv 13 vs 13 Yunara · CS 210 vs 190 | aviso: 
-27:01 | franja: Dragón vivo · Barón vivo · ▼ Nv 13 vs 14 Yunara · CS 210 vs 200 | aviso: 
-27:31 | franja: Dragón 4:33 · Barón vivo · ▼ Nv 13 vs 14 Yunara · CS 220 vs 200 | aviso: 
-28:02 | franja: Dragón 4:03 · Barón 5:37 · Nv 14 vs 14 Yunara · CS 220 vs 200 | aviso: 
-28:32 | franja: Dragón 3:33 · Barón 5:07 · Nv 14 vs 14 Yunara · CS 220 vs 200 | aviso: 
-29:02 | franja: Dragón 3:03 · Barón 4:37 · ▼ Nv 14 vs 15 Yunara · CS 230 vs 210 | aviso: 
-29:32 | franja: Dragón 2:32 · Barón 4:07 · ▼ Nv 14 vs 15 Yunara · CS 230 vs 210 | aviso: 
-30:02 | franja: Dragón 2:02 · Barón 3:37 · Nv 15 vs 15 Yunara · CS 240 vs 210 | aviso: 
-30:33 | franja: Dragón 1:32 · Barón 3:06 · Nv 15 vs 15 Yunara · CS 240 vs 210 | aviso: 
-31:03 | franja: Dragón 1:02 · Barón 2:36 · Nv 15 vs 15 Yunara · CS 240 vs 220 | aviso: 
-31:33 | franja: Dragón 0:32 · Barón 2:06 · Nv 15 vs 15 Yunara · CS 250 vs 220 | aviso: 
-32:03 | franja: Dragón 0:01 · Barón 1:36 · Nv 16 vs 16 Yunara · CS 260 vs 230 | aviso: 
-32:33 | franja: Dragón 4:52 · Barón 1:06 · Nv 16 vs 16 Yunara · CS 260 vs 230 | aviso: 
-33:04 | franja: Dragón 4:22 · Barón 0:35 · Nv 16 vs 16 Yunara · CS 280 vs 240 | aviso: 
-33:34 | franja: Dragón 3:52 · Barón 0:05 · Nv 16 vs 16 Yunara · CS 280 vs 240 | aviso: 
-34:04 | franja: Dragón 3:22 · Barón vivo · Nv 17 vs 16 Yunara · CS 290 vs 240 | aviso: 
-34:34 | franja: Dragón 2:51 · Barón vivo · Nv 17 vs 16 Yunara · CS 290 vs 240 | aviso: 
+00:00 | franja: Nv 1 vs 1 Yunara · CS 0 vs 0 | aviso: 
+00:20 | franja: Nv 1 vs 1 Yunara · CS 0 vs 0 | aviso: 
+00:50 | franja: Nv 1 vs 1 Yunara · CS 0 vs 0 | aviso: 
+01:20 | franja: Nv 1 vs 1 Yunara · CS 0 vs 0 | aviso: 
+01:51 | franja: Nv 2 vs 2 Yunara · CS 0 vs 0 | aviso: 
+02:21 | franja: Nv 2 vs 2 Yunara · ▼ CS 0 vs 10 | aviso: 
+02:51 | franja: Nv 3 vs 3 Yunara · CS 10 vs 10 | aviso: 
+03:21 | franja: Nv 3 vs 3 Yunara · ▼ CS 10 vs 20 | aviso: 
+03:52 | franja: Nv 4 vs 3 Yunara · CS 20 vs 20 · Dragón 1:08 | aviso: 
+04:22 | franja: Nv 4 vs 4 Yunara · CS 20 vs 20 · ! Dragón 0:38 | aviso: 
+04:52 | franja: Nv 4 vs 4 Yunara · CS 30 vs 30 · ! Dragón 0:08 | aviso: 
+05:22 | franja: Nv 5 vs 5 Yunara · CS 40 vs 30 · Dragón vivo | aviso: 
+05:52 | franja: Nv 5 vs 5 Yunara · CS 40 vs 40 · Dragón vivo | aviso: 
+06:22 | franja: CS 50 vs 40 · Dragón vivo | aviso: 
+06:53 | franja: CS 50 vs 50 · Dragón vivo | aviso: 
+07:23 | franja: CS 60 vs 50 · Dragón vivo | aviso: 
+07:53 | franja: CS 60 vs 60 · Dragón 4:41 | aviso: 
+08:23 | franja: CS 70 vs 60 · Dragón 4:10 | aviso: 
+08:54 | franja: CS 70 vs 60 · Dragón 3:40 | aviso: 
+09:24 | franja: CS 70 vs 60 · Dragón 3:10 | aviso: 
+09:54 | franja: CS 80 vs 70 · Dragón 2:40 | aviso: 
+10:24 | franja: CS 80 vs 70 · Dragón 2:09 | aviso: 
+10:55 | franja: CS 80 vs 80 · Dragón 1:39 | aviso: 
+11:25 | franja: CS 90 vs 80 · Dragón 1:09 | aviso: 
+11:55 | franja: CS 90 vs 80 · ! Dragón 0:39 | aviso: 
+12:25 | franja: CS 100 vs 90 · ! Dragón 0:09 | aviso: 
+12:55 | franja: CS 100 vs 90 · Dragón vivo | aviso: 
+13:25 | franja: CS 110 vs 100 · Dragón vivo | aviso: 
+13:56 | franja: CS 110 vs 100 · Dragón vivo | aviso: 
+14:26 | franja: Muertes 14–25: 0/2 · Dragón vivo | aviso: 
+14:56 | franja: Muertes 14–25: 0/2 · Dragón 4:53 | aviso: 
+15:26 | franja: Muertes 14–25: 1/2 · Dragón 4:22 | aviso: 
+15:56 | franja: Muertes 14–25: 1/2 · Dragón 3:52 | aviso: 
+16:27 | franja: Muertes 14–25: 1/2 · Dragón 3:22 | aviso: 
+16:57 | franja: Muertes 14–25: 2/2 · Dragón 2:52 | aviso: Min 16: 2 muertes desde el 14. Juega con objetivo: no pelees si no sale un dragón, heraldo o torre; la meta es 2 o menos del 14 al 25.
+17:27 | franja: Muertes 14–25: 2/2 · Dragón 2:22 · Barón 2:32 | aviso: 
+17:57 | franja: Muertes 14–25: 2/2 · Dragón 1:51 · Barón 2:02 | aviso: 
+18:28 | franja: Muertes 14–25: 2/2 · Dragón 1:21 · Barón 1:32 | aviso: 
+18:58 | franja: Muertes 14–25: 2/2 · ! Dragón 0:51 · Barón 1:02 | aviso: 
+19:28 | franja: ▼ Muertes 14–25: 3/2 · ! Dragón 0:21 · ! Barón 0:32 | aviso: 
+19:58 | franja: ▼ Muertes 14–25: 3/2 · Dragón vivo · ! Barón 0:01 | aviso: 
+20:28 | franja: ▼ Muertes 14–25: 3/2 · Dragón vivo · Barón vivo | aviso: 
+20:59 | franja: ▼ Muertes 14–25: 3/2 · Dragón vivo · Barón vivo | aviso: 
+21:29 | franja: ▼ Muertes 14–25: 3/2 · Dragón vivo · Barón vivo | aviso: 
+21:59 | franja: ▼ Muertes 14–25: 4/2 · Dragón 4:49 · Barón vivo | aviso: 
+22:29 | franja: ▼ Muertes 14–25: 4/2 · Dragón 4:19 · Barón vivo | aviso: 
+23:00 | franja: ▼ Muertes 14–25: 4/2 · Dragón 3:49 · Barón vivo | aviso: 
+23:30 | franja: ▼ Muertes 14–25: 4/2 · Dragón 3:18 · Barón vivo | aviso: 
+24:00 | franja: ▼ Muertes 14–25: 5/2 · Dragón 2:48 · Barón vivo | aviso: 
+24:30 | franja: ▼ Muertes 14–25: 5/2 · Dragón 2:18 · Barón vivo | aviso: 
+25:00 | franja: Dragón 1:48 · Barón vivo | aviso: 
+25:31 | franja: Dragón 1:18 · Barón vivo | aviso: 
+26:01 | franja: ! Dragón 0:47 · Barón vivo | aviso: 
+26:31 | franja: ! Dragón 0:17 · Barón vivo | aviso: 
+27:01 | franja: Dragón vivo · Barón vivo | aviso: 
+27:31 | franja: Dragón 4:33 · Barón vivo | aviso: 
+28:02 | franja: Dragón 4:03 | aviso: 
+28:32 | franja: Dragón 3:33 | aviso: 
+29:02 | franja: Dragón 3:03 | aviso: 
+29:32 | franja: Dragón 2:32 | aviso: 
+30:02 | franja: Dragón 2:02 | aviso: 
+30:33 | franja: Dragón 1:32 | aviso: 
+31:03 | franja: Dragón 1:02 · Barón 2:36 | aviso: 
+31:33 | franja: ! Dragón 0:32 · Barón 2:06 | aviso: 
+32:03 | franja: ! Dragón 0:01 · Barón 1:36 | aviso: 
+32:33 | franja: Dragón 4:52 · Barón 1:06 | aviso: 
+33:04 | franja: Dragón 4:22 · ! Barón 0:35 | aviso: 
+33:34 | franja: Dragón 3:52 · ! Barón 0:05 | aviso: 
+34:04 | franja: Dragón 3:22 · Barón vivo | aviso: 
+34:34 | franja: Dragón 2:51 · Barón vivo | aviso: 
