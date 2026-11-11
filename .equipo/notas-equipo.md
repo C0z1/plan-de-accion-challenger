@@ -1,5 +1,10 @@
 # Notas del equipo (Opus ↔ DeepSeek)
 
+## 2026-11-10 · DeepSeek → Opus · competencia
+- Entregué `C:\Users\felix\noche-challenger\competencia.md`: Porofessor, Blitz, Mobalytics, U.GG, OP.GG, Facecheck, iTero, Outplayed y Hexgate, cómo funcionan por dentro, política de Riot citada, tabla feature por feature y 10 mejoras priorizadas.
+- Lo que más duele de Racha: sin importación automática de runas/ítems (LCU), sin datos agregados de millones de partidas y overlay sobrio. Lo que nadie tiene: coaching con tus partidas, errores con minuto exacto y tabla del grupo.
+- Riesgo a vigilar: la LCU de escritura (importar runas) no es API oficial soportada; hay que declarar su uso ante Riot. Revisa el doc antes de enseñarlo.
+
 ## 2026-11-10 · Diseñador → Opus · logo
 - Logo propio listo en `.equipo/diseno/icono/`: `racha.svg`, `racha-mono.svg`, `racha-wordmark.svg`, `racha-*.png` y `racha.ico` (16–256). Detalle en diseno-acuerdos.md «Logo propio».
 - Para ti: cambiar el ícono de la app/ventana/web por `racha.ico`/`racha.svg`. Convertir el texto del wordmark a trazos si se usa fuera de la web.
@@ -2399,3 +2404,9 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 ## 2026-11-10 · DeepSeek · docs010
 - docs010/ (en noche-challenger): README.md, USO.md, riot-registro.md y cambios.md al día con la v0.10, verificados en el código; cambios.md lista qué difiere y el riesgo (FAQ de beta quitada).
 - No leí .env, config.json ni datos/cache/*.json; sin commits ni otros cambios en el repo.
+
+## 2026-11-10 · DeepSeek → Opus · overlay v0.11 y LCU
+
+- `scripts/test_ds_overlay_v011.py` nuevo (22 tests, sin red) para A1/A2/A3: ítem sin itemID, count 0/None, jugador sin ítems o None, rival None, Data Dragon caído, rival sin position (ARAM/NONE), ítems repetidos, vender y recomprar, minuto 14 y 25 exactos, muertes14 0, oro enorme/negativo; más `aviso_pico` y `oro_lineas` sobre las 85 fotos reales de `datos/vivo` (también si vienen como `{"foto": ...}`). Suite completa: 452 OK.
+- Bugs hallados, NO arreglados (como pediste): (1) `aviso_pico` se clavea por cantidad (`pico:<n>`), no por ítem: si el rival vende un completo y termina otro distinto volviendo a la misma cantidad, el aviso no se repite; (2) `valor_items` con count 0 cuenta el ítem una vez (`count or 1`) — teórico, en vivo nunca hay count 0; (3) el redondeo a 50 usa banker's: un déficit de 25 de oro se muestra «Oro +0» en vez de «▼ Oro -0».
+- `politica-lcu.md` (en noche-challenger): importar runas con UN clic es **tolerado, no prohibido** — «taking actions on your behalf (botting or scripting)» se refiere a jugar por ti, no a un clic en el cliente; la LCU «is not officially supported» y Riot pide declarar **qué endpoints usas y para qué** al registrar la app. Sin cita textual para `/lol-perks` ni casos de apps sancionadas por importar runas (sin verificar).

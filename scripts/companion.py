@@ -217,7 +217,7 @@ def completos(p, leg=None):
 
 def aviso_pico(d, leg=None):
     """Pico de poder del rival de línea: cuando termina un ítem completo y ya tiene más que tú → (clave, texto); si no, None.
-    La clave («pico:<n>») hace que cada ítem avise una sola vez. Solo con lo que se ve con Tab."""
+    La clave («pico:<n>:<ítem>») hace que cada ítem avise una sola vez. Solo con lo que se ve con Tab."""
     if leg is None: precios(); leg = LEGENDARIOS
     me, rival = yo_rival(d)
     if not rival or not leg: return None
@@ -225,7 +225,7 @@ def aviso_pico(d, leg=None):
     if len(suyos) <= len(mios): return None
     t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
     n = len(suyos)
-    return (f"pico:{n}", f"Min {int(t // 60)}: {rival.get('championName', 'tu rival')} terminó {suyos[-1]} ({n} ítem{'s' if n > 1 else ''} completo{'s' if n > 1 else ''} contra "
+    return (f"pico:{n}:{suyos[-1]}", f"Min {int(t // 60)}: {rival.get('championName', 'tu rival')} terminó {suyos[-1]} ({n} ítem{'s' if n > 1 else ''} completo{'s' if n > 1 else ''} contra "
             f"{len(mios)} tuyo{'s' if len(mios) != 1 else ''}): ahora pega más. No pelees sin ventaja hasta tener el tuyo; farmea y espera a tu jungla.")
 
 

@@ -203,9 +203,9 @@ class PicoRival(unittest.TestCase):  # A2: un aviso por ítem completo del rival
         leg = {"6692", "3142"}
         self.assertIsNone(companion.aviso_pico(self.foto([], [1036]), leg))  # componente: nada
         c, txt = companion.aviso_pico(self.foto([], [6692, 1036]), leg)
-        self.assertEqual(c, "pico:1"); self.assertIn("Zed terminó Item6692", txt); self.assertIn("Min 12", txt)
+        self.assertEqual(c, "pico:1:Item6692"); self.assertIn("Zed terminó Item6692", txt); self.assertIn("Min 12", txt)
         self.assertIsNone(companion.aviso_pico(self.foto([3142], [6692]), leg))  # parejos en ítems: sin aviso
-        self.assertEqual(companion.aviso_pico(self.foto([3142], [6692, 3142]), leg)[0], "pico:2")
+        self.assertEqual(companion.aviso_pico(self.foto([3142], [6692, 3142]), leg)[0], "pico:2:Item3142")
         self.assertIsNone(companion.aviso_pico({"allPlayers": []}, leg))
 
 
