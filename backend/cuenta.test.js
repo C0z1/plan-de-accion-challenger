@@ -172,3 +172,10 @@ test("tabla del grupo: solo quien la activó, con su récord de 7 días y de sus
   assert.ok(!JSON.stringify(g).includes("gmail"));  // nunca el correo
   assert.equal((await worker.fetch(req("/v1/grupo"), env, ctx)).status, 401);
 });
+
+test("F5: el ping suma avisos de la franja como números chicos (nunca texto)", async () => {
+  const {env, ctx} = entorno(); env.ACCESOS = "cozi:codigo-admin1,beto:codigo-beto1"; env.ADMINS = "cozi";
+  for (const avisos of [3, 0, "<script>", 999]) await worker.fetch(conCodigo("/v1/ping", "codigo-beto1", {method: "POST", body: {version: "0.11.0", region: "la1", avisos}}), env, ctx);
+  const met = await (await worker.fetch(conCodigo("/v1/admin/metricas", "codigo-admin1"), env, ctx)).json();
+  assert.deepEqual([met[0].usos, met[0].avisos, met[0].partidas_con_aviso], [3, 3, 1]);  // 3 por hora: el cuarto se ignora; texto → 0
+});

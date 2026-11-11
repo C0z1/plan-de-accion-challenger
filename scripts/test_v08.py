@@ -20,7 +20,7 @@ class V08(unittest.TestCase):
         self.assertEqual(len(llamadas), 1)
         ruta, c = llamadas[0]
         self.assertEqual((ruta, c["champ_select"], c["revision"], c["version"]), ("/v1/ping", True, False, w.VERSION))
-        self.assertEqual(set(c), {"version", "region", "overlay", "champ_select", "revision"})  # nada que identifique
+        self.assertEqual(set(c), {"version", "region", "overlay", "champ_select", "revision", "avisos"})  # nada que identifique
 
     def test_reporte_ok_y_sin_red(self):
         w.ESTADO.update(fase="Lobby", descarga="falló (3)")

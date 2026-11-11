@@ -98,10 +98,11 @@ export async function extra(request, env, url, quienEs) {
     const d = await cuerpo(request) || {};
     const version = /^\d+\.\d+\.\d+$/.test(d.version || "") ? d.version : "?";
     const region = /^[a-z0-9]{2,5}$/.test(d.region || "") ? d.region : "?";
-    const b = k => d[k] ? 1 : 0;
-    await DB.prepare("INSERT INTO metricas (dia, version, region, usos, overlay, champ_select, revision) VALUES (?, ?, ?, 1, ?, ?, ?) " +
-      "ON CONFLICT(dia, version, region) DO UPDATE SET usos = usos + 1, overlay = overlay + excluded.overlay, champ_select = champ_select + excluded.champ_select, revision = revision + excluded.revision")
-      .bind(new Date().toISOString().slice(0, 10), version, region, b("overlay"), b("champ_select"), b("revision")).run();
+    const b = k => d[k] ? 1 : 0, n = k => Math.max(0, Math.min(20, Math.floor(Number(d[k]) || 0)));  // F5: contadores chicos, nunca texto
+    await DB.prepare("INSERT INTO metricas (dia, version, region, usos, overlay, champ_select, revision, avisos, partidas_con_aviso) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?) " +
+      "ON CONFLICT(dia, version, region) DO UPDATE SET usos = usos + 1, overlay = overlay + excluded.overlay, champ_select = champ_select + excluded.champ_select, " +
+      "revision = revision + excluded.revision, avisos = avisos + excluded.avisos, partidas_con_aviso = partidas_con_aviso + excluded.partidas_con_aviso")
+      .bind(new Date().toISOString().slice(0, 10), version, region, b("overlay"), b("champ_select"), b("revision"), n("avisos"), n("avisos") > 0 ? 1 : 0).run();
     return json({ok: true});
   }
 

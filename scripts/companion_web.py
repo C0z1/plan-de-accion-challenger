@@ -305,7 +305,8 @@ def ping():
     hoy = time.strftime("%Y-%m-%d")
     if not gui.ajustes().get("metricas") or PING[0] == hoy: return
     with LOCK: region = ESTADO.get("plataforma")
-    try: companion.backend("POST", "/v1/ping", {"version": VERSION, "region": region or "?", **{k: k in USADO for k in ("overlay", "champ_select", "revision")}}, gui.REPO)
+    with LOCK: avisos = sum(1 for a in ESTADO.get("avisos") or [] if a.get("franja"))  # F5: cuántos salieron en la franja en la última partida
+    try: companion.backend("POST", "/v1/ping", {"version": VERSION, "region": region or "?", "avisos": avisos, **{k: k in USADO for k in ("overlay", "champ_select", "revision")}}, gui.REPO)
     except Exception: return
     PING[0] = hoy; USADO.clear()
 
