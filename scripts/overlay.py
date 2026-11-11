@@ -160,6 +160,7 @@ def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None):
         if ultimo[0] and len(ps) == len(ultimo[0]):  # mismas piezas, otro texto (el timer bajó un segundo): sin crear widgets
             for et, (t, c) in zip(etiquetas, ps): et.config(text=t, fg=c)
         else:
+            ultimo[0] = None  # si el dibujo falla a medias, la próxima vuelta rehace todo (revisión del asistente, 16)
             for w in fila.winfo_children(): w.destroy()
             etiquetas.clear()
             for i, (t, c) in enumerate(ps):
