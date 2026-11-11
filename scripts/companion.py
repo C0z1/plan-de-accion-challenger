@@ -43,14 +43,15 @@ def lcu_escribir(metodo, path, cuerpo=None):
 def importar_runas(nombre, pagina, leer=None, escribir=None):
     """Crea en el cliente la página de runas `pagina` ({primaryStyleId, subStyleId, selectedPerkIds[9]}) y la deja activa.
     Solo en selección de campeón y solo cuando el jugador pulsa el botón: Racha nunca elige, banea ni acepta por ti.
-    Si la página activa es editable la reemplaza (así no se llena el límite de páginas). Devuelve (ok, mensaje)."""
+    Si la página activa la creó Racha («Racha: …») la reemplaza (así no se llena el límite); una página tuya nunca se borra. Devuelve (ok, mensaje)."""
     leer, escribir = leer or lcu, escribir or lcu_escribir
     ids = (pagina or {}).get("selectedPerkIds") or []
     if len(ids) != 9 or not all(isinstance(i, int) for i in ids + [pagina.get("primaryStyleId"), pagina.get("subStyleId")]):
         return False, "Esta build no trae la página completa de runas."
     if leer("/lol-gameflow/v1/gameflow-phase") != "ChampSelect": return False, "Solo se puede en la selección de campeón."
     act = leer("/lol-perks/v1/currentpage") or {}
-    if act.get("isDeletable") and act.get("id") is not None: escribir("DELETE", f"/lol-perks/v1/pages/{act['id']}")
+    if act.get("isDeletable") and str(act.get("name") or "").startswith("Racha: ") and act.get("id") is not None:  # solo las que creó Racha:
+        escribir("DELETE", f"/lol-perks/v1/pages/{act['id']}")                                                     # las tuyas no se tocan
     ok = escribir("POST", "/lol-perks/v1/pages", {"name": f"Racha: {nombre}"[:25], "primaryStyleId": pagina["primaryStyleId"],
                                                  "subStyleId": pagina["subStyleId"], "selectedPerkIds": ids, "current": True})
     return (True, "Listo: la página de runas ya está en tu cliente.") if ok else (False, "El cliente no aceptó la página (¿llegaste al límite de páginas?).")
@@ -233,7 +234,8 @@ def aviso_pico(d, leg=None):
     t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
     n = len(suyos)
     r, m = rival.get('championName', 'tu rival'), len(mios)
-    return (f"pico:{n}:{suyos[-1]}", Texto(f"Min {int(t // 60)}: {r} terminó {suyos[-1]}: {n} ítem{'s' if n > 1 else ''} completo{'s' if n > 1 else ''} contra {m} "
+    lista = ", ".join(suyos)  # todos sus completos: la casilla no dice cuál terminó último (revisión de DeepSeek)
+    return (f"pico:{n}:{'|'.join(sorted(suyos))}", Texto(f"Min {int(t // 60)}: {r} ya tiene {n} ítem{'s' if n > 1 else ''} completo{'s' if n > 1 else ''} ({lista}) contra {m} "
                                           f"tuyo{'s' if m != 1 else ''}. Tu regla: no pelear sin ventaja hasta tener el tuyo.",
                                           f"{r} {n} ítem{'s' if n > 1 else ''} vs {m} tuyo{'s' if m != 1 else ''}"))
 

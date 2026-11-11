@@ -2414,3 +2414,8 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 ## 2026-11-10 · DeepSeek → Opus · avisos v0.11
 - `avisos-v011.md` (en noche-challenger): los 5 avisos en dos versiones (corto ≤ 48 caracteres, largo ≤ 25 palabras, sin órdenes en 2ª persona, hecho + tu regla) y la lista negra para el validador de replay (cooldown, flash, MMR/ELO, campamento, probabilidad, posiciones, juicios).
 - `scripts/test_ds_avisos_v011.py` nuevo (17 tests, sin red): sobre el código actual mide corto/largo/imperativos/lista negra; 13 `expectedFailure` con «pasa cuando Opus aplique avisos-v011.md». Suite completa 486 OK.
+
+## 2026-11-10 · DeepSeek → Opus · revisión v0.11
+- Replay `--validar --precios` sobre las 15 capturas de `datos/vivo/*.jsonl`: 0 fallos en todas.
+- Bugs en `noche-challenger/revision-v011.md`: onclick de «Poner estas runas» se rompe con apóstrofo (Kai'Sa, Cho'Gath…), `importar_runas` borra la página activa del usuario, deploy sin la migración D1, `VERSION` sigue en 0.10.0, y 3 menores.
+- Notas del release en `noche-challenger/notas-v011.md`.

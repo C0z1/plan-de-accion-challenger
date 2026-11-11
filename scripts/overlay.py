@@ -98,15 +98,22 @@ def correr(leer, seguir, x=0.22, y=6):
     import tkinter as tk
     root = tk.Tk(); root.withdraw(); root.overrideredirect(True); root.attributes("-topmost", True); root.attributes("-alpha", 0.88)
     root.configure(bg=BG); fila = tk.Frame(root, bg=BG, padx=10, pady=4); fila.pack()
-    root.update_idletasks(); atravesable(root); visible = [False]
+    root.update_idletasks(); atravesable(root); visible, ultimo = [False], [None]
 
     def tick():
         if not seguir(): root.destroy(); return
+        try: dibujar()
+        except Exception: pass  # un dato raro no congela la franja el resto de la partida (revisión de DeepSeek)
+        root.after(1000, tick)
+
+    def dibujar():
         s = leer() or {}
         encendido = (s.get("ajustes") or {}).get("overlay", True)  # Ajustes_Vino: «Siempre encima en partida»
         aj = s.get("ajustes") or {}
         ps = partes(s.get("meta"), time.time(), aj) if s.get("fase") == "InProgress" and encendido else []
         if ps and (pa := pieza_aviso(s.get("aviso"), time.time())): ps = ps + [pa]  # el aviso corto, al final y por 12 s
+        if ps == ultimo[0] and ps: return  # nada cambió: no se crean widgets cada segundo (plan en partida, F6)
+        ultimo[0] = ps
         for w in fila.winfo_children(): w.destroy()
         for i, (t, c) in enumerate(ps):
             if i: tk.Label(fila, text="·", fg="#7A5A68", bg=BG, font=("Segoe UI", 11)).pack(side="left", padx=4)
@@ -116,6 +123,5 @@ def correr(leer, seguir, x=0.22, y=6):
             root.geometry(f"+{int(root.winfo_screenwidth() * x)}+{pos_y(aj.get('franja_pos'), root.winfo_screenheight(), root.winfo_reqheight(), y, fraccion_util())}")
             if not visible[0]: root.deiconify(); root.attributes("-topmost", True); visible[0] = True
         elif visible[0]: root.withdraw(); visible[0] = False
-        root.after(1000, tick)
 
     tick(); root.mainloop()

@@ -203,9 +203,9 @@ class PicoRival(unittest.TestCase):  # A2: un aviso por ítem completo del rival
         leg = {"6692", "3142"}
         self.assertIsNone(companion.aviso_pico(self.foto([], [1036]), leg))  # componente: nada
         c, txt = companion.aviso_pico(self.foto([], [6692, 1036]), leg)
-        self.assertEqual(c, "pico:1:Item6692"); self.assertIn("Zed terminó Item6692", txt); self.assertIn("Min 12", txt)
+        self.assertEqual(c, "pico:1:Item6692"); self.assertIn("Zed ya tiene 1 ítem completo (Item6692)", txt); self.assertIn("Min 12", txt)
         self.assertIsNone(companion.aviso_pico(self.foto([3142], [6692]), leg))  # parejos en ítems: sin aviso
-        self.assertEqual(companion.aviso_pico(self.foto([3142], [6692, 3142]), leg)[0], "pico:2:Item3142")
+        self.assertEqual(companion.aviso_pico(self.foto([3142], [6692, 3142]), leg)[0], "pico:2:Item3142|Item6692")
         self.assertIsNone(companion.aviso_pico({"allPlayers": []}, leg))
 
 
@@ -222,12 +222,18 @@ class ImportarRunas(unittest.TestCase):  # A5: solo en selección, solo la pági
 
     def test_crea_y_reemplaza(self):
         import companion
-        leer, escribir, ll = self.cliente(actual={"id": 77, "isDeletable": True})
+        leer, escribir, ll = self.cliente(actual={"id": 77, "isDeletable": True, "name": "Racha: Ahri"})  # una que creó Racha
         ok, msg = companion.importar_runas("Yone", self.PAG, leer, escribir)
         self.assertTrue(ok); self.assertIn("Listo", msg)
         self.assertEqual([(m, p) for m, p, _ in ll], [("DELETE", "/lol-perks/v1/pages/77"), ("POST", "/lol-perks/v1/pages")])
         self.assertEqual(ll[1][2]["selectedPerkIds"], self.PAG["selectedPerkIds"]); self.assertTrue(ll[1][2]["current"])
         self.assertTrue(all(p.startswith("/lol-perks/") for _, p, _ in ll))  # nada fuera de las runas
+
+    def test_nunca_borra_una_pagina_tuya(self):  # revisión de DeepSeek: una página editable del jugador no se toca
+        import companion
+        leer, escribir, ll = self.cliente(actual={"id": 5, "isDeletable": True, "name": "Mi página de Yone"})
+        self.assertTrue(companion.importar_runas("Yone", self.PAG, leer, escribir)[0])
+        self.assertEqual([m for m, _, _ in ll], ["POST"])
 
     def test_no_borra_paginas_fijas_ni_actua_fuera_de_seleccion(self):
         import companion

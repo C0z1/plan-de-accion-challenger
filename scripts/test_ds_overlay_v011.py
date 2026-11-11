@@ -110,12 +110,13 @@ class AvisoPico(unittest.TestCase):
         self.assertIsNone(companion.aviso_pico(self.foto([3100], [3100]), LEG))   # parejos
         self.assertIsNone(companion.aviso_pico(self.foto([3100, 6692], [3100]), LEG))  # vas arriba
         c, txt = companion.aviso_pico(self.foto([], [3100]), LEG)
-        self.assertEqual((c, "Min 12" in txt, "Zed terminó Item3100" in txt), ("pico:1:Item3100", True, True))
+        self.assertEqual((c, "Min 12" in txt, "Zed terminó Item3100" in txt), ("pico:1:Item3100", True, False))
+        self.assertIn("Zed ya tiene 1 ítem completo (Item3100)", txt)
 
     def test_vender_y_terminar_otro_si_reavisa(self):  # bug que halló DeepSeek: la clave ahora lleva el ítem
         a = companion.aviso_pico(self.foto([], [3100, 6692]), LEG)[0]
         b = companion.aviso_pico(self.foto([], [3100, 3142]), LEG | {"3142"})[0]  # vende 6692 y termina OTRO completo
-        self.assertEqual((a, b), ("pico:2:Item6692", "pico:2:Item3142"))
+        self.assertEqual((a, b), ("pico:2:Item3100|Item6692", "pico:2:Item3100|Item3142"))
 
 
 class Partes(unittest.TestCase):
