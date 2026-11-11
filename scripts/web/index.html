@@ -774,6 +774,12 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
         ${fila("Partidas descargadas", V ? `${V.total} · última: ${esc(ult)}` : s.cliente ? `${s.cliente.length} del cliente (sin descargar)` : "sin datos", '<span style="display:flex;gap:8px"><button class="btn2" onclick="descargar()">Descargar</button><button class="btn2" onclick="recargar()">Recargar</button></span>')}
         ${s.descarga && !/Google/.test(s.descarga) ? `<span class="sub" style="font-size:13px;margin:-4px 0 4px 16px" role="status" aria-live="polite">${esc(s.descarga)}</span>` : ""}
         ${loginNube(s)}
+        <details class="alt"><summary>Buscar mi cuenta por Riot ID</summary>
+          <div class="filaV" style="flex-wrap:wrap;gap:8px"><div class="txt" style="flex:1;min-width:200px"><b>Tu Riot ID</b><small>Para usar Racha sin el cliente de LoL abierto. El inicio de sesión oficial de Riot llegará cuando Riot apruebe la app.</small></div>
+            <span style="display:flex;gap:8px;flex-wrap:wrap"><input id="cuenta-id" aria-label="Riot ID (Nombre#TAG)" placeholder="Nombre#TAG" autocomplete="off" style="width:150px;height:40px;background:var(--dark3);border:1px solid var(--soft);border-radius:10px;color:var(--txt);padding:8px 10px;font:inherit">
+            <select id="cuenta-region" aria-label="Región" style="height:40px;background:var(--dark3);border:1px solid var(--soft);border-radius:10px;color:var(--txt);padding:0 8px;font:inherit">${REGIONES.map(([k, t]) => `<option value="${k}">${t}</option>`).join("")}</select>
+            <button class="btn2" onclick="buscarCuenta()">Buscar</button></span>
+            ${cuentaMsg ? `<span class="sub" style="font-size:13px;width:100%" role="status" aria-live="polite">${esc(cuentaMsg)}</span>` : ""}</div></details>
         <details class="alt"><summary>Usar un código de acceso</summary>
           ${fila("Código de acceso", s.conectado && !s.nube ? "Conectado a racha.gg: tus partidas se bajan solas." : "Te lo da quien administra Racha.", (s.conectado && !s.nube ? '<span class="tag ok" style="align-self:center">✓ Conectado</span> ' : "") + '<span style="display:flex;gap:8px"><input id="acceso" type="password" autocomplete="off" aria-label="Código de acceso" placeholder="código" style="width:130px;height:40px;background:var(--dark3);border:1px solid var(--soft);border-radius:10px;color:var(--txt);padding:8px 10px;font:inherit"><button class="btn2" onclick="guardarAcceso()">Guardar</button></span>')}</details>
 </div>
@@ -851,6 +857,16 @@ function mensajeInvitacion(inv) {  // lo que el admin le manda a su amigo: desca
 async function copiarMensaje(b) {
   try { await navigator.clipboard.writeText(document.getElementById("inv-msg").value); b.textContent = "Copiado"; }
   catch (e) { document.getElementById("inv-msg").select(); b.textContent = "Selecciónalo y cópialo con Ctrl+C"; }
+}
+const REGIONES = [["la1", "LAN"], ["la2", "LAS"], ["na1", "NA"], ["br1", "BR"], ["euw1", "EUW"], ["eun1", "EUNE"], ["kr", "KR"], ["jp1", "JP"], ["oc1", "OCE"], ["tr1", "TR"], ["ru", "RU"], ["me1", "ME"], ["sg2", "SG"], ["tw2", "TW"], ["vn2", "VN"]];
+let cuentaMsg = "";
+async function buscarCuenta() {  // tu Riot ID: Racha comprueba que existe y baja tus partidas (sin el cliente abierto)
+  const riot_id = ((document.getElementById("cuenta-id") || {}).value || "").trim(), region = (document.getElementById("cuenta-region") || {}).value;
+  if (!riot_id.includes("#")) { cuentaMsg = "Escribe tu Riot ID como Nombre#TAG."; v = -1; tick(); return; }
+  cuentaMsg = "Buscando…"; v = -1; tick();
+  try { const r = await fetch("/api/cuenta", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({riot_id, region})}); cuentaMsg = (await r.json()).mensaje || ""; }
+  catch (e) { cuentaMsg = "No se pudo hablar con Racha."; }
+  v = -1; tick();
 }
 let runasMsg = "";
 async function ponerRunas(champ, pos) {  // A5: solo con tu clic; Racha no elige, banea ni acepta por ti

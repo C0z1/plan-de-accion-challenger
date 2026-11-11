@@ -334,4 +334,38 @@ class MomentoMuerto(unittest.TestCase):  # F4: muerto, la franja deja tu regla y
 
 
 
+
+class CuentaPorRiotId(unittest.TestCase):  # sin el cliente abierto: tu Riot ID guardado (el login oficial de Riot llega con la production key)
+    def setUp(self):
+        self.viejo = dict(w.ESTADO); self.d = tempfile.TemporaryDirectory(); self.addCleanup(self.d.cleanup)
+        p = mock.patch.object(w.gui, "CUENTA_F", pathlib.Path(self.d.name) / "cuenta.json"); p.start(); self.addCleanup(p.stop)
+        p = mock.patch.object(w, "descargar_todo", lambda *a, **k: None); p.start(); self.addCleanup(p.stop)
+    def tearDown(self): w.ESTADO.clear(); w.ESTADO.update(self.viejo)
+
+    def test_valida_y_guarda(self):
+        g = w.gui
+        for malo in [("sin-tag", "la1"), ("ab#1", "la1"), ("Nombre#TAG", "marte"), ("", "")]:
+            with self.assertRaises(ValueError): g.guardar_cuenta(*malo)
+        self.assertEqual(g.guardar_cuenta(" cozi#1134 ", "LA1"), {"riot_id": "cozi#1134", "region": "la1"})
+        self.assertEqual(g.cuenta_guardada()["region"], "la1")
+
+    def test_buscar(self):
+        llamadas = []
+        def falso(m, ruta, c=None, base=None): llamadas.append(ruta); return {"gameName": "cozi", "tagLine": "1134"}
+        with mock.patch.object(w.companion, "backend", falso):
+            ok, msg = w.buscar_cuenta("cozi#1134", "la1")
+        self.assertTrue(ok); self.assertIn("Encontrada: cozi#1134", msg)
+        self.assertEqual(llamadas, ["/v1/riot/americas/riot/account/v1/accounts/by-riot-id/cozi/1134"])
+        def no_existe(*a, **k): raise urllib.error.HTTPError("u", 404, "no", {}, None)
+        with mock.patch.object(w.companion, "backend", no_existe):
+            ok, msg = w.buscar_cuenta("nadie#000", "euw1")
+        self.assertFalse(ok); self.assertIn("No existe", msg); self.assertIsNone(w.gui.cuenta_guardada())  # no se guarda
+        def caido(*a, **k): raise urllib.error.URLError("sin red")
+        with mock.patch.object(w.companion, "backend", caido):
+            ok, msg = w.buscar_cuenta("cozi#1134", "kr")
+        self.assertTrue(ok); self.assertIn("Guardada", msg)  # sin servidor se guarda igual y se verifica al descargar
+        self.assertFalse(w.buscar_cuenta("mal", "la1")[0])
+
+
+
 if __name__ == "__main__": unittest.main()

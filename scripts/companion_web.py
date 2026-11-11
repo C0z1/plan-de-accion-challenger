@@ -250,6 +250,28 @@ def primera_vez():
 DESCARGANDO = threading.Lock()
 
 
+def buscar_cuenta(riot_id, region):
+    """Comprueba que el Riot ID existe (Riot API por el backend, o con tu key) y lo guarda; luego baja sus partidas.
+    Es el «inicio de sesión» posible hoy: el oficial de Riot (RSO) solo se da a apps con production key aprobada."""
+    import urllib.error, urllib.parse
+    try: c = gui.guardar_cuenta(riot_id, region)
+    except ValueError: return False, "Escribe tu Riot ID como Nombre#TAG y elige tu región."
+    nombre, _, tag = c["riot_id"].rpartition("#")
+    ruta = "asia" if gui.RUTAS[c["region"]] == "sea" else gui.RUTAS[c["region"]]
+    q = urllib.parse.quote
+    try:
+        r = companion.backend("GET", f"/v1/riot/{ruta}/riot/account/v1/accounts/by-riot-id/{q(nombre, safe='')}/{q(tag, safe='')}", base=gui.REPO)
+    except urllib.error.HTTPError as e:
+        if e.code == 404: gui.CUENTA_F.unlink(missing_ok=True); return False, f"No existe la cuenta {c['riot_id']} en esa región."
+        r = None
+    except OSError: r = None
+    with LOCK: ESTADO.update(cuenta=ESTADO.get("cuenta") or c["riot_id"], v=ESTADO["v"] + 1)
+    threading.Thread(target=descargar_todo, daemon=True).start()
+    hallada = r and r.get("gameName")
+    return True, (f"Encontrada: {r['gameName']}#{r.get('tagLine', tag)}. Bajando tus partidas…" if hallada
+                  else f"Guardada: {c['riot_id']}. Bajando tus partidas…")
+
+
 def descargar_todo(n=100):
     """Baja tus últimas n partidas (descargar.py, con tu key o tu código) y recalcula todo; el avance va a «descarga»."""
     if not DESCARGANDO.acquire(blocking=False):  # ya hay una en curso
@@ -483,6 +505,11 @@ class H(http.server.BaseHTTPRequestHandler):
             with LOCK: ESTADO.update(descarga="Código guardado. Ya puedes descargar tus partidas.", conectado=True, v=ESTADO["v"] + 1)
             threading.Thread(target=primera_vez, daemon=True).start()  # con el cliente abierto, empieza a bajar sola
             return self.enviar(200, b"{}", "application/json")
+        if self.path == "/api/cuenta":  # tu Riot ID y región, para usar Racha sin el cliente de LoL abierto
+            try: d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 300)))
+            except (ValueError, TypeError): return self.enviar(400, b"", "text/plain")
+            ok, msg = buscar_cuenta(str(d.get("riot_id") or ""), str(d.get("region") or ""))
+            return self.enviar(200 if ok else 409, json.dumps({"ok": ok, "mensaje": msg}).encode(), "application/json")
         if self.path == "/api/runas":  # A5: importar la página de runas de la build, solo cuando el jugador pulsa el botón
             import builds
             try:

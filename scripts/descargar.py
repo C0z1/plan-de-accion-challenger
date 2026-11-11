@@ -23,15 +23,23 @@ def riot_id():
     """RIOT_ID del entorno o, si no está, la cuenta con sesión en el cliente de LoL (LCU, solo lectura)."""
     if os.environ.get("RIOT_ID"): return os.environ["RIOT_ID"]
     s = companion.lcu("/lol-summoner/v1/current-summoner") or {}
-    return f"{s['gameName']}#{s['tagLine']}" if s.get("gameName") and s.get("tagLine") else None
+    if s.get("gameName") and s.get("tagLine"): return f"{s['gameName']}#{s['tagLine']}"
+    return (guardada() or {}).get("riot_id")  # cliente cerrado: la cuenta que guardaste en Ajustes
 
 
-NAME, _, TAG = (riot_id() or sys.exit('Falta tu cuenta: abre el cliente de LoL o define RIOT_ID="Nombre#TAG"')).rpartition("#")
+def guardada():
+    """La cuenta guardada en Ajustes (datos/cache/cuenta.json), o None."""
+    import json
+    try: return json.loads((pathlib.Path(__file__).resolve().parent.parent / "datos" / "cache" / "cuenta.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError): return None
+
+
+NAME, _, TAG = (riot_id() or sys.exit('Falta tu cuenta: abre el cliente de LoL o escribe tu Riot ID en Ajustes')).rpartition("#")
 def plataforma():
     """RIOT_REGION, o la del cliente de LoL (platformId de tu historial, solo lectura), o la1."""
     if os.environ.get("RIOT_REGION"): return os.environ["RIOT_REGION"]
     h = companion.lcu("/lol-match-history/v1/products/lol/current-summoner/matches?begIndex=0&endIndex=0") or {}
-    return str(h.get("platformId") or "la1")
+    return str(h.get("platformId") or (guardada() or {}).get("region") or "la1")
 
 
 PLATAFORMA = plataforma().lower()

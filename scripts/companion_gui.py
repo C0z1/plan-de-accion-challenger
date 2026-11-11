@@ -140,6 +140,28 @@ def puede_descargar():
     return hay_key() or companion.acceso(REPO) is not None
 
 
+RUTAS = {"na1": "americas", "br1": "americas", "la1": "americas", "la2": "americas", "euw1": "europe", "eun1": "europe",
+         "tr1": "europe", "ru": "europe", "me1": "europe", "kr": "asia", "jp1": "asia", "oc1": "sea", "sg2": "sea", "tw2": "sea", "vn2": "sea"}
+CUENTA_F = REPO / "datos" / "cache" / "cuenta.json"  # tu Riot ID guardado: para bajar tus partidas con el cliente cerrado
+
+
+def guardar_cuenta(riot_id, region):
+    """Guarda «Nombre#TAG» y la región (la1, euw1…) para usar Racha sin el cliente abierto. ValueError si no es válido."""
+    import re
+    riot_id, region = str(riot_id or "").strip(), str(region or "").strip().lower()
+    if not re.fullmatch(r"[^#]{3,16}#[^#\s]{2,5}", riot_id) or region not in RUTAS: raise ValueError("Riot ID o región inválidos")
+    CUENTA_F.parent.mkdir(parents=True, exist_ok=True)
+    CUENTA_F.write_text(json.dumps({"riot_id": riot_id, "region": region}, ensure_ascii=False), encoding="utf-8")
+    return {"riot_id": riot_id, "region": region}
+
+
+def cuenta_guardada():
+    """{riot_id, region} guardados en Ajustes, o None."""
+    try: d = json.loads(CUENTA_F.read_text(encoding="utf-8"))
+    except (OSError, ValueError): return None
+    return d if isinstance(d, dict) and d.get("riot_id") and d.get("region") in RUTAS else None
+
+
 def guardar_acceso(token):
     """Guarda tu código de acceso (lo da quien administra el backend). Solo letras, números y guiones: ValueError si no."""
     import re

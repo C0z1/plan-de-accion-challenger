@@ -39,6 +39,7 @@ Descartado a propósito: timers de campamentos (la API no avisa cuándo se limpi
 ## Fase C — Lanzamiento público (primer gasto)
 
 - Production key de Riot (texto listo en `~/noche-challenger/docs010/riot-registro.md`).
+- Inicio de sesión con Riot (RSO, pedido del usuario): Riot solo lo da a apps aprobadas; pedirlo junto con la production key. Mientras, «Buscar mi cuenta por Riot ID» en Ajustes (v0.12) y la cuenta del cliente abierto.
 - Firma del instalador y dominio: solo cuando la fase B lo justifique (montos en `plan-negocio.md`).
 
 ## Fase D — Ingresos
