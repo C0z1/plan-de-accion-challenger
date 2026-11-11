@@ -107,13 +107,14 @@ def build_de(match, timeline, puuid, items):
         rango[s] += 1
         if rango[s] == 3: llega3.setdefault(s, n)
     orden = sorted((1, 2, 3), key=lambda s: (llega3.get(s, math.inf), -rango[s]))
-    st = p["perks"]["styles"]
+    st, sp = p["perks"]["styles"], p["perks"].get("statPerks") or {}
     riv = next((x["championName"] for x in match["info"]["participants"]
                 if x.get("teamId") != p.get("teamId") and p["teamPosition"] and x["teamPosition"] == p["teamPosition"]), None)
     return dict(champ=p["championName"], pos=p["teamPosition"], win=p["win"], core=core[:3], rival=riv,
                 botas=next((i for i in compras if botas(items.get(i), i)), None),
                 runas=(st[0]["style"], st[0]["selections"][0]["perk"],
-                       tuple(s["perk"] for s in st[0]["selections"]) + (st[1]["style"],) + tuple(s["perk"] for s in st[1]["selections"])),
+                       tuple(s["perk"] for s in st[0]["selections"]) + (st[1]["style"],) + tuple(s["perk"] for s in st[1]["selections"]),
+                       tuple(sp.get(k) for k in ("offense", "flex", "defense"))),  # fragmentos, en el orden que pide el cliente
                 skills=">".join(SKILL[s - 1] for s in orden))
 
 
@@ -130,7 +131,10 @@ def resumir(bs, items, runas):
     ks = Counter(b["runas"][1] for b in bs).most_common(1)[0]
     pag = Counter(b["runas"][2] for b in bs if b["runas"][1] == ks[0]).most_common(1)[0][0]
     sk = Counter(b["skills"] for b in bs).most_common(1)[0]
-    return dict(n=n, wr=sum(b["win"] for b in bs) / n, core=core,
+    frag = Counter(b["runas"][3] for b in bs if b["runas"][1] == ks[0] and b["runas"][2] == pag and len(b["runas"]) > 3 and None not in b["runas"][3])
+    estilo = next(b["runas"][0] for b in bs if b["runas"][1] == ks[0])
+    ids = dict(primaryStyleId=estilo, subStyleId=pag[4], selectedPerkIds=list(pag[:4]) + list(pag[5:7]) + list(frag.most_common(1)[0][0]))         if frag and len(pag) == 7 else None  # la página completa para importarla al cliente (con un clic del jugador)
+    return dict(n=n, pagina_ids=ids, wr=sum(b["win"] for b in bs) / n, core=core,
                 botas=(nom(b_.most_common(1)[0][0]), b_.most_common(1)[0][1] / n) if b_ else None,
                 runa=(runas.get(ks[0], ks[0]), ks[1] / n), pagina=[runas.get(r, r) for r in pag],
                 skills=(sk[0], sk[1] / n))

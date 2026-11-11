@@ -266,7 +266,9 @@ function champSelect(s) {
       ${b.core.map(([n, p, id], i) => `${i ? '<span class="sub" style="font-size:18px">→</span>' : ""}<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span class="itm ${i === 0 ? "core" : ""}">${img("item", id, "", n)}<span class="sh"></span>${i ? '<span class="itm-ch"></span>' : ""}</span><span class="sub" style="font-size:12px">${i === 0 ? '<b style="color:var(--acc);letter-spacing:.06em">CORE</b> · ' : ""}${pct(p)}</span></div>`).join("")}
       ${b.runa ? `<span style="width:1px;height:44px;background:var(--line);margin:0 4px"></span><div style="display:flex;flex-direction:column;gap:2px"><b style="font-size:14px">${esc(b.runa[0])}</b><span class="sub" style="font-size:12px">${pct(b.runa[1])}</span></div>` : ""}
       ${b.skills ? `<span style="margin-left:auto;display:flex;align-items:center;gap:6px">${b.skills[0].split(">").map((k, i) => `${i ? '<span class="sub">›</span>' : ""}<b style="width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:14px;${i === 0 ? "background:var(--acc);color:var(--ontint)" : "background:var(--dark3);color:var(--txt)"}">${esc(k.trim())}</b>`).join("")}</span>` : ""}
-    </div>${b.vs_tu ? `<span class="sub" style="font-size:14px"><b style="color:var(--txt)">Tú contra ellos:</b> ${esc(b.vs_tu)}</span>` : ""}</div>` : ""}
+    </div>${b.vs_tu ? `<span class="sub" style="font-size:14px"><b style="color:var(--txt)">Tú contra ellos:</b> ${esc(b.vs_tu)}</span>` : ""}
+    ${b.pagina_ids && s.fase === "ChampSelect" ? `<span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn2" onclick="ponerRunas('${esc(pq.champ)}','${esc(d.pos)}')">Poner estas runas</button>
+      <span class="sub" style="font-size:13px" role="status" aria-live="polite">${esc(runasMsg)}</span></span>` : ""}</div>` : ""}
   ${(rec.avisos || []).map(a => `<div class="aviso red">${esc(a)}</div>`).join("")}`;
   const est = pq.est, x = v => Math.max(0, Math.min(100, (v - .4) / .3 * 100));  // escala 40–70%
   const otras = rec.filas.slice(1, 4);
@@ -841,6 +843,13 @@ function mensajeInvitacion(inv) {  // lo que el admin le manda a su amigo: desca
 async function copiarMensaje(b) {
   try { await navigator.clipboard.writeText(document.getElementById("inv-msg").value); b.textContent = "Copiado"; }
   catch (e) { document.getElementById("inv-msg").select(); b.textContent = "Selecciónalo y cópialo con Ctrl+C"; }
+}
+let runasMsg = "";
+async function ponerRunas(champ, pos) {  // A5: solo con tu clic; Racha no elige, banea ni acepta por ti
+  runasMsg = "Poniendo las runas…"; v = -1; tick();
+  try { const r = await fetch("/api/runas", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({champ, pos})}); runasMsg = (await r.json()).mensaje || ""; }
+  catch (e) { runasMsg = "No se pudo hablar con Racha."; }
+  v = -1; tick();
 }
 async function invitar() {
   const val = id => ((document.getElementById(id) || {}).value || "").trim();

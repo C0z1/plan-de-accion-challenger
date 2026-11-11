@@ -46,6 +46,16 @@ class Build(unittest.TestCase):
         self.assertIsNone(builds.resumir([], ITEMS, {}))
 
 
+class PaginaIds(unittest.TestCase):  # A5: la página completa (estilos, 6 runas y 3 fragmentos) para importarla al cliente
+    def test_pagina_ids(self):
+        m, t = partida()
+        for x in m["info"]["participants"]: x["perks"] = dict(PERKS, statPerks=dict(offense=5005, flex=5008, defense=5011))
+        r = builds.resumir([builds.build_de(m, t, "yo", ITEMS)], ITEMS, {})
+        self.assertEqual(r["pagina_ids"], dict(primaryStyleId=8000, subStyleId=8400,
+                                               selectedPerkIds=[8008, 9111, 9104, 8299, 8444, 8453, 5005, 5008, 5011]))
+        self.assertIsNone(builds.resumir([builds.build_de(*partida(), "yo", ITEMS)], ITEMS, {})["pagina_ids"])  # sin fragmentos: no se inventan
+
+
 class Riot(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)

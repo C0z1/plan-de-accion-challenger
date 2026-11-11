@@ -29,6 +29,33 @@ def lcu(path):
     except FALLAS: return None  # sin lockfile o a medias, cliente cerrándose, timeout, 404 fuera de champ select
 
 
+def lcu_escribir(metodo, path, cuerpo=None):
+    """POST/PUT/DELETE a la API local del cliente; True si respondió 2xx. Solo la usa importar_runas (un clic del jugador)."""
+    try:
+        _, _, port, pw, proto = LOCK.read_text().split(":")
+        auth = base64.b64encode(f"riot:{pw}".encode()).decode()
+        req = urllib.request.Request(f"{proto}://127.0.0.1:{port}{path}", method=metodo, data=None if cuerpo is None else json.dumps(cuerpo).encode(),
+                                     headers={"Authorization": f"Basic {auth}", "Content-Type": "application/json"})
+        with urllib.request.urlopen(req, context=SSL, timeout=5) as r: return 200 <= r.status < 300
+    except FALLAS: return False
+
+
+def importar_runas(nombre, pagina, leer=None, escribir=None):
+    """Crea en el cliente la página de runas `pagina` ({primaryStyleId, subStyleId, selectedPerkIds[9]}) y la deja activa.
+    Solo en selección de campeón y solo cuando el jugador pulsa el botón: Racha nunca elige, banea ni acepta por ti.
+    Si la página activa es editable la reemplaza (así no se llena el límite de páginas). Devuelve (ok, mensaje)."""
+    leer, escribir = leer or lcu, escribir or lcu_escribir
+    ids = (pagina or {}).get("selectedPerkIds") or []
+    if len(ids) != 9 or not all(isinstance(i, int) for i in ids + [pagina.get("primaryStyleId"), pagina.get("subStyleId")]):
+        return False, "Esta build no trae la página completa de runas."
+    if leer("/lol-gameflow/v1/gameflow-phase") != "ChampSelect": return False, "Solo se puede en la selección de campeón."
+    act = leer("/lol-perks/v1/currentpage") or {}
+    if act.get("isDeletable") and act.get("id") is not None: escribir("DELETE", f"/lol-perks/v1/pages/{act['id']}")
+    ok = escribir("POST", "/lol-perks/v1/pages", {"name": f"Racha: {nombre}"[:25], "primaryStyleId": pagina["primaryStyleId"],
+                                                 "subStyleId": pagina["subStyleId"], "selectedPerkIds": ids, "current": True})
+    return (True, "Listo: la página de runas ya está en tu cliente.") if ok else (False, "El cliente no aceptó la página (¿llegaste al límite de páginas?).")
+
+
 def rango(s):
     """Solo/dúo de /lol-ranked/v1/current-ranked-stats (fresco, sin key de Riot) como dict
     {tier, division, lp, wins, losses, n, wr}; division None en Master+ (la LCU da «NA»). None sin datos."""

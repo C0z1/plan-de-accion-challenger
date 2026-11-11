@@ -468,6 +468,14 @@ class H(http.server.BaseHTTPRequestHandler):
             with LOCK: ESTADO.update(descarga="Código guardado. Ya puedes descargar tus partidas.", conectado=True, v=ESTADO["v"] + 1)
             threading.Thread(target=primera_vez, daemon=True).start()  # con el cliente abierto, empieza a bajar sola
             return self.enviar(200, b"{}", "application/json")
+        if self.path == "/api/runas":  # A5: importar la página de runas de la build, solo cuando el jugador pulsa el botón
+            import builds
+            try:
+                d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 300)))
+                b = builds.guardado_dict(str(d["champ"]), str(d["pos"])) or {}
+            except (ValueError, KeyError, TypeError): return self.enviar(400, b"", "text/plain")
+            ok, msg = companion.importar_runas(str(d["champ"]), b.get("pagina_ids"))
+            return self.enviar(200 if ok else 409, json.dumps({"ok": ok, "mensaje": msg}).encode(), "application/json")
         if self.path in ("/api/reporte", "/api/invitar"):
             try:
                 d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 6000)))

@@ -210,4 +210,36 @@ class PicoRival(unittest.TestCase):  # A2: un aviso por ítem completo del rival
 
 
 
+
+class ImportarRunas(unittest.TestCase):  # A5: solo en selección, solo la página de runas, reemplaza la activa si es editable
+    PAG = {"primaryStyleId": 8000, "subStyleId": 8400, "selectedPerkIds": [8008, 9111, 9104, 8299, 8444, 8453, 5005, 5008, 5011]}
+
+    def cliente(self, fase="ChampSelect", actual=None):
+        llamadas = []
+        leer = lambda path: {"/lol-gameflow/v1/gameflow-phase": fase, "/lol-perks/v1/currentpage": actual}.get(path)
+        escribir = lambda metodo, path, cuerpo=None: llamadas.append((metodo, path, cuerpo)) or True
+        return leer, escribir, llamadas
+
+    def test_crea_y_reemplaza(self):
+        import companion
+        leer, escribir, ll = self.cliente(actual={"id": 77, "isDeletable": True})
+        ok, msg = companion.importar_runas("Yone", self.PAG, leer, escribir)
+        self.assertTrue(ok); self.assertIn("Listo", msg)
+        self.assertEqual([(m, p) for m, p, _ in ll], [("DELETE", "/lol-perks/v1/pages/77"), ("POST", "/lol-perks/v1/pages")])
+        self.assertEqual(ll[1][2]["selectedPerkIds"], self.PAG["selectedPerkIds"]); self.assertTrue(ll[1][2]["current"])
+        self.assertTrue(all(p.startswith("/lol-perks/") for _, p, _ in ll))  # nada fuera de las runas
+
+    def test_no_borra_paginas_fijas_ni_actua_fuera_de_seleccion(self):
+        import companion
+        leer, escribir, ll = self.cliente(actual={"id": 1, "isDeletable": False})
+        self.assertTrue(companion.importar_runas("Yone", self.PAG, leer, escribir)[0])
+        self.assertEqual([m for m, _, _ in ll], ["POST"])
+        leer, escribir, ll = self.cliente(fase="InProgress")
+        self.assertFalse(companion.importar_runas("Yone", self.PAG, leer, escribir)[0]); self.assertEqual(ll, [])
+        leer, escribir, ll = self.cliente()
+        self.assertFalse(companion.importar_runas("Yone", {"selectedPerkIds": [1, 2]}, leer, escribir)[0]); self.assertEqual(ll, [])
+        self.assertFalse(companion.importar_runas("Yone", None, leer, escribir)[0])
+
+
+
 if __name__ == "__main__": unittest.main()
