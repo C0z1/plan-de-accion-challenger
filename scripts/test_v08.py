@@ -190,4 +190,24 @@ class OroLineas(unittest.TestCase):  # A1: costo TOTAL de Data Dragon, no el «p
 
 
 
+
+class PicoRival(unittest.TestCase):  # A2: un aviso por ítem completo del rival, solo si te saca ventaja en ítems
+    def foto(self, mios, suyos, t=720):
+        it = lambda ids: [{"itemID": i, "displayName": f"Item{i}"} for i in ids]
+        return {"activePlayer": {"riotId": "yo#1"}, "gameData": {"gameTime": t},
+                "allPlayers": [{"riotId": "yo#1", "position": "MIDDLE", "team": "ORDER", "items": it(mios)},
+                               {"riotId": "el#2", "position": "MIDDLE", "team": "CHAOS", "championName": "Zed", "items": it(suyos)}]}
+
+    def test_avisa_una_vez_por_item(self):
+        import companion
+        leg = {"6692", "3142"}
+        self.assertIsNone(companion.aviso_pico(self.foto([], [1036]), leg))  # componente: nada
+        c, txt = companion.aviso_pico(self.foto([], [6692, 1036]), leg)
+        self.assertEqual(c, "pico:1"); self.assertIn("Zed terminó Item6692", txt); self.assertIn("Min 12", txt)
+        self.assertIsNone(companion.aviso_pico(self.foto([3142], [6692]), leg))  # parejos en ítems: sin aviso
+        self.assertEqual(companion.aviso_pico(self.foto([3142], [6692, 3142]), leg)[0], "pico:2")
+        self.assertIsNone(companion.aviso_pico({"allPlayers": []}, leg))
+
+
+
 if __name__ == "__main__": unittest.main()

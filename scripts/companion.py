@@ -139,7 +139,7 @@ def meta_aram(d, me):
                          for p in rivales[:3]]}
 
 
-PRECIOS = {}  # itemID (str) → costo total de Data Dragon; se llena una vez
+PRECIOS, LEGENDARIOS = {}, set()  # itemID (str) → costo total · ids de ítems completos (Data Dragon; se llenan una vez)
 
 
 def precios():
@@ -148,7 +148,9 @@ def precios():
     if not PRECIOS:
         try:
             import builds
-            PRECIOS.update({k: (v.get("gold") or {}).get("total") or 0 for k, v in builds.ddragon()[0].items()})
+            items = builds.ddragon()[0]
+            PRECIOS.update({k: (v.get("gold") or {}).get("total") or 0 for k, v in items.items()})
+            LEGENDARIOS.update(k for k, v in items.items() if builds.legendario(v))
         except Exception: pass  # sin Data Dragon: sin oro por ítems (la franja no lo muestra)
     return PRECIOS
 
@@ -178,6 +180,26 @@ def meta_fase(d, m10=None):
             "objetivos": objetivos(d, me), "t": int(((d.get("gameData") or {}).get("gameTime") or 0)), "kda": kda(me),
             "oro": oro_lineas(d, me, rival),
             "items": [[i["itemID"], i.get("displayName") or ""] for i in me.get("items") or [] if i.get("itemID") and not i.get("consumable") and i.get("slot") != 6][:6]}
+
+
+def completos(p, leg=None):
+    """Ítems completos (legendarios, sin botas) de un jugador, en el orden de sus casillas."""
+    leg = LEGENDARIOS if leg is None else leg
+    return [i.get("displayName") or "" for i in (p or {}).get("items") or [] if str(i.get("itemID")) in leg]
+
+
+def aviso_pico(d, leg=None):
+    """Pico de poder del rival de línea: cuando termina un ítem completo y ya tiene más que tú → (clave, texto); si no, None.
+    La clave («pico:<n>») hace que cada ítem avise una sola vez. Solo con lo que se ve con Tab."""
+    if leg is None: precios(); leg = LEGENDARIOS
+    me, rival = yo_rival(d)
+    if not rival or not leg: return None
+    suyos, mios = completos(rival, leg), completos(me, leg)
+    if len(suyos) <= len(mios): return None
+    t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
+    n = len(suyos)
+    return (f"pico:{n}", f"Min {int(t // 60)}: {rival.get('championName', 'tu rival')} terminó {suyos[-1]} ({n} ítem{'s' if n > 1 else ''} completo{'s' if n > 1 else ''} contra "
+            f"{len(mios)} tuyo{'s' if len(mios) != 1 else ''}): ahora pega más. No pelees sin ventaja hasta tener el tuyo; farmea y espera a tu jungla.")
 
 
 def oro_lineas(d, me, rival, pr=None):

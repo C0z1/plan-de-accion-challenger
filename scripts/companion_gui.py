@@ -77,7 +77,7 @@ def ultima_partida():
 
 
 AJUSTES_F = REPO / "datos" / "cache" / "ajustes.json"
-AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "aviso_muertes": True, "aviso_regreso": True,  # Ajustes_Vino
+AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "aviso_muertes": True, "aviso_regreso": True, "aviso_pico": True,  # Ajustes_Vino
                "metricas": False,  # métricas anónimas: solo si el amigo las prende (v0.8)
                "grupo": False}  # aparecer en la tabla del grupo (Riot ID y win rate a los demás): solo si lo prende
 
@@ -276,6 +276,8 @@ def trabajador(q):
                 for f in (companion.aviso_nivel, companion.aviso_minions, companion.aviso_muertes, companion.aviso_regreso):
                     if f not in avisado and aj.get(f.__name__, True) and (txt := f(d)):
                         q.put(aviso(txt, "consejo", int((((d or {}).get("gameData") or {}).get("gameTime") or 0) // 60))); avisado.add(f)
+                if aj.get("aviso_pico", True) and (r := companion.aviso_pico(d)) and r[0] not in avisado:  # uno por ítem del rival
+                    q.put(aviso(r[1], "consejo", int((((d or {}).get("gameData") or {}).get("gameTime") or 0) // 60))); avisado.add(r[0])
             elif not jugando: archivo, avisado = None, set()
             if fase in FIN and real not in FIN:
                 if r := companion.resumen_fin(foto): q.put(("fin", r))  # sin key, esto es todo lo que hay al terminar
