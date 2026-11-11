@@ -180,6 +180,9 @@ DRAFT = threading.Lock()  # el reload de draft (hilo post-partida) no debe pisar
 POST = []  # el hilo post-partida vivo, si hay
 
 
+SONDEO_VIVO = 10  # s entre fotos en vivo: < 1 ms de cálculo por foto (medido); menos no aporta al coaching (plan en partida)
+
+
 def aviso(texto, tipo="error", minuto=None):
     """Evento de aviso para la cola: {texto, tipo: consejo (en partida) | error, minuto de juego o None} (pedido del Diseñador)."""
     return ("aviso", {"texto": str(texto), "tipo": tipo, "minuto": minuto, "corto": getattr(texto, "corto", None)})  # corto: para la franja (F1)
@@ -255,6 +258,7 @@ def lineas_ficha(fi):
 def trabajador(q):
     """El mismo bucle que companion.main, pero manda eventos a la ventana en vez de imprimir."""
     m, visto, fase_ant, real, archivo, ult, estado, fallos = None, None, "inicio", None, None, 0, {"avisado": set()}, 0
+    ult_disco = 0  # la foto se lee cada SONDEO_VIVO s (F4: ver la muerte a tiempo) pero al disco va cada 30 s
     error = foto = None
     while True:
         fase = None  # si lcu() lanza, cuenta como cliente caído
@@ -276,8 +280,9 @@ def trabajador(q):
                     q.put(("draft", pos, recomendaciones(pos, nombres), len(ids) > 1))
                 elif not ids and pos and visto != pos: q.put(("pos", pos)); visto = pos  # bans y picks antes del rival
             elif fase != "ChampSelect": visto = None
-            if jugando and time.time() - ult >= 30:
-                d = companion.vivo(); archivo, ult = companion.capturar(archivo, d), time.time(); foto = d or foto
+            if jugando and time.time() - ult >= SONDEO_VIVO:
+                d = companion.vivo(); ult = time.time(); foto = d or foto
+                if ult - ult_disco >= 30: archivo, ult_disco = companion.capturar(archivo, d), ult
                 mf, avs = companion.paso_vivo(d, estado, ajustes())  # Ajustes_Vino: cada aviso se puede apagar
                 if mf: q.put(("meta", mf))
                 for _, txt, minuto in avs: q.put(aviso(txt, "consejo", minuto))

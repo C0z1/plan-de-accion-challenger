@@ -37,20 +37,20 @@
 17:57 | franja: Muertes 14–25: 2/2 · Dragón 1:51 · Barón 2:02 | aviso: 
 18:28 | franja: Muertes 14–25: 2/2 · Dragón 1:21 · Barón 1:32 | aviso: 
 18:58 | franja: Muertes 14–25: 2/2 · ! Dragón 0:51 · Barón 1:02 | aviso: 
-19:28 | franja: ▼ Muertes 14–25: 3/2 · ! Dragón 0:21 · ! Barón 0:32 | aviso: 
+19:28 | franja: ▼ Muertes 14–25: 3/2 · ! Dragón 0:21 | aviso: 
 19:58 | franja: ▼ Muertes 14–25: 3/2 · Dragón vivo · ! Barón 0:01 | aviso: 
 20:28 | franja: ▼ Muertes 14–25: 3/2 · Dragón vivo · Barón vivo | aviso: 
 20:59 | franja: ▼ Muertes 14–25: 3/2 · Dragón vivo · Barón vivo | aviso: 
 21:29 | franja: ▼ Muertes 14–25: 3/2 · Dragón vivo · Barón vivo | aviso: 
-21:59 | franja: ▼ Muertes 14–25: 4/2 · Dragón 4:49 · Barón vivo | aviso: 
-22:29 | franja: ▼ Muertes 14–25: 4/2 · Dragón 4:19 · Barón vivo | aviso: 
+21:59 | franja: ▼ Muertes 14–25: 4/2 · Barón vivo | aviso: 
+22:29 | franja: ▼ Muertes 14–25: 4/2 · Barón vivo | aviso: 
 23:00 | franja: ▼ Muertes 14–25: 4/2 · Dragón 3:49 · Barón vivo | aviso: 
 23:30 | franja: ▼ Muertes 14–25: 4/2 · Dragón 3:18 · Barón vivo | aviso: 
-24:00 | franja: ▼ Muertes 14–25: 5/2 · Dragón 2:48 · Barón vivo | aviso: 
+24:00 | franja: ▼ Muertes 14–25: 5/2 · Barón vivo | aviso: 
 24:30 | franja: ▼ Muertes 14–25: 5/2 · Dragón 2:18 · Barón vivo | aviso: 
 25:00 | franja: Dragón 1:48 · Barón vivo | aviso: 
-25:31 | franja: Dragón 1:18 · Barón vivo | aviso: 
-26:01 | franja: ! Dragón 0:47 · Barón vivo | aviso: 
+25:31 | franja: Muertes 14–25: 6/2 · Barón vivo | aviso: 
+26:01 | franja: Muertes 14–25: 6/2 · Barón vivo | aviso: 
 26:31 | franja: ! Dragón 0:17 · Barón vivo | aviso: 
 27:01 | franja: Dragón vivo · Barón vivo | aviso: 
 27:31 | franja: Dragón 4:33 · Barón vivo | aviso: 
@@ -66,5 +66,5 @@
 32:33 | franja: Dragón 4:52 · Barón 1:06 | aviso: 
 33:04 | franja: Dragón 4:22 · ! Barón 0:35 | aviso: 
 33:34 | franja: Dragón 3:52 · ! Barón 0:05 | aviso: 
-34:04 | franja: Dragón 3:22 · Barón vivo | aviso: 
-34:34 | franja: Dragón 2:51 · Barón vivo | aviso: 
+34:04 | franja: Muertes 14–25: 7/2 · Barón vivo | aviso: 
+34:34 | franja: Muertes 14–25: 7/2 · Barón vivo | aviso: 

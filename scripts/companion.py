@@ -207,6 +207,7 @@ def meta_fase(d, m10=None):
             "rival_cs": rs.get("creepScore"), "rival_items": [[i["itemID"], i.get("displayName") or ""] for i in (rival or {}).get("items") or [] if i.get("itemID") and not i.get("consumable") and i.get("slot") != 6][:6],  # slot 6 = trinket
             "objetivos": objetivos(d, me), "t": int(((d.get("gameData") or {}).get("gameTime") or 0)), "kda": kda(me),
             "oro": oro_lineas(d, me, rival),
+            "muerto": bool(me.get("isDead")), "revive": round(me.get("respawnTimer") or 0) if me.get("isDead") else None,  # F4: solo los tuyos
             "items": [[i["itemID"], i.get("displayName") or ""] for i in me.get("items") or [] if i.get("itemID") and not i.get("consumable") and i.get("slot") != 6][:6]}
 
 

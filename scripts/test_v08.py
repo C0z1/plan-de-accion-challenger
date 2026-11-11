@@ -314,4 +314,24 @@ class ReglaHoy(unittest.TestCase):  # F3: en la franja va TU regla que más fall
 
 
 
+
+class MomentoMuerto(unittest.TestCase):  # F4: muerto, la franja deja tu regla y el próximo objetivo
+    def test_muerto(self):
+        import overlay, companion
+        meta = {"nivel": 11, "nivel_rival": 12, "rival": "Zed", "cs": 140, "rival_cs": 150, "minuto": 18, "muertes14": 2,
+                "objetivos": {"dragon": 200, "baron": 40}, "recibido": 0, "muerto": True, "revive": 25}
+        self.assertEqual([x for x, _ in overlay.partes(meta, 0)], ["Muertes 14–25: 2/2", "! Barón 0:40"])
+        vivo = [x for x, _ in overlay.partes({**meta, "muerto": False}, 0)]
+        self.assertGreater(len(vivo), 2)
+        temprano = [x for x, _ in overlay.partes({**meta, "minuto": 8, "muertes14": None, "objetivos": {"dragon": 200, "baron": 720}}, 0)]
+        self.assertEqual(temprano, ["Dragón 3:20"])  # antes del 14 no hay contador: solo el objetivo
+        d = {"activePlayer": {"riotId": "yo#1"}, "gameData": {"gameTime": 900, "gameMode": "CLASSIC", "mapNumber": 11},
+             "allPlayers": [{"riotId": "yo#1", "position": "MIDDLE", "team": "ORDER", "isDead": True, "respawnTimer": 24.6, "scores": {}},
+                            {"riotId": "el#2", "position": "MIDDLE", "team": "CHAOS", "isDead": True, "respawnTimer": 30, "scores": {}}]}
+        m = companion.meta_fase(d, {})
+        self.assertEqual((m["muerto"], m["revive"]), (True, 25))
+        self.assertNotIn("rival_muerto", m)  # nunca el estado de muerte del rival
+
+
+
 if __name__ == "__main__": unittest.main()

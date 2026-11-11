@@ -52,6 +52,10 @@ def partes(meta, ahora, aj=None, regla=None):
         d = dif(oro["tu"], oro["rival"]); c["oro"] = (("▼ " if d < 0 else "") + f"Oro {d:+d}", ROSA if d < 0 else TXT)
     if oro.get("equipo") is not None and oro.get("equipo_rival") is not None:
         d = dif(oro["equipo"], oro["equipo_rival"]); c["oro_equipo"] = (("▼ " if d < 0 else "") + f"Equipo {d:+d}", ROSA if d < 0 else TXT)
+    if meta.get("muerto"):  # F4: muerto es el único momento con atención libre: tu regla y el próximo objetivo, nada más
+        sig = min((k for k in ("dragon", "baron") if k in c), key=lambda k: c.get(k + "_falta", -1), default=None)
+        if "regla" not in c and m14 is not None: c["regla"] = (f"Muertes 14–25: {m14}/2", ROSA if m14 > 2 else TXT) if minuto >= 14 else None
+        return [c[k] for k in ("regla", sig) if k and c.get(k)]
     return elegir(c, minuto)
 
 
