@@ -13,6 +13,7 @@ SALUD = REPO / "datos" / "salud"  # el log va al repo aunque se mida la app inst
 APPS = (REPO, pathlib.Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "HTC")  # Racha desde el código o el .exe instalado
 VISTAS = ("inicio", "draft", "companion", "envivo", "perfil", "partidas", "campeones", "errores", "ajustes")
 ZONAS = {"minimapa": (0.80, 0.70, 1, 1), "marcador": (0.78, 0, 1, 0.06), "hud": (0.28, 0.85, 0.72, 1), "chat": (0, 0.60, 0.25, 1)}  # (x0, y0, x1, y1) en fracciones del juego
+ARRANQUE = 180  # s tras abrir Racha en que la CPU alta es el precálculo de tus partidas (AVISO, no FALLA)
 PRIVADO = ("rendimiento", "cuenta", "nube", "grupo", "coach", "invitacion")  # nunca al log
 
 
@@ -65,7 +66,7 @@ def evaluar(d, ahora):
         res("S7", "FALLA" if bool(s.get("pantalla_completa")) != pc and fase in ("ChampSelect", "InProgress") else "AVISO" if pc and jugando else "OK",
             pc, False, "LoL en pantalla completa: la franja no se ve" if pc else "")
     if (c := d.get("cpu")) is not None:
-        alto = c > 1.0 and (d.get("cpu_antes") or 0) > 1.0
+        alto = c > 1.0 and (d.get("cpu_antes") or 0) > 1.0 and (d.get("edad_proceso") or 10 ** 6) >= ARRANQUE  # al arrancar precalcula: esperado
         res("S8", "FALLA" if alto or (d.get("rss_mb") or 0) > 200 else "AVISO" if c > 1.0 else "OK", {"cpu": round(c, 2), "rss_mb": d.get("rss_mb")}, {"cpu": 1.0, "rss_mb": 200})
     if jugando and v and v[0] and v[0] > 60 and (g := d.get("grabacion")) is not None:  # S9: [edad del .jsonl más nuevo, archivos nuevos en esta partida]
         res("S9", "FALLA" if g[0] is None or g[0] > 45 or g[1] > 1 else "OK", g, [45, 1], "" if g[0] is not None and g[0] <= 45 and g[1] <= 1 else "la grabación se atrasó o se partió")
@@ -142,19 +143,21 @@ def dueño(p):
 
 
 def cpu_rss(pid, ventana=10):
-    """% de un núcleo en `ventana` s y memoria (MB) del proceso pid (Windows)."""
+    """(% de un núcleo en `ventana` s, memoria en MB, segundos desde que arrancó) del proceso pid (Windows)."""
     try:
         import ctypes, ctypes.wintypes as w
         k = ctypes.windll.kernel32; h = k.OpenProcess(0x1000 | 0x0010, False, pid)  # QUERY_LIMITED_INFORMATION | VM_READ
-        if not h: return None, None
+        if not h: return None, None, None
+        nacio = [0]
         def tiempos():
             a, b, c, e = (w.FILETIME() for _ in range(4)); k.GetProcessTimes(h, ctypes.byref(a), ctypes.byref(b), ctypes.byref(c), ctypes.byref(e))
+            nacio[0] = (a.dwHighDateTime << 32 | a.dwLowDateTime) / 1e7 - 11644473600  # FILETIME (1601) a época Unix
             return sum((x.dwHighDateTime << 32 | x.dwLowDateTime) / 1e7 for x in (c, e))
         t0, c0 = time.time(), tiempos(); time.sleep(ventana); t1, c1 = time.time(), tiempos()
         class PMC(ctypes.Structure): _fields_ = [("cb", w.DWORD), ("PageFaultCount", w.DWORD)] + [(n, ctypes.c_size_t) for n in ("Peak", "WorkingSetSize", "a", "b", "c", "d", "e", "f")]
         m = PMC(); m.cb = ctypes.sizeof(m); ctypes.windll.psapi.GetProcessMemoryInfo(h, ctypes.byref(m), m.cb); k.CloseHandle(h)
-        return (c1 - c0) / (t1 - t0) * 100, round(m.WorkingSetSize / 2**20)
-    except Exception: return None, None
+        return (c1 - c0) / (t1 - t0) * 100, round(m.WorkingSetSize / 2**20), round(time.time() - nacio[0])
+    except Exception: return None, None, None
 
 
 def grabacion(desde, vivo):
@@ -216,7 +219,7 @@ def pasada(args, mem):
     try: d["pantalla_completa"] = companion.pantalla_completa()
     except Exception: pass
     if p and (pid := mem.get("pid") or dueño(p)):
-        mem["pid"] = pid; d["cpu_antes"] = mem.get("cpu"); d["cpu"], d["rss_mb"] = cpu_rss(pid); mem["cpu"] = d["cpu"]
+        mem["pid"] = pid; d["cpu_antes"] = mem.get("cpu"); d["cpu"], d["rss_mb"], d["edad_proceso"] = cpu_rss(pid); mem["cpu"] = d["cpu"]
         if d["cpu"] is None: mem.pop("pid", None)  # Racha se reinició: otro proceso, se vuelve a buscar en la próxima pasada
     if jugando: d["grabacion"] = grabacion(mem.get("partida", time.time()) - 60, app / "datos" / "vivo")
     if args.vistas and p and not jugando: d["vistas"] = vistas(p)  # 9 Edge sin ventana: nunca en partida (le quitan FPS al juego)

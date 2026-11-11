@@ -143,5 +143,29 @@ class ListaNegra(unittest.TestCase):
                 self.assertEqual([w for w in PROHIBIDO if w in t], [], f())
 
 
+class ReglasSinImperativos(unittest.TestCase):
+    """A2: los textos de reglas (draft.py) y la regla de Perfil (web/index.html) tampoco dan ordenes en 2a persona."""
+    @staticmethod
+    def _malas(t): return [w for w in IMPERATIVOS if re.search(rf"{w}", t.lower())]
+
+    def test_reglas_generales_de_draft(self):
+        import draft
+        for r in (draft.R_NIVEL6, draft.R_MUERTES, draft.R_RIO):
+            with self.subTest(regla=r["texto"]): self.assertEqual(self._malas(r["texto"]), [], r["texto"])
+
+    def test_regla_de_muertes_en_index_html(self):
+        import pathlib
+        html = (pathlib.Path(__file__).resolve().parent / "web" / "index.html").read_text(encoding="utf-8")
+        m = re.search(r'muertes: \["Muertes".*?"(≤ 2 muertes[^"]*)"\]', html)
+        self.assertIsNotNone(m, "no encontre la cadena de la regla de muertes en index.html")
+        self.assertEqual(self._malas(m.group(1)), [], m.group(1))
+
+    def test_reglas_por_campeon_de_draft(self):
+        import draft
+        for c, rs in draft.REGLAS_CHAMP.items():
+            for r in rs:
+                with self.subTest(campeon=c, regla=r["texto"]): self.assertEqual(self._malas(r["texto"]), [], r["texto"])
+
+
 if __name__ == "__main__":
     unittest.main()

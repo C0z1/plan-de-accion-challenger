@@ -333,3 +333,11 @@ class TestHistorialCliente(unittest.TestCase):  # v0.5: últimas partidas del cl
         self.assertEqual([(x["campeon"], x["cola"], x["win"]) for x in r], [("99", "ARAM", False), ("Ahri", "Solo/Duo", True)])
         self.assertEqual((r[1]["kda"], r[1]["cs"], r[1]["min"]), ("3/1/4", 160, 30))
         self.assertEqual(companion.historial(None, {}), [])
+
+
+class UnirEventosOtraPartida(unittest.TestCase):  # Racha no vio el fin: la partida nueva (gameTime menor) no hereda eventos
+    def test_partida_nueva_no_hereda(self):
+        f = lambda t, ev: {"gameData": {"gameTime": t}, "events": {"Events": ev}}
+        vieja = f(1800, [{"EventName": "DragonKill", "EventTime": 600}])
+        self.assertEqual(companion.unir_eventos(f(30, [{"EventName": "GameStart", "EventTime": 0}]), vieja)["events"]["Events"],
+                         [{"EventName": "GameStart", "EventTime": 0}])

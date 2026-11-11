@@ -27,7 +27,7 @@ def partes(meta, ahora, aj=None, regla=None):
         (tu, ellos), a = meta.get("kills") or [0, 0], (meta.get("amenazas") or [{}])[0]
         cuidado = [(f"Cuidado {a['campeon']} {a['kda']}", AMBAR)] if a.get("campeon") else []
         return [(("▼ " if tu < ellos else "") + f"Kills {tu} vs {ellos}", ROSA if tu < ellos else TXT)] + cuidado + [(f"Tu KDA {meta.get('kda', '')}", TXT)]
-    o, edad = meta.get("objetivos") or {}, max(0.0, ahora - (meta.get("recibido") or ahora))
+    o, edad = meta.get("objetivos") or {}, 0.0 if meta.get("pausa") else max(0.0, ahora - (meta.get("recibido") or ahora))  # en pausa no bajan
     minuto, c = meta.get("minuto") or 0, {}  # c: pieza → (texto, color); luego se eligen por fase
     for nombre, k in (("Anciano" if o.get("anciano") else "Dragón", "dragon"), ("Barón", "baron")):
         if k not in o or not on("franja_objetivos"): continue
@@ -141,7 +141,7 @@ def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None):
     import tkinter as tk, traceback
     root = tk.Tk(); root.withdraw(); root.title("Racha franja"); root.overrideredirect(True); root.attributes("-topmost", True); root.attributes("-alpha", 0.88)
     root.configure(bg=BG); fila = tk.Frame(root, bg=BG, padx=10, pady=4); fila.pack()
-    root.update_idletasks(); atravesable(root); mostrada, ultimo, errores = [False], [None], set()
+    root.update_idletasks(); atravesable(root); mostrada, ultimo, errores, etiquetas = [False], [None], set(), []
 
     def tick():
         if not seguir(): root.destroy(); return
@@ -157,11 +157,15 @@ def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None):
         ps = partes(s.get("meta"), time.time(), aj, regla) if visible(s, time.time()) else []
         if ps and (pa := pieza_aviso(s.get("aviso"), time.time())): ps = ps + [pa]  # el aviso corto, al final y por 12 s
         if ps == ultimo[0] and ps: return  # nada cambió: no se crean widgets cada segundo (plan en partida, F6)
+        if ultimo[0] and len(ps) == len(ultimo[0]):  # mismas piezas, otro texto (el timer bajó un segundo): sin crear widgets
+            for et, (t, c) in zip(etiquetas, ps): et.config(text=t, fg=c)
+        else:
+            for w in fila.winfo_children(): w.destroy()
+            etiquetas.clear()
+            for i, (t, c) in enumerate(ps):
+                if i: tk.Label(fila, text="·", fg="#7A5A68", bg=BG, font=("Segoe UI", 11)).pack(side="left", padx=4)
+                etiquetas.append(tk.Label(fila, text=t, fg=c, bg=BG, font=("Segoe UI Semibold", 11))); etiquetas[-1].pack(side="left")
         ultimo[0] = ps
-        for w in fila.winfo_children(): w.destroy()
-        for i, (t, c) in enumerate(ps):
-            if i: tk.Label(fila, text="·", fg="#7A5A68", bg=BG, font=("Segoe UI", 11)).pack(side="left", padx=4)
-            tk.Label(fila, text=t, fg=c, bg=BG, font=("Segoe UI Semibold", 11)).pack(side="left")
         if ps:  # se recoloca cada segundo: cambiar «franja_pos» en partida mueve la franja al instante
             root.update_idletasks()
             px, py = colocar(rect_juego(), (root.winfo_screenwidth(), root.winfo_screenheight()), root.winfo_reqheight(), x, aj.get("franja_pos"), y, fraccion_util(), root.winfo_reqwidth())

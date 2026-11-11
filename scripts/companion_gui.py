@@ -351,7 +351,7 @@ def trabajador(q):
                 elif not ids and pos and visto != pos: q.put(("pos", pos)); visto = pos  # bans y picks antes del rival
             elif fase != "ChampSelect": visto = None
             if jugando and time.time() - ult >= SONDEO_VIVO:
-                d = companion.vivo(); ult = time.time(); foto = d or foto
+                d = companion.unir_eventos(companion.vivo(), foto); ult = time.time(); foto = d or foto  # Reconnect reinicia los eventos
                 if ult - ult_disco >= 30: archivo, ult_disco = companion.capturar(archivo, d), ult
                 mf, avs = companion.paso_vivo(d, estado, ajustes())  # Ajustes_Vino: cada aviso se puede apagar
                 if mf: q.put(("meta", mf))

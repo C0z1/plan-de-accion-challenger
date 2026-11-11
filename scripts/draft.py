@@ -211,7 +211,7 @@ REGLAS_CHAMP = {
 R_NIVEL6 = R("No salgas del 6 con un nivel abajo: tradea, pero no pierdas la carrera al 6.",
              "abajo al 6, 44% (16/36); igual, 54%; arriba, 69%", 36, True, "muertes6.py",
              metrica="nivel", meta="nivel igual o arriba al 6", minuto="6", campo="nivel6", ok=lambda x: x >= 0)
-R_MUERTES = R("≤ 2 muertes del 14 al 25: antes de un dragón, heraldo o barón, no pelees si no hace falta.",
+R_MUERTES = R("≤ 2 muertes del 14 al 25; antes de un dragón, heraldo o barón, no pelear si no hace falta.",
               "0–2 muertes del 14 al 25, 68%; 3+, 43% (282 partidas)", 282, fuente="midgame.py",
               metrica="muertes", meta="≤ 2 muertes del 14 al 25", minuto="14+", campo="m25", ok=lambda x: x <= 2)
 R_RIO = R("Con nivel arriba en top, no empujes pasado el río sin ver al jungla rival.",

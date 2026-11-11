@@ -156,6 +156,20 @@ def grieta(d):
     return (((d or {}).get("gameData") or {}).get("gameMode") or "CLASSIC") in ("CLASSIC", "PRACTICETOOL")
 
 
+def unir_eventos(d, previos):
+    """Tras Reconnect la Live API reinicia events.Events (solo un GameStart con la hora de la reconexión): se le suman los
+    eventos de la foto anterior de la MISMA partida (su gameTime no es mayor), por clave (EventName, EventTime); los ID
+    vuelven a empezar y chocarían. Sin reinicio no cambia nada. Devuelve d (modificada); nunca toca `previos`."""
+    ev = lambda x: ((x or {}).get("events") or {}).get("Events")
+    t = lambda x: ((x or {}).get("gameData") or {}).get("gameTime") or 0
+    if not d or not isinstance(ev(d), list) or not ev(previos) or t(previos) > t(d): return d  # otra partida: nada que unir
+    nuevos = [e for e in ev(d) if not (e.get("EventName") == "GameStart" and (e.get("EventTime") or 0) > 0)]
+    vistos = {(e.get("EventName"), e.get("EventTime")) for e in nuevos}
+    d["events"]["Events"] = sorted([e for e in ev(previos) if (e.get("EventName"), e.get("EventTime")) not in vistos] + nuevos,
+                                   key=lambda e: e.get("EventTime") or 0)
+    return d
+
+
 def kda(p):
     s = (p or {}).get("scores") or {}
     return f"{s.get('kills') or 0}/{s.get('deaths') or 0}/{s.get('assists') or 0}"

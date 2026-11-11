@@ -57,7 +57,9 @@ def evento(e):
         if e[1] == "InProgress" and ESTADO["ajustes"].get("overlay", True): USADO.add("overlay")
         if e[1] in ("Lobby", "Matchmaking", "ReadyCheck"): s.update(aviso=None, perfil=gui.perfil(ESTADO["rango"], ESTADO["cuenta"]))
     elif tipo == "draft": s = {"draft": {**draft_json(e[1], e[2]), "probable": bool(e[3]) if len(e) > 3 else False}}
-    elif tipo == "meta": s = {"meta": {**e[1], "texto": gui.texto_meta(e[1]), "recibido": time.time()}}  # «recibido»: el overlay descuenta los timers
+    elif tipo == "meta":  # el mismo gameTime que la foto anterior: juego en pausa (práctica, custom): los timers se congelan
+        pausa = e[1].get("t") is not None and e[1].get("t") == (ESTADO.get("meta") or {}).get("t")
+        s = {"meta": {**e[1], "texto": gui.texto_meta(e[1]), "recibido": time.time(), "pausa": pausa}}  # «recibido»: el overlay descuenta los timers
     elif tipo == "fin":  # el tope de tu coach (F12) también en la línea final; y el ping sale aunque no llegue la revisión de Riot
         tope = ((((ESTADO.get("rendimiento") or {}).get("vistas") or {}).get("regla_hoy")) or {}).get("tope", 2)
         s = {"fin": {**e[1], "texto": companion.linea_fin(e[1], tope)}}
