@@ -79,19 +79,26 @@ def ultima_partida():
 AJUSTES_F = REPO / "datos" / "cache" / "ajustes.json"
 AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "aviso_muertes": True, "aviso_regreso": True, "aviso_pico": True,  # Ajustes_Vino
                "metricas": False,  # métricas anónimas: solo si el amigo las prende (v0.8)
-               "grupo": False}  # aparecer en la tabla del grupo (Riot ID y win rate a los demás): solo si lo prende
+               "grupo": False,  # aparecer en la tabla del grupo (Riot ID y win rate a los demás): solo si lo prende
+               "franja_objetivos": True, "franja_linea": True, "franja_regla": True,  # piezas de la franja en partida (A4)
+               "franja_pos": "arriba"}  # esquina de la franja: único ajuste que no es booleano
+OPCIONES = {"franja_pos": ("arriba", "abajo")}  # lista blanca de los ajustes de texto
+
+
+def valido(clave, v):
+    return v in OPCIONES[clave] if clave in OPCIONES else isinstance(v, bool)
 
 
 def ajustes():
     """Ajustes guardados (los que faltan, por defecto); un archivo roto no tumba nada."""
     try: d = json.loads(AJUSTES_F.read_text(encoding="utf-8"))
     except (OSError, ValueError): d = {}
-    return {k: d[k] if isinstance(d.get(k), bool) else v for k, v in AJUSTES_DEF.items()}
+    return {k: d[k] if k in d and valido(k, d[k]) else v for k, v in AJUSTES_DEF.items()}
 
 
 def guardar_ajuste(clave, on):
     """Guarda un ajuste conocido; devuelve todos. Clave desconocida: ValueError (lista blanca)."""
-    if clave not in AJUSTES_DEF or not isinstance(on, bool): raise ValueError(clave)
+    if clave not in AJUSTES_DEF or not valido(clave, on): raise ValueError(clave)
     a = {**ajustes(), clave: on}
     AJUSTES_F.parent.mkdir(parents=True, exist_ok=True); AJUSTES_F.write_text(json.dumps(a), encoding="utf-8")
     return a

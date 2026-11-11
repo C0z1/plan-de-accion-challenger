@@ -493,8 +493,8 @@ class H(http.server.BaseHTTPRequestHandler):
         if self.path not in ("/api/autoarranque", "/api/ajuste"): return self.enviar(404, b"", "text/plain")
         try: d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 200))); on = d["on"]
         except (ValueError, KeyError, TypeError): return self.enviar(400, b"", "text/plain")
-        if not isinstance(on, bool): return self.enviar(400, b"", "text/plain")
-        if self.path == "/api/ajuste":
+        if self.path == "/api/autoarranque" and not isinstance(on, bool): return self.enviar(400, b"", "text/plain")
+        if self.path == "/api/ajuste":  # guardar_ajuste valida cada clave (booleano, o la lista blanca de franja_pos)
             try: a = gui.guardar_ajuste(d.get("clave"), on)
             except (ValueError, OSError): return self.enviar(400, b"", "text/plain")
             with LOCK: ESTADO.update(ajustes=a, v=ESTADO["v"] + 1)

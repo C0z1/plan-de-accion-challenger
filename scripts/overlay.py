@@ -11,10 +11,11 @@ def reloj(seg):
     seg = max(0, int(seg)); return f"{seg // 60}:{seg % 60:02d}"
 
 
-def partes(meta, ahora):
+def partes(meta, ahora, aj=None):
     """[(texto, color)] de la franja, o [] sin datos. meta = ESTADO["meta"] (companion.meta_fase + «recibido»): los
     timers llegan cada 30 s; entre fotos se descuentan con el reloj local."""
     if not meta: return []
+    aj = aj or {}; on = lambda k: aj.get(k, True) is not False  # piezas de Ajustes: sin dato, visibles
     if meta.get("modo") == "ARAM":  # sin líneas ni dragón: el marcador, la amenaza y tu KDA
         (tu, ellos), a = meta.get("kills") or [0, 0], (meta.get("amenazas") or [{}])[0]
         cuidado = [(f"Cuidado {a['campeon']} {a['kda']}", AMBAR)] if a.get("campeon") else []
@@ -22,20 +23,20 @@ def partes(meta, ahora):
     o, edad = meta.get("objetivos") or {}, max(0.0, ahora - (meta.get("recibido") or ahora))
     out = []
     for nombre, k in (("Dragón", "dragon"), ("Barón", "baron")):
-        if k not in o: continue
+        if k not in o or not on("franja_objetivos"): continue
         if o[k] is None: out.append((f"{nombre} vivo", ROSA)); continue
         falta = o[k] - edad
         out.append((f"{nombre} {reloj(falta)}", AMBAR if falta < 60 else TXT))
-    if meta.get("nivel") is not None and meta.get("nivel_rival") is not None:
+    if on("franja_linea") and meta.get("nivel") is not None and meta.get("nivel_rival") is not None:
         d = meta["nivel"] - meta["nivel_rival"]
         out.append((("▼ " if d < 0 else "") + f"Nv {meta['nivel']} vs {meta['nivel_rival']}" + (f" {meta['rival']}" if meta.get("rival") else ""), ROSA if d < 0 else TXT))
-    if meta.get("cs") is not None and meta.get("rival_cs") is not None:
+    if on("franja_linea") and meta.get("cs") is not None and meta.get("rival_cs") is not None:
         out.append((("▼ " if meta["cs"] < meta["rival_cs"] else "") + f"CS {meta['cs']} vs {meta['rival_cs']}", ROSA if meta["cs"] < meta["rival_cs"] else TXT))
     m14, minuto = meta.get("muertes14"), meta.get("minuto") or 0
-    if m14 is not None and 14 <= minuto < 25:  # tu regla que más pesa (≤ 2 muertes del 14 al 25), a la vista toda la fase
+    if on("franja_regla") and m14 is not None and 14 <= minuto < 25:  # tu regla que más pesa (≤ 2 muertes del 14 al 25), a la vista toda la fase
         out.append((("▼ " if m14 > 2 else "") + f"Muertes 14–25: {m14}/2", ROSA if m14 > 2 else AMBAR if m14 == 2 else TXT))
     oro = meta.get("oro") or {}
-    if oro.get("tu") is not None and oro.get("rival") is not None:  # oro en ítems (lo de Tab), redondeado: el detalle no cambia la decisión
+    if on("franja_linea") and oro.get("tu") is not None and oro.get("rival") is not None:  # oro en ítems (lo de Tab), redondeado: el detalle no cambia la decisión
         d = round((oro["tu"] - oro["rival"]) / 50) * 50
         out.append((("▼ " if d < 0 else "") + f"Oro {d:+d}", ROSA if d < 0 else TXT))
     return out
@@ -50,6 +51,11 @@ def atravesable(root):
     except (AttributeError, OSError): pass  # fuera de Windows: ventana normal
 
 
+def pos_y(pos, alto_pantalla, alto_franja, margen=6):
+    """Coordenada y de la franja: arriba (por defecto) o abajo del todo."""
+    return max(0, alto_pantalla - alto_franja - margen) if pos == "abajo" else margen
+
+
 def correr(leer, seguir, x=0.22, y=6):
     """Bucle de tkinter (hilo principal). leer() -> estado de HTC; seguir() -> False para cerrar. x = fracción del ancho."""
     import tkinter as tk
@@ -61,14 +67,17 @@ def correr(leer, seguir, x=0.22, y=6):
         if not seguir(): root.destroy(); return
         s = leer() or {}
         encendido = (s.get("ajustes") or {}).get("overlay", True)  # Ajustes_Vino: «Siempre encima en partida»
-        ps = partes(s.get("meta"), time.time()) if s.get("fase") == "InProgress" and encendido else []
+        aj = s.get("ajustes") or {}
+        ps = partes(s.get("meta"), time.time(), aj) if s.get("fase") == "InProgress" and encendido else []
         for w in fila.winfo_children(): w.destroy()
         for i, (t, c) in enumerate(ps):
             if i: tk.Label(fila, text="·", fg="#7A5A68", bg=BG, font=("Segoe UI", 11)).pack(side="left", padx=4)
             tk.Label(fila, text=t, fg=c, bg=BG, font=("Segoe UI Semibold", 11)).pack(side="left")
-        if ps and not visible[0]:
-            root.geometry(f"+{int(root.winfo_screenwidth() * x)}+{y}"); root.deiconify(); root.attributes("-topmost", True); visible[0] = True
-        elif not ps and visible[0]: root.withdraw(); visible[0] = False
+        if ps:  # se recoloca cada segundo: cambiar «franja_pos» en partida mueve la franja al instante
+            root.update_idletasks()
+            root.geometry(f"+{int(root.winfo_screenwidth() * x)}+{pos_y(aj.get('franja_pos'), root.winfo_screenheight(), root.winfo_reqheight(), y)}")
+            if not visible[0]: root.deiconify(); root.attributes("-topmost", True); visible[0] = True
+        elif visible[0]: root.withdraw(); visible[0] = False
         root.after(1000, tick)
 
     tick(); root.mainloop()
