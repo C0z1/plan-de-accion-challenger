@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "reporte": None, "invitacion": None, "v": 0}
+          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "reporte": None, "invitacion": None, "v": 0}
 VERSION = "0.10.0"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -42,7 +42,7 @@ def evento(e):
         s = {"fase": e[1]}
         if FONDO[0] and ESTADO["fase"] in (None, "inicio") and e[1] is not None and time.time() - VIVO[0] > 6:
             abrir(URL[0])  # el cliente acaba de abrir y no hay ventana de HTC (si la hubiera, preguntaría cada 2 s)
-        if e[1] == "ChampSelect": s.update(draft=None, fin=None, meta=None, pos=None); USADO.add("champ_select")
+        if e[1] == "ChampSelect": s.update(draft=None, fin=None, meta=None, pos=None, avisos=[]); USADO.add("champ_select")
         if e[1] == "InProgress" and ESTADO["ajustes"].get("overlay", True): USADO.add("overlay")
         if e[1] in ("Lobby", "Matchmaking", "ReadyCheck"): s.update(aviso=None, perfil=gui.perfil(ESTADO["rango"], ESTADO["cuenta"]))
     elif tipo == "draft": s = {"draft": {**draft_json(e[1], e[2]), "probable": bool(e[3]) if len(e) > 3 else False}}
@@ -59,7 +59,9 @@ def evento(e):
     elif tipo == "cliente": s = {"cliente": e[1]}
     elif tipo == "region": s = {"region": e[1], **({"plataforma": e[2]} if len(e) > 2 else {})}
     elif tipo == "crono": s = {"crono": e[1]}
-    elif tipo == "aviso": s = {"aviso": e[1]}
+    elif tipo == "aviso":  # F8: los consejos de la partida se guardan todos (el nuevo ya no borra al anterior)
+        s = {"aviso": e[1]}
+        if e[1].get("tipo") == "consejo": s["avisos"] = (ESTADO.get("avisos") or []) + [e[1]]
     elif tipo == "pos": s = {"pos": e[1]}  # champ select antes de ver al rival: la ventana Draft
     with LOCK: ESTADO.update(s, v=ESTADO["v"] + 1)
 

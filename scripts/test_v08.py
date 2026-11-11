@@ -242,4 +242,19 @@ class ImportarRunas(unittest.TestCase):  # A5: solo en selección, solo la pági
 
 
 
+
+class HistorialAvisos(unittest.TestCase):  # F8: todos los consejos de la partida; se vacía al entrar a la siguiente selección
+    def setUp(self): self.viejo = dict(w.ESTADO); w.ESTADO.update(avisos=[])
+    def tearDown(self): w.ESTADO.clear(); w.ESTADO.update(self.viejo)
+
+    def test_acumula_y_se_vacia(self):
+        w.evento(("aviso", {"texto": "A", "tipo": "consejo", "minuto": 6}))
+        w.evento(("aviso", {"texto": "error de red", "tipo": "error", "minuto": None}))  # los errores no van al historial
+        w.evento(("aviso", {"texto": "B", "tipo": "consejo", "minuto": 16}))
+        self.assertEqual([a["texto"] for a in w.ESTADO["avisos"]], ["A", "B"])
+        self.assertEqual(w.ESTADO["aviso"]["texto"], "B")
+        w.evento(("fase", "ChampSelect")); self.assertEqual(w.ESTADO["avisos"], [])
+
+
+
 if __name__ == "__main__": unittest.main()
