@@ -371,6 +371,22 @@ def aviso_minions(d, m10=None):
 
 
 
+AVISOS_FOTO = ("aviso_nivel", "aviso_minions", "aviso_muertes", "aviso_regreso")  # uno por partida cada uno; por nombre, se resuelven al llamar (las pruebas los sustituyen)
+
+
+def paso_vivo(d, estado, aj):
+    """Lo «por foto» del trabajador, puro: (meta, avisos) con avisos = [(clave, texto, minuto)]. estado = {"avisado": set}
+    pasa de foto en foto (cada aviso sale una vez); aj = ajustes (cada aviso se apaga con su nombre)."""
+    av, minuto = estado.setdefault("avisado", set()), int((((d or {}).get("gameData") or {}).get("gameTime") or 0) // 60)
+    out = []
+    for n in AVISOS_FOTO:
+        if n not in av and aj.get(n, True) and (txt := globals()[n](d)):
+            out.append((n, txt, minuto)); av.add(n)
+    if aj.get("aviso_pico", True) and (r := aviso_pico(d)) and r[0] not in av:  # uno por ítem del rival
+        out.append((r[0], r[1], minuto)); av.add(r[0])
+    return meta_fase(d), out
+
+
 def espera(fallos):
     """Segundos hasta el próximo sondeo: 3 con el cliente arriba; con fallos seguidos, 6, 12, 24 y tope 30."""
     return min(3 * 2 ** fallos, 30)

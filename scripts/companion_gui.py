@@ -254,7 +254,7 @@ def lineas_ficha(fi):
 
 def trabajador(q):
     """El mismo bucle que companion.main, pero manda eventos a la ventana en vez de imprimir."""
-    m, visto, fase_ant, real, archivo, ult, avisado, fallos = None, None, "inicio", None, None, 0, set(), 0
+    m, visto, fase_ant, real, archivo, ult, estado, fallos = None, None, "inicio", None, None, 0, {"avisado": set()}, 0
     error = foto = None
     while True:
         fase = None  # si lcu() lanza, cuenta como cliente caído
@@ -278,14 +278,10 @@ def trabajador(q):
             elif fase != "ChampSelect": visto = None
             if jugando and time.time() - ult >= 30:
                 d = companion.vivo(); archivo, ult = companion.capturar(archivo, d), time.time(); foto = d or foto
-                if mf := companion.meta_fase(d): q.put(("meta", mf))
-                aj = ajustes()  # Ajustes_Vino: cada aviso se puede apagar
-                for f in (companion.aviso_nivel, companion.aviso_minions, companion.aviso_muertes, companion.aviso_regreso):
-                    if f not in avisado and aj.get(f.__name__, True) and (txt := f(d)):
-                        q.put(aviso(txt, "consejo", int((((d or {}).get("gameData") or {}).get("gameTime") or 0) // 60))); avisado.add(f)
-                if aj.get("aviso_pico", True) and (r := companion.aviso_pico(d)) and r[0] not in avisado:  # uno por ítem del rival
-                    q.put(aviso(r[1], "consejo", int((((d or {}).get("gameData") or {}).get("gameTime") or 0) // 60))); avisado.add(r[0])
-            elif not jugando: archivo, avisado = None, set()
+                mf, avs = companion.paso_vivo(d, estado, ajustes())  # Ajustes_Vino: cada aviso se puede apagar
+                if mf: q.put(("meta", mf))
+                for _, txt, minuto in avs: q.put(aviso(txt, "consejo", minuto))
+            elif not jugando: archivo = None; estado["avisado"] = set()
             if fase in FIN and real not in FIN:
                 if r := companion.resumen_fin(foto): q.put(("fin", r))  # sin key, esto es todo lo que hay al terminar
                 foto = None; post_partida(q); m = None
