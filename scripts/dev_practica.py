@@ -1,6 +1,7 @@
 """Solo desarrollo (no va en el .exe): abre una Herramienta de práctica para probar Racha en una partida real.
   python scripts/dev_practica.py [campeónId, 245 = Ekko] [--seco]   lobby → selección → elige y confirma → espera InProgress
   python scripts/dev_practica.py salir                              termina la partida de práctica
+  python scripts/dev_practica.py reconectar                         vuelve a la partida de práctica (prueba de Reconnect)
 Nunca toca colas ranked/normales ni el ready-check: se niega fuera de las fases None/Lobby."""
 import sys, time
 sys.path.insert(0, __import__("os").path.dirname(__file__))
@@ -17,10 +18,10 @@ def puede(fase): return fase in ("None", "Lobby")  # nunca interrumpir una cola,
 def main(args, lcu=c.lcu, escribir=c.lcu_escribir, dormir=time.sleep):
     seco = "--seco" in args; args = [a for a in args if a != "--seco"]
     w = (lambda m, p, b=None: print("seco:", m, p) or True) if seco else escribir
-    if args == ["salir"]:  # solo una partida de práctica: en una partida real early-exit sería abandonar
+    if args in (["salir"], ["reconectar"]):  # solo una partida de práctica: en una partida real early-exit sería abandonar
         modo = (((lcu("/lol-gameflow/v1/session") or {}).get("gameData") or {}).get("queue") or {}).get("gameMode")
-        if modo != "PRACTICETOOL": print("no salgo: la partida es", modo); return False
-        return w("POST", "/lol-gameflow/v1/early-exit")
+        if modo != "PRACTICETOOL": print("no toco la partida: es", modo); return False
+        return w("POST", "/lol-gameflow/v1/early-exit" if args == ["salir"] else "/lol-gameflow/v1/reconnect")
     champ = int(args[0]) if args else 245
     fase = lcu("/lol-gameflow/v1/gameflow-phase"); print("fase", fase)
     if not puede(fase): print("no toco nada en fase", fase); return False

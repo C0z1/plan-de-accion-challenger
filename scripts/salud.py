@@ -219,7 +219,7 @@ def pasada(args, mem):
         mem["pid"] = pid; d["cpu_antes"] = mem.get("cpu"); d["cpu"], d["rss_mb"] = cpu_rss(pid); mem["cpu"] = d["cpu"]
         if d["cpu"] is None: mem.pop("pid", None)  # Racha se reinició: otro proceso, se vuelve a buscar en la próxima pasada
     if jugando: d["grabacion"] = grabacion(mem.get("partida", time.time()) - 60, app / "datos" / "vivo")
-    if args.vistas and p: d["vistas"] = vistas(p)
+    if args.vistas and p and not jugando: d["vistas"] = vistas(p)  # 9 Edge sin ventana: nunca en partida (le quitan FPS al juego)
     res = evaluar(d, time.time())
     for x in res:  # tres fallas seguidas del mismo ID: persistente
         mem[x["id"]] = mem.get(x["id"], 0) + 1 if x["nivel"] == "FALLA" else 0

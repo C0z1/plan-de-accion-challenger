@@ -12,9 +12,9 @@ class Candado(unittest.TestCase):
             self.assertEqual(escrito, [], fase)
 
     def test_salir_solo_de_la_practica(self):  # en una partida real, early-exit sería abandonar (revisión del asistente)
-        for modo, sale in (("CLASSIC", False), ("ARAM", False), (None, False), ("PRACTICETOOL", True)):
+        for (modo, sale), orden in ((x, o) for x in (("CLASSIC", False), ("ARAM", False), (None, False), ("PRACTICETOOL", True)) for o in ("salir", "reconectar")):
             escrito = []
-            r = d.main(["salir"], lcu=lambda p, m=modo: {"gameData": {"queue": {"gameMode": m}}}, escribir=lambda *a: escrito.append(a) or True)
+            r = d.main([orden], lcu=lambda p, m=modo: {"gameData": {"queue": {"gameMode": m}}}, escribir=lambda *a: escrito.append(a) or True)
             self.assertEqual((r, bool(escrito)), (sale, sale), modo)
 
     def test_seco_no_escribe(self):
