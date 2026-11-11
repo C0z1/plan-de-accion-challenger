@@ -137,4 +137,20 @@ class SemanaCompleta(unittest.TestCase):  # con solo las últimas 20 no se compa
 
 
 
+
+class SintaxisJS(unittest.TestCase):  # un salto de línea suelto en un texto rompe toda la página y ninguna otra prueba lo ve
+    def test_index_html_parsea(self):
+        import re, shutil, subprocess
+        node = shutil.which("node")
+        if not node: self.skipTest("sin node")
+        html = (pathlib.Path(__file__).parent / "web" / "index.html").read_text(encoding="utf-8")
+        js = "\n".join(re.findall(r"<script>(.*?)</script>", html, re.S))
+        self.assertTrue(js.strip())
+        with tempfile.TemporaryDirectory() as d:
+            f = pathlib.Path(d) / "pagina.js"; f.write_text(js, encoding="utf-8")
+            r = subprocess.run([node, "--check", str(f)], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr[-800:])
+
+
+
 if __name__ == "__main__": unittest.main()

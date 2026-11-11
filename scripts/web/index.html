@@ -800,6 +800,9 @@ function ayudaV(s, aj) {  // v0.8: reportes privados, métricas opcionales y, so
         <input id="inv-email" type="email" aria-label="Correo de Google del amigo (opcional)" placeholder="correo de Google (opcional)" autocomplete="off" style="${CAMPO};flex:1;min-width:180px">
         <button class="btn2" onclick="invitar()">Invitar</button></span>
       ${inv ? `<span class="sub" style="font-size:14px" role="status" aria-live="polite">${inv.error ? esc(inv.error) : `Código de <b>${esc(inv.nombre)}</b>: <code style="user-select:all;color:var(--acc)">${esc(inv.codigo)}</code> · cópialo ahora, no se vuelve a mostrar.`}</span>` : ""}
+      ${inv && !inv.error ? `<label for="inv-msg" class="sub" style="font-size:13px">Mensaje listo para mandarle:</label>
+        <textarea id="inv-msg" readonly rows="8" style="${CAMPO};resize:vertical;font-size:13px">${esc(mensajeInvitacion(inv))}</textarea>
+        <button class="btn2" onclick="copiarMensaje(this)">Copiar mensaje</button>` : ""}
       <span class="sub" style="font-size:13px">${lista.length ? "Invitados: " + lista.map(i => esc(i.nombre) + (i.email ? " (" + esc(i.email) + ")" : "")).join(", ") : "Aún no invitas a nadie desde aquí."}</span>
     </div>` : ""}`;
 }
@@ -807,6 +810,19 @@ async function reportar() {
   if (!borrador.trim()) return;
   try { const r = await fetch("/api/reporte", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({texto: borrador, vista: "ajustes"})}); if (r.ok) borrador = ""; } catch (e) {}
   v = -1; tick();
+}
+function mensajeInvitacion(inv) {  // lo que el admin le manda a su amigo: descarga, código y los 3 pasos
+  return ["Te dejé un acceso a Racha, la app que uso para revisar mis partidas de LoL y ver qué me baja el win rate.",
+    "Bájala de aquí: https://github.com/C0z1/racha.gg/releases/latest",
+    "Si Windows dice «Windows protegió su PC», dale a «Más información» y luego a «Ejecutar de todas formas».",
+    "", "Ya dentro, son 3 pasos:", "1. Abre LoL y entra a tu cuenta.",
+    inv.email ? `2. En Ajustes, dale a «Continuar con Google» con ${inv.email} (o pega este código: ${inv.codigo}).` : `2. En Ajustes, pega tu código: ${inv.codigo}`,
+    "3. Dale a «Descargar» (la primera vez tarda unos minutos).", "",
+    "Pon LoL en «Sin bordes» para ver los avisos encima del juego. Si algo falla, usa Ajustes > Ayuda > Mandar reporte."].join("\n");
+}
+async function copiarMensaje(b) {
+  try { await navigator.clipboard.writeText(document.getElementById("inv-msg").value); b.textContent = "Copiado"; }
+  catch (e) { document.getElementById("inv-msg").select(); b.textContent = "Selecciónalo y cópialo con Ctrl+C"; }
 }
 async function invitar() {
   const val = id => ((document.getElementById(id) || {}).value || "").trim();
