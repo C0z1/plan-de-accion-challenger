@@ -20,7 +20,7 @@ class V08(unittest.TestCase):
         self.assertEqual(len(llamadas), 1)
         ruta, c = llamadas[0]
         self.assertEqual((ruta, c["champ_select"], c["revision"], c["version"]), ("/v1/ping", True, False, w.VERSION))
-        self.assertEqual(set(c), {"version", "region", "overlay", "champ_select", "revision", "avisos"})  # nada que identifique
+        self.assertEqual(set(c), {"version", "region", "overlay", "champ_select", "revision", "avisos", "sirvio_si", "sirvio_no", "sirvio_no_vi"})  # nada que identifique
 
     def test_reporte_ok_y_sin_red(self):
         w.ESTADO.update(fase="Lobby", descarga="falló (3)")
@@ -384,6 +384,36 @@ class RangoPorApi(unittest.TestCase):  # al buscar tu nick, el rango llega de la
             self.assertIsNone(w.rango_api("a" * 78, "la1"))  # sin ranked: nada
         self.assertIsNone(w.rango_api("../../x", "la1"))  # un puuid raro no arma rutas
         self.assertIsNone(w.rango_api(None, "la1"))
+
+
+
+
+class Sirvio(unittest.TestCase):  # v0.13: «¿te sirvieron los avisos?», una respuesta por partida, como contador en el ping
+    def setUp(self):
+        self.viejo = dict(w.ESTADO); self.sv = dict(w.SIRVIO); w.SIRVIO.update(si=0, no=0, no_vi=0); w.PING[0] = None
+    def tearDown(self): w.ESTADO.clear(); w.ESTADO.update(self.viejo); w.SIRVIO.update(self.sv); w.PING[0] = None
+
+    def test_contesta_una_vez_y_viaja_en_el_ping(self):
+        import http.client, threading
+        srv = w.http.server.ThreadingHTTPServer(("127.0.0.1", 0), w.H)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        def post(cuerpo):
+            c = http.client.HTTPConnection("127.0.0.1", srv.server_address[1], timeout=5)
+            c.request("POST", "/api/sirvio", body=cuerpo, headers={"X-HTC": "1", "Content-Type": "application/json", "Content-Length": str(len(cuerpo))})
+            return c.getresponse().status
+        try:
+            w.ESTADO.update(fin={"texto": "fin"})
+            self.assertEqual(post(b'{"valor": "talvez"}'), 400)
+            self.assertEqual(post(b'{"valor": "si"}'), 200)
+            self.assertEqual(post(b'{"valor": "no"}'), 409)  # una sola por partida
+            self.assertEqual((w.SIRVIO["si"], w.ESTADO["fin"]["sirvio"]), (1, "si"))
+        finally: srv.shutdown()
+        enviado = {}
+        with mock.patch.object(w.companion, "backend", lambda m, r, c=None, base=None: enviado.update(c) or {"ok": True}), \
+                mock.patch.object(w.gui, "ajustes", lambda: {"metricas": True}):
+            w.ping()
+        self.assertEqual((enviado["sirvio_si"], enviado["sirvio_no"]), (1, 0))
+        self.assertEqual(w.SIRVIO["si"], 0)  # ya enviado: no se cuenta dos veces
 
 
 

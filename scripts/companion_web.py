@@ -35,6 +35,7 @@ def draft_json(pos, recs):
     return {"pos": pos, "recs": out}
 
 
+SIRVIO = {"si": 0, "no": 0, "no_vi": 0}  # «¿te sirvieron los avisos?» (v0.13): contadores para el ping opt-in, sin identidad
 AVISO_ENTRE, AVISO_MAX = 90, 6  # F1: separación mínima entre avisos en la franja y tope por partida
 
 
@@ -343,9 +344,13 @@ def ping():
     if not gui.ajustes().get("metricas") or PING[0] == hoy: return
     with LOCK: region = ESTADO.get("plataforma")
     with LOCK: avisos = sum(1 for a in ESTADO.get("avisos") or [] if a.get("franja"))  # F5: cuántos salieron en la franja en la última partida
-    try: companion.backend("POST", "/v1/ping", {"version": VERSION, "region": region or "?", "avisos": avisos, **{k: k in USADO for k in ("overlay", "champ_select", "revision")}}, gui.REPO)
+    with LOCK: resp = dict(SIRVIO)  # respuestas a «¿te sirvieron los avisos?» desde el último ping
+    try: companion.backend("POST", "/v1/ping", {"version": VERSION, "region": region or "?", "avisos": avisos, **{f"sirvio_{k}": v for k, v in resp.items()},
+                                                **{k: k in USADO for k in ("overlay", "champ_select", "revision")}}, gui.REPO)
     except Exception: return
     PING[0] = hoy; USADO.clear()
+    with LOCK:
+        for k, v in resp.items(): SIRVIO[k] -= v  # lo que se contestó mientras salía el ping queda para el siguiente
 
 
 def reportar(texto, vista):
@@ -519,6 +524,14 @@ class H(http.server.BaseHTTPRequestHandler):
             except (ValueError, KeyError, TypeError, OSError): return self.enviar(400, b"", "text/plain")
             with LOCK: ESTADO.update(descarga="Código guardado. Ya puedes descargar tus partidas.", conectado=True, v=ESTADO["v"] + 1)
             threading.Thread(target=primera_vez, daemon=True).start()  # con el cliente abierto, empieza a bajar sola
+            return self.enviar(200, b"{}", "application/json")
+        if self.path == "/api/sirvio":  # una respuesta por partida: sí / no / no los vi
+            try: v = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 100))).get("valor")
+            except (ValueError, TypeError, AttributeError): v = None
+            if v not in SIRVIO: return self.enviar(400, b"", "text/plain")
+            with LOCK:
+                if (ESTADO.get("fin") or {}).get("sirvio"): return self.enviar(409, b"", "text/plain")
+                SIRVIO[v] += 1; ESTADO.update(fin={**(ESTADO.get("fin") or {}), "sirvio": v}, v=ESTADO["v"] + 1)
             return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/cuenta":  # tu Riot ID y región, para usar Racha sin el cliente de LoL abierto
             try: d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 300)))

@@ -44,7 +44,8 @@ CREATE TABLE IF NOT EXISTS metricas (
   version TEXT NOT NULL,
   region  TEXT NOT NULL,
   usos    INTEGER DEFAULT 0, overlay INTEGER DEFAULT 0, champ_select INTEGER DEFAULT 0, revision INTEGER DEFAULT 0,
-  avisos  INTEGER DEFAULT 0, partidas_con_aviso INTEGER DEFAULT 0,  -- v0.11 (F5): avisos que salieron en la franja; en D1 ya creada: migraciones/001_avisos.sql
+  avisos  INTEGER DEFAULT 0, partidas_con_aviso INTEGER DEFAULT 0,
+  sirvio_si INTEGER DEFAULT 0, sirvio_no INTEGER DEFAULT 0, sirvio_no_vi INTEGER DEFAULT 0,  -- v0.13: «¿te sirvieron los avisos?» (migraciones/002_sirvio.sql)  -- v0.11 (F5): avisos que salieron en la franja; en D1 ya creada: migraciones/001_avisos.sql
   PRIMARY KEY (dia, version, region)
 );
 -- v0.10: límites de uso (login por IP, ping y reportes por usuario) para no agotar el plan gratis

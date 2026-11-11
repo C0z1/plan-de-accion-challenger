@@ -179,3 +179,11 @@ test("F5: el ping suma avisos de la franja como números chicos (nunca texto)", 
   const met = await (await worker.fetch(conCodigo("/v1/admin/metricas", "codigo-admin1"), env, ctx)).json();
   assert.deepEqual([met[0].usos, met[0].avisos, met[0].partidas_con_aviso], [3, 3, 1]);  // 3 por hora: el cuarto se ignora; texto → 0
 });
+
+
+test("v0.13: el ping suma las respuestas de «¿te sirvieron los avisos?»", async () => {
+  const {env, ctx} = entorno(); env.ACCESOS = "cozi:codigo-admin1,beto:codigo-beto1"; env.ADMINS = "cozi";
+  await worker.fetch(conCodigo("/v1/ping", "codigo-beto1", {method: "POST", body: {version: "0.13.0", region: "la1", sirvio_si: 2, sirvio_no: 1, sirvio_no_vi: "x"}}), env, ctx);
+  const met = await (await worker.fetch(conCodigo("/v1/admin/metricas", "codigo-admin1"), env, ctx)).json();
+  assert.deepEqual([met[0].sirvio_si, met[0].sirvio_no, met[0].sirvio_no_vi], [2, 1, 0]);
+});

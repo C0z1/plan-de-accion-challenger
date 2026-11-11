@@ -752,7 +752,9 @@ function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estad
   ${(s.avisos || []).length ? `<div class="est" style="gap:8px"><span class="sub" id="avisos-t">Avisos de esta partida</span>
     <ol aria-labelledby="avisos-t" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:14px">${s.avisos.map(a => `<li>${a.minuto != null ? `<b>Min ${a.minuto}</b> · ` : ""}${esc(a.texto)}</li>`).join("")}</ol></div>` : ""}
   ${f ? `<div class="est"><span class="sub">Al terminar</span><b>${esc(f.texto || "")}</b>${(f.momentos || []).length ? `<span class="sub" style="margin-top:6px">3 momentos clave (al instante, de lo que vio Racha en la partida)</span>
-    <ol style="margin:4px 0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px">${f.momentos.map(m => `<li>${esc(m)}</li>`).join("")}</ol>` : ""}${f.cotejo === false ? '<span class="tag red">No cuadran tus muertes con los eventos</span>' : ""}</div>` : ""}
+    <ol style="margin:4px 0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px">${f.momentos.map(m => `<li>${esc(m)}</li>`).join("")}</ol>` : ""}
+    ${(s.avisos || []).length ? (f.sirvio ? `<span class="sub" style="margin-top:6px" role="status">Gracias: anotado.</span>`
+      : `<span class="sub" style="margin-top:6px">¿Te sirvieron los avisos de esta partida?</span><span style="display:flex;gap:8px;flex-wrap:wrap">${[["si", "Sí"], ["no", "No"], ["no_vi", "No los vi"]].map(([k, t]) => `<button class="btn2" onclick="sirvio('${k}')">${t}</button>`).join("")}</span>`) : ""}${f.cotejo === false ? '<span class="tag red">No cuadran tus muertes con los eventos</span>' : ""}</div>` : ""}
   ${s.revision ? `<div class="est"><span class="sub">Revisión (Riot)</span><b>${esc(s.revision.champ)} ${esc(s.revision.kda || "")} · score ${esc(s.revision.score)}</b><span class="sub">Oro al 14 ${esc(s.revision.oro)} · CS al 14 ${esc(s.revision.cs)}</span></div>` : ""}
   ${s.revision && (s.revision.momentos || []).length ? `<div class="est"><span class="sub">3 momentos clave${s.revision.libres ? ` · ${s.revision.libres[0]} de ${s.revision.libres[1]} muertes sin objetivo a cambio` : ""}</span>
     <ol style="margin:4px 0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px">${s.revision.momentos.map(m => `<li>${esc(m)}</li>`).join("")}</ol></div>` : ""}
@@ -867,6 +869,10 @@ async function buscarCuenta() {  // tu Riot ID: Racha comprueba que existe y baj
   cuentaMsg = "Buscando…"; v = -1; tick();
   try { const r = await fetch("/api/cuenta", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({riot_id, region})}); cuentaMsg = (await r.json()).mensaje || ""; }
   catch (e) { cuentaMsg = "No se pudo hablar con Racha."; }
+  v = -1; tick();
+}
+async function sirvio(valor) {  // v0.13: va en las métricas opcionales como contador, nunca con tu identidad
+  try { await fetch("/api/sirvio", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({valor})}); } catch (e) {}
   v = -1; tick();
 }
 let runasMsg = "";
