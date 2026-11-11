@@ -3,6 +3,7 @@ import contextlib, io, json, pathlib, sys, unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 import companion
+companion._METAS = {}  # sin meta automática: estas pruebas no dependen de tus partidas (test_cs_meta.py la prueba)
 
 FIX = pathlib.Path(__file__).parent / "fixtures"
 

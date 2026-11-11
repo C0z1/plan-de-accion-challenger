@@ -6,7 +6,7 @@ Uso:
   y corre draft.py; imprime una vez por cada cambio de rivales.
 - InProgress: cada 30 s guarda una foto de la Live Client Data API (puerto 2999) en datos/vivo/<inicio>.jsonl
   y avisa una vez: del minuto 5 al 7 si vas abajo de nivel contra tu rival de línea; del 10 al 11 si vas bajo
-  la meta minions10 de config.json (p. ej. Sylas 69+).
+  tu meta de CS al 10 (mediana de tus victorias con ese campeón, o minions10 de config.json si existe).
 - EndOfGame/PreEndOfGame: una línea con la última foto en vivo (KDA, CS, muertes del 14 al 25; sirve sin key), espera 60 s y corre descargar.py 5 y revision.py 1 (si la key caducó, lo avisa).
 Lockfile: C:\\Riot Games\\League of Legends\\lockfile (o la variable LOL_LOCKFILE)."""
 import argparse, base64, http.client, json, os, pathlib, ssl, subprocess, sys, time, urllib.request
@@ -193,16 +193,15 @@ def valor_items(p, pr=None):
 def meta_fase(d, m10=None):
     """La meta de la fase como números para la GUI: {minuto, campeon, nivel, rival, nivel_rival, cs, cs_meta, muertes14}; None sin tu jugador.
     muertes14: tus muertes desde el 14:00 (None antes del 14; meta ≤ 2 hasta el 25).
-    cs_meta solo con el campeón de minions10 de config.json. La Live Client Data no trae el oro del rival: no hay «oro al 14»."""
+    cs_meta: minions10 de config.json si es tu campeón, si no la mediana de tus victorias (meta_cs). La Live Client Data no trae el oro del rival: no hay «oro al 14»."""
     me, rival = yo_rival(d)
     if not me: return None
     if not grieta(d): return meta_aram(d, me)
-    if m10 is None: m10 = minions10()
     rs = (rival or {}).get("scores") or {}
     return {"minuto": int(((d.get("gameData") or {}).get("gameTime") or 0) // 60), "campeon": me.get("championName"),
             "nivel": me.get("level"), "rival": (rival or {}).get("championName"), "nivel_rival": (rival or {}).get("level"),
             "cs": (me.get("scores") or {}).get("creepScore"), "muertes14": muertes14(d, me),
-            "cs_meta": m10.get("minimo") if m10 and me.get("championName") == m10.get("campeon") else None,
+            "cs_meta": meta_cs(me, m10),
             "rival_kda": f"{rs.get('kills') or 0}/{rs.get('deaths') or 0}/{rs.get('assists') or 0}" if rival else None,
             "rival_cs": rs.get("creepScore"), "rival_items": [[i["itemID"], i.get("displayName") or ""] for i in (rival or {}).get("items") or [] if i.get("itemID") and not i.get("consumable") and i.get("slot") != 6][:6],  # slot 6 = trinket
             "objetivos": objetivos(d, me), "t": int(((d.get("gameData") or {}).get("gameTime") or 0)), "kda": kda(me),
@@ -370,18 +369,40 @@ def minions10():
     return m if isinstance(m, dict) and "campeon" in m and "minimo" in m else None
 
 
-def aviso_minions(d, m10=None):
-    """Del minuto 10 al 11, si juegas el campeón de la meta minions10 de config.json y vas bajo el mínimo: el aviso; si no, None.
-    Sylas con 69+ minions de línea al 10 → 74%, con ≤ 68 → 32% (early.py). creepScore en vivo incluye monstruos (en mid, pocos)."""
+_METAS = None  # {(campeón, rol): mínimo}, calculado una vez con tus partidas (draft.py las lee al importar, ~3 s la primera vez)
+
+
+def metas_auto():
+    global _METAS
+    if _METAS is None:
+        try: import vistas, draft; _METAS = vistas.metas_cs(draft.games)
+        except Exception: _METAS = {}  # sin partidas suficientes draft.py truena al importar: sin meta, no tumba la partida
+    return _METAS
+
+
+def meta_cs(me, m10=None):
+    """Meta de CS al 10 del campeón en juego: minions10 de config.json si es ese campeón (manda), si no la mediana de tus victorias
+    con él en ese rol (vistas.metas_cs); None sin datos suficientes."""
+    if not me: return None
     if m10 is None: m10 = minions10()
+    if m10 and me.get("championName") == m10.get("campeon"): return m10.get("minimo")
+    m = metas_auto().get((me.get("championName"), me.get("position")))
+    return int(m) if m is not None else None  # mediana de enteros puede ser x.5: se redondea a la baja (no exigir de más)
+
+
+def aviso_minions(d, m10=None):
+    """Del minuto 10 al 11, si vas bajo tu meta de CS con ese campeón (meta_cs): el aviso; si no, None.
+    Sylas con 69+ minions de línea al 10 → 74%, con ≤ 68 → 32% (early.py). creepScore en vivo incluye monstruos (en mid, pocos)."""
     t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
-    if not m10 or not grieta(d) or not 600 <= t <= 660: return None  # 60 s de ventana: la foto de cada 30 s siempre cae dentro
+    if not grieta(d) or not 600 <= t <= 660: return None  # 60 s de ventana: la foto de cada 30 s siempre cae dentro
     me, _ = yo_rival(d)
-    if not me or me.get("championName") != m10["campeon"]: return None
+    meta = meta_cs(me, m10)
+    if meta is None: return None
     cs = (me.get("scores") or {}).get("creepScore") or 0
-    if cs >= m10["minimo"]: return None
-    return Texto(f"Min 10: llevas {cs} de CS con {m10['campeon']} (tu meta: {m10['minimo']}). Tu regla: no roamear ni tradear a costa de oleadas hasta el 14.",
-                 f"{m10['campeon']} {cs} CS al 10 · tu meta")
+    if cs >= meta: return None
+    c = me["championName"]
+    return Texto(f"Min 10: llevas {cs} de CS con {c} (tu meta: {meta}). Tu regla: no roamear ni tradear a costa de oleadas hasta el 14.",
+                 f"{c} {cs} CS al 10 · tu meta")
 
 
 

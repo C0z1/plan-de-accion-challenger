@@ -10,6 +10,18 @@ R_KP = dict(texto="Únete a las peleas del 14 en adelante", por_que="Tu particip
             metrica="kp", minuto="14+")
 
 
+MIN_PARTIDAS_META = 8  # con menos victorias la mediana es ruido: sin meta antes que una meta inventada
+
+
+def metas_cs(games):
+    """{(campeon, rol): mediana de minions de línea al minuto 10 en tus VICTORIAS} con >= MIN_PARTIDAS_META victorias con dato.
+    min10 (timeline) cuenta solo minions de línea; el creepScore en vivo suma monstruos: por eso la jungla no tiene meta."""
+    por = defaultdict(list)
+    for g in games:
+        if g.get("win") and g.get("min10") is not None and g.get("pos") != "JUNGLE": por[(g["champ"], g["pos"])].append(g["min10"])
+    return {k: st.median(v) for k, v in por.items() if len(v) >= MIN_PARTIDAS_META}
+
+
 def _forma(rs, k=5): return [g["win"] for g in rs[-k:]]
 
 

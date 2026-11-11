@@ -4,6 +4,7 @@ import json, os, pathlib, sys, unittest
 AQUI = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
 import companion_gui as g
+g.companion._METAS = {}  # sin meta automática: no depende de tus partidas (test_cs_meta.py)
 
 SALIDA = """# Revisión
 ## Partida por partida (más reciente primero)
