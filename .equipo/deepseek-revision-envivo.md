@@ -45,3 +45,27 @@ Nada pide cola, acepta partida ni banea. Esto se separa de lo que Riot pide decl
 1. S3/S5/S6 con LoL cerrado y Racha corriendo (hallazgo 2).
 2. S2 nunca se activará (hallazgo 4): un 0 en S2 no prueba que las fases cuadren.
 3. S6 no avisa de una franja visible con meta vieja en partida (hallazgo 3).
+
+## Ronda 2: 7b6ad61, 60f6ff3 y 1002796 (A4)
+
+DeepSeek (Sonnet de reemplazo), 2026-11-11. Lectura de los diffs y pruebas sueltas con fotos sintéticas; no se corrió `salud.py` ni nada contra el juego. Los hallazgos 1-4 de la ronda 1 quedaron arreglados en 7b6ad61 (comprobado en `scripts/test_ds_salud.py` y `scripts/dev_practica.py:21-24`).
+
+### Hallazgos
+
+| # | Gravedad | Archivo:línea | Qué pasa | Sugerencia |
+|---|---|---|---|---|
+| 12 | MEDIA | `scripts/companion.py:159-170` (`unir_eventos`), `scripts/companion_gui.py:354` | La guarda `t(previos) > t(d)` no basta para separar partidas: `foto` solo se vacía en `FIN` (`companion_gui.py:361`), no cuando la partida termina por otro camino (cliente cerrado, salir de la práctica, cancelar). Con una partida anterior más corta que el primer `gameTime` de la siguiente, los eventos viejos se mezclan en la nueva (probado: previos t=100 con un `ChampionKill`, nueva t=120: queda 1 evento ajeno). Ensucia dragones, alma y `muertes14`. | Poner `foto = None` cuando `jugando` pasa de True a False y la fase no es `Reconnect` (junto a `archivo = None`, línea 359), o exigir que `previos` tenga un `GameStart` con `EventTime` 0 y la misma lista de jugadores. |
+| 13 | BAJA | `scripts/companion.py:166-168` | Dedupe por `(EventName, EventTime)`: dos eventos con la misma clave en `previos` (dos muertes en el mismo tick) se pierden si la nueva trae solo una (probado: previos [A, B] con la misma clave y nueva [GameStart, A] deja 1 evento). Sin reinicio no pasa nada, porque `d` ya trae ambos. | Incluir `VictimName`/`KillerName` en la clave, o quitar de `previos` solo los que la nueva repite las mismas veces. |
+| 14 | BAJA | `scripts/companion.py:164` | «Sin reinicio no cambia nada» no es del todo cierto: la lista se vuelve a ordenar por `EventTime` y se reescribe en cada foto. Inocuo hoy; solo tenerlo en cuenta si algo depende del orden de la Live API. | Unir solo si `d` perdió eventos (menos que `previos`) o trae un `GameStart` con tiempo > 0. |
+| 15 | BAJA | `scripts/companion_web.py:60-62` | La pausa compara `meta.t` con la meta anterior: con juego realmente colgado (mismo `gameTime` para siempre) la franja queda congelada y «fresca» (`recibido` se renueva cada 10 s), así que `visible()` no la oculta; solo S3 lo detecta. Además, al empezar la pausa el timer sube de golpe hasta 10 s (pasa de `recibido`+edad a edad 0). La meta ARAM no trae `t`, así que no hay pausa ahí (correcto: sin timers). | Aceptable; anotar en el plan. |
+| 16 | BAJA | `scripts/overlay.py:160-168` | Con el mismo número de piezas se reusa `etiquetas`; si el dibujo anterior falló a la mitad del `else` (tras destruir y antes de crear todas), `ultimo[0]` conserva el valor viejo y el siguiente tick actualiza solo las etiquetas que existan: la franja queda incompleta hasta que cambie el número de piezas. Raro (tkinter casi nunca falla ahí) y la excepción sí se registra. | Poner `ultimo[0] = None` al entrar al `else`, antes de destruir. |
+| 17 | BAJA | `scripts/salud.py:68` | `(d.get("edad_proceso") or 10 ** 6) >= ARRANQUE`: una edad de 0 s cuenta como proceso viejo (por el `or`); no importa en la práctica. Y la gracia de 180 s también se aplica si el proceso es el `HTC.exe` que acaba de reiniciar por una caída: tapa un bucle de caídas con AVISO. | Comparar con `is None`; cruzar con `grabacion`/`fase` si se quiere detectar reinicios. |
+| 18 | BAJA | `scripts/dev_practica.py:21-24` | `reconectar` reutiliza el candado de modo de `salir` (`gameData.queue.gameMode == PRACTICETOOL` en `/lol-gameflow/v1/session`): bien. Si la sesión aún guarda la partida anterior (EndOfGame), podría tocar una práctica ya terminada; inocuo. No comprueba la fase. | Exigir además fase `InProgress` o `Reconnect`. |
+
+### Sin hallazgo
+- `unir_eventos` con `previos` None, sin `events`, o `d` None devuelve `d` sin cambios; no modifica `previos` (cubierto por `scripts/test_ds_eventos_pausa.py`).
+- `salud.py:222-223` y `:227`: reintento de proceso al reiniciar Racha y vistas fuera de partida son correctos; con `--vistas` en una partida el chequeo S10 se omite en silencio (esperado).
+- `overlay.colocar`/`rect_juego` (7b6ad61): solo lee la posición del juego con `FindWindowW`/`GetWindowRect`, sin enviar mensajes; si `ancho_franja` supera el 76 % del ancho se pega al margen izquierdo y puede seguir pisando el marcador (caso extremo, medido por S5).
+
+### Endpoints LCU nuevos
+`POST /lol-gameflow/v1/reconnect` (solo `reconectar`, con candado de modo) y `GET /lol-gameflow/v1/session` (lectura para el candado). Estado de política: sin verificar, igual que el resto (`deepseek-politica-overlay.md`).

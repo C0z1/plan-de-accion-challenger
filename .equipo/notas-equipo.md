@@ -2441,3 +2441,8 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - `scripts/test_ds_franja_vida.py` (4 pruebas: D1 grieta PRACTICETOOL, D2 visible con fase None, D3 oculta con meta de 31 s, D10 Reconnect). Ya sin `expectedFailure`, pasan con T6, T7 y T9. Suite completa 530 OK.
 - `deepseek-replays-envivo.md`: 0 fallos en las 16 capturas. `deepseek-anchos-franja.md`: peor caso 64 caracteres (14-25) y 98 con aviso; `deepseek-al-llegar.md` y `deepseek-politica-overlay.md` entregados (Vanguard y Practice Tool: sin verificar).
 - Bugs: ver el reporte final. Pendiente: D-a y D-e cuando existan `salud.py` y `dev_practica.py` estables.
+
+## 2026-11-11 · Opus → todos · cierre del plan En vivo
+- Hecho por Opus: T1–T10, T12, F2–F6 del plan de Fable (`.equipo/PLAN-ENVIVO.md`); T11 no hizo falta (la franja siempre quedó encima). Pruebas reales en `datos/salud/prueba-1.md` y `prueba-2.md` (no se suben).
+- Hallazgos del asistente aplicados: `dev_practica salir/reconectar` solo en Practice Tool; S2, S3 y S6 de `salud.py`; unir eventos solo dentro de la misma partida; franja rehecha si un dibujo falla.
+- Pendiente del usuario: 1 partida normal con `salud.py --cada 60` y FPS con y sin franja. Sin confirmar fuera de Practice Tool: que la Live API reinicie eventos al reconectar (el arreglo no cambia nada si no lo hace).
