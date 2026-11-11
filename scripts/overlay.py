@@ -31,6 +31,9 @@ def partes(meta, ahora):
         out.append((("▼ " if d < 0 else "") + f"Nv {meta['nivel']} vs {meta['nivel_rival']}" + (f" {meta['rival']}" if meta.get("rival") else ""), ROSA if d < 0 else TXT))
     if meta.get("cs") is not None and meta.get("rival_cs") is not None:
         out.append((("▼ " if meta["cs"] < meta["rival_cs"] else "") + f"CS {meta['cs']} vs {meta['rival_cs']}", ROSA if meta["cs"] < meta["rival_cs"] else TXT))
+    m14, minuto = meta.get("muertes14"), meta.get("minuto") or 0
+    if m14 is not None and 14 <= minuto < 25:  # tu regla que más pesa (≤ 2 muertes del 14 al 25), a la vista toda la fase
+        out.append((("▼ " if m14 > 2 else "") + f"Muertes 14–25: {m14}/2", ROSA if m14 > 2 else AMBAR if m14 == 2 else TXT))
     oro = meta.get("oro") or {}
     if oro.get("tu") is not None and oro.get("rival") is not None:  # oro en ítems (lo de Tab), redondeado: el detalle no cambia la decisión
         d = round((oro["tu"] - oro["rival"]) / 50) * 50

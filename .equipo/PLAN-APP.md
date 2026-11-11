@@ -45,6 +45,14 @@ Descartado a propósito: timers de campamentos (la API no avisa cuándo se limpi
 
 - Tier gratis intacto; de pago solo lo transformador (definido con los números de `plan-negocio.md`).
 
+## Números (de `plan-negocio.md`, revisado por Opus)
+
+- Infra: $0 hasta ~1 000 usuarios activos por día; luego Cloudflare $5/mes. Dominio racha.gg ~$55/año.
+- Firma del instalador: SignPath Foundation, $0 para código abierto (1–2 semanas de aprobación). Es la mejor relación costo-beneficio de la fase C.
+- Production key de Riot: $0; pide web con términos y privacidad (ya están) y prototipo funcionando.
+- Ingresos: membresía $3/mes o $25/año con 1–2 % de conversión NO da para vivir (≈110 000 usuarios activos para $2 500/mes). Lo realista: la app como embudo + coaching humano sobre los reportes de Racha y plan para academias. Empujar el plan anual (la comisión fija pesa ~17 % en $3).
+- Regla: no gastar ni cobrar antes de que la fase B muestre retención.
+
 ## Proceso de trabajo
 
 - Opus construye; DeepSeek investiga, revisa cada versión (bugs, seguridad), escribe pruebas de borde y docs; un constructor Sonnet en worktree para piezas aisladas.

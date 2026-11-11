@@ -22,6 +22,14 @@ class TestPartes(unittest.TestCase):
         self.assertEqual(dict(overlay.partes({**META, "oro": {"tu": 10, "rival": 0}}, 1000.0))["Oro +0"], overlay.TXT)  # parejo: sin ▼
         self.assertFalse(any(x.startswith(("Oro", "▼ Oro")) for x, _ in overlay.partes({**META, "oro": {"tu": 100, "rival": None}}, 1000.0)))
 
+    def test_regla_muertes_14_25(self):  # A3: el contador solo del 14 al 25, ámbar en 2 y rosa con ▼ al pasarse
+        c = lambda m, minuto: dict(overlay.partes({**META, "muertes14": m, "minuto": minuto}, 1000.0))
+        self.assertEqual(c(1, 15)["Muertes 14–25: 1/2"], overlay.TXT)
+        self.assertEqual(c(2, 20)["Muertes 14–25: 2/2"], overlay.AMBAR)
+        self.assertEqual(c(3, 24)["▼ Muertes 14–25: 3/2"], overlay.ROSA)
+        self.assertFalse(any("Muertes" in x for x in c(3, 26)))
+        self.assertFalse(any("Muertes" in x for x in c(None, 10)))
+
     def test_sin_datos(self):
         self.assertEqual(overlay.partes(None, 0), [])
         self.assertEqual([x for x, _ in overlay.partes({"objetivos": {}}, 0)], [])
