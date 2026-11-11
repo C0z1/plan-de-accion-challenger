@@ -15,7 +15,7 @@ class AvisoNivelBordes(unittest.TestCase):
     def test_limites_300_y_420_si_avisan(self):
         for t in (300.0, 420.0):
             d = foto(); d["gameData"]["gameTime"] = t
-            self.assertIn("No tradees hasta igualar", companion.aviso_nivel(d))
+            self.assertIn("no tradear hasta igualar", companion.aviso_nivel(d))
 
     def test_dos_rivales_misma_position_toma_el_primero(self):
         d = foto()

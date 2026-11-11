@@ -257,4 +257,31 @@ class HistorialAvisos(unittest.TestCase):  # F8: todos los consejos de la partid
 
 
 
+
+class AvisoEnFranja(unittest.TestCase):  # F1: el corto sale en la franja 12 s; ≥ 90 s entre avisos y ≤ 6 por partida
+    def setUp(self): self.viejo = dict(w.ESTADO); w.ESTADO.update(avisos=[], aviso=None)
+    def tearDown(self): w.ESTADO.clear(); w.ESTADO.update(self.viejo)
+
+    def test_limites_y_pieza(self):
+        import overlay
+        av = lambda t: w.evento(("aviso", {"texto": "largo " + t, "corto": t, "tipo": "consejo", "minuto": 10}))
+        with mock.patch.object(w.time, "time", lambda: 1000.0): av("A")
+        self.assertEqual(w.ESTADO["aviso"]["franja"], 1000.0)
+        self.assertEqual(overlay.pieza_aviso(w.ESTADO["aviso"], 1011.0), ("A", overlay.AMBAR))
+        self.assertIsNone(overlay.pieza_aviso(w.ESTADO["aviso"], 1012.0))  # a los 12 s se va
+        with mock.patch.object(w.time, "time", lambda: 1050.0): av("B")  # 50 s después: queda en el historial, no en la franja
+        self.assertNotIn("franja", w.ESTADO["aviso"]); self.assertEqual(len(w.ESTADO["avisos"]), 2)
+        for i in range(8):
+            with mock.patch.object(w.time, "time", lambda: 1200.0 + 100 * i): av(f"C{i}")
+        self.assertEqual(sum(1 for a in w.ESTADO["avisos"] if a.get("franja")), 6)  # tope por partida
+        self.assertIsNone(overlay.pieza_aviso({"texto": "x", "tipo": "consejo"}, 0))  # sin corto: nada
+
+    def test_avisos_reales_traen_corto(self):
+        import companion_gui as g, companion
+        e = g.aviso(companion.Texto("largo", "corto"), "consejo", 5)[1]
+        self.assertEqual((e["texto"], e["corto"]), ("largo", "corto"))
+        self.assertIsNone(g.aviso("error de red")[1]["corto"])
+
+
+
 if __name__ == "__main__": unittest.main()

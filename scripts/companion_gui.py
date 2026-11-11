@@ -182,7 +182,7 @@ POST = []  # el hilo post-partida vivo, si hay
 
 def aviso(texto, tipo="error", minuto=None):
     """Evento de aviso para la cola: {texto, tipo: consejo (en partida) | error, minuto de juego o None} (pedido del Diseñador)."""
-    return ("aviso", {"texto": texto, "tipo": tipo, "minuto": minuto})
+    return ("aviso", {"texto": str(texto), "tipo": tipo, "minuto": minuto, "corto": getattr(texto, "corto", None)})  # corto: para la franja (F1)
 
 
 def post_partida(q):

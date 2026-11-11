@@ -35,6 +35,15 @@ def draft_json(pos, recs):
     return {"pos": pos, "recs": out}
 
 
+AVISO_ENTRE, AVISO_MAX = 90, 6  # F1: separación mínima entre avisos en la franja y tope por partida
+
+
+def franja_libre(previos, ahora):
+    """¿Puede salir otro aviso en la franja? Como mucho AVISO_MAX por partida y AVISO_ENTRE s desde el último que salió."""
+    salidos = [a["franja"] for a in previos if a.get("franja")]
+    return len(salidos) < AVISO_MAX and (not salidos or ahora - max(salidos) >= AVISO_ENTRE)
+
+
 def evento(e):
     """Aplica un evento de la cola (los mismos que App.evento de companion_gui) al estado."""
     tipo, s = e[0], {}
@@ -61,7 +70,10 @@ def evento(e):
     elif tipo == "crono": s = {"crono": e[1]}
     elif tipo == "aviso":  # F8: los consejos de la partida se guardan todos (el nuevo ya no borra al anterior)
         s = {"aviso": e[1]}
-        if e[1].get("tipo") == "consejo": s["avisos"] = (ESTADO.get("avisos") or []) + [e[1]]
+        if e[1].get("tipo") == "consejo":
+            if e[1].get("corto") and franja_libre(ESTADO.get("avisos") or [], time.time()):  # F1: a la franja, sin saturarla
+                s["aviso"] = {**e[1], "franja": time.time()}
+            s["avisos"] = (ESTADO.get("avisos") or []) + [s["aviso"]]
     elif tipo == "pos": s = {"pos": e[1]}  # champ select antes de ver al rival: la ventana Draft
     with LOCK: ESTADO.update(s, v=ESTADO["v"] + 1)
 

@@ -62,8 +62,8 @@ class Validador(unittest.TestCase):
         self.assertTrue(replay.validar([reg(10, d=foto(10, eventos=[ev], muertes=2))]))
 
     def test_aviso_fuera_de_ventana(self):
-        self.assertTrue(replay.validar([reg(0, avisos=[("aviso_nivel", "x", 9)])]))
-        self.assertEqual(replay.validar([reg(0, avisos=[("aviso_nivel", "x", 6)])]), [])
+        self.assertTrue(replay.validar([reg(0, avisos=[("aviso_nivel", companion.Texto("x", "x"), 9)])]))
+        self.assertEqual(replay.validar([reg(0, avisos=[("aviso_nivel", companion.Texto("x", "x"), 6)])]), [])
 
     def test_linea_fuera_de_classic(self):
         self.assertTrue(replay.validar([reg(0, ["CS 3 vs 4"], d=foto(0, modo="ARAM"))]))

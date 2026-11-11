@@ -54,7 +54,7 @@ class Flujo(unittest.TestCase):
         self.assertIn("Recomendación: ", out)
         self.assertEqual((len(vivos), len(fotos)), (1, 3), out)  # una foto por sondeo de InProgress, un archivo
         self.assertEqual(json.loads(fotos[0])["gameData"]["gameTime"], json.loads(foto)["gameData"]["gameTime"])
-        self.assertEqual(out.count("No tradees"), 1)  # aviso de nivel una vez
+        self.assertEqual(out.count("no tradear hasta igualar"), 1)  # aviso de nivel una vez
         self.assertEqual(cmds, ["descargar.py", "revision.py"])  # post-partida una vez
         self.assertIn("| Win rate |", out)  # revision.py 1 corrió y salió su tabla
         self.assertNotIn("Traceback", out); self.assertNotIn("Error (sigo)", out)

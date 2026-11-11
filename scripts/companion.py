@@ -215,6 +215,13 @@ def completos(p, leg=None):
     return [i.get("displayName") or "" for i in (p or {}).get("items") or [] if str(i.get("itemID")) in leg]
 
 
+class Texto(str):
+    """Un aviso: el texto largo (En vivo, después de la partida) y `corto` (≤ 48 caracteres, para la franja). Hecho + tu regla,
+    sin órdenes: Riot no quiere «drawing conclusions for you during gameplay» (textos de DeepSeek, avisos-v011.md)."""
+    def __new__(cls, largo, corto):
+        t = super().__new__(cls, largo); t.corto = corto[:48]; return t
+
+
 def aviso_pico(d, leg=None):
     """Pico de poder del rival de línea: cuando termina un ítem completo y ya tiene más que tú → (clave, texto); si no, None.
     La clave («pico:<n>:<ítem>») hace que cada ítem avise una sola vez. Solo con lo que se ve con Tab."""
@@ -225,8 +232,10 @@ def aviso_pico(d, leg=None):
     if len(suyos) <= len(mios): return None
     t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
     n = len(suyos)
-    return (f"pico:{n}:{suyos[-1]}", f"Min {int(t // 60)}: {rival.get('championName', 'tu rival')} terminó {suyos[-1]} ({n} ítem{'s' if n > 1 else ''} completo{'s' if n > 1 else ''} contra "
-            f"{len(mios)} tuyo{'s' if len(mios) != 1 else ''}): ahora pega más. No pelees sin ventaja hasta tener el tuyo; farmea y espera a tu jungla.")
+    r, m = rival.get('championName', 'tu rival'), len(mios)
+    return (f"pico:{n}:{suyos[-1]}", Texto(f"Min {int(t // 60)}: {r} terminó {suyos[-1]}: {n} ítem{'s' if n > 1 else ''} completo{'s' if n > 1 else ''} contra {m} "
+                                          f"tuyo{'s' if m != 1 else ''}. Tu regla: no pelear sin ventaja hasta tener el tuyo.",
+                                          f"{r} {n} ítem{'s' if n > 1 else ''} vs {m} tuyo{'s' if m != 1 else ''}"))
 
 
 def oro_lineas(d, me, rival, pr=None):
@@ -276,8 +285,9 @@ def aviso_nivel(d):
     if not 300 <= t <= 420: return None
     me, rival = yo_rival(d)
     if not rival or (n := (rival.get("level") or 0) - (me.get("level") or 0)) < 1: return None  # level puede venir null
-    return (f"Min {int(t // 60)}: vas {n} nivel{'es' if n > 1 else ''} abajo de {rival.get('championName', 'tu rival')} "
-            f"({me.get('level') or '?'} contra {rival.get('level') or '?'}). No tradees hasta igualar; quédate en rango de XP de cada oleada.")
+    r, nv = rival.get('championName', 'tu rival'), f"{n} nivel{'es' if n > 1 else ''}"
+    return Texto(f"Min {int(t // 60)}: vas {nv} abajo de {r} ({me.get('level') or '?'} contra {rival.get('level') or '?'}). "
+                 "Tu regla: no tradear hasta igualar y quedarte en rango de XP.", f"Vas {nv} abajo de {r}")
 
 
 REGRESO_DESDE, REGRESO_HASTA = 600, 840  # min 10 al 14: aún hay tiempo de igualar antes de la ventana de objetivos del 14
@@ -293,8 +303,9 @@ def aviso_regreso(d):
     if not rival or (n := (rival.get("level") or 0) - (me.get("level") or 0)) < 1: return None
     dcs = ((rival.get("scores") or {}).get("creepScore") or 0) - ((me.get("scores") or {}).get("creepScore") or 0)
     farm = f" y {dcs} CS" if dcs >= REGRESO_CS else ""
-    return (f"Min {int(t // 60)}: vas {n} nivel{'es' if n > 1 else ''}{farm} abajo de {rival.get('championName', 'tu rival')}. Juega seguro hasta igualar, "
-            "farmea bajo torre y no pelees el próximo objetivo sin tu jungla.")
+    r, nv = rival.get('championName', 'tu rival'), f"{n} nivel{'es' if n > 1 else ''}"
+    return Texto(f"Min {int(t // 60)}: vas {nv}{farm} abajo de {r}. Tu regla: jugar seguro, farmear y no pelear el próximo objetivo sin tu jungla.",
+                 f"Vas {nv} abajo de {r} · tu plan")
 
 
 def muertes14(d, me=None, hasta=float("inf")):
@@ -341,8 +352,8 @@ def aviso_muertes(d):
     en tus 282 partidas (datos/analisis-aviso-muertes-*.md; con línea y equipo ≥ 0 al 14, 82% contra 57%)."""
     t = ((d or {}).get("gameData") or {}).get("gameTime") or 0
     if not grieta(d) or not 840 <= t < 1500 or (n := muertes14(d) or 0) < 2: return None
-    return (f"Min {int(t // 60)}: {n} muertes desde el 14. Juega con objetivo: no pelees si no sale un dragón, heraldo o torre; "
-            "la meta es 2 o menos del 14 al 25.")
+    return Texto(f"Min {int(t // 60)}: {n} muertes desde el 14 (tu tope: 2). Tu regla: jugar con objetivo, no pelear si no sale un dragón, heraldo o torre.",
+                 f"{n} muertes desde el 14 · tu tope")
 
 
 CFG = DIR.parent / "config.json"  # opcional, como en revision.py
@@ -366,8 +377,8 @@ def aviso_minions(d, m10=None):
     if not me or me.get("championName") != m10["campeon"]: return None
     cs = (me.get("scores") or {}).get("creepScore") or 0
     if cs >= m10["minimo"]: return None
-    return (f"Min 10: llevas {cs} de CS con {m10['campeon']} (meta {m10['minimo']}+). "
-            "No roamees ni tradees a costa de oleadas hasta el 14.")
+    return Texto(f"Min 10: llevas {cs} de CS con {m10['campeon']} (tu meta: {m10['minimo']}). Tu regla: no roamear ni tradear a costa de oleadas hasta el 14.",
+                 f"{m10['campeon']} {cs} CS al 10 · tu meta")
 
 
 

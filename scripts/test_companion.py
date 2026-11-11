@@ -42,7 +42,7 @@ def foto(): return json.loads((FIX / "vivo" / "allgamedata.json").read_text(enco
 class AvisoNivel(unittest.TestCase):
     def test_abajo_de_tu_rival_de_linea(self):  # Ekko 5 contra Zed 6; Graves (aliado, 6) y Lee Sin (4) no cuentan
         txt = companion.aviso_nivel(foto())
-        self.assertIn("1 nivel abajo de Zed (5 contra 6)", txt); self.assertIn("No tradees hasta igualar", txt)
+        self.assertIn("1 nivel abajo de Zed (5 contra 6)", txt); self.assertIn("no tradear hasta igualar", txt)
 
     def test_nivel_igual_o_arriba_no_avisa(self):
         for lvl in (6, 7):
@@ -68,7 +68,7 @@ class AvisoNivel(unittest.TestCase):
     def test_minions_al_10(self):
         m10 = {"campeon": "Ekko", "minimo": 69}
         d = foto(); d["gameData"]["gameTime"] = 610; d["allPlayers"][0]["scores"]["creepScore"] = 60
-        self.assertIn("llevas 60 de CS con Ekko (meta 69+)", companion.aviso_minions(d, m10))
+        self.assertIn("llevas 60 de CS con Ekko (tu meta: 69)", companion.aviso_minions(d, m10))
         d["allPlayers"][0]["scores"]["creepScore"] = 69
         self.assertIsNone(companion.aviso_minions(d, m10))  # en la meta: no avisa
         d["allPlayers"][0]["scores"]["creepScore"] = None
@@ -161,7 +161,7 @@ class AvisoNivel(unittest.TestCase):
         try:
             with self.assertRaises(StopIteration), contextlib.redirect_stdout(out): companion.main([])
         finally: companion.lcu, companion.vivo, companion.capturar, companion.time.sleep, companion.time.time = orig
-        self.assertEqual(out.getvalue().count("No tradees"), 2)  # 1 en la primera partida, 1 en la segunda
+        self.assertEqual(out.getvalue().count("no tradear hasta igualar"), 2)  # 1 en la primera partida, 1 en la segunda
 
 
 class Rango(unittest.TestCase):
@@ -307,7 +307,7 @@ class Robusto(unittest.TestCase):
     def test_reinicio_a_media_partida_sigue_la_misma(self):
         out = self.bucle(["InProgress", None, None, None, "InProgress", "EndOfGame", None, "EndOfGame", "Lobby"])
         self.assertEqual(set(self.archivos[:5]), {"archivo0"})  # sigue grabando en el mismo archivo con el cliente caído
-        self.assertEqual(out.count("No tradees"), 1)  # el aviso no se repite tras el reinicio
+        self.assertEqual(out.count("no tradear hasta igualar"), 1)  # el aviso no se repite tras el reinicio
         self.assertEqual(self.posts, [1])  # reinicio en EndOfGame: no baja la partida dos veces
         self.assertEqual(self.esperas, [3, 6, 12, 24, 3, 3, 6, 3, 3])
 

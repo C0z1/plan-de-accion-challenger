@@ -7,7 +7,11 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import companion, overlay
 
 MAX_PIEZAS = 4  # plan F6: piezas de franja (el aviso va aparte, 1 a la vez)
-LISTA_NEGRA = ("cooldown", "enfriamiento", "flash", "mmr", "elo", "campamento")  # placeholder: lo que la franja y los avisos nunca dicen
+AVISO_CORTO = 48  # plan F1: caracteres del aviso en la franja
+LISTA_NEGRA = (  # lo que la franja y los avisos nunca dicen (lista de DeepSeek, avisos-v011.md); se busca como palabra completa
+    "cooldown", "enfriamiento", "flash", "destello", "ultimate", "definitiva", "smite", "castigo",  # timers que no se ven
+    "respawn", "reaparece", "mmr", "elo", "probabilidad", "campamento",  # reaparición rival, rating, conclusiones, jungla
+    "el jungla está", "el jungla va", "troll", "inting", "afk")  # posiciones que no ves y juicios de compañeros
 VENTANAS = {"aviso_nivel": (5, 7), "aviso_regreso": (10, 14), "aviso_muertes": (14, 24), "aviso_minions": (10, 11)}  # minuto de juego; el pico no tiene ventana
 PIEZAS_LINEA = re.compile(r"^(▼ )?(Nv|CS|Oro)\b")
 BORRAR = {"rawDescription", "rawDisplayName", "rawChampionName", "rawSkinName", "skinID", "skinName", "fullRunes", "runes",
@@ -71,7 +75,7 @@ def repetir(fotos, aj=None):
 
 
 def texto(r):
-    return f"{reloj(r['t'])} | franja: {' · '.join(x[0] for x in r['franja'])} | aviso: {' / '.join(a[1] for a in r['avisos'])}"
+    return f"{reloj(r['t'])} | franja: {' · '.join(x[0] for x in r['franja'])} | aviso: {' / '.join(getattr(a[1], 'corto', a[1]) for a in r['avisos'])}"
 
 
 def _eventos(d): return ((d or {}).get("events") or {}).get("Events") or []
@@ -84,13 +88,15 @@ def validar(rs):
         t = reloj(r["t"])
         if len(r["franja"]) > MAX_PIEZAS: f.append(f"{t}: {len(r['franja'])} piezas en la franja (máx. {MAX_PIEZAS})")  # (a)
         if len(r["avisos"]) > 1: f.append(f"{t}: {len(r['avisos'])} avisos a la vez (máx. 1)")
+        for clave, txt, _ in r["avisos"]:  # F1: lo que sale en la franja cabe de reojo
+            if len(getattr(txt, "corto", "") or "") > AVISO_CORTO or not getattr(txt, "corto", None): f.append(f"{t}: aviso {clave} sin corto de ≤ {AVISO_CORTO} caracteres")
         for clave, _, minuto in r["avisos"]:  # (d)
             lo, hi = VENTANAS.get(clave, (0, 10 ** 6))
             if not lo <= minuto <= hi: f.append(f"{t}: aviso {clave} fuera de su ventana {lo}-{hi} (min {minuto})")
         if r["d"]["gameData"].get("gameMode", "CLASSIC") != "CLASSIC":  # (e)
             f += [f"{t}: pieza de línea «{x[0]}» fuera de CLASSIC" for x in r["franja"] if PIEZAS_LINEA.match(x[0])]
-        for txt in [x[0] for x in r["franja"]] + [a[1] for a in r["avisos"]]:  # (f)
-            if mal := [w for w in LISTA_NEGRA if w in txt.lower()]: f.append(f"{t}: palabra prohibida {mal} en «{txt}»")
+        for txt in [x[0] for x in r["franja"]] + [a[1] for a in r["avisos"]] + [getattr(a[1], "corto", "") or "" for a in r["avisos"]]:  # (f)
+            if mal := [w for w in LISTA_NEGRA if re.search(r"\b" + re.escape(w) + r"\b", txt.lower())]: f.append(f"{t}: palabra prohibida {mal} en «{txt}»")
         if i:  # (b) un objetivo no muere antes de que su cuenta llegue a 0
             ant = rs[i - 1]; previos = {(e.get("EventID"), e.get("EventTime")) for e in _eventos(ant["d"])}
             for e in _eventos(r["d"]):

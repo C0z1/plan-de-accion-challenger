@@ -5,10 +5,17 @@ completa exclusiva. Sin dependencias: tkinter + ctypes."""
 import time
 
 BG, TXT, ROSA, AMBAR = "#1A0C13", "#F2F4F7", "#F28DB0", "#F5C26B"
+AVISO_SEGUNDOS = 12  # F1: lo que dura el aviso corto en la franja (lo bastante para leer 8 palabras de reojo)
 
 
 def reloj(seg):
     seg = max(0, int(seg)); return f"{seg // 60}:{seg % 60:02d}"
+
+
+def pieza_aviso(aviso, ahora):
+    """F1: el aviso corto de la partida, los AVISO_SEGUNDOS que dura en la franja (la quinta pieza, siempre al final); o None."""
+    if not aviso or not aviso.get("franja") or not aviso.get("corto") or ahora - aviso["franja"] >= AVISO_SEGUNDOS: return None
+    return (aviso["corto"], AMBAR)
 
 
 def partes(meta, ahora, aj=None):
@@ -99,6 +106,7 @@ def correr(leer, seguir, x=0.22, y=6):
         encendido = (s.get("ajustes") or {}).get("overlay", True)  # Ajustes_Vino: «Siempre encima en partida»
         aj = s.get("ajustes") or {}
         ps = partes(s.get("meta"), time.time(), aj) if s.get("fase") == "InProgress" and encendido else []
+        if ps and (pa := pieza_aviso(s.get("aviso"), time.time())): ps = ps + [pa]  # el aviso corto, al final y por 12 s
         for w in fila.winfo_children(): w.destroy()
         for i, (t, c) in enumerate(ps):
             if i: tk.Label(fila, text="·", fg="#7A5A68", bg=BG, font=("Segoe UI", 11)).pack(side="left", padx=4)
