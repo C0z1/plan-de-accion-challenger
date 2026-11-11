@@ -318,7 +318,10 @@ def trabajador(q):
                 for _, txt, minuto in avs: q.put(aviso(txt, "consejo", minuto))
             elif not jugando: archivo = None; estado["avisado"] = set()
             if fase in FIN and real not in FIN:
-                if r := companion.resumen_fin(foto): q.put(("fin", r))  # sin key, esto es todo lo que hay al terminar
+                if r := companion.resumen_fin(foto):  # sin key, esto es lo que hay al terminar
+                    try: import postpartida; r = {**r, "momentos": [m["texto"] for m in postpartida.momentos_vivo(foto)]}  # F11: al instante
+                    except Exception: pass
+                    q.put(("fin", r))
                 foto = None; post_partida(q); m = None
             error = None
         except Exception:

@@ -69,8 +69,29 @@ def momentos(match, timeline, puuid):
     if not c: return []
     me, opp, ev, fr = c
     eq, objs = me["teamId"], _objetivos(ev)
+    cand = _candidatos(_muertes(me, ev, objs), objs, eq)
+    if opp:
+        try:
+            dif = [(f["timestamp"], f["participantFrames"][str(me["participantId"])]["totalGold"] - f["participantFrames"][str(opp["participantId"])]["totalGold"]) for f in fr]
+            for (_, a), (t, b) in zip(dif, dif[1:]):
+                if abs(b - a) >= SALTO_ORO:
+                    cand.append(dict(t=t // 1000, tipo="oro", impacto=round(abs(b - a) / ORO_POR_PUNTO, 1),
+                                     texto=f"Min {_mm(t)}: la diferencia de oro con tu rival de línea pasó de {a:+d} a {b:+d}."))
+        except (KeyError, TypeError):
+            pass
+    return _tres(cand)
+
+
+def _tres(cand):
+    """Los 3 de más impacto, en orden cronológico."""
+    top = sorted(cand, key=lambda m: (-m["impacto"], m["t"]))[:3]
+    return sorted(top, key=lambda m: m["t"])
+
+
+def _candidatos(muertes, objs, eq):
+    """Momentos posibles de tus muertes (con el objetivo rival que cayó después) y de los objetivos sueltos; t en ms."""
     cand, ligados = [], set()
-    for t, o in _muertes(me, ev, objs):
+    for t, o in muertes:
         if o:
             ligados.update(o)
             t2, ty = max(o, key=lambda x: VALOR[x[1]])
@@ -84,17 +105,40 @@ def momentos(match, timeline, puuid):
         mio = q == eq
         cand.append(dict(t=t // 1000, tipo="objetivo", impacto=VALOR[ty] + (0 if mio else 1),
                          texto=f"Min {_mm(t)}: tu equipo tomó {NOMBRE[ty]}." if mio else f"Min {_mm(t)}: el rival tomó {NOMBRE[ty]}."))
-    if opp:
-        try:
-            dif = [(f["timestamp"], f["participantFrames"][str(me["participantId"])]["totalGold"] - f["participantFrames"][str(opp["participantId"])]["totalGold"]) for f in fr]
-            for (_, a), (t, b) in zip(dif, dif[1:]):
-                if abs(b - a) >= SALTO_ORO:
-                    cand.append(dict(t=t // 1000, tipo="oro", impacto=round(abs(b - a) / ORO_POR_PUNTO, 1),
-                                     texto=f"Min {_mm(t)}: la diferencia de oro con tu rival de línea pasó de {a:+d} a {b:+d}."))
-        except (KeyError, TypeError):
-            pass
-    top = sorted(cand, key=lambda m: (-m["impacto"], m["t"]))[:3]
-    return sorted(top, key=lambda m: m["t"])
+    return cand
+
+
+VIVO_TIPO = {"BaronKill": "BARON_NASHOR", "HeraldKill": "RIFTHERALD", "HordeKill": "HORDE"}
+
+
+def momentos_vivo(d):
+    """F11: los 3 momentos clave AL INSTANTE, desde la última foto en vivo (sus eventos traen toda la partida), sin key ni
+    esperar a que Riot publique la partida. Sin vuelcos de oro: en vivo solo se ve el oro en ítems, que salta con cada compra."""
+    try:
+        import companion
+        me, _ = companion.yo_rival(d)
+        if not me: return []
+        ps, ev = (d or {}).get("allPlayers") or [], ((d or {}).get("events") or {}).get("Events") or []
+        eq = {n: p.get("team") for p in ps for n in (p.get("riotIdGameName"), p.get("summonerName"), (p.get("riotId") or "").split("#")[0]) if n}
+        eq.update({"Minion_T100": "ORDER", "Minion_T200": "CHAOS"})
+        mios = {me.get("riotIdGameName"), me.get("summonerName"), (me.get("riotId") or "").split("#")[0]} - {None, ""}
+        otro = {"ORDER": "CHAOS", "CHAOS": "ORDER"}
+        objs = []
+        for e in ev:
+            n, t, k = e.get("EventName"), int((e.get("EventTime") or 0) * 1000), str(e.get("KillerName") or "")
+            if n == "DragonKill": ty, q = ("ELDER_DRAGON" if e.get("DragonType") == "Elder" else "DRAGON"), eq.get(k)
+            elif n in VIVO_TIPO: ty, q = VIVO_TIPO[n], eq.get(k)
+            elif n in ("TurretKilled", "InhibKilled"):  # el dueño va en el nombre del edificio; lo toma el otro equipo
+                s = str(e.get(n) or ""); dueno = "ORDER" if "_TOrder_" in s else "CHAOS" if "_TChaos_" in s else None
+                ty, q = ("TOWER_BUILDING" if n == "TurretKilled" else "INHIBITOR_BUILDING"), otro.get(dueno)
+            else: continue
+            if q: objs.append((t, ty, q))
+        yo = me.get("team")
+        muertes = [(t, [(t2, ty) for t2, ty, q in objs if q != yo and t <= t2 <= t + VENTANA_OBJ])
+                   for t, e in ((int((e.get("EventTime") or 0) * 1000), e) for e in ev)
+                   if e.get("EventName") == "ChampionKill" and e.get("VictimName") in mios]
+        return _tres(_candidatos(muertes, objs, yo))
+    except (TypeError, ValueError, AttributeError): return []
 
 
 def _cargar(path):

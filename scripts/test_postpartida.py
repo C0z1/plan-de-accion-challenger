@@ -71,5 +71,30 @@ class SinObjetivo(unittest.TestCase):
     def test_sin_timeline(self):
         self.assertEqual(P.muertes_sin_objetivo(match(), None, "yo"), dict(n=0, total=0, ratio=None, lista=[]))
 
+
+class Vivo(unittest.TestCase):  # F11: los 3 momentos al instante desde la última foto en vivo (sin key)
+    def foto(self, eventos):
+        return {"activePlayer": {"riotId": "yo#1"}, "gameData": {"gameTime": 2000, "gameMode": "CLASSIC"},
+                "allPlayers": [{"riotId": "yo#1", "riotIdGameName": "yo", "position": "MIDDLE", "team": "ORDER"},
+                               {"riotId": "el#2", "riotIdGameName": "el", "position": "MIDDLE", "team": "CHAOS"}],
+                "events": {"Events": eventos}}
+
+    def test_muerte_con_objetivo_y_edificios(self):
+        ev = [{"EventName": "ChampionKill", "EventTime": 900.0, "KillerName": "el", "VictimName": "yo"},
+              {"EventName": "DragonKill", "EventTime": 920.0, "KillerName": "el", "DragonType": "Fire"},
+              {"EventName": "TurretKilled", "EventTime": 1000.0, "KillerName": "yo", "TurretKilled": "Turret_TChaos_L1_P3_1_0"},
+              {"EventName": "DragonKill", "EventTime": 1900.0, "KillerName": "el", "DragonType": "Elder"},
+              {"EventName": "ChampionKill", "EventTime": 300.0, "KillerName": "yo", "VictimName": "el"}]
+        ms = P.momentos_vivo(self.foto(ev))
+        self.assertEqual([m["t"] for m in ms], [900, 1000, 1900])
+        self.assertIn("moriste y 20 s después el rival tomó el dragón", ms[0]["texto"])
+        self.assertIn("tu equipo tomó una torre", ms[1]["texto"])
+        self.assertIn("el dragón anciano", ms[2]["texto"])
+
+    def test_sin_datos(self):
+        self.assertEqual(P.momentos_vivo(None), [])
+        self.assertEqual(P.momentos_vivo({"allPlayers": []}), [])
+        self.assertEqual(P.momentos_vivo(self.foto([])), [])
+
 if __name__ == "__main__":
     unittest.main()
