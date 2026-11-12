@@ -66,7 +66,7 @@ def evaluar(d, ahora):
         res("S7", "FALLA" if bool(s.get("pantalla_completa")) != pc and fase in ("ChampSelect", "InProgress") else "AVISO" if pc and jugando else "OK",
             pc, False, "LoL en pantalla completa: la franja no se ve" if pc else "")
     if (c := d.get("cpu")) is not None:
-        alto = c > 1.0 and (d.get("cpu_antes") or 0) > 1.0 and (d.get("edad_proceso") or 10 ** 6) >= ARRANQUE  # al arrancar precalcula: esperado
+        alto = c > 1.0 and (d.get("cpu_antes") or 0) > 1.0 and (10 ** 6 if d.get("edad_proceso") is None else d["edad_proceso"]) >= ARRANQUE  # al arrancar precalcula: esperado
         res("S8", "FALLA" if alto or (d.get("rss_mb") or 0) > 200 else "AVISO" if c > 1.0 else "OK", {"cpu": round(c, 2), "rss_mb": d.get("rss_mb")}, {"cpu": 1.0, "rss_mb": 200})
     if jugando and v and v[0] and v[0] > 60 and (g := d.get("grabacion")) is not None:  # S9: [edad del .jsonl más nuevo, archivos nuevos en esta partida]
         res("S9", "FALLA" if g[0] is None or g[0] > 45 or g[1] > 1 else "OK", g, [45, 1], "" if g[0] is not None and g[0] <= 45 and g[1] <= 1 else "la grabación se atrasó o se partió")

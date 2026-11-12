@@ -19,8 +19,10 @@ def main(args, lcu=c.lcu, escribir=c.lcu_escribir, dormir=time.sleep):
     seco = "--seco" in args; args = [a for a in args if a != "--seco"]
     w = (lambda m, p, b=None: print("seco:", m, p) or True) if seco else escribir
     if args in (["salir"], ["reconectar"]):  # solo una partida de práctica: en una partida real early-exit sería abandonar
-        modo = (((lcu("/lol-gameflow/v1/session") or {}).get("gameData") or {}).get("queue") or {}).get("gameMode")
+        s = lcu("/lol-gameflow/v1/session") or {}
+        modo, fase = ((s.get("gameData") or {}).get("queue") or {}).get("gameMode"), s.get("phase")
         if modo != "PRACTICETOOL": print("no toco la partida: es", modo); return False
+        if fase not in ("InProgress", "Reconnect"): print("no toco nada en fase", fase); return False
         return w("POST", "/lol-gameflow/v1/early-exit" if args == ["salir"] else "/lol-gameflow/v1/reconnect")
     champ = int(args[0]) if args else 245
     fase = lcu("/lol-gameflow/v1/gameflow-phase"); print("fase", fase)

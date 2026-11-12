@@ -91,3 +91,6 @@ Opus toca `scripts/*.py` salvo `test_ds_*`; DeepSeek toca `scripts/test_ds_*.py`
 - LCU de escritura: solo en `dev_practica.py` (no se distribuye) y solo Practice Tool. Nunca colas ranked/normales, aceptar partida ni pick/ban desde Racha.
 - El chequeo no cura; nada de `datos/` se sube ni se manda crudo a DeepSeek.
 - No hacer: piezas nuevas, watchdog que reinicie Racha, dependencias nuevas, release o push sin permiso, emojis en docs públicas.
+
+## Ronda 3 (ver PLAN-ENVIVO-3.md)
+- Hallazgo 15 aceptado: con el juego colgado y el mismo `gameTime`, la franja queda congelada como en pausa; si el juego deja de responder, `visible()` la oculta a los 30 s y S3 lo marca.

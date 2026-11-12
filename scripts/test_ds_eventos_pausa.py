@@ -2,7 +2,7 @@
 (expectedFailure); cuando Opus los implemente se les quita el decorador.
 unir_eventos(d, previos): d con events.Events unidos por clave (EventName, EventTime); previos = la foto o lista de eventos previa.
 Se asume que `previos` es una foto completa (dict con events.Events); si Opus elige otra forma, ajustar _previos()."""
-import copy, unittest
+import copy, json, unittest
 
 import companion, overlay
 
@@ -34,6 +34,11 @@ def unir():
 
 
 def nombres(d): return [(e["EventName"], e["EventTime"]) for e in d["events"]["Events"]]
+
+
+def clave(e):
+    """Clave de dedupe del cambio pedido: el evento completo menos EventID."""
+    return json.dumps({k: v for k, v in sorted(e.items()) if k != "EventID"}, sort_keys=True)
 
 
 class UnirEventos(unittest.TestCase):
@@ -77,6 +82,64 @@ class UnirEventos(unittest.TestCase):
         previa = copy.deepcopy(PREVIA)
         unir()(copy.deepcopy(TRAS_RECONNECT), previa)
         self.assertEqual(previa, PREVIA)
+
+
+    def test_dos_kills_del_mismo_tick_se_conservan_ambos(self):
+        """Falla hoy: la clave es solo (EventName, EventTime) y descarta el segundo kill del mismo tick."""
+        k1 = {"EventName": "ChampionKill", "EventTime": 900.0, "VictimName": YO, "KillerName": RIVAL, "EventID": 1}
+        k2 = {"EventName": "ChampionKill", "EventTime": 900.0, "VictimName": RIVAL, "KillerName": YO, "EventID": 2}
+        previa = foto([GS0, k1, k2])
+        d = foto([{"EventName": "GameStart", "EventTime": 500.0}, {**k1, "EventID": 99}])
+        kills = [e for e in unir()(d, previa)["events"]["Events"] if e["EventName"] == "ChampionKill"]
+        self.assertEqual(len(kills), 2)
+        self.assertEqual({k["VictimName"] for k in kills}, {YO, RIVAL})
+
+
+    def test_sin_reinicio_devuelve_la_lista_identica_y_en_su_orden(self):
+        """Falla hoy: siempre ordena por EventTime aunque no hubo reinicio."""
+        evs = [MUERTE2, GS0, DRAGON, MUERTE1]  # desordenada, sin GameStart > 0 y con tantos eventos como PREVIA (menos eventos contaría como reinicio)
+        d = foto(evs); original = d["events"]["Events"]
+        out = unir()(d, copy.deepcopy(PREVIA))
+        self.assertIs(out, d); self.assertIs(out["events"]["Events"], original)
+        self.assertEqual([(e["EventName"], e["EventTime"]) for e in out["events"]["Events"]],
+                         [(e["EventName"], e["EventTime"]) for e in evs])
+
+
+    def test_reinicio_solo_por_menos_eventos_une(self):
+        """Menos eventos que previos cuenta como reinicio aunque no haya GameStart > 0."""
+        previa = foto([GS0, DRAGON, MUERTE1])
+        d = foto([GS0, DRAGON])
+        n = unir()(copy.deepcopy(d), copy.deepcopy(previa))
+        self.assertEqual(sorted(clave(e) for e in n["events"]["Events"]),
+                         sorted(clave(e) for e in [GS0, DRAGON, MUERTE1]))
+
+
+    def test_doble_reconexion_no_duplica(self):
+        """Unir la foto cruda dos veces no repite eventos."""
+        previa = foto([GS0, DRAGON, MUERTE1])
+        cruda = foto([{"EventName": "GameStart", "EventTime": 500.0}, MUERTE1])
+        dos = unir()(copy.deepcopy(cruda), unir()(copy.deepcopy(cruda), copy.deepcopy(previa)))
+        self.assertEqual(len(dos["events"]["Events"]), 3)
+        self.assertEqual(len({clave(e) for e in dos["events"]["Events"]}), 3)
+
+
+    def test_gamestart_cero_previo_y_dragon_nuevo(self):
+        """GameStart@0 previo se conserva y el DragonKill del reinicio se suma."""
+        previa = foto([GS0])
+        d = foto([{"EventName": "GameStart", "EventTime": 500.0}, {"EventName": "DragonKill", "EventTime": 520.0, "KillerName": "Yo"}])
+        n = unir()(copy.deepcopy(d), copy.deepcopy(previa))
+        self.assertEqual([(e["EventName"], e["EventTime"]) for e in n["events"]["Events"]],
+                         [("GameStart", 0.0), ("DragonKill", 520.0)])
+
+
+    def test_otra_partida_queda_intacta(self):
+        """t(previos) > t(d): otra partida, d se devuelve sin tocar."""
+        previa = foto([GS0, DRAGON, MUERTE1], t=1100)
+        d = foto([GS0, MUERTE2], t=1000); original = d["events"]["Events"]
+        out = unir()(d, copy.deepcopy(previa))
+        self.assertIs(out, d); self.assertIs(out["events"]["Events"], original)
+        self.assertEqual([(e["EventName"], e["EventTime"]) for e in original],
+                         [("GameStart", 0.0), ("ChampionKill", 1000.0)])
 
 
 class Pausa(unittest.TestCase):

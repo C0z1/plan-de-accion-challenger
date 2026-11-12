@@ -157,16 +157,19 @@ def grieta(d):
 
 
 def unir_eventos(d, previos):
-    """Tras Reconnect la Live API reinicia events.Events (solo un GameStart con la hora de la reconexión): se le suman los
-    eventos de la foto anterior de la MISMA partida (su gameTime no es mayor), por clave (EventName, EventTime); los ID
-    vuelven a empezar y chocarían. Sin reinicio no cambia nada. Devuelve d (modificada); nunca toca `previos`."""
+    """Tras Reconnect la Live API reinicia events.Events (un GameStart con la hora de la reconexión, o menos eventos que
+    antes): se le suman los de la foto anterior de la MISMA partida (su gameTime no es mayor). La clave es el evento sin
+    EventID (los ID vuelven a empezar), así dos muertes del mismo tick no se pisan. Sin reinicio, d queda intacta.
+    Devuelve d (modificada); nunca toca `previos`."""
     ev = lambda x: ((x or {}).get("events") or {}).get("Events")
     t = lambda x: ((x or {}).get("gameData") or {}).get("gameTime") or 0
     if not d or not isinstance(ev(d), list) or not ev(previos) or t(previos) > t(d): return d  # otra partida: nada que unir
-    nuevos = [e for e in ev(d) if not (e.get("EventName") == "GameStart" and (e.get("EventTime") or 0) > 0)]
-    vistos = {(e.get("EventName"), e.get("EventTime")) for e in nuevos}
-    d["events"]["Events"] = sorted([e for e in ev(previos) if (e.get("EventName"), e.get("EventTime")) not in vistos] + nuevos,
-                                   key=lambda e: e.get("EventTime") or 0)
+    reinicio = lambda e: e.get("EventName") == "GameStart" and (e.get("EventTime") or 0) > 0
+    if not any(map(reinicio, ev(d))) and len(ev(d)) >= len(ev(previos)): return d
+    clave = lambda e: tuple(sorted((k, str(v)) for k, v in e.items() if k != "EventID"))
+    nuevos = [e for e in ev(d) if not reinicio(e)]
+    vistos = {clave(e) for e in nuevos}
+    d["events"]["Events"] = sorted([e for e in ev(previos) if clave(e) not in vistos] + nuevos, key=lambda e: e.get("EventTime") or 0)
     return d
 
 

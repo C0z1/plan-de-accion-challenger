@@ -71,7 +71,7 @@ def elegir(c, minuto):
     elif minuto < 14: prio = ["regla", "oro", "cs", "dragon"] + (["nivel"] if c.get("abajo_nv") else [])
     elif minuto < 25: prio = ["regla", "dragon"] + (["baron"] if pronto("baron", 180) else []) + ["oro_equipo"]
     else: prio = (["baron"] if pronto("baron", 180) else []) + ["dragon", "oro_equipo"]
-    elegidas = [k for k in prio if k in c][:MAX_PIEZAS]
+    elegidas = [k for k in prio if k in c][:MAX_PIEZAS] or [k for k in ("dragon", "baron") if k in c][:1]  # sin rival (práctica, línea apagada): el próximo objetivo, no una franja vacía
     return [c[k] for k in ORDEN if k in elegidas]
 
 

@@ -157,6 +157,18 @@ class S7aS9(unittest.TestCase):
         self.assertEqual(nivel(sano(cpu=1.5, cpu_antes=None, rss_mb=100), "S8"), "AVISO")  # primera pasada
         self.assertIsNone(nivel(sano(cpu=None), "S8"))
 
+    def test_s8_edad_proceso_cero_cuenta_como_recien_arrancado(self):
+        """edad_proceso 0 es recién arrancado: dos pasadas altas es AVISO, no FALLA."""
+        self.assertEqual(nivel(sano(cpu=1.5, cpu_antes=1.5, rss_mb=100, edad_proceso=0), "S8"), "AVISO")
+
+    def test_s8_edad_proceso_none_cuenta_como_viejo(self):
+        """edad_proceso None (sin medir) cuenta como viejo: dos pasadas altas es FALLA."""
+        self.assertEqual(nivel(sano(cpu=1.5, cpu_antes=1.5, rss_mb=100, edad_proceso=None), "S8"), "FALLA")
+
+    def test_s8_edad_proceso_200_cuenta_como_viejo(self):
+        """edad_proceso 200 >= ARRANQUE: dos pasadas altas es FALLA."""
+        self.assertEqual(nivel(sano(cpu=1.5, cpu_antes=1.5, rss_mb=100, edad_proceso=200), "S8"), "FALLA")
+
     def test_rss_200_justo_ok_y_201_falla(self):
         self.assertEqual(nivel(sano(cpu=0.1, rss_mb=200), "S8"), "OK")
         self.assertEqual(nivel(sano(cpu=0.1, rss_mb=201), "S8"), "FALLA")
