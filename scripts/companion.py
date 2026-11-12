@@ -13,7 +13,43 @@ import argparse, base64, http.client, json, os, pathlib, ssl, subprocess, sys, t
 
 sys.stdout.reconfigure(encoding="utf-8")
 DIR = pathlib.Path(__file__).resolve().parent
-LOCK = pathlib.Path(os.environ.get("LOL_LOCKFILE", r"C:\Riot Games\League of Legends\lockfile"))
+DEF_LOCK = pathlib.Path(r"C:\Riot Games\League of Legends\lockfile")
+LOCK = pathlib.Path(os.environ.get("LOL_LOCKFILE") or DEF_LOCK)
+_BUSCADO, AUTO = [0.0], [LOCK]  # cuándo se buscó por última vez · el lockfile que maneja _lock()
+
+
+def instalaciones():
+    """Carpetas donde puede estar LoL: la que anota el Riot Client y la del cliente abierto (2026-11-12: un amigo con LoL
+    en otro disco: Racha no veía su cliente y no cargaba nada)."""
+    try:
+        y = pathlib.Path(os.environ.get("PROGRAMDATA") or r"C:\ProgramData", "Riot Games", "Metadata", "league_of_legends.live",
+                         "league_of_legends.live.product_settings.yaml").read_text(encoding="utf-8", errors="replace")
+        for linea in y.splitlines():
+            if linea.strip().startswith("product_install_full_path:"):
+                yield pathlib.Path(linea.split(":", 1)[1].strip().strip('"').strip("'"))
+    except OSError: pass
+    try:  # el proceso del cliente (permiso mínimo: también si LoL corre como administrador)
+        import ctypes
+        from ctypes import wintypes
+        k, ps = ctypes.windll.kernel32, (wintypes.DWORD * 4096)(); n = wintypes.DWORD()
+        k.OpenProcess.restype = wintypes.HANDLE
+        if not ctypes.windll.psapi.EnumProcesses(ps, ctypes.sizeof(ps), ctypes.byref(n)): return
+        for pid in ps[:n.value // 4]:
+            if not (h := k.OpenProcess(0x1000, False, pid)): continue  # PROCESS_QUERY_LIMITED_INFORMATION
+            b, t = ctypes.create_unicode_buffer(1024), wintypes.DWORD(1024)
+            ok = k.QueryFullProcessImageNameW(h, 0, b, ctypes.byref(t)); k.CloseHandle(h)
+            if ok and pathlib.Path(b.value).name.lower() in ("leagueclient.exe", "leagueclientux.exe"): yield pathlib.Path(b.value).parent
+    except (ImportError, AttributeError, OSError): pass
+
+
+def _lock():
+    """El lockfile del cliente: el de siempre o, si no está, el de la instalación real (se busca a lo más cada 10 s)."""
+    global LOCK
+    if LOCK.exists() or os.environ.get("LOL_LOCKFILE") or LOCK != AUTO[0] or time.time() - _BUSCADO[0] < 10: return LOCK  # LOCK cambiado a mano (pruebas): no se toca
+    _BUSCADO[0] = time.time()
+    for d in instalaciones():
+        if (d / "lockfile").exists(): LOCK = AUTO[0] = d / "lockfile"; break
+    return LOCK
 POS = {"top": "TOP", "jungle": "JUNGLE", "middle": "MIDDLE", "bottom": "BOTTOM", "utility": "UTILITY"}
 FALLAS = (OSError, ValueError, http.client.HTTPException)  # HTTPException: respuesta cortada (IncompleteRead) si el cliente se cae
 SSL = ssl.create_default_context(); SSL.check_hostname = False; SSL.verify_mode = ssl.CERT_NONE  # cert propio del cliente, solo 127.0.0.1
@@ -22,7 +58,7 @@ SSL = ssl.create_default_context(); SSL.check_hostname = False; SSL.verify_mode 
 def lcu(path):
     """GET a la API local del cliente; None si el cliente está cerrado."""
     try:
-        _, _, port, pw, proto = LOCK.read_text().split(":")
+        _, _, port, pw, proto = _lock().read_text().split(":")
         auth = base64.b64encode(f"riot:{pw}".encode()).decode()
         req = urllib.request.Request(f"{proto}://127.0.0.1:{port}{path}", headers={"Authorization": f"Basic {auth}"})
         with urllib.request.urlopen(req, context=SSL, timeout=5) as r: return json.load(r)
@@ -32,7 +68,7 @@ def lcu(path):
 def lcu_escribir(metodo, path, cuerpo=None):
     """POST/PUT/DELETE a la API local del cliente; True si respondió 2xx. Solo la usa importar_runas (un clic del jugador)."""
     try:
-        _, _, port, pw, proto = LOCK.read_text().split(":")
+        _, _, port, pw, proto = _lock().read_text().split(":")
         auth = base64.b64encode(f"riot:{pw}".encode()).decode()
         req = urllib.request.Request(f"{proto}://127.0.0.1:{port}{path}", method=metodo, data=None if cuerpo is None else json.dumps(cuerpo).encode(),
                                      headers={"Authorization": f"Basic {auth}", "Content-Type": "application/json"})

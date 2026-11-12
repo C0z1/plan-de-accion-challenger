@@ -14,3 +14,4 @@ build/
 .playwright-mcp/
 backend/node_modules/
 backend/.wrangler/
+datos/edge/

@@ -1,171 +1,108 @@
-"""Ventana de Racha sin barra de título (pedido del usuario; opción B de DeepSeek, probada en Windows 11): la app sigue
-siendo una ventana de Edge --app, y aquí se le quita la barra de Windows con ctypes conservando el borde para
-redimensionar. Los botones y el arrastre los dibuja la página (Ventana_Vino) y llegan por POST /api/ventana.
-Todo es «si se puede»: fuera de Windows, o si no aparece la ventana, Racha queda con la barra normal."""
-import time
+"""Ventana de Racha: una ventana normal de Edge --app con perfil propio (datos/edge). Reescrita desde cero el 2026-11-12
+(plan de Fable): sin quitarle el marco ni recortarla, que fallaba en PCs ajenas (doble barra, franjas, ventanas huérfanas).
+- La barra es la de Windows, oscura con --force-dark-mode (probado en la PC del usuario).
+- El proceso de Edge es nuestro: lo encontramos por PID (no por título) y vive en un Job Object que lo mata cuando
+  Racha termina por cualquier motivo (salida, taskkill del instalador, actualización): nunca queda una ventana huérfana.
+Todo es «si se puede»: fuera de Windows o sin Edge, abrir() devuelve False y Racha usa el navegador."""
+import pathlib, shutil, subprocess, threading
 
-HWND = [None]  # la ventana de Racha ya sin barra, o None
-ARRIBA = [0]  # alto en px físicos de la barra de Edge con la ventana normal (lo que se recorta)
-MAXI = {}  # hwnd -> (rect normal, borde lado, borde abajo, rect maximizado): maximizada «a mano»
-CLASE_EDGE = "Chrome_WidgetWin_1"
-ACCIONES = ("minimizar", "maximizar", "cerrar", "arrastrar", "recortar")
+PROC = [None]  # el msedge.exe que lanzamos
+JOB = [None]  # handle del Job Object (se cierra solo al morir Racha, y con él Edge)
+LOCK = threading.Lock()  # abrir a mano y champ select a la vez: una sola ventana
+EDGES = (pathlib.Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
+         pathlib.Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"))
+
+
+def edge():
+    return shutil.which("msedge") or next((str(p) for p in EDGES if p.exists()), None)
 
 
 def _win():
-    """(user32, wintypes) o None fuera de Windows."""
+    """(ctypes, wintypes, user32, kernel32) o None fuera de Windows."""
     try:
         import ctypes
         from ctypes import wintypes
-        u = ctypes.windll.user32
+        return ctypes, wintypes, ctypes.windll.user32, ctypes.windll.kernel32
     except (ImportError, AttributeError, OSError): return None
-    u.GetWindowLongPtrW.restype = ctypes.c_ssize_t
-    u.GetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int]
-    u.SetWindowLongPtrW.restype = ctypes.c_ssize_t
-    u.SetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_ssize_t]
-    return ctypes, wintypes, u
 
 
-WS_CAPTION = 0x00C00000
+def viva():
+    return PROC[0] is not None and PROC[0].poll() is None
 
 
-def es_racha(u, ctypes, h, titulo="Racha"):
-    """¿h es una ventana visible de Edge cuyo título es exactamente `titulo`?"""
-    n = u.GetWindowTextLengthW(h)
-    if not n or not u.IsWindowVisible(h): return False
-    t = ctypes.create_unicode_buffer(n + 1); u.GetWindowTextW(h, t, n + 1)
-    c = ctypes.create_unicode_buffer(64); u.GetClassNameW(h, c, 64)
-    return t.value == titulo and c.value == CLASE_EDGE
-
-
-def buscar(titulo="Racha", con_barra=False):
-    """HWND visible de la ventana de Edge cuyo título es exactamente `titulo`, o None. con_barra: solo una que aún tenga la
-    barra de Windows, es decir, la recién abierta (si Racha se abre dos veces, la primera ya no la tiene: lo vio el usuario)."""
+def ventanas(pid):
+    """Ventanas visibles de nivel superior de ese proceso."""
     w = _win()
-    if not w: return None
-    ctypes, wintypes, u = w
+    if not w: return []
+    ctypes, wintypes, u, _ = w
     hallada = []
     def cb(h, _):
-        if es_racha(u, ctypes, h, titulo) and (not con_barra or u.GetWindowLongPtrW(h, -16) & WS_CAPTION): hallada.append(h)
+        p = wintypes.DWORD(); u.GetWindowThreadProcessId(h, ctypes.byref(p))
+        if p.value == pid and u.IsWindowVisible(h) and not u.GetWindow(h, 4): hallada.append(h)  # 4 = GW_OWNER: sin dueño
         return True
     u.EnumWindows(ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)(cb), 0)
-    return hallada[0] if hallada else None
+    return hallada
 
 
-def al_frente(titulo="Racha"):
-    """Si ya hay una ventana de Racha, la restaura y la trae al frente: True. Si no, False (hay que abrir una)."""
+def al_frente():
+    """Restaura y trae al frente nuestra ventana. False si no hay."""
     w = _win()
-    if not w or not (h := buscar(titulo)): return False
+    if not w or not viva() or not (hs := ventanas(PROC[0].pid)): return False
     u = w[2]
-    if u.IsIconic(h): u.ShowWindow(h, 9)
-    u.SetForegroundWindow(h)  # Windows puede negarlo si otro programa tiene el foco: la ventana igual queda restaurada
+    if u.IsIconic(hs[0]): u.ShowWindow(hs[0], 9)
+    u.SetForegroundWindow(hs[0])  # Windows puede negarlo si otro programa tiene el foco: igual queda restaurada
     return True
 
 
-def sin_marco(segundos=15, al_listo=None):
-    """Espera a que Edge abra la ventana de Racha y le quita la barra de título (deja WS_THICKFRAME: se redimensiona)."""
+def _al_job(pid):
+    """Mete el proceso de Edge en un Job con KILL_ON_JOB_CLOSE: si Racha muere, Edge también."""
     w = _win()
     if not w: return
-    _, _, u = w
-    fin = time.time() + segundos
-    while time.time() < fin and not (h := buscar(con_barra=True)): time.sleep(0.3)
-    if not h: return
-    GWL_STYLE = -16
-    u.SetWindowLongPtrW(h, GWL_STYLE, u.GetWindowLongPtrW(h, GWL_STYLE) & ~WS_CAPTION)
-    u.SetWindowPos(h, 0, 0, 0, 0, 0, 0x0027)  # NOMOVE | NOSIZE | NOZORDER | FRAMECHANGED
-    HWND[0] = h
-    if al_listo: al_listo()
+    ctypes, wintypes, _, k = w
+    class BASICA(ctypes.Structure): _fields_ = [("t1", ctypes.c_int64), ("t2", ctypes.c_int64), ("flags", wintypes.DWORD), ("a", ctypes.c_size_t),
+                                                ("b", ctypes.c_size_t), ("c", wintypes.DWORD), ("d", ctypes.c_size_t), ("e", wintypes.DWORD), ("f", wintypes.DWORD)]
+    class EXT(ctypes.Structure): _fields_ = [("basica", BASICA), ("io", ctypes.c_uint64 * 6), ("m", ctypes.c_size_t * 4)]
+    k.CreateJobObjectW.restype = k.OpenProcess.restype = wintypes.HANDLE
+    if not JOB[0]:
+        e = EXT(); e.basica.flags = 0x2000  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        j = k.CreateJobObjectW(None, None)
+        if not j or not k.SetInformationJobObject(j, 9, ctypes.byref(e), ctypes.sizeof(e)): return
+        JOB[0] = j
+    if (hp := k.OpenProcess(0x0101, False, pid)):  # PROCESS_SET_QUOTA | PROCESS_TERMINATE
+        k.AssignProcessToJobObject(JOB[0], hp); k.CloseHandle(hp)
 
 
-def recortar(alto_css, dpr):
-    """Edge dibuja su propia barra dentro de la ventana (quitar WS_CAPTION no basta: lo vio el usuario). La página mide
-    cuánto ocupa (outerHeight - innerHeight, en px CSS) y aquí se recorta esa franja de arriba con una región."""
-    w = _win()
-    if not w or not (0 < alto_css <= 80) or not (0.5 <= dpr <= 4): return False
-    ctypes, wintypes, u = w
-    h = objetivo(u, ctypes)
-    if not h: return False
-    try:  # Edge extiende el marco de DWM dentro de la ventana para su barra (con efecto vidrio) y esa zona ignora la
-        # región: sin esto queda una franja blanca vacía (probado en la PC del usuario, Windows 11)
-        class MARGINS(ctypes.Structure): _fields_ = [("l", ctypes.c_int), ("r", ctypes.c_int), ("t", ctypes.c_int), ("b", ctypes.c_int)]
-        d = ctypes.windll.dwmapi; d.DwmExtendFrameIntoClientArea(h, ctypes.byref(MARGINS(0, 0, 0, 0)))
-        ninguno = ctypes.c_int(1); d.DwmSetWindowAttribute(h, 38, ctypes.byref(ninguno), 4)  # DWMWA_SYSTEMBACKDROP_TYPE = sin vidrio
-        # sin el marco que Windows 11 dibuja sobre el rectángulo completo (se veía como un contorno y una línea encima de la
-        # región recortada; lo vio el usuario): sin color de borde, sin esquinas redondeadas y sin dibujo de marco
-        for attr, valor in ((34, ctypes.c_uint(0xFFFFFFFE)), (33, ctypes.c_int(1)), (2, ctypes.c_int(1))):
-            d.DwmSetWindowAttribute(h, attr, ctypes.byref(valor), 4)
-    except (AttributeError, OSError): pass
-    r = wintypes.RECT(); u.GetWindowRect(h, ctypes.byref(r))
-    arriba = round(alto_css * dpr)
-    if u.IsZoomed(h):  # maximizada por Windows (Win+↑, doble clic en el borde, snap): pasarla a la maximizada a mano
-        if ARRIBA[0]: maximizar(u, ctypes, wintypes, h)
+def abrir(url, perfil):
+    """Trae al frente la ventana de Racha o abre una (perfil propio: aparte del Edge del usuario). False sin Edge."""
+    with LOCK:
+        if al_frente(): return True
+        if not (e := edge()): return False
+        PROC[0] = subprocess.Popen([e, f"--app={url}", f"--user-data-dir={perfil}", "--force-dark-mode", "--disable-features=Translate,msEdgeTranslate", "--lang=es", "--window-size=1440,1024",
+                                    "--no-first-run", "--no-default-browser-check"])
+        _al_job(PROC[0].pid)
         return True
-    ARRIBA[0] = arriba
-    m = MAXI.get(h)
-    if m and (r.left, r.top, r.right, r.bottom) != m[3]: MAXI.pop(h); m = None  # la movieron o la achicaron: ya no está maximizada
-    caja = (m[1], arriba, r.right - r.left - m[1], r.bottom - r.top - m[2]) if m else (0, arriba, r.right - r.left, r.bottom - r.top)
-    rgn = ctypes.windll.gdi32.CreateRectRgn(*caja)  # maximizada, sin los bordes invisibles: no asoman en el otro monitor
-    u.SetWindowRgn(h, rgn, True)  # Windows se queda con la región: no se libera aquí
-    return True
 
 
-def caja_max(trabajo, lado, arriba, abajo):
-    """(x, y, ancho, alto) de la ventana para que, recortada, la página llene justo el área de trabajo del monitor: la barra
-    de Edge queda arriba, fuera de la pantalla. Con ShowWindow(3) Windows deja la barra de Edge dentro de la pantalla y
-    asoma encima de la nuestra (lo vio el usuario al maximizar, 2026-11-12)."""
-    izq, sup, der, inf = trabajo
-    return izq - lado, sup - arriba, der - izq + 2 * lado, inf - sup + arriba + abajo
+def cerrar():
+    if viva():
+        try: PROC[0].terminate()
+        except OSError: pass
 
 
-def maximizar(u, ctypes, wintypes, h):
-    """Alterna entre la ventana normal y la maximizada a mano (ver caja_max)."""
-    if h in MAXI:
-        a = MAXI.pop(h)[0]; u.SetWindowPos(h, 0, a[0], a[1], a[2] - a[0], a[3] - a[1], 0x0014); return  # NOZORDER | NOACTIVATE
-    if u.IsZoomed(h): u.ShowWindow(h, 9)
-    r, c, o = wintypes.RECT(), wintypes.RECT(), wintypes.POINT(0, 0)
-    u.GetWindowRect(h, ctypes.byref(r)); u.GetClientRect(h, ctypes.byref(c)); u.ClientToScreen(h, ctypes.byref(o))
-    lado, abajo = o.x - r.left, (r.bottom - o.y) - c.bottom  # bordes invisibles de redimensionar (arriba no tiene)
-    class MI(ctypes.Structure): _fields_ = [("cb", wintypes.DWORD), ("mon", wintypes.RECT), ("trab", wintypes.RECT), ("f", wintypes.DWORD)]
-    mi = MI(); mi.cb = ctypes.sizeof(MI)
-    if not u.GetMonitorInfoW(u.MonitorFromWindow(h, 2), ctypes.byref(mi)): return
-    t = mi.trab
-    x, y, an, al = caja_max((t.left, t.top, t.right, t.bottom), lado, ARRIBA[0], abajo)
-    normal = (r.left, r.top, r.right, r.bottom)
-    if normal == (x, y, x + an, y + al):  # Edge abrió la ventana con el tamaño de maximizada (se cerró así): restaurar a una centrada
-        an2, al2 = min(1280, (t.right - t.left) * 7 // 10), (t.bottom - t.top) * 9 // 10
-        cx, cy = t.left + (t.right - t.left - an2) // 2, t.top + (t.bottom - t.top - al2) // 2
-        u.SetWindowPos(h, 0, cx, cy, an2, al2, 0x0014); return
-    MAXI[h] = (normal, lado, abajo, (x, y, x + an, y + al))
-    u.SetWindowPos(h, 0, x, y, an, al, 0x0014)
-
-
-def objetivo(u, ctypes):
-    """La ventana de Racha a la que van los botones: la que está al frente (la del clic, aunque haya dos abiertas); si no,
-    la última que se dejó sin barra, si sigue existiendo."""
-    f = u.GetForegroundWindow()
-    if f and es_racha(u, ctypes, f): HWND[0] = f; return f
-    return HWND[0] if HWND[0] and u.IsWindow(HWND[0]) else None
-
-
-def accion(nombre, alto=0, dpr=1):
-    """minimizar / maximizar (alterna) / cerrar / arrastrar (sigue al mouse mientras el botón izquierdo esté apretado)."""
-    if nombre not in ACCIONES: raise ValueError(nombre)
+def limpiar_viejas():
+    """Migración desde 0.14–0.16: cierra las ventanas «Racha» de Edge sin barra de título (las que esas versiones dejaban
+    sin marco). Una ventana normal de Edge siempre tiene WS_CAPTION, así que no toca las del usuario. Cuántas cerró."""
     w = _win()
-    if not w: return False
-    ctypes, wintypes, u = w
-    if nombre == "recortar": return recortar(alto, dpr)
-    h = objetivo(u, ctypes)
-    if not h: return False
-    if nombre == "minimizar": u.ShowWindow(h, 6)
-    elif nombre == "maximizar":
-        if ARRIBA[0]: maximizar(u, ctypes, wintypes, h)
-        else: u.ShowWindow(h, 9 if u.IsZoomed(h) else 3)  # sin recorte medido todavía (o con la barra de Windows): la de siempre
-    elif nombre == "cerrar": u.PostMessageW(h, 0x0010, 0, 0)
-    else:
-        if u.IsZoomed(h) or h in MAXI: return True  # maximizada no se arrastra
-        p, r = wintypes.POINT(), wintypes.RECT()
-        u.GetCursorPos(ctypes.byref(p)); u.GetWindowRect(h, ctypes.byref(r))
-        dx, dy, ancho, alto = p.x - r.left, p.y - r.top, r.right - r.left, r.bottom - r.top
-        fin = time.time() + 30
-        while u.GetAsyncKeyState(0x01) & 0x8000 and time.time() < fin:  # botón izquierdo apretado
-            u.GetCursorPos(ctypes.byref(p)); u.MoveWindow(h, p.x - dx, p.y - dy, ancho, alto, True); time.sleep(0.01)
-    return True
+    if not w: return 0
+    ctypes, wintypes, u, _ = w
+    u.GetWindowLongPtrW.restype = ctypes.c_ssize_t; u.GetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int]
+    viejas = []
+    def cb(h, _):
+        n = u.GetWindowTextLengthW(h); t = ctypes.create_unicode_buffer(n + 1); u.GetWindowTextW(h, t, n + 1)
+        c = ctypes.create_unicode_buffer(64); u.GetClassNameW(h, c, 64)
+        if t.value == "Racha" and c.value == "Chrome_WidgetWin_1" and u.IsWindowVisible(h) and not u.GetWindowLongPtrW(h, -16) & 0x00C00000:
+            viejas.append(h)
+        return True
+    u.EnumWindows(ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)(cb), 0)
+    for h in viejas: u.PostMessageW(h, 0x0010, 0, 0)  # WM_CLOSE
+    return len(viejas)

@@ -32,18 +32,18 @@ class MainConHtcVivo(unittest.TestCase):
     def test_sin_fondo_abre_el_otro_y_no_sirve(self):
         url = "http://127.0.0.1:9/"
         with mock.patch.object(w, "otro_htc", return_value=url) as otro, \
-                mock.patch.object(w, "abrir") as a, \
-                mock.patch.object(w.http.server, "ThreadingHTTPServer") as srv:
+                mock.patch.object(w, "pedir_abrir") as a, \
+                mock.patch.object(w, "Servidor") as srv:
             w.main([])
             otro.assert_called_once()
-            a.assert_called_once_with(url)  # abre la ventana del HTC que ya corre
+            a.assert_called_once_with(url)  # le pide la ventana al HTC que ya corre (dueño del proceso de Edge)
             srv.assert_not_called()         # y sale sin abrir otro servidor
 
     def test_fondo_con_htc_vivo_no_abre_ni_sirve(self):
         url = "http://127.0.0.1:9/"
         with mock.patch.object(w, "otro_htc", return_value=url), \
                 mock.patch.object(w, "abrir") as a, \
-                mock.patch.object(w.http.server, "ThreadingHTTPServer") as srv:
+                mock.patch.object(w, "Servidor") as srv:
             w.main(["--fondo"])
             a.assert_not_called()  # --fondo no abre ventana: otro arranque sale en silencio
             srv.assert_not_called()

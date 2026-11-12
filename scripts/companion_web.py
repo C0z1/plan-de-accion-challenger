@@ -6,6 +6,7 @@ Uso:
   python scripts/companion_web.py --no-abrir no abre ventana (para pruebas)
   python scripts/companion_web.py --fondo    en segundo plano (arranca con Windows): abre la ventana sola al abrir el cliente de LoL
 Sin --fondo, desde el código, el servidor se cierra solo si la ventana deja de preguntar 60 s (el .exe instalado sigue en segundo plano). Si ya hay un HTC abierto, abre su ventana y sale."""
+import ventana  # noqa: E402
 import html, http.server, json, os, pathlib, queue, re, shutil, subprocess, sys, threading, time, urllib.parse, urllib.request, webbrowser
 
 import companion_gui as gui  # noqa: E402  (trae REPO, sys.path del .exe y el trabajador)
@@ -16,8 +17,8 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "comentario": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
-VERSION = "0.16.0"  # HTC; también invalida la caché de rendimiento
+          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "comentario": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
+VERSION = "0.16.1"  # HTC; también invalida la caché de rendimiento
 ESTADO["version"] = VERSION  # la página se recarga si cambia (Racha se actualizó con la ventana abierta)
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -51,8 +52,8 @@ def evento(e):
     tipo, s = e[0], {}
     if tipo == "fase":
         s = {"fase": e[1]}
-        if FONDO[0] and ESTADO["fase"] in (None, "inicio") and e[1] is not None and time.time() - VIVO[0] > 6:
-            abrir(URL[0])  # el cliente acaba de abrir y no hay ventana de HTC (si la hubiera, preguntaría cada 2 s)
+        if FONDO[0] and ESTADO["fase"] in (None, "inicio") and e[1] is not None and not ventana.viva() and time.time() - VIVO[0] > 6:
+            abrir(URL[0])  # el cliente acaba de abrir y no hay ventana de Racha
         if ESTADO["fase"] in ("InProgress", "Reconnect") and e[1] not in ("InProgress", "Reconnect"):  # hallazgo 24: «Tu última partida» = la que acaba de terminar
             threading.Thread(target=vistas_previas, args=(ESTADO.get("rendimiento"),), daemon=True).start()
         if e[1] == "ChampSelect": s.update(tablero=None, comentario=None, draft=None, fin=None, meta=None, pos=None, avisos=[]); USADO.add("champ_select")
@@ -266,7 +267,7 @@ def actualizar(version, url, sha, espera=30):
         with LOCK: fase = ESTADO.get("fase")
         if fase in QUIETO: break
         time.sleep(espera)
-    subprocess.Popen([str(destino), "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/RACHA=" + ("--fondo" if FONDO[0] else "")])
+    subprocess.Popen([str(destino), "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/RACHA=" + ("--fondo" if FONDO[0] and not ventana.viva() else "")])  # con ventana abierta, vuelve con ventana
 
 
 def buscar_version():
@@ -559,13 +560,8 @@ class H(http.server.BaseHTTPRequestHandler):
                 except (OSError, ValueError): return self.enviar(502, b"", "text/plain")
                 with LOCK: ESTADO.update(nube=None, v=ESTADO["v"] + 1)
             return self.enviar(200, b"{}", "application/json")
-        if self.path == "/api/ventana":  # botones y arrastre de la franja propia (la ventana ya no tiene barra de Windows)
-            import ventana
-            try:
-                d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 200)))
-                ventana.accion(d["accion"], float(d.get("alto", 0)), float(d.get("dpr", 1)))
-            except (ValueError, KeyError, TypeError): return self.enviar(400, b"", "text/plain")
-            return self.enviar(200, b"{}", "application/json")
+        if self.path == "/api/abrir":  # un segundo arranque del .exe: la ventana la abre (o trae al frente) este proceso
+            abrir(URL[0]); return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/descargar":  # «Descargar mis partidas»: con tu key o tu código de acceso, en su hilo
             threading.Thread(target=descargar_todo, daemon=True).start(); return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/acceso":
@@ -641,17 +637,14 @@ class H(http.server.BaseHTTPRequestHandler):
 
 
 def abrir(url):
-    import ventana
-    if ventana.al_frente(): return  # ya hay una ventana de Racha (aunque esté minimizada y Edge frene su sondeo): no abrir otra
-    edge = shutil.which("msedge") or next((str(p) for p in (pathlib.Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
-                                                            pathlib.Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe")) if p.exists()), None)
-    if edge:
-        subprocess.Popen([edge, f"--app={url}", "--window-size=1440,1024"])
-        # sin barra de título de Windows (Ventana_Vino); si no se puede, queda la barra normal
-        def listo():
-            with LOCK: ESTADO.update(sin_marco=True, v=ESTADO["v"] + 1)
-        threading.Thread(target=ventana.sin_marco, kwargs={"al_listo": listo}, daemon=True).start()
-    else: webbrowser.open(url)
+    """La ventana de Racha (ventana.py: Edge --app con perfil propio en datos/edge); sin Edge, el navegador."""
+    if not ventana.abrir(url, gui.REPO / "datos" / "edge"): webbrowser.open(url)
+
+
+def pedir_abrir(url):
+    """Pide al Racha que ya corre que abra su ventana (él es el dueño del proceso de Edge)."""
+    try: urllib.request.urlopen(urllib.request.Request(url + "api/abrir", b"{}", {"X-HTC": "1", "Content-Type": "application/json"}), timeout=5)
+    except OSError: pass
 
 
 def demo(q):
@@ -682,8 +675,9 @@ def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     unico = not ({"--demo", "--no-abrir"} & set(argv))  # las pruebas y la demo no tocan al HTC real
     if unico and (url := otro_htc()):
-        if "--fondo" not in argv: abrir(url)
+        if "--fondo" not in argv: pedir_abrir(url)
         return
+    if unico and ventana.limpiar_viejas() and "--fondo" in argv: argv = [a for a in argv if a != "--fondo"]  # venía de 0.14–0.16 con ventana: se reabre
     srv = None
     if unico:  # el puerto de la vez anterior: una ventana que quedó abierta (actualización, reinicio) se reconecta sola
         try: srv = Servidor(("127.0.0.1", int(PUERTO.read_text())), H)
@@ -720,7 +714,7 @@ def main(argv=None):
         try: import overlay; overlay.correr(leer, seguir, registrar=registrar)  # franja en partida; ocupa el hilo principal (tkinter)
         except Exception as e: registrar(f"sin franja: {e!r}")  # sin tkinter o sin pantalla: HTC sigue sin overlay
     while seguir(): time.sleep(2)
-    srv.shutdown()
+    ventana.cerrar(); srv.shutdown()
 
 
 if __name__ == "__main__":
