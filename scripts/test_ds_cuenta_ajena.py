@@ -61,7 +61,7 @@ class CuentaAjena(unittest.TestCase):
             w.refrescar()
         self.assertIsNone(w.ESTADO["rendimiento"])
         self.assertIsNone(w.ESTADO["previa"])
-        vp.assert_not_called()  # sin r no hay previa ni ultima que calcular
+        vp.assert_called_once_with(None)  # «ultima» sí se calcula aunque la cuenta sea ajena (ronda 4)
 
     def _r(self):
         return {"vistas": {"pos": "MIDDLE", "draft": {"MIDDLE": {"frecuentes": [{"rival": "Zed"}]}}}}

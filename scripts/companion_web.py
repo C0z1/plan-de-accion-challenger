@@ -151,12 +151,16 @@ def aplicar_coach(r, c=None):
     return r
 
 
+AJENA = "Esta PC guarda el historial de otra cuenta: para el tuyo, usa Racha en tu PC."
+
+
 def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la cola
     r = None if gui.ajeno(gui.CUENTA[0]) else aplicar_coach(rendimiento_rapido())  # historial de otra cuenta: no mostrarlo como tuyo
     with LOCK:
-        if gui.ajeno(gui.CUENTA[0]): r = None  # la cuenta pudo llegar mientras se calculaba (hallazgo 20)
+        if gui.ajeno(gui.CUENTA[0]): r = None; ESTADO["descarga"] = AJENA  # la cuenta pudo llegar mientras se calculaba (hallazgo 20)
         ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1, **({} if r is not None else {"previa": None}))
-    if r is not None: vistas_previas(r); tus_builds()  # tu build propia relee las timelines: al final (auditoría de rendimiento)
+    vistas_previas(r)  # siempre: «ultima» es la última partida grabada en esta PC, también con cuenta ajena (ronda 4)
+    if r is not None: tus_builds()  # tu build propia relee las timelines: al final (auditoría de rendimiento)
     builds_del_backend(); sync_nube()
 
 
@@ -334,7 +338,7 @@ def descargar_todo(n=100):
             if nuevas: refrescar()
             return
         if gui.ajeno(gui.CUENTA[0]):  # el historial de esta PC es de otra cuenta: bajarlo pisaría su perfil.json
-            return aviso("Esta PC guarda el historial de otra cuenta: para el tuyo, usa Racha en tu PC.")
+            return aviso(AJENA)
         aviso("Descargando tus partidas… puede tardar unos minutos la primera vez.")
         code, out = gui.script("descargar.py", str(n))
         if code in (0, 3):

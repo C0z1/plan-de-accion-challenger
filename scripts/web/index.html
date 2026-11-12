@@ -393,7 +393,7 @@ function aro(f, ref, col, tam = 76) {  // acuerdo 21: anillo con raya de referen
 
 function perfil(s) {  // Perfil_Vino (+ acuerdo 21): score, win rate y errores con anillo; qué cambiar; tilt hoy; cuenta y campeones
   const R = s.rendimiento;
-  if (!R) return [`<div><h1>Tu rendimiento</h1><span class="sub">${esc(s.perfil)}</span></div><div class="card"><span class="sub">Aún no tienes partidas aquí. ${s.conectado ? "Se están bajando: tarda unos minutos la primera vez." : "En Ajustes pega tu código de acceso y dale a Descargar."}</span></div>`, cuentaCab(s) + rangoCard(s, true)];
+  if (!R) return [`<div><h1>Tu rendimiento</h1><span class="sub">${esc(s.perfil)}</span></div><div class="card"><span class="sub">Aún no tienes partidas aquí. ${s.descarga ? esc(s.descarga) : s.conectado ? "Se están bajando: tarda unos minutos la primera vez." : "En Ajustes pega tu código de acceso y dale a Descargar."}</span></div>`, cuentaCab(s) + rangoCard(s, true)];
   const r = R.resumen, t = R.tilt, ps = r.partidas, v = ps.filter(p => p.win).length, wr = ps.length ? v / ps.length : null, V = VS(s);
   const base = s.rango && s.rango.n ? s.rango.wr / 100 : t.base.wr, E = V && V.errores, rep = E ? Object.keys(ERR).filter(k => (E.partidas[k] || 0) > 0) : [], peor = E && E.n ? Math.max(0, ...rep.map(k => E.partidas[k])) / E.n : 0;
   const fecha = ps.length && ps[ps.length - 1].fecha ? " · " + esc(ps[ps.length - 1].fecha) : "";
