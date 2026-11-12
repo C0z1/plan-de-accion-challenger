@@ -6,24 +6,21 @@ import companion_gui as g
 import companion_web as w
 import overlay
 
-META = {"nivel": 11, "nivel_rival": 12, "rival": "Ahri", "cs": 71, "rival_cs": 140, "recibido": 1000.0, "muertes14": 3, "minuto": 20,
-        "objetivos": {"dragon": 90, "baron": None}, "oro": {"tu": 7400, "rival": 7900}}
+META = {"nivel": 11, "nivel_rival": 12, "rival": "Ahri", "cs": 71, "rival_cs": 140, "recibido": 1000.0, "muertes14": 3, "kda": "2/3/4"}
 
 
-def textos(aj):  # todas las fases juntas: cada fase enseña piezas distintas (F6)
-    return " | ".join(t for m in (3, 9, 20) for t, _ in overlay.partes({**META, "minuto": m}, 1000.0, aj))
+def tipos(aj):  # qué estado muestra la pastilla a los 3, 9 y 20 min
+    return [overlay.estado({**META, "t": m * 60}, 1000.0, aj)["tipo"] for m in (3, 9, 20)]
 
 
 class Piezas(unittest.TestCase):
     def test_todo_por_defecto(self):
-        for aj in (None, {}):
-            t = textos(aj)
-            for x in ("Dragón", "Barón", "Nv 11", "CS 71", "Oro", "Muertes 14"): self.assertIn(x, t)
+        for aj in (None, {}): self.assertEqual(tipos(aj), ["linea", "linea", "peleas"])
 
     def test_cada_ajuste_quita_lo_suyo(self):
-        t = textos({"franja_objetivos": False}); self.assertNotIn("Dragón", t); self.assertNotIn("Barón", t); self.assertIn("Nv 11", t)
-        t = textos({"franja_linea": False}); self.assertTrue(all(x not in t for x in ("Nv", "CS", "Oro"))); self.assertIn("Dragón", t)
-        t = textos({"franja_regla": False}); self.assertNotIn("Muertes", t); self.assertIn("Oro", t)
+        self.assertEqual(tipos({"franja_linea": False}), ["tarde", "tarde", "peleas"])
+        self.assertEqual(tipos({"franja_regla": False}), ["linea", "linea", "tarde"])
+        self.assertEqual(tipos({"franja_objetivos": False}), ["linea", "linea", "peleas"])  # ajuste viejo de 0.16: no rompe
 
     def test_pos_y(self):
         self.assertEqual(overlay.pos_y("arriba", 1080, 30), 6); self.assertEqual(overlay.pos_y(None, 1080, 30), 6)
@@ -39,7 +36,7 @@ class Ajustes(unittest.TestCase):
 
     def test_defaults_y_lista_blanca(self):
         a = g.ajustes()
-        self.assertEqual(a["franja_pos"], "arriba"); self.assertTrue(a["franja_objetivos"] and a["franja_linea"] and a["franja_regla"])
+        self.assertEqual(a["franja_pos"], "arriba"); self.assertTrue(a["franja_linea"] and a["franja_regla"]); self.assertNotIn("franja_objetivos", a)  # timers fuera de la franja (0.17)
         self.assertEqual(g.guardar_ajuste("franja_pos", "abajo")["franja_pos"], "abajo"); self.assertEqual(g.ajustes()["franja_pos"], "abajo")
         for clave, v in (("franja_pos", "lado"), ("franja_pos", True), ("franja_pos", None), ("franja_linea", "abajo"), ("overlay", "arriba")):
             with self.assertRaises(ValueError): g.guardar_ajuste(clave, v)

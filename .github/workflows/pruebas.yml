@@ -11,4 +11,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
+      - run: python -m pip install pillow  # la pastilla del overlay se dibuja con Pillow
       - run: python -m unittest discover scripts -v

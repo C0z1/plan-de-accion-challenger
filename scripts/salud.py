@@ -55,7 +55,7 @@ def evaluar(d, ahora):
                 if f.get("monitor") != d.get("monitor_juego"): malo.append("otro monitor")
                 if x0 < gx0 or y0 < gy0 or x1 > gx1 or y1 > gy1: malo.append("se sale del juego")
                 if gw and (x1 - x0) / gw > 0.60: malo.append(f"ancho {round((x1 - x0) / gw * 100)} %")
-                if gh and (y1 - y0) / gh > 0.05: malo.append(f"alto {round((y1 - y0) / gh * 100)} %")
+                if gh and (y1 - y0) / gh > 0.08: malo.append(f"alto {round((y1 - y0) / gh * 100)} %")
                 fx0, fy0, fx1, fy1 = ((x0 - gx0) / gw, (y0 - gy0) / gh, (x1 - gx0) / gw, (y1 - gy0) / gh) if gw and gh else (0, 0, 0, 0)
                 malo += [f"pisa {z}" for z, (a, b, c, e2) in ZONAS.items() if fx0 < c and fx1 > a and fy0 < e2 and fy1 > b]
             res("S5", "FALLA" if malo else "OK", f.get("rect"), "encima, dentro del juego, sin zonas prohibidas", ", ".join(malo))
@@ -215,7 +215,7 @@ def pasada(args, mem):
     else: mem.pop("partida", None)
     d.update(ventanas())
     try:
-        import overlay; d["franja_debe"] = overlay.visible(s, time.time()) and bool(overlay.partes(s.get("meta"), time.time(), s.get("ajustes")))
+        import overlay; d["franja_debe"] = overlay.visible(s, time.time()) and bool(overlay.estado(s.get("meta"), time.time(), s.get("ajustes")))
     except Exception: d["franja_debe"] = None
     try: d["pantalla_completa"] = companion.pantalla_completa()
     except Exception: pass

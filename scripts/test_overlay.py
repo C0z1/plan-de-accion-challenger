@@ -1,48 +1,73 @@
-"""Overlay en partida: el texto de la franja, el descuento de los timers entre fotos y que la ventana abre y cierra."""
+"""Overlay en partida: los estados de la pastilla, su dibujo, cuándo se ve, dónde va y que la ventana abre y cierra."""
 import unittest
 
 import overlay
 
-META = {"nivel": 11, "nivel_rival": 12, "rival": "Ahri", "cs": 71, "rival_cs": 140, "recibido": 1000.0,
-        "objetivos": {"dragon": 90, "baron": None}}
+META = {"nivel": 11, "nivel_rival": 12, "rival": "Ahri", "campeon": "Ekko", "cs": 71, "rival_cs": 140, "recibido": 1000.0, "t": 300, "kda": "1/0/2"}
 
 
-class TestPartes(unittest.TestCase):
-    def test_franja_y_descuento(self):
-        t = [x for x, _ in overlay.partes(META, 1000.0)]  # minuto 0–6: línea primero; dragón solo si sale en ≤ 90 s; barón no
-        self.assertEqual(t, ["▼ Nv 11 vs 12 Ahri", "▼ CS 71 vs 140", "Dragón 1:30"])  # ▼: vas abajo, no solo por color
-        p = dict(overlay.partes(META, 1045.0))  # 45 s después de la foto: el dragón sale en 0:45, en ámbar y con «!»
-        self.assertEqual(p["! Dragón 0:45"], overlay.AMBAR)
-        self.assertEqual(p["▼ Nv 11 vs 12 Ahri"], overlay.ROSA)  # nivel abajo: rosa
-        self.assertIn("! Dragón 0:00", dict(overlay.partes(META, 2000.0)))  # nunca negativo
+class TestEstado(unittest.TestCase):  # la pastilla 380×72 (plan del overlay de Fable con la revisión de DeepSeek)
+    def e(self, **kw): return overlay.estado({**META, **kw}, 1000.0)
 
-    def test_oro_por_linea(self):  # oro en ítems (Tab) contra tu rival, redondeado a 50
-        m = {**META, "minuto": 8}  # el oro de línea manda del 6 al 14
-        p = dict(overlay.partes({**m, "oro": {"tu": 2500, "rival": 2830}}, 1000.0))
-        self.assertEqual(p["▼ Oro -350"], overlay.ROSA)
-        self.assertEqual(dict(overlay.partes({**m, "oro": {"tu": 10, "rival": 0}}, 1000.0))["Oro +0"], overlay.TXT)  # parejo: sin ▼
-        self.assertFalse(any(x.startswith(("Oro", "▼ Oro")) for x, _ in overlay.partes({**m, "oro": {"tu": 100, "rival": None}}, 1000.0)))
+    def test_linea_bordes(self):
+        self.assertEqual(self.e(t=839)["tipo"], "linea"); self.assertEqual(self.e(t=840, muertes14=0)["tipo"], "peleas")
+        self.assertEqual(self.e(t=1499, muertes14=0)["tipo"], "peleas"); self.assertEqual(self.e(t=1500, muertes14=0)["tipo"], "tarde")
 
-    def test_prioridad_por_fase_y_tope(self):  # F6: nunca más de 4 piezas; cada fase muestra lo suyo, en orden fijo
-        oro = {"tu": 5000, "rival": 5600, "equipo": 20000, "equipo_rival": 19000}
-        f = lambda minuto, **k: [x for x, _ in overlay.partes({**META, "oro": oro, "muertes14": 1, "minuto": minuto, **k}, 1000.0)]
-        for minuto in (3, 9, 18, 30): self.assertLessEqual(len(f(minuto)), overlay.MAX_PIEZAS)
-        self.assertEqual(f(9), ["▼ Nv 11 vs 12 Ahri", "▼ CS 71 vs 140", "▼ Oro -600", "Dragón 1:30"])  # 6–14: sin regla aún; orden fijo
-        self.assertEqual(f(18), ["Muertes 14–25: 1/2", "Equipo +1000", "Dragón 1:30", "Barón vivo"])  # 14–25: la regla primero
-        self.assertNotIn("Barón 7:00", f(18, objetivos={"dragon": 90, "baron": 420}))  # barón solo desde 3 min antes
-        self.assertEqual(f(30)[0], "Equipo +1000")
+    def test_nivel_contra_rival(self):
+        e = self.e(t=400)
+        self.assertEqual((e["flecha"]["txt"], e["flecha"]["color"], e["chip"]), ("-1", "rojo", ("Nivel -1", "rojo")))
+        self.assertEqual(self.e(t=400, nivel=12)["flecha"]["txt"], "=")
+        self.assertEqual(self.e(t=400, nivel=13)["flecha"]["color"], "salvia")
+        self.assertIsNone(self.e(t=400, rival=None)["rival"])  # práctica: solo tu medallón
 
-    def test_regla_muertes_14_25(self):  # A3: el contador solo del 14 al 25, ámbar en 2 y rosa con ▼ al pasarse
-        c = lambda m, minuto: dict(overlay.partes({**META, "muertes14": m, "minuto": minuto}, 1000.0))
-        self.assertEqual(c(1, 15)["Muertes 14–25: 1/2"], overlay.TXT)
-        self.assertEqual(c(2, 20)["Muertes 14–25: 2/2"], overlay.AMBAR)
-        self.assertEqual(c(3, 24)["▼ Muertes 14–25: 3/2"], overlay.ROSA)
-        self.assertFalse(any("Muertes" in x for x in c(3, 26)))
-        self.assertFalse(any("Muertes" in x for x in c(None, 10)))
+    def test_ritmo_de_cs(self):  # umbral sobre el flotante: cs_meta 70 al 10 -> a los 5:00 se esperan 30
+        b = lambda cs: self.e(t=300, nivel=12, cs=cs, cs_meta=70)["b"]
+        self.assertEqual((b(30)["color"], b(26)["color"], b(25)["color"]), ("salvia", "oro", "rojo"))
+        self.assertEqual(b(30)["etq"], "ritmo 30")
+        self.assertEqual(self.e(t=700, nivel=12)["b"]["num"], "-69")  # pasado el 10: CS contra tu rival
 
-    def test_sin_datos(self):
-        self.assertEqual(overlay.partes(None, 0), [])
-        self.assertEqual([x for x, _ in overlay.partes({"objetivos": {}}, 0)], [])
+    def test_peleas_y_tope(self):
+        chip = lambda m, tope=2: overlay.estado({**META, "t": 1000, "muertes14": m}, 0, regla={"tope": tope})["chip"]
+        self.assertEqual([chip(0), chip(2), chip(3), chip(2, tope=3)],
+                         [("Vas bien", "salvia"), ("En tu tope", "oro"), ("Sobre tope", "rojo"), ("Vas bien", "salvia")])
+        self.assertEqual(self.e(t=1000, muertes14=1, participacion=.58)["b"]["num"], "58%")
+
+    def test_ajustes_apagan(self):
+        self.assertEqual(overlay.estado({**META, "t": 300}, 0, {"franja_linea": False})["tipo"], "tarde")
+        self.assertEqual(overlay.estado({**META, "t": 1000, "muertes14": 0}, 0, {"franja_regla": False})["tipo"], "tarde")
+
+    def test_aviso_8_s(self):
+        av = {"franja": 100.0, "corto": "Min 17: 2 muertes desde el 14"}
+        self.assertEqual(overlay.estado(META, 107.9, aviso=av)["tipo"], "aviso")
+        self.assertNotEqual(overlay.estado(META, 108.1, aviso=av)["tipo"], "aviso")
+
+    def test_aram_y_sin_datos(self):
+        self.assertEqual(overlay.textos(overlay.estado({"modo": "ARAM", "kills": [9, 32], "kda": "6/8/10", "campeon": "Lux"}, 0)), ["9 – 32", "kills", "6/8/10", "KDA"])
+        self.assertIsNone(overlay.estado(None, 0)); self.assertEqual(overlay.textos(None), [])
+
+    def test_sin_ordenes(self):  # Riot: dato y tu regla, nunca órdenes (los textos del lienzo se cambiaron)
+        for kw in ({"t": 300}, {"t": 700, "nivel": 12}, {"t": 1000, "muertes14": 3}, {"t": 1600, "oro": {"equipo": 9000, "equipo_rival": 9800}}):
+            for txt in overlay.textos(self.e(**kw)):
+                self.assertNotRegex(txt, r"(?i)pelees|juega|farmea|puedes|cuidado|debes|ve a")
+                self.assertLessEqual(len(txt), 12)
+
+
+class TestPintar(unittest.TestCase):
+    def test_tamano_esquinas_y_peor_caso(self):
+        try: import PIL  # noqa: F401
+        except ImportError: self.skipTest("sin Pillow")
+        casos = [overlay.estado({**META, "t": 300, "nivel": 18, "nivel_rival": 18, "cs": 399, "cs_meta": 90}, 0),
+                 overlay.estado({**META, "t": 1000, "muertes14": 4}, 0, regla={"tope": 6}),
+                 overlay.estado({**META, "campeon": None}, 0, aviso={"franja": 0, "corto": "Min 12: Ahri ya tiene 2 ítems completos contra 1"})]
+        for esc in (0.75, 1, 1.5, 2):
+            for e in casos:
+                im = overlay.pintar(e, esc)
+                self.assertEqual(im.size, (round(380 * esc), round(72 * esc)))
+                self.assertEqual(im.getpixel((0, 0))[3], 0)  # esquina redonda: transparente
+                self.assertGreater(im.getpixel((im.width // 2, 2))[3], 150)  # fondo translúcido
+
+    def test_escala(self):
+        self.assertEqual([overlay.escala(None), overlay.escala((0, 0, 1280, 720)), overlay.escala((0, 0, 3840, 2160)), overlay.escala((0, 0, 9, 4000))], [1.0, 0.75, 2.0, 2.0])
 
 
 class TestVisible(unittest.TestCase):  # D2 + D3 del plan En vivo

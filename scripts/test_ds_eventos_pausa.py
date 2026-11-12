@@ -183,25 +183,4 @@ class UnirEventos(unittest.TestCase):
         self.assertIs(out, d); self.assertIs(out["events"]["Events"], original)
 
 
-class Pausa(unittest.TestCase):
-    META = {"minuto": 17, "objetivos": {"dragon": 400, "baron": None}, "recibido": 1000.0}
-
-    def _dragon(self, meta, ahora):
-        return next((t for t, _ in overlay.partes(meta, ahora, {}) if t.startswith(("Dragón", "! Dragón"))), None)
-
-    def test_sin_pausa_el_timer_baja_con_la_edad(self):  # contraste: ya pasa hoy
-        self.assertEqual(self._dragon(self.META, 1100.0), "Dragón 5:00")
-
-
-    def test_con_pausa_usa_edad_cero(self):  # el timer no baja aunque recibido sea viejo
-        pausado = {**self.META, "pausa": True}
-        self.assertEqual(self._dragon(pausado, 1100.0), "Dragón 6:40")
-        self.assertEqual(self._dragon(pausado, 5000.0), "Dragón 6:40")
-
-    def test_pausa_false_o_ausente_no_congela(self):
-        self.assertEqual(self._dragon({**self.META, "pausa": False}, 1100.0), "Dragón 5:00")
-        # y pausa True no cambia nada si no hay timers (no lanza)
-        self.assertEqual(overlay.partes({**self.META, "pausa": True, "objetivos": {}}, 1100.0, {}), overlay.partes({**self.META, "objetivos": {}}, 1000.0, {}))
-
-
 if __name__ == "__main__": unittest.main()

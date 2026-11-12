@@ -58,42 +58,4 @@ class Reconnect(unittest.TestCase):
         self.assertEqual(len(estados), 2); self.assertTrue(estados[0] <= estados[1], "el segundo InProgress perdio los avisos ya dados")
 
 
-def c_objetivo(dragon=None, baron=None, nivel=None, cs=None):
-    """c como lo arma overlay.partes: clave -> (texto, color), más las de ayuda *_falta y abajo_nv."""
-    c = {}
-    if dragon is not None: c["dragon"], c["dragon_falta"] = (f"Dragón {overlay.reloj(dragon)}", overlay.TXT), dragon
-    if baron is not None: c["baron"], c["baron_falta"] = (f"Barón {overlay.reloj(baron)}", overlay.TXT), baron
-    if nivel is not None: c["nivel"], c["abajo_nv"] = (f"Nv {nivel} vs 13", overlay.TXT), False
-    if cs is not None: c["cs"] = (f"CS {cs} vs 90", overlay.TXT)
-    return c
-
-
-class Elegir(unittest.TestCase):
-    def test_minuto_1_sin_rival_muestra_el_dragon_proximo(self):
-        """Falla hoy: sin piezas de linea ni regla, elegir devuelve [] y no el proximo objetivo."""
-        self.assertEqual(overlay.elegir(c_objetivo(dragon=240), 1), [("Dragón 4:00", overlay.TXT)])
-
-
-    def test_minuto_1_con_rival_no_agrega_el_dragon(self):
-        """Con nivel y CS, el dragón a 240 s no está pronto y no se fuerza."""
-        res = overlay.elegir(c_objetivo(nivel=14, cs=100, dragon=240), 1)
-        self.assertEqual(len(res), 2)
-        self.assertFalse(any(t.startswith(("Dragón", "! Dragón")) for t, _ in res))
-
-
-    def test_sin_rival_y_objetivos_apagados_da_vacio(self):
-        """Objetivos apagados: sin dragon/baron en c, el fallback no tiene qué mostrar."""
-        self.assertEqual(overlay.elegir({}, 1), [])
-
-
-    def test_aram_y_muerto_sin_cambio(self):
-        """ARAM vuelve antes de elegir: el fallback no mete dragón/barón en ARAM ni con el jugador muerto."""
-        meta = {"modo": "ARAM", "kills": [2, 3], "amenazas": [{"campeon": "Zed", "kda": "5/2/3"}], "kda": "1/2/3",
-                "muerto": True, "objetivos": {"dragon": 240, "baron": None}}
-        ps = overlay.partes(meta, 1000.0, {})
-        self.assertFalse(any(t.startswith(("Dragón", "Barón", "! Dragón", "! Barón")) for t, _ in ps))
-        self.assertEqual(ps[0][0], "▼ Kills 2 vs 3")
-        self.assertTrue(any(t == "Tu KDA 1/2/3" for t, _ in ps))
-
-
 if __name__ == "__main__": unittest.main()

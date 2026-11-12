@@ -18,7 +18,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "comentario": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
-VERSION = "0.16.1"  # HTC; también invalida la caché de rendimiento
+VERSION = "0.17.0"  # HTC; también invalida la caché de rendimiento
 ESTADO["version"] = VERSION  # la página se recarga si cambia (Racha se actualizó con la ventana abierta)
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -711,7 +711,7 @@ def main(argv=None):
                 f = gui.REPO / "datos" / "salud" / "franja.log"; f.parent.mkdir(parents=True, exist_ok=True)
                 with f.open("a", encoding="utf-8") as h: h.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {txt}\n")
             except OSError: pass
-        try: import overlay; overlay.correr(leer, seguir, registrar=registrar)  # franja en partida; ocupa el hilo principal (tkinter)
+        try: import overlay; overlay.correr(leer, seguir, registrar=registrar, icono=imagen)  # franja en partida; ocupa el hilo principal (tkinter)
         except Exception as e: registrar(f"sin franja: {e!r}")  # sin tkinter o sin pantalla: HTC sigue sin overlay
     while seguir(): time.sleep(2)
     ventana.cerrar(); srv.shutdown()

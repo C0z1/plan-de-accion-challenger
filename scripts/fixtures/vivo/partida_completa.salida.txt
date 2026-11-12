@@ -1,70 +1,70 @@
-00:00 | franja: Nv 1 vs 1 Yunara · CS 0 vs 0 | aviso: 
-00:20 | franja: Nv 1 vs 1 Yunara · CS 0 vs 0 | aviso: 
-00:50 | franja: Nv 1 vs 1 Yunara · CS 0 vs 0 | aviso: 
-01:20 | franja: Nv 1 vs 1 Yunara · CS 0 vs 0 | aviso: 
-01:51 | franja: Nv 2 vs 2 Yunara · CS 0 vs 0 | aviso: 
-02:21 | franja: Nv 2 vs 2 Yunara · ▼ CS 0 vs 10 | aviso: 
-02:51 | franja: Nv 3 vs 3 Yunara · CS 10 vs 10 | aviso: 
-03:21 | franja: Nv 3 vs 3 Yunara · ▼ CS 10 vs 20 | aviso: 
-03:52 | franja: Nv 4 vs 3 Yunara · CS 20 vs 20 · Dragón 1:08 | aviso: 
-04:22 | franja: Nv 4 vs 4 Yunara · CS 20 vs 20 · ! Dragón 0:38 | aviso: 
-04:52 | franja: Nv 4 vs 4 Yunara · CS 30 vs 30 · ! Dragón 0:08 | aviso: 
-05:22 | franja: Nv 5 vs 5 Yunara · CS 40 vs 30 · Dragón vivo | aviso: 
-05:52 | franja: Nv 5 vs 5 Yunara · CS 40 vs 40 · Dragón vivo | aviso: 
-06:22 | franja: CS 50 vs 40 · Dragón vivo | aviso: 
-06:53 | franja: CS 50 vs 50 · Dragón vivo | aviso: 
-07:23 | franja: CS 60 vs 50 · Dragón vivo | aviso: 
-07:53 | franja: CS 60 vs 60 · Dragón 4:41 | aviso: 
-08:23 | franja: CS 70 vs 60 · Dragón 4:10 | aviso: 
-08:54 | franja: CS 70 vs 60 · Dragón 3:40 | aviso: 
-09:24 | franja: CS 70 vs 60 · Dragón 3:10 | aviso: 
-09:54 | franja: CS 80 vs 70 · Dragón 2:40 | aviso: 
-10:24 | franja: CS 80 vs 70 · Dragón 2:09 | aviso: 
-10:55 | franja: CS 80 vs 80 · Dragón 1:39 | aviso: 
-11:25 | franja: CS 90 vs 80 · Dragón 1:09 | aviso: 
-11:55 | franja: CS 90 vs 80 · ! Dragón 0:39 | aviso: 
-12:25 | franja: CS 100 vs 90 · ! Dragón 0:09 | aviso: 
-12:55 | franja: CS 100 vs 90 · Dragón vivo | aviso: 
-13:25 | franja: CS 110 vs 100 · Dragón vivo | aviso: 
-13:56 | franja: CS 110 vs 100 · Dragón vivo | aviso: 
-14:26 | franja: Muertes 14–25: 0/2 · Dragón vivo | aviso: 
-14:56 | franja: Muertes 14–25: 0/2 · Dragón 4:53 | aviso: 
-15:26 | franja: Muertes 14–25: 1/2 · Dragón 4:22 | aviso: 
-15:56 | franja: Muertes 14–25: 1/2 · Dragón 3:52 | aviso: 
-16:27 | franja: Muertes 14–25: 1/2 · Dragón 3:22 | aviso: 
-16:57 | franja: Muertes 14–25: 2/2 · Dragón 2:52 | aviso: 2 muertes desde el 14 · tu tope
-17:27 | franja: Muertes 14–25: 2/2 · Dragón 2:22 · Barón 2:32 | aviso: 
-17:57 | franja: Muertes 14–25: 2/2 · Dragón 1:51 · Barón 2:02 | aviso: 
-18:28 | franja: Muertes 14–25: 2/2 · Dragón 1:21 · Barón 1:32 | aviso: 
-18:58 | franja: Muertes 14–25: 2/2 · ! Dragón 0:51 · Barón 1:02 | aviso: 
-19:28 | franja: ▼ Muertes 14–25: 3/2 · ! Dragón 0:21 | aviso: 
-19:58 | franja: ▼ Muertes 14–25: 3/2 · Dragón vivo · ! Barón 0:01 | aviso: 
-20:28 | franja: ▼ Muertes 14–25: 3/2 · Dragón vivo · Barón vivo | aviso: 
-20:59 | franja: ▼ Muertes 14–25: 3/2 · Dragón vivo · Barón vivo | aviso: 
-21:29 | franja: ▼ Muertes 14–25: 3/2 · Dragón vivo · Barón vivo | aviso: 
-21:59 | franja: ▼ Muertes 14–25: 4/2 · Barón vivo | aviso: 
-22:29 | franja: ▼ Muertes 14–25: 4/2 · Barón vivo | aviso: 
-23:00 | franja: ▼ Muertes 14–25: 4/2 · Dragón 3:49 · Barón vivo | aviso: 
-23:30 | franja: ▼ Muertes 14–25: 4/2 · Dragón 3:18 · Barón vivo | aviso: 
-24:00 | franja: ▼ Muertes 14–25: 5/2 · Barón vivo | aviso: 
-24:30 | franja: ▼ Muertes 14–25: 5/2 · Dragón 2:18 · Barón vivo | aviso: 
-25:00 | franja: Dragón 1:48 · Barón vivo | aviso: 
-25:31 | franja: Barón vivo | aviso: 
-26:01 | franja: Barón vivo | aviso: 
-26:31 | franja: ! Dragón 0:17 · Barón vivo | aviso: 
-27:01 | franja: Dragón vivo · Barón vivo | aviso: 
-27:31 | franja: Dragón 4:33 · Barón vivo | aviso: 
-28:02 | franja: Dragón 4:03 | aviso: 
-28:32 | franja: Dragón 3:33 | aviso: 
-29:02 | franja: Dragón 3:03 | aviso: 
-29:32 | franja: Dragón 2:32 | aviso: 
-30:02 | franja: Dragón 2:02 | aviso: 
-30:33 | franja: Dragón 1:32 | aviso: 
-31:03 | franja: Dragón 1:02 · Barón 2:36 | aviso: 
-31:33 | franja: ! Dragón 0:32 · Barón 2:06 | aviso: 
-32:03 | franja: ! Dragón 0:01 · Barón 1:36 | aviso: 
-32:33 | franja: Anciano 5:52 · Barón 1:06 | aviso: 
-33:04 | franja: Anciano 5:22 · ! Barón 0:35 | aviso: 
-33:34 | franja: Anciano 4:52 · ! Barón 0:05 | aviso: 
-34:04 | franja: Barón vivo | aviso: 
-34:34 | franja: Barón vivo | aviso: 
+00:00 | franja: = · +0 · CS vs rival · Vas bien | aviso: 
+00:20 | franja: = · +0 · CS vs rival · Vas bien | aviso: 
+00:50 | franja: = · +0 · CS vs rival · Vas bien | aviso: 
+01:20 | franja: = · +0 · CS vs rival · Vas bien | aviso: 
+01:51 | franja: = · +0 · CS vs rival · Vas bien | aviso: 
+02:21 | franja: = · -10 · CS vs rival · CS abajo | aviso: 
+02:51 | franja: = · +0 · CS vs rival · Vas bien | aviso: 
+03:21 | franja: = · -10 · CS vs rival · CS abajo | aviso: 
+03:52 | franja: +1 · +0 · CS vs rival · Vas bien | aviso: 
+04:22 | franja: = · +0 · CS vs rival · Vas bien | aviso: 
+04:52 | franja: = · +0 · CS vs rival · Vas bien | aviso: 
+05:22 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+05:52 | franja: = · +0 · CS vs rival · Vas bien | aviso: 
+06:22 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+06:53 | franja: = · +0 · CS vs rival · Vas bien | aviso: 
+07:23 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+07:53 | franja: = · +0 · CS vs rival · Vas bien | aviso: 
+08:23 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+08:54 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+09:24 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+09:54 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+10:24 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+10:55 | franja: = · +0 · CS vs rival · Vas bien | aviso: 
+11:25 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+11:55 | franja: +1 · +10 · CS vs rival · Vas bien | aviso: 
+12:25 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+12:55 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+13:25 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+13:56 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
+14:26 | franja: 0 / 2 · muertes · 33% · en kills · Vas bien | aviso: 
+14:56 | franja: 0 / 2 · muertes · 33% · en kills · Vas bien | aviso: 
+15:26 | franja: 1 / 2 · muertes · 43% · en kills · Vas bien | aviso: 
+15:56 | franja: 1 / 2 · muertes · 38% · en kills · Vas bien | aviso: 
+16:27 | franja: 1 / 2 · muertes · 33% · en kills · Vas bien | aviso: 
+16:57 | franja: 2 / 2 · muertes · 40% · en kills · En tu tope | aviso: 2 muertes desde el 14 · tu tope
+17:27 | franja: 2 / 2 · muertes · 40% · en kills · En tu tope | aviso: 
+17:57 | franja: 2 / 2 · muertes · 40% · en kills · En tu tope | aviso: 
+18:28 | franja: 2 / 2 · muertes · 40% · en kills · En tu tope | aviso: 
+18:58 | franja: 2 / 2 · muertes · 40% · en kills · En tu tope | aviso: 
+19:28 | franja: 3 / 2 · muertes · 33% · en kills · Sobre tope | aviso: 
+19:58 | franja: 3 / 2 · muertes · 33% · en kills · Sobre tope | aviso: 
+20:28 | franja: 3 / 2 · muertes · 33% · en kills · Sobre tope | aviso: 
+20:59 | franja: 3 / 2 · muertes · 33% · en kills · Sobre tope | aviso: 
+21:29 | franja: 3 / 2 · muertes · 31% · en kills · Sobre tope | aviso: 
+21:59 | franja: 4 / 2 · muertes · 31% · en kills · Sobre tope | aviso: 
+22:29 | franja: 4 / 2 · muertes · 31% · en kills · Sobre tope | aviso: 
+23:00 | franja: 4 / 2 · muertes · 31% · en kills · Sobre tope | aviso: 
+23:30 | franja: 4 / 2 · muertes · 36% · en kills · Sobre tope | aviso: 
+24:00 | franja: 5 / 2 · muertes · 40% · en kills · Sobre tope | aviso: 
+24:30 | franja: 5 / 2 · muertes · 40% · en kills · Sobre tope | aviso: 
+25:00 | franja: 5/5/1 · KDA · 40% · en kills | aviso: 
+25:31 | franja: 5/6/2 · KDA · 44% · en kills | aviso: 
+26:01 | franja: 5/6/2 · KDA · 44% · en kills | aviso: 
+26:31 | franja: 5/6/2 · KDA · 41% · en kills | aviso: 
+27:01 | franja: 5/6/2 · KDA · 41% · en kills | aviso: 
+27:31 | franja: 5/6/2 · KDA · 41% · en kills | aviso: 
+28:02 | franja: 5/6/2 · KDA · 41% · en kills | aviso: 
+28:32 | franja: 5/6/2 · KDA · 41% · en kills | aviso: 
+29:02 | franja: 5/6/2 · KDA · 41% · en kills | aviso: 
+29:32 | franja: 6/6/2 · KDA · 44% · en kills | aviso: 
+30:02 | franja: 9/6/2 · KDA · 52% · en kills | aviso: 
+30:33 | franja: 9/6/2 · KDA · 52% · en kills | aviso: 
+31:03 | franja: 9/6/2 · KDA · 52% · en kills | aviso: 
+31:33 | franja: 9/6/2 · KDA · 52% · en kills | aviso: 
+32:03 | franja: 10/6/2 · KDA · 55% · en kills | aviso: 
+32:33 | franja: 11/6/2 · KDA · 57% · en kills | aviso: 
+33:04 | franja: 11/6/2 · KDA · 57% · en kills | aviso: 
+33:34 | franja: 11/6/2 · KDA · 57% · en kills | aviso: 
+34:04 | franja: 12/7/2 · KDA · 56% · en kills | aviso: 
+34:34 | franja: 12/7/2 · KDA · 56% · en kills | aviso: 

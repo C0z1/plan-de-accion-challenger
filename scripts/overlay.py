@@ -1,78 +1,187 @@
-"""Overlay en partida (v0.5): franja fina siempre encima con los timers de dragón y barón y tu nivel/CS contra tu rival.
+"""Overlay en partida (0.17): una pastilla de 380×72 siempre encima, del lienzo «Base LOL» (plan de Fable y DeepSeek):
+nivel y farm hasta el 14, muertes y peleas del 14 al 25, KDA después, y el aviso corto 8 s.
 Solo lee el estado de HTC (que a su vez solo lee la Live Client Data): no inyecta nada en el juego. Los clics la
 atraviesan (WS_EX_TRANSPARENT) y no roba el foco. Se ve con LoL en «sin bordes» (el modo por defecto), no en pantalla
-completa exclusiva. Sin dependencias: tkinter + ctypes."""
+completa exclusiva. tkinter + ctypes + Pillow (dibujo a imagen y UpdateLayeredWindow: alfa por píxel)."""
 import time
 
-BG, TXT, ROSA, AMBAR = "#1A0C13", "#F2F4F7", "#F28DB0", "#F5C26B"
-AVISO_SEGUNDOS = 12  # F1: lo que dura el aviso corto en la franja (lo bastante para leer 8 palabras de reojo)
+import io, pathlib
+
+# Paleta Vino del lienzo «Base LOL» (Overlay_Vino), en rgb
+ROSA, ROSA2, ROSA3, ROJO, ROJO2 = (242, 141, 176), (248, 195, 214), (163, 58, 99), (255, 138, 138), (154, 46, 58)
+SALVIA, ORO, TXT, ETQ = (168, 216, 192), (242, 196, 107), (242, 244, 247), (174, 149, 160)
+COLORES = {"rosa": (ROSA2, ROSA3), "rojo": (ROJO, ROJO2), "salvia": (SALVIA, (62, 122, 98)), "oro": (ORO, (156, 106, 28)), "gris": (ETQ, (90, 70, 80))}
+AVISO_SEGUNDOS = 8  # el aviso corto ocupa la pastilla 8 s (plan del overlay; antes 12 en la franja de texto)
+LINEA_HASTA, PELEAS_HASTA = 840, 1500  # s de juego: 0–14 nivel y farm; 14–25 muertes y peleas; después KDA
+CHIP_MAX = 10  # caracteres que caben en el chip junto a los dos medallones
 
 
-def reloj(seg):
-    seg = max(0, int(seg)); return f"{seg // 60}:{seg % 60:02d}"
+def ritmo(cs_meta, t):
+    """CS esperado a los t s si cs_meta es tu meta de CS al minuto 10 (los minions llegan a la línea ~1:15)."""
+    return cs_meta * max(0, t - 75) / 525
 
 
-def pieza_aviso(aviso, ahora):
-    """F1: el aviso corto de la partida, los AVISO_SEGUNDOS que dura en la franja (la quinta pieza, siempre al final); o None."""
-    if not aviso or not aviso.get("franja") or not aviso.get("corto") or ahora - aviso["franja"] >= AVISO_SEGUNDOS: return None
-    return (aviso["corto"], AMBAR)
-
-
-def partes(meta, ahora, aj=None, regla=None):
-    """[(texto, color)] de la franja, o [] sin datos. meta = ESTADO["meta"] (companion.meta_fase + «recibido»): los
-    timers llegan cada 30 s; entre fotos se descuentan con el reloj local."""
-    if not meta: return []
-    aj = aj or {}; on = lambda k: aj.get(k, True) is not False  # piezas de Ajustes: sin dato, visibles
-    if meta.get("modo") == "ARAM":  # sin líneas ni dragón: el marcador, la amenaza y tu KDA
-        (tu, ellos), a = meta.get("kills") or [0, 0], (meta.get("amenazas") or [{}])[0]
-        cuidado = [(f"Cuidado {a['campeon']} {a['kda']}", AMBAR)] if a.get("campeon") else []
-        return [(("▼ " if tu < ellos else "") + f"Kills {tu} vs {ellos}", ROSA if tu < ellos else TXT)] + cuidado + [(f"Tu KDA {meta.get('kda', '')}", TXT)]
-    o, edad = meta.get("objetivos") or {}, 0.0 if meta.get("pausa") else max(0.0, ahora - (meta.get("recibido") or ahora))  # en pausa no bajan
-    minuto, c = meta.get("minuto") or 0, {}  # c: pieza → (texto, color); luego se eligen por fase
-    for nombre, k in (("Anciano" if o.get("anciano") else "Dragón", "dragon"), ("Barón", "baron")):
-        if k not in o or not on("franja_objetivos"): continue
-        if o[k] is None: c[k] = (f"{nombre} vivo", ROSA); continue
-        falta = max(0, o[k] - edad)
-        if falta < 60: c[k] = (f"! {nombre} {reloj(falta)}", AMBAR)  # «!» además del color: urgente
-        else: c[k] = (f"{nombre} {reloj(falta)}", TXT)
-        c[k + "_falta"] = falta
-    if on("franja_linea") and meta.get("nivel") is not None and meta.get("nivel_rival") is not None:
-        d = meta["nivel"] - meta["nivel_rival"]; c["abajo_nv"] = d < 0
-        c["nivel"] = (("▼ " if d < 0 else "") + f"Nv {meta['nivel']} vs {meta['nivel_rival']}" + (f" {meta['rival']}" if meta.get("rival") else ""), ROSA if d < 0 else TXT)
-    if on("franja_linea") and meta.get("cs") is not None and meta.get("rival_cs") is not None:
-        c["cs"] = (("▼ " if meta["cs"] < meta["rival_cs"] else "") + f"CS {meta['cs']} vs {meta['rival_cs']}", ROSA if meta["cs"] < meta["rival_cs"] else TXT)
-    m14, de_nivel = meta.get("muertes14"), (regla or {}).get("metrica") == "nivel"
-    if on("franja_regla") and de_nivel and minuto < 8 and "nivel" in c:  # F3: tu regla de hoy es la del nivel al 6
-        nv = c.pop("nivel"); c["regla"] = (nv[0].replace("Nv ", "Regla Nv 6: ", 1), nv[1])
-    tope = (regla or {}).get("tope", 2)  # F12: tu coach puede poner otro tope de muertes
-    if on("franja_regla") and not de_nivel and m14 is not None and 14 <= minuto < 25:  # tu regla que más pesa (≤ 2 muertes del 14 al 25), a la vista toda la fase
-        c["regla"] = (("▼ " if m14 > tope else "") + f"Muertes 14–25: {m14}/{tope}", ROSA if m14 > tope else AMBAR if m14 == tope else TXT)
+def estado(meta, ahora, aj=None, regla=None, aviso=None):
+    """Qué muestra la pastilla (plan del overlay de Fable con la revisión de DeepSeek), o None. Solo datos y tu regla,
+    nunca órdenes (Riot: no dictar decisiones). Huecos: a (tu medallón), rival (opcional), b (anillo + número), chip."""
+    if not meta: return None
+    aj = aj or {}; on = lambda k: aj.get(k, True) is not False
+    t = meta["t"] if meta.get("t") is not None else (meta.get("minuto") or 0) * 60
+    camp = meta.get("campeon")
+    if aviso and aviso.get("franja") is not None and aviso.get("corto") and ahora - aviso["franja"] < AVISO_SEGUNDOS:
+        return {"tipo": "aviso", "a": {"campeon": camp, "anillo": 1.0, "color": "rojo", "insignia": None, "atenuado": True},
+                "texto": aviso["corto"], "chip": None}
+    if meta.get("modo") == "ARAM":
+        tu, ellos = meta.get("kills") or [0, 0]
+        return {"tipo": "aram", "a": {"campeon": camp, "anillo": 1.0, "color": "rosa", "insignia": meta.get("nivel")},
+                "num": f"{tu} – {ellos}", "etq": "kills", "b": {"icono": None, "color": "rosa", "num": meta.get("kda") or "", "etq": "KDA"}, "chip": None}
+    nv, nvr, rival = meta.get("nivel"), meta.get("nivel_rival"), meta.get("rival")
+    if t < LINEA_HASTA and on("franja_linea"):
+        a = {"campeon": camp, "anillo": min(nv or 0, 6) / 6, "color": "rosa", "insignia": nv}  # hacia tu regla del nivel 6 (la API no trae XP)
+        dif_nv = (nv - nvr) if nv is not None and nvr is not None else None
+        riv = flecha = None
+        if dif_nv is not None and rival:
+            riv = {"campeon": rival, "anillo": min(nvr, 6) / 6, "color": "rojo" if dif_nv < 0 else "gris", "insignia": nvr}
+            flecha = {"txt": f"{dif_nv:+d}" if dif_nv else "=", "color": "rojo" if dif_nv < 0 else "salvia" if dif_nv > 0 else "gris"}
+        cs, meta10, rcs = meta.get("cs"), meta.get("cs_meta"), meta.get("rival_cs")
+        b, bajo = {"icono": "minion", "anillo": None, "color": "rosa", "num": str(cs if cs is not None else "—"), "etq": "CS"}, None
+        if cs is not None and meta10 and t < 600:
+            obj = ritmo(meta10, t)  # el umbral va sobre el flotante, no sobre el redondeo (DeepSeek)
+            col = "salvia" if cs >= obj else "oro" if cs >= .85 * obj else "rojo"
+            b.update(anillo=min(1.0, cs / obj) if obj else 1.0, color=col, etq=f"ritmo {round(obj)}"); bajo = col != "salvia"
+        elif cs is not None and rcs is not None:
+            dcs = cs - rcs
+            b.update(num=f"{dcs:+d}", color="rojo" if dcs <= -10 else "salvia" if dcs >= 0 else "oro", etq="CS vs rival"); bajo = dcs < 0
+        if riv and dif_nv < 0: chip = ("Nivel " + flecha["txt"], "rojo")
+        elif bajo: chip = ("Bajo ritmo" if b["etq"].startswith("ritmo") else "CS abajo", "oro")
+        elif bajo is False or (riv and dif_nv >= 0): chip = ("Vas bien", "salvia")
+        else: chip = None
+        return {"tipo": "linea", "a": a, "rival": riv, "flecha": flecha, "b": b, "chip": chip}
+    m14, tope = meta.get("muertes14"), max(1, int((regla or {}).get("tope", 2)))
+    part = meta.get("participacion")
+    bpart = {"icono": "espadas", "anillo": part, "color": "rosa", "num": f"{round(part * 100)}%" if part is not None else "—", "etq": "en kills"}
+    if LINEA_HASTA <= t < PELEAS_HASTA and m14 is not None and on("franja_regla"):  # siempre, aunque tu regla de hoy sea otra (decisión del usuario)
+        col = "salvia" if m14 < tope else "oro" if m14 == tope else "rojo"
+        return {"tipo": "peleas", "a": {"campeon": camp, "tramos": min(tope, 5), "apagados": min(m14, tope, 5), "color": "rojo" if m14 >= tope else "rosa",
+                                         "insignia": f"{m14}/{tope}", "atenuado": m14 > tope},
+                "num": f"{m14} / {tope}", "etq": "muertes", "b": bpart,
+                "chip": ("Vas bien" if m14 < tope else "En tu tope" if m14 == tope else "Sobre tope", col)}
     oro = meta.get("oro") or {}
-    dif = lambda a, b: round((a - b) / 50) * 50  # oro en ítems (lo de Tab), redondeado: el detalle no cambia la decisión
-    if on("franja_linea") and oro.get("tu") is not None and oro.get("rival") is not None:
-        d = dif(oro["tu"], oro["rival"]); c["oro"] = (("▼ " if d < 0 else "") + f"Oro {d:+d}", ROSA if d < 0 else TXT)
-    if oro.get("equipo") is not None and oro.get("equipo_rival") is not None:
-        d = dif(oro["equipo"], oro["equipo_rival"]); c["oro_equipo"] = (("▼ " if d < 0 else "") + f"Equipo {d:+d}", ROSA if d < 0 else TXT)
-    if meta.get("muerto"):  # F4: muerto es el único momento con atención libre: tu regla y el próximo objetivo, nada más
-        sig = min((k for k in ("dragon", "baron") if k in c), key=lambda k: c.get(k + "_falta", -1), default=None)
-        if "regla" not in c and m14 is not None and 14 <= minuto < 25: c["regla"] = (f"Muertes 14–25: {m14}/{tope}", ROSA if m14 > tope else TXT)  # pasado el 25 ya cuenta otras
-        return [c[k] for k in ("regla", sig) if k and c.get(k)]
-    return elegir(c, minuto)
+    eq = round((oro["equipo"] - oro["equipo_rival"]) / 50) * 50 if oro.get("equipo") is not None and oro.get("equipo_rival") is not None else None
+    return {"tipo": "tarde", "a": {"campeon": camp, "anillo": 1.0, "color": "rosa", "insignia": nv}, "num": meta.get("kda") or "", "etq": "KDA",
+            "b": bpart, "chip": (f"Eq {eq:+d}"[:CHIP_MAX], "salvia" if eq >= 0 else "rojo") if eq is not None else None}
 
 
-MAX_PIEZAS = 4  # más que esto no se lee de reojo en partida (plan en partida, F6)
-ORDEN = ("regla", "nivel", "cs", "oro", "oro_equipo", "dragon", "baron")  # orden fijo en pantalla: el ojo aprende dónde mirar
+def textos(e):
+    """Los textos de la pastilla en orden de lectura: para replay (lista negra) y salud."""
+    if not e: return []
+    b = e.get("b") or {}
+    out = [e.get("texto"), e.get("num"), e.get("etq"), (e.get("flecha") or {}).get("txt"), b.get("num"), b.get("etq"), (e.get("chip") or (None,))[0]]
+    return [str(x) for x in out if x not in (None, "")]
 
 
-def elegir(c, minuto):
-    """Las MAX_PIEZAS más importantes para la fase de la partida, en el orden fijo de ORDEN."""
-    pronto = lambda k, s: k in c and (c.get(k + "_falta") is None or c[k + "_falta"] <= s)  # vivo, o sale en ≤ s segundos
-    if minuto < 6: prio = ["regla", "nivel", "cs"] + (["dragon"] if pronto("dragon", 90) else [])
-    elif minuto < 14: prio = ["regla", "oro", "cs", "dragon"] + (["nivel"] if c.get("abajo_nv") else [])
-    elif minuto < 25: prio = ["regla", "dragon"] + (["baron"] if pronto("baron", 180) else []) + ["oro_equipo"]
-    else: prio = (["baron"] if pronto("baron", 180) else []) + ["dragon", "oro_equipo"]
-    elegidas = [k for k in prio if k in c][:MAX_PIEZAS] or [k for k in ("dragon", "baron") if k in c][:1]  # sin rival (práctica, línea apagada): el próximo objetivo, no una franja vacía
-    return [c[k] for k in ORDEN if k in elegidas]
+FUENTE = pathlib.Path(r"C:\Windows\Fonts\segoeuib.ttf")
+_CACHE = {}
+
+
+def _fuente(px):
+    from PIL import ImageFont
+    if ("f", px) not in _CACHE:
+        try: _CACHE[("f", px)] = ImageFont.truetype(str(FUENTE), px)
+        except OSError: _CACHE[("f", px)] = ImageFont.load_default(px)  # fuera de Windows (CI en Ubuntu)
+    return _CACHE[("f", px)]
+
+
+def _png(icono, tipo, nombre, px):
+    """PNG de icono(tipo, nombre) -> bytes, a px×px; None si no hay."""
+    from PIL import Image
+    try:
+        b = icono(tipo, nombre) if icono and nombre else None
+        return Image.open(io.BytesIO(b)).convert("RGBA").resize((px, px), Image.LANCZOS) if b else None
+    except Exception: return None
+
+
+def _retrato(nombre, px, icono, apagado=False):
+    """Retrato circular del campeón, en caché; sin imagen, un círculo con la inicial. apagado: gris y más oscuro."""
+    from PIL import Image, ImageDraw, ImageOps
+    k = ("r", nombre, px, apagado)
+    if k in _CACHE: return _CACHE[k]
+    im = _png(icono, "champion", nombre, px)
+    if im is None:
+        im = Image.new("RGBA", (px, px), ROSA3 + (255,))
+        ImageDraw.Draw(im).text((px / 2, px / 2), (nombre or "?")[:1], font=_fuente(int(px * .5)), fill=TXT + (255,), anchor="mm")
+    if apagado: im = ImageOps.grayscale(im).point(lambda v: int(v * .7)).convert("RGBA")
+    mask = Image.new("L", (px, px), 0); ImageDraw.Draw(mask).ellipse((0, 0, px - 1, px - 1), fill=255)
+    im.putalpha(mask); _CACHE[k] = im
+    return im
+
+
+def pintar(e, esc=1.0, icono=None):
+    """La pastilla (RGBA de 380×72 por esc) para el estado e. Dibujo a 2× y reducción: bordes suaves."""
+    from PIL import Image, ImageDraw
+    S = 2; W, H = round(380 * esc), round(72 * esc); k = lambda v: round(v * esc * S)
+    im = Image.new("RGBA", (W * S, H * S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    alarma = e["tipo"] == "aviso" or (e["tipo"] == "peleas" and e["chip"][1] == "rojo")
+    d.rounded_rectangle((0, 0, W * S - 1, H * S - 1), radius=k(16), fill=(60, 14, 26, 240) if alarma else (11, 7, 9, 214),
+                        outline=ROJO + (255,) if alarma else ROSA + (90,), width=k(2) if alarma else max(1, k(1)))
+    f17, f11 = _fuente(k(17)), _fuente(k(11))
+
+    def anillo(cx, r, frac, col, ancho=3):
+        d.ellipse((cx - r, k(36) - r, cx + r, k(36) + r), outline=(255, 255, 255, 26), width=k(ancho))
+        if frac: d.arc((cx - r, k(36) - r, cx + r, k(36) + r), -90, -90 + 360 * max(0.0, min(1.0, frac)), fill=col + (255,), width=k(ancho))
+
+    def medallon(x, m):
+        cx, r = k(x + 22), k(17); c1 = COLORES.get(m.get("color"), COLORES["rosa"])[0]
+        if m.get("tramos"):  # muertes: anillo partido en tramos; cada muerte apaga uno
+            d.ellipse((cx - r, k(36) - r, cx + r, k(36) + r), outline=(255, 255, 255, 20), width=k(3))
+            n = m["tramos"]; paso = 360 / n
+            for i in range(n):
+                d.arc((cx - r, k(36) - r, cx + r, k(36) + r), -90 + i * paso + 6, -90 + (i + 1) * paso - 6,
+                      fill=ROJO + (217,) if i >= n - m.get("apagados", 0) else ROSA2 + (255,), width=k(3.5))
+        else: anillo(cx, r, m.get("anillo"), c1)
+        im.alpha_composite(_retrato(m.get("campeon"), k(28), icono, m.get("atenuado")), (cx - k(14), k(36) - k(14)))
+        if m.get("insignia") is not None:
+            t = str(m["insignia"]); f = _fuente(k(10)); w = max(k(18), d.textlength(t, font=f) + k(8))
+            d.rounded_rectangle((cx - w / 2, k(50), cx + w / 2, k(66)), radius=k(8), fill=c1 + (255,))
+            d.text((cx, k(58)), t, font=f, fill=(36, 17, 26, 255), anchor="mm")
+        return x + 44
+
+    def dos(x, num, etq, col=TXT):
+        d.text((k(x), k(27)), num, font=f17, fill=col + (255,), anchor="lm")
+        d.text((k(x), k(47)), etq, font=f11, fill=ETQ + (255,), anchor="lm")
+        return x + max(d.textlength(num, font=f17), d.textlength(etq, font=f11)) / (esc * S)
+
+    x = medallon(14, e["a"]) + 12
+    if e["tipo"] == "aviso":  # el texto corto en dos renglones como mucho
+        f, lin = _fuente(k(12)), [""]
+        for p in e["texto"].split():
+            prueba = (lin[-1] + " " + p).strip()
+            if not lin[-1] or d.textlength(prueba, font=f) <= k(380 - x - 14): lin[-1] = prueba
+            elif len(lin) < 2: lin.append(p)
+            else: lin[-1] += "…"; break
+        for i, l in enumerate(lin): d.text((k(x), k(36 + (i - (len(lin) - 1) / 2) * 17)), l, font=f, fill=TXT + (255,), anchor="lm")
+        return im.resize((W, H), Image.LANCZOS)
+    if e.get("rival"):
+        fl = e["flecha"]; d.text((k(x + 9), k(36)), fl["txt"], font=_fuente(k(13)), fill=COLORES[fl["color"]][0] + (255,), anchor="mm")
+        x = medallon(x + 20, e["rival"]) + 12
+    elif e.get("num"): x = dos(x, e["num"], e["etq"]) + 12
+    if e.get("b"):
+        b = e["b"]; c1 = COLORES.get(b["color"], COLORES["rosa"])[0]
+        d.line((k(x), k(18), k(x), k(54)), fill=(255, 255, 255, 31), width=max(1, k(1))); x += 12
+        if b.get("icono"):
+            cx = k(x + 22); anillo(cx, k(19), b.get("anillo"), c1)
+            ic = _png(icono, "minion", "caster", k(32)) if b["icono"] == "minion" else None
+            if ic: im.alpha_composite(ic, (cx - k(16), k(36) - k(16)))
+            elif b["icono"] == "espadas":
+                for (x1, y1), (x2, y2) in (((-7, 7), (7, -7)), ((-7, -7), (7, 7))):
+                    d.line((cx + k(x1), k(36 + y1), cx + k(x2), k(36 + y2)), fill=ROSA2 + (255,), width=k(2))
+            x += 54
+        x = dos(x, b["num"], b["etq"], c1 if b["etq"] == "CS vs rival" else TXT)
+    if e.get("chip"):
+        t, c = e["chip"]; col = COLORES[c][0]; f = _fuente(k(12)); w = d.textlength(t, font=f) + k(20)
+        d.rounded_rectangle((W * S - k(14) - w, k(22), W * S - k(14), k(50)), radius=k(14), fill=col + (38,))
+        d.text((W * S - k(14) - w / 2, k(36)), t, font=f, fill=col + (255,), anchor="mm")
+    return im.resize((W, H), Image.LANCZOS)
 
 
 def atravesable(root):
@@ -135,13 +244,49 @@ def visible(s, ahora):
             and recibido is not None and ahora - recibido < FRESCA)
 
 
-def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None):
-    """Bucle de tkinter (hilo principal). leer() -> estado de HTC; seguir() -> False para cerrar. x = fracción del ancho.
-    registrar(txt): a dónde va un error de dibujo (una vez por texto)."""
+def escala(juego):
+    """Tamaño de la pastilla según el alto del juego (1080 = 1), en pasos de 0,25 entre 0,75 y 2."""
+    alto = (juego[3] - juego[1]) if juego else 1080
+    return max(0.75, min(2.0, round(alto / 1080 * 4) / 4))
+
+
+def mostrar(hwnd, im, x, y):
+    """Pone la imagen RGBA en la ventana en capas: DIB de 32 bits BGRA premultiplicado (sin premultiplicar salen halos,
+    DeepSeek). True si Windows la aceptó."""
+    import ctypes, ctypes.wintypes as w
+    from PIL import Image, ImageChops
+    u, g, H = ctypes.windll.user32, ctypes.windll.gdi32, ctypes.c_void_p
+    u.GetDC.restype = H; u.GetDC.argtypes = [w.HWND]; u.ReleaseDC.argtypes = [w.HWND, H]
+    g.CreateCompatibleDC.restype = H; g.CreateCompatibleDC.argtypes = [H]
+    g.CreateDIBSection.restype = H; g.CreateDIBSection.argtypes = [H, ctypes.c_void_p, ctypes.c_uint, ctypes.POINTER(ctypes.c_void_p), H, w.DWORD]
+    g.SelectObject.restype = H; g.SelectObject.argtypes = [H, H]; g.DeleteObject.argtypes = [H]; g.DeleteDC.argtypes = [H]
+    u.UpdateLayeredWindow.argtypes = [w.HWND, H, ctypes.c_void_p, ctypes.c_void_p, H, ctypes.c_void_p, w.DWORD, ctypes.c_void_p, w.DWORD]
+    class BLEND(ctypes.Structure): _fields_ = [("op", ctypes.c_byte), ("flags", ctypes.c_byte), ("alpha", ctypes.c_ubyte), ("fmt", ctypes.c_byte)]
+    class BIH(ctypes.Structure): _fields_ = [("size", w.DWORD), ("w", ctypes.c_long), ("h", ctypes.c_long), ("planes", w.WORD), ("bits", w.WORD), ("comp", w.DWORD),
+                                             ("isize", w.DWORD), ("xp", ctypes.c_long), ("yp", ctypes.c_long), ("used", w.DWORD), ("imp", w.DWORD)]
+    W, Hh = im.size; r, gg, b, a = im.split()
+    px = Image.merge("RGBA", tuple(ImageChops.multiply(c, a) for c in (b, gg, r)) + (a,)).tobytes()  # BGRA premultiplicado
+    sdc = u.GetDC(0); mdc = g.CreateCompatibleDC(sdc); bits = ctypes.c_void_p()
+    hb = g.CreateDIBSection(mdc, ctypes.byref(BIH(ctypes.sizeof(BIH), W, -Hh, 1, 32, 0, 0, 0, 0, 0, 0)), 0, ctypes.byref(bits), None, 0)
+    if not hb: g.DeleteDC(mdc); u.ReleaseDC(0, sdc); return False
+    ctypes.memmove(bits, px, len(px)); viejo = g.SelectObject(mdc, hb)
+    ok = u.UpdateLayeredWindow(hwnd, sdc, ctypes.byref(w.POINT(x, y)), ctypes.byref(w.SIZE(W, Hh)), mdc, ctypes.byref(w.POINT(0, 0)), 0,
+                               ctypes.byref(BLEND(0, 0, 255, 1)), 2)  # AC_SRC_OVER, AC_SRC_ALPHA, ULW_ALPHA
+    g.SelectObject(mdc, viejo); g.DeleteObject(hb); g.DeleteDC(mdc); u.ReleaseDC(0, sdc)
+    return bool(ok)
+
+
+def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None, icono=None):
+    """Bucle de tkinter (hilo principal): la pastilla en una ventana en capas (alfa por píxel), siempre encima y
+    atravesable. leer() -> estado de HTC; seguir() -> False para cerrar; icono(tipo, nombre) -> PNG en bytes o None.
+    Solo se repinta cuando cambia lo que muestra (la foto llega cada 10 s)."""
     import tkinter as tk, traceback
-    root = tk.Tk(); root.withdraw(); root.title("Racha franja"); root.overrideredirect(True); root.attributes("-topmost", True); root.attributes("-alpha", 0.88)
-    root.configure(bg=BG); fila = tk.Frame(root, bg=BG, padx=10, pady=4); fila.pack()
-    root.update_idletasks(); atravesable(root); mostrada, ultimo, errores, etiquetas = [False], [None], set(), []
+    try: import ctypes; ctypes.windll.shcore.SetProcessDpiAwareness(2)  # coordenadas reales por monitor (antes de crear Tk)
+    except (AttributeError, OSError): pass
+    root = tk.Tk(); root.withdraw(); root.title("Racha franja"); root.overrideredirect(True); root.attributes("-topmost", True)
+    root.update_idletasks(); atravesable(root)
+    hwnd = ctypes.windll.user32.GetParent(root.winfo_id()) if hasattr(ctypes, "windll") else None
+    mostrada, ultimo, errores = [False], [None], set()
 
     def tick():
         if not seguir(): root.destroy(); return
@@ -151,27 +296,18 @@ def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None):
         root.after(1000, tick)
 
     def dibujar():
-        s = leer() or {}
-        aj = s.get("ajustes") or {}
-        regla = (((s.get("rendimiento") or {}).get("vistas") or {}).get("regla_hoy"))  # F3: la tuya, no la del autor
-        ps = partes(s.get("meta"), time.time(), aj, regla) if visible(s, time.time()) else []
-        if ps and (pa := pieza_aviso(s.get("aviso"), time.time())): ps = ps + [pa]  # el aviso corto, al final y por 12 s
-        if ps == ultimo[0] and ps: return  # nada cambió: no se crean widgets cada segundo (plan en partida, F6)
-        if ultimo[0] and len(ps) == len(ultimo[0]):  # mismas piezas, otro texto (el timer bajó un segundo): sin crear widgets
-            for et, (t, c) in zip(etiquetas, ps): et.config(text=t, fg=c)
-        else:
-            ultimo[0] = None  # si el dibujo falla a medias, la próxima vuelta rehace todo (revisión del asistente, 16)
-            for w in fila.winfo_children(): w.destroy()
-            etiquetas.clear()
-            for i, (t, c) in enumerate(ps):
-                if i: tk.Label(fila, text="·", fg="#7A5A68", bg=BG, font=("Segoe UI", 11)).pack(side="left", padx=4)
-                etiquetas.append(tk.Label(fila, text=t, fg=c, bg=BG, font=("Segoe UI Semibold", 11))); etiquetas[-1].pack(side="left")
-        ultimo[0] = ps
-        if ps:  # se recoloca cada segundo: cambiar «franja_pos» en partida mueve la franja al instante
-            root.update_idletasks()
-            px, py = colocar(rect_juego(), (root.winfo_screenwidth(), root.winfo_screenheight()), root.winfo_reqheight(), x, aj.get("franja_pos"), y, fraccion_util(), root.winfo_reqwidth())
-            root.geometry(f"+{px}+{py}")
-            if not mostrada[0]: root.deiconify(); root.attributes("-topmost", True); mostrada[0] = True
-        elif mostrada[0]: root.withdraw(); mostrada[0] = False
+        s = leer() or {}; ahora = time.time(); aj = s.get("ajustes") or {}
+        regla = (((s.get("rendimiento") or {}).get("vistas") or {}).get("regla_hoy"))  # tu regla, no la del autor
+        e = estado(s.get("meta"), ahora, aj, regla, s.get("aviso")) if visible(s, ahora) else None
+        if not e:
+            if mostrada[0]: root.withdraw(); mostrada[0] = False
+            ultimo[0] = None; return
+        juego = rect_juego(); esc = escala(juego)
+        px, py = colocar(juego, (root.winfo_screenwidth(), root.winfo_screenheight()), round(72 * esc), x, aj.get("franja_pos"), y, fraccion_util(), round(380 * esc))
+        clave = (repr(e), esc, px, py)
+        if clave == ultimo[0] and mostrada[0]: return  # nada cambió: no se repinta
+        if not mostrada[0]: root.deiconify(); root.attributes("-topmost", True); mostrada[0] = True  # la ventana en capas solo se ve tras mostrarla
+        if hwnd: mostrar(hwnd, pintar(e, esc, icono), px, py)
+        ultimo[0] = clave
 
     tick(); root.mainloop()

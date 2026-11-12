@@ -1,4 +1,4 @@
-"""Repite una partida grabada (datos/vivo/*.jsonl) por companion.paso_vivo y overlay.partes, sin LoL ni red.
+"""Repite una partida grabada (datos/vivo/*.jsonl) por companion.paso_vivo y la pastilla (overlay.estado), sin LoL ni red.
 Uso: python scripts/replay.py <archivo.jsonl> [--validar] [--precios]
 Cada foto: «mm:ss | franja: … | aviso: …». --validar comprueba invariantes y sale con 1 si alguna falla.
 Por defecto no usa Data Dragon (sin pieza de Oro ni aviso de pico) para que la salida sea idéntica en cualquier máquina; --precios lo activa."""
@@ -6,14 +6,14 @@ import argparse, contextlib, json, pathlib, re, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import companion, overlay
 
-MAX_PIEZAS = 4  # plan F6: piezas de franja (el aviso va aparte, 1 a la vez)
+MAX_PIEZAS = 7  # textos de la pastilla 380×72 (plan del overlay): número y etiqueta ×2, flecha, chip
 AVISO_CORTO = 48  # plan F1: caracteres del aviso en la franja
 LISTA_NEGRA = (  # lo que la franja y los avisos nunca dicen (lista de DeepSeek, avisos-v011.md); se busca como palabra completa
     "cooldown", "enfriamiento", "flash", "destello", "ultimate", "definitiva", "smite", "castigo",  # timers que no se ven
     "respawn", "reaparece", "mmr", "elo", "probabilidad", "campamento",  # reaparición rival, rating, conclusiones, jungla
     "el jungla está", "el jungla va", "troll", "inting", "afk")  # posiciones que no ves y juicios de compañeros
 VENTANAS = {"aviso_nivel": (5, 7), "aviso_regreso": (10, 14), "aviso_muertes": (14, 24), "aviso_minions": (10, 11)}  # minuto de juego; el pico no tiene ventana
-PIEZAS_LINEA = re.compile(r"^(▼ )?(Nv|CS|Oro)\b")
+PIEZAS_LINEA = re.compile(r"^(ritmo|CS vs|Nivel |[+-]\d+$)")  # textos de la pastilla que solo existen en la Grieta
 BORRAR = {"rawDescription", "rawDisplayName", "rawChampionName", "rawSkinName", "skinID", "skinName", "fullRunes", "runes",
           "abilities", "championStats", "summonerSpells", "teamRelativeColors"}  # pesan y no los usa nada del replay
 
@@ -70,7 +70,7 @@ def repetir(fotos, aj=None):
         t = d["gameData"]["gameTime"]
         meta, avisos = companion.paso_vivo(d, estado, aj or {})
         if meta: meta = {**meta, "recibido": t}
-        out.append({"t": t, "d": d, "meta": meta, "franja": overlay.partes(meta, t, aj), "avisos": avisos})
+        out.append({"t": t, "d": d, "meta": meta, "franja": [(x, None) for x in overlay.textos(overlay.estado(meta, t, aj))], "avisos": avisos})
     return out
 
 
@@ -84,7 +84,7 @@ def _eventos(d): return ((d or {}).get("events") or {}).get("Events") or []
 def validar(rs):
     """Lista de fallos (texto); vacía si todo cuadra."""
     f = []
-    for i, r in enumerate(rs):
+    for r in rs:
         t = reloj(r["t"])
         if len(r["franja"]) > MAX_PIEZAS: f.append(f"{t}: {len(r['franja'])} piezas en la franja (máx. {MAX_PIEZAS})")  # (a)
         if len(r["avisos"]) > 1: f.append(f"{t}: {len(r['avisos'])} avisos a la vez (máx. 1)")
@@ -97,14 +97,6 @@ def validar(rs):
             f += [f"{t}: pieza de línea «{x[0]}» fuera de CLASSIC" for x in r["franja"] if PIEZAS_LINEA.match(x[0])]
         for txt in [x[0] for x in r["franja"]] + [a[1] for a in r["avisos"]] + [getattr(a[1], "corto", "") or "" for a in r["avisos"]]:  # (f)
             if mal := [w for w in LISTA_NEGRA if re.search(r"\b" + re.escape(w) + r"\b", txt.lower())]: f.append(f"{t}: palabra prohibida {mal} en «{txt}»")
-        if i:  # (b) un objetivo no muere antes de que su cuenta llegue a 0
-            ant = rs[i - 1]; previos = {(e.get("EventID"), e.get("EventTime")) for e in _eventos(ant["d"])}
-            for e in _eventos(r["d"]):
-                k = {"DragonKill": "Dragón", "BaronKill": "Barón"}.get(e.get("EventName"))
-                if not k or (e.get("EventID"), e.get("EventTime")) in previos: continue
-                for x in ant["franja"]:
-                    if (mm := re.fullmatch(rf"{k} (\d+):(\d\d)", x[0])) and int(mm[1]) * 60 + int(mm[2]) - (e["EventTime"] - ant["t"]) > 1.5:
-                        f.append(f"{t}: {e['EventName']} a {reloj(e['EventTime'])} con la franja anterior marcando «{x[0]}» (a {reloj(ant['t'])})")
     if rs:  # (c)
         d = rs[-1]["d"]; me, _ = companion.yo_rival(d)
         if me:

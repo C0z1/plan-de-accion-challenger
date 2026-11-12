@@ -2468,3 +2468,8 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - Verificado en la PC: 0.15.0 instalada, misma ventana reconectada, 20 partidas de Zeriously#cozi bajadas, 9 vistas OK.
 - Sin verificar: forma real de `actions`/`bans` de la LCU en una selección (la fixture no los trae); DeepSeek no escribió pruebas de esta ronda.
 - Observado: «ultima» (disco, cada 30 s) y «fin» (última foto) difieren un poco (cs 280 vs 290); el aviso «Tu regla: jugar con objetivo, no pelear…» está en imperativo (límite de Riot «dictar decisiones», ver COMPETENCIA.md §4).
+
+## 2026-11-12 · Opus · 0.17.0: franja «pastilla» (PLAN-OVERLAY.md, Fable + DeepSeek)
+- Hecho la fase 1: `overlay.estado/textos/pintar/mostrar/escala`, ventana Tk en capas con Pillow (`UpdateLayeredWindow`, BGRA premultiplicado), `companion.participacion`, salud S5 ≤ 8 %, replay con `textos`, sin `franja_objetivos` ni timers en la franja; pruebas viejas de `partes`/`elegir` reescritas o borradas (timers). numpy excluido del build (Pillow lo arrastraba: +27 MB); instalador 15,8 MB.
+- Verificado: pastilla pintada en los 8 estados; en pantalla con `dev_franja.py` (Zeri vs Jinx 6:00 y 18:00); Practice Tool con la 0.17.0 instalada: visible, transparente, noactivate, topmost, salud OK, juego a 144 FPS.
+- Falta: FPS con y sin franja en partida normal (usuario), DPI 125/150 y dos monitores, fase 2 (Igualaste, oro al 14), pruebas de DeepSeek del plan.

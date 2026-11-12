@@ -3,7 +3,7 @@
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path $PSScriptRoot)
 python -m PyInstaller --noconfirm --onedir --windowed --name HTC --icon instalador/htc.ico --distpath dist --workpath build `
-  --add-data "scripts/web;web" --paths scripts scripts/companion_web.py
+  --add-data "scripts/web;web" --paths scripts --exclude-module numpy scripts/companion_web.py  # numpy: Pillow lo arrastra y no se usa (27 MB)
 if ($LASTEXITCODE) { exit $LASTEXITCODE }
 python scripts/humo_exe.py dist/HTC/HTC.exe
 if ($LASTEXITCODE) { exit $LASTEXITCODE }

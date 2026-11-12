@@ -215,6 +215,13 @@ def kda(p):
     return f"{s.get('kills') or 0}/{s.get('deaths') or 0}/{s.get('assists') or 0}"
 
 
+def participacion(d, me):
+    """(tus kills + asistencias) / kills de tu equipo, 0–1; None sin kills del equipo todavía."""
+    sc = lambda p: p.get("scores") or {}
+    eq = sum(sc(p).get("kills") or 0 for p in (d or {}).get("allPlayers") or [] if p.get("team") == me.get("team"))
+    return round(min(1.0, ((sc(me).get("kills") or 0) + (sc(me).get("assists") or 0)) / eq), 2) if eq else None
+
+
 def meta_aram(d, me):
     """ARAM y modos sin líneas: {modo, minuto, campeon, nivel, kda, kills, torres, amenazas}. amenazas = los 3 rivales más
     fuertes ahora (kills, luego asistencias, luego menos muertes) con su KDA, nivel e ítems: a quién cuidar en la pelea."""
@@ -269,7 +276,7 @@ def meta_fase(d, m10=None):
             "rival_kda": f"{rs.get('kills') or 0}/{rs.get('deaths') or 0}/{rs.get('assists') or 0}" if rival else None,
             "rival_cs": rs.get("creepScore"), "rival_items": [[i["itemID"], i.get("displayName") or ""] for i in (rival or {}).get("items") or [] if i.get("itemID") and not i.get("consumable") and i.get("slot") != 6][:6],  # slot 6 = trinket
             "objetivos": objetivos(d, me), "t": int(((d.get("gameData") or {}).get("gameTime") or 0)), "kda": kda(me),
-            "oro": oro_lineas(d, me, rival),
+            "oro": oro_lineas(d, me, rival), "participacion": participacion(d, me),
             "muerto": bool(me.get("isDead")), "revive": round(me.get("respawnTimer") or 0) if me.get("isDead") else None,  # F4: solo los tuyos
             "items": [[i["itemID"], i.get("displayName") or ""] for i in me.get("items") or [] if i.get("itemID") and not i.get("consumable") and i.get("slot") != 6][:6]}
 

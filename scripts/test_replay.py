@@ -47,15 +47,6 @@ class Validador(unittest.TestCase):
     def test_dos_avisos_a_la_vez(self):
         self.assertTrue(replay.validar([reg(0, avisos=[("pico:1:x", "a", 0), ("pico:2:y", "b", 0)])]))
 
-    def test_dragon_muerto_antes_de_la_cuenta(self):
-        ev = {"EventName": "DragonKill", "EventID": 1, "EventTime": 400.0}
-        malo = replay.validar([reg(300, ["Dragón 2:00"]), reg(330, d=foto(330, eventos=[ev]))])  # salía a 420
-        self.assertEqual(len(malo), 1)
-        ok = {**ev, "EventTime": 425.0}
-        self.assertEqual(replay.validar([reg(300, ["Dragón 2:00"]), reg(330, d=foto(330, eventos=[ok]))]), [])
-        # un evento ya visto en la foto anterior no cuenta de nuevo
-        self.assertEqual(replay.validar([reg(300, ["Dragón 2:00"], d=foto(300, eventos=[ev])), reg(330, d=foto(330, eventos=[ev]))]), [])
-
     def test_muertes_contra_eventos(self):
         ev = {"EventName": "ChampionKill", "EventID": 1, "EventTime": 5.0, "VictimName": "Yo"}
         self.assertEqual(replay.validar([reg(10, d=foto(10, eventos=[ev], muertes=1))]), [])
@@ -66,8 +57,9 @@ class Validador(unittest.TestCase):
         self.assertEqual(replay.validar([reg(0, avisos=[("aviso_nivel", companion.Texto("x", "x"), 6)])]), [])
 
     def test_linea_fuera_de_classic(self):
-        self.assertTrue(replay.validar([reg(0, ["CS 3 vs 4"], d=foto(0, modo="ARAM"))]))
-        self.assertEqual(replay.validar([reg(0, ["Kills 1 vs 2"], d=foto(0, modo="ARAM"))]), [])
+        self.assertTrue(replay.validar([reg(0, ["CS vs rival"], d=foto(0, modo="ARAM"))]))
+        self.assertTrue(replay.validar([reg(0, ["ritmo 30"], d=foto(0, modo="ARAM"))]))
+        self.assertEqual(replay.validar([reg(0, ["9 – 32", "kills"], d=foto(0, modo="ARAM"))]), [])
 
     def test_lista_negra(self):
         self.assertTrue(replay.validar([reg(0, ["Flash 3:00"])]))

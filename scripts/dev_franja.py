@@ -25,7 +25,8 @@ def main(argv=None):
         aviso = {"corto": a.aviso, "franja": inicio} if a.aviso else None
         return {"fase": "InProgress", "meta": {**r["meta"], "recibido": time.time()}, "ajustes": {}, "aviso": aviso}
 
-    overlay.correr(leer, lambda: time.time() < fin)
+    import companion_web
+    overlay.correr(leer, lambda: time.time() < fin, icono=companion_web.imagen)
 
 
 if __name__ == "__main__": main()

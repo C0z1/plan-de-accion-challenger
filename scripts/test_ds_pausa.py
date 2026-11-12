@@ -48,13 +48,6 @@ class Pausa(unittest.TestCase):
         w.evento(("meta", meta(None)))
         self.assertFalse(w.ESTADO["meta"]["pausa"])
 
-    def test_pausa_true_congela_overlay_partes_7_s_despues(self):
-        import overlay
-        w.ESTADO["meta"] = meta(122, minuto=17)
-        self._evento(122, minuto=17)
-        m = w.ESTADO["meta"]
-        self.assertTrue(m["pausa"])
-        self.assertEqual(overlay.partes(m, m["recibido"] + 1), overlay.partes(m, m["recibido"] + 8))
 
 
 if __name__ == "__main__":

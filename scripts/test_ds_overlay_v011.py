@@ -119,25 +119,22 @@ class AvisoPico(unittest.TestCase):
         self.assertEqual((a, b), ("pico:2:Item3100|Item6692", "pico:2:Item3100|Item3142"))
 
 
-class Partes(unittest.TestCase):
-    META = {"nivel": 11, "nivel_rival": 12, "rival": "Ahri", "cs": 71, "rival_cs": 140, "recibido": 1000.0,
-            "objetivos": {"dragon": 90, "baron": None}}
+class Pastilla(unittest.TestCase):  # antes Partes (franja de texto): ahora overlay.estado
+    META = {"nivel": 11, "nivel_rival": 12, "rival": "Ahri", "cs": 71, "rival_cs": 140, "recibido": 1000.0}
 
-    def c(self, m, minuto):
-        return dict(overlay.partes({**self.META, "muertes14": m, "minuto": minuto}, 1000.0))
+    def e(self, m, t, **kw): return overlay.estado({**self.META, "muertes14": m, "t": t, **kw}, 1000.0)
 
     def test_minuto_14_exacto_entra_y_25_exacto_no(self):
-        self.assertEqual(self.c(1, 14)["Muertes 14–25: 1/2"], overlay.TXT)
-        self.assertFalse(any("Muertes" in x for x in self.c(3, 25)))  # 25 ya no entra en < 25
+        self.assertEqual(self.e(1, 840)["num"], "1 / 2")
+        self.assertNotEqual(self.e(3, 1500)["tipo"], "peleas")  # 25:00 ya no entra en < 25
 
     def test_muertes14_cero_se_muestra(self):
-        self.assertEqual(self.c(0, 18)["Muertes 14–25: 0/2"], overlay.TXT)
+        self.assertEqual((self.e(0, 18 * 60)["num"], self.e(0, 18 * 60)["chip"]), ("0 / 2", ("Vas bien", "salvia")))
 
     def test_oro_enorme_y_negativo_no_tumba(self):
-        m = {**self.META, "minuto": 8}  # el oro de línea se ve del 6 al 14 (prioridad por fase, F6)
-        self.assertEqual(dict(overlay.partes({**m, "oro": {"tu": 10**9, "rival": 0}}, 1000.0))["Oro +1000000000"], overlay.TXT)
-        self.assertEqual(dict(overlay.partes({**m, "oro": {"tu": 0, "rival": 10**9}}, 1000.0))["▼ Oro -1000000000"], overlay.ROSA)
-        self.assertEqual(dict(overlay.partes({**m, "oro": {"tu": -5000, "rival": 0}}, 1000.0))["▼ Oro -5000"], overlay.ROSA)
+        for eq, er in ((10**9, 0), (0, 10**9), (-5000, 0)):
+            e = self.e(None, 1600, oro={"equipo": eq, "equipo_rival": er})
+            self.assertLessEqual(len(e["chip"][0]), overlay.CHIP_MAX)
 
 
 @unittest.skipUnless(VIVO.exists() and any(VIVO.glob("*.jsonl")), "sin datos/vivo")

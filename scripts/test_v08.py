@@ -273,14 +273,14 @@ class AvisoEnFranja(unittest.TestCase):  # F1: el corto sale en la franja 12 s; 
         av = lambda t: w.evento(("aviso", {"texto": "largo " + t, "corto": t, "tipo": "consejo", "minuto": 10}))
         with mock.patch.object(w.time, "time", lambda: 1000.0): av("A")
         self.assertEqual(w.ESTADO["aviso"]["franja"], 1000.0)
-        self.assertEqual(overlay.pieza_aviso(w.ESTADO["aviso"], 1011.0), ("A", overlay.AMBAR))
-        self.assertIsNone(overlay.pieza_aviso(w.ESTADO["aviso"], 1012.0))  # a los 12 s se va
+        self.assertEqual(overlay.estado({"t": 300}, 1007.9, aviso=w.ESTADO["aviso"])["texto"], "A")
+        self.assertNotEqual(overlay.estado({"t": 300}, 1008.1, aviso=w.ESTADO["aviso"])["tipo"], "aviso")  # a los 8 s se va
         with mock.patch.object(w.time, "time", lambda: 1050.0): av("B")  # 50 s después: queda en el historial, no en la franja
         self.assertNotIn("franja", w.ESTADO["aviso"]); self.assertEqual(len(w.ESTADO["avisos"]), 2)
         for i in range(8):
             with mock.patch.object(w.time, "time", lambda: 1200.0 + 100 * i): av(f"C{i}")
         self.assertEqual(sum(1 for a in w.ESTADO["avisos"] if a.get("franja")), 6)  # tope por partida
-        self.assertIsNone(overlay.pieza_aviso({"texto": "x", "tipo": "consejo"}, 0))  # sin corto: nada
+        self.assertNotEqual(overlay.estado({"t": 300}, 0, aviso={"texto": "x", "tipo": "consejo", "franja": 0})["tipo"], "aviso")  # sin corto: nada
 
     def test_avisos_reales_traen_corto(self):
         import companion_gui as g, companion
@@ -301,18 +301,12 @@ class ReglaHoy(unittest.TestCase):  # F3: en la franja va TU regla que más fall
         self.assertIsNone(vistas.regla_hoy([dict(metrica="nivel", texto="Nv", numero="y", ok=None, n=0)]))
         self.assertIsNone(vistas.regla_hoy(None))
 
-    def test_franja_con_regla_de_nivel(self):
+    def test_franja_con_regla_de_nivel(self):  # decisión del usuario (plan del overlay): el contador 14–25 sale siempre
         import overlay
-        meta = {"nivel": 5, "nivel_rival": 6, "rival": "Zed", "cs": 40, "rival_cs": 44, "minuto": 4, "muertes14": None, "objetivos": {}}
-        t = [x for x, _ in overlay.partes(meta, 0, None, {"metrica": "nivel"})]
-        self.assertEqual(t[0], "▼ Regla Nv 6: 5 vs 6 Zed")
-        self.assertFalse(any(x.startswith(("Nv", "▼ Nv")) for x in t))  # no se repite como pieza de línea
-        t = [x for x, _ in overlay.partes({**meta, "minuto": 18, "muertes14": 1}, 0, None, {"metrica": "nivel"})]
-        self.assertFalse(any("Muertes" in x for x in t))  # tu regla es la del nivel: el contador de muertes no ocupa lugar
-        t = [x for x, _ in overlay.partes({**meta, "minuto": 18, "muertes14": 1}, 0, None, None)]
-        self.assertIn("Muertes 14–25: 1/2", t)  # sin datos tuyos: la de muertes como consejo
-
-
+        meta = {"nivel": 5, "nivel_rival": 6, "rival": "Zed", "cs": 40, "rival_cs": 44, "t": 240, "muertes14": None}
+        self.assertEqual(overlay.estado(meta, 0, None, {"metrica": "nivel"})["a"]["anillo"], 5 / 6)  # anillo hacia tu nivel 6
+        self.assertEqual(overlay.estado({**meta, "t": 18 * 60, "muertes14": 1}, 0, None, {"metrica": "nivel"})["num"], "1 / 2")
+        self.assertEqual(overlay.estado({**meta, "t": 18 * 60, "muertes14": 1}, 0, None, None)["num"], "1 / 2")
 
 
 class MomentoMuerto(unittest.TestCase):  # F4: muerto, la franja deja tu regla y el próximo objetivo
@@ -320,11 +314,7 @@ class MomentoMuerto(unittest.TestCase):  # F4: muerto, la franja deja tu regla y
         import overlay, companion
         meta = {"nivel": 11, "nivel_rival": 12, "rival": "Zed", "cs": 140, "rival_cs": 150, "minuto": 18, "muertes14": 2,
                 "objetivos": {"dragon": 200, "baron": 40}, "recibido": 0, "muerto": True, "revive": 25}
-        self.assertEqual([x for x, _ in overlay.partes(meta, 0)], ["Muertes 14–25: 2/2", "! Barón 0:40"])
-        vivo = [x for x, _ in overlay.partes({**meta, "muerto": False}, 0)]
-        self.assertGreater(len(vivo), 2)
-        temprano = [x for x, _ in overlay.partes({**meta, "minuto": 8, "muertes14": None, "objetivos": {"dragon": 200, "baron": 720}}, 0)]
-        self.assertEqual(temprano, ["Dragón 3:20"])  # antes del 14 no hay contador: solo el objetivo
+        self.assertEqual(overlay.estado({**meta, "t": 18 * 60}, 0)["chip"], ("En tu tope", "oro"))  # la pastilla no cambia al morir
         d = {"activePlayer": {"riotId": "yo#1"}, "gameData": {"gameTime": 900, "gameMode": "CLASSIC", "mapNumber": 11},
              "allPlayers": [{"riotId": "yo#1", "position": "MIDDLE", "team": "ORDER", "isDead": True, "respawnTimer": 24.6, "scores": {}},
                             {"riotId": "el#2", "position": "MIDDLE", "team": "CHAOS", "isDead": True, "respawnTimer": 30, "scores": {}}]}
@@ -453,9 +443,8 @@ class Coach(unittest.TestCase):  # F12 (prototipo): la regla del coach manda en 
     def test_franja_con_tope_del_coach(self):
         import overlay
         meta = {"minuto": 18, "muertes14": 1, "objetivos": {}}
-        t = [x for x, _ in overlay.partes(meta, 0, None, {"metrica": "muertes", "tope": 1})]
-        self.assertIn("Muertes 14–25: 1/1", t)
-        self.assertIn("▼ Muertes 14–25: 2/1", [x for x, _ in overlay.partes({**meta, "muertes14": 2}, 0, None, {"metrica": "muertes", "tope": 1})])
+        self.assertEqual(overlay.estado({**meta, "t": 18 * 60}, 0, None, {"metrica": "muertes", "tope": 1})["num"], "1 / 1")
+        self.assertEqual(overlay.estado({**meta, "t": 18 * 60, "muertes14": 2}, 0, None, {"metrica": "muertes", "tope": 1})["chip"], ("Sobre tope", "rojo"))
 
 
 

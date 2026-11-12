@@ -119,10 +119,10 @@ class S5S6(unittest.TestCase):
         r = por_id(salud.evaluar(sano(franja=franja(rect=(300, 6, 300 + w + 20, 40))), AHORA), "S5")[0]
         self.assertIn("ancho", r["detalle"])
 
-    def test_alto_5_por_ciento(self):
-        r = por_id(salud.evaluar(sano(franja=franja(rect=(422, 6, 1000, 6 + 54))), AHORA), "S5")[0]
-        self.assertNotIn("alto", r["detalle"])  # 54 / 1080 = 5 % justo
-        r = por_id(salud.evaluar(sano(franja=franja(rect=(422, 6, 1000, 6 + 60))), AHORA), "S5")[0]
+    def test_alto_8_por_ciento(self):  # la pastilla mide 72 px a 1080 (6,7 %); el tope pasó de 5 a 8 % (plan del overlay)
+        r = por_id(salud.evaluar(sano(franja=franja(rect=(422, 6, 802, 6 + 72))), AHORA), "S5")[0]
+        self.assertNotIn("alto", r["detalle"])
+        r = por_id(salud.evaluar(sano(franja=franja(rect=(422, 6, 802, 6 + 100))), AHORA), "S5")[0]
         self.assertIn("alto", r["detalle"])
 
     def test_pisa_cada_zona_prohibida(self):

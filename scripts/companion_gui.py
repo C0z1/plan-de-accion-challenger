@@ -112,7 +112,7 @@ AJUSTES_F = REPO / "datos" / "cache" / "ajustes.json"
 AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "aviso_muertes": True, "aviso_regreso": True, "aviso_pico": True,  # Ajustes_Vino
                "metricas": False,  # métricas anónimas: solo si el amigo las prende (v0.8)
                "grupo": False,  # aparecer en la tabla del grupo (Riot ID y win rate a los demás): solo si lo prende
-               "franja_objetivos": True, "franja_linea": True, "franja_regla": True,  # piezas de la franja en partida (A4)
+               "franja_linea": True, "franja_regla": True,  # piezas de la franja en partida (A4)
                "voz": False,  # Racha lee en voz alta sus comentarios del draft (sin sonido por defecto, PLAN-ENVIVO §5)
                "franja_pos": "arriba"}  # esquina de la franja: único ajuste que no es booleano
 OPCIONES = {"franja_pos": ("arriba", "abajo")}  # lista blanca de los ajustes de texto
