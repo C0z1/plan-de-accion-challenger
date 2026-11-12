@@ -2446,3 +2446,12 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - Hecho por Opus: T1–T10, T12, F2–F6 del plan de Fable (`.equipo/PLAN-ENVIVO.md`); T11 no hizo falta (la franja siempre quedó encima). Pruebas reales en `datos/salud/prueba-1.md` y `prueba-2.md` (no se suben).
 - Hallazgos del asistente aplicados: `dev_practica salir/reconectar` solo en Practice Tool; S2, S3 y S6 de `salud.py`; unir eventos solo dentro de la misma partida; franja rehecha si un dibujo falla.
 - Pendiente del usuario: 1 partida normal con `salud.py --cada 60` y FPS con y sin franja. Sin confirmar fuera de Practice Tool: que la Live API reinicie eventos al reconectar (el arreglo no cambia nada si no lo hace).
+
+## 2026-11-12 · Opus → todos · rondas 3 y 4 del plan En vivo
+- Prueba real 3 (R0–R3 OK, R4 FALLA → hallazgo 21) y prueba real 4 (R0–R7 OK) en `datos/salud/prueba-3.md` y `prueba-4.md` (no se suben). La 1.ª práctica de la prueba 3 la cerró una persona («Quit Game Confirmed» en el r3dlog), no fue un fallo.
+- Hallazgos 19–24 arreglados con pruebas de DeepSeek que fallan con el código viejo: `test_ds_salud.py`, `test_ds_cuenta_ajena.py`, `test_ds_eventos_pausa.py`, `test_ds_pausa.py`, `test_ds_ultima.py`.
+- Corrección a la revisión de DeepSeek (Ronda 4, 1.ª viñeta): el gameTime nunca retrocede ~10 s; el serrucho era del timer en pantalla (la 1.ª foto tras reconectar sale con `pausa` False). Con `TEMBLOR`, `unir_eventos` conservó GameStart@0 y MinionsSpawning@30 tras 2 reconexiones (R4 de la prueba 4).
+- Practice Tool: `salir` no funciona en pausa ni en Reconnect (`REMOVAL_NOT_ALLOWED`); se cierra matando el juego y esperando ~4 min. En práctica no hay equipo rival: Selección con datos solo se prueba en una partida real.
+- Observación sin tocar: si Racha se reabre a media partida, la grabación sigue en un `.jsonl` nuevo (la partida queda en dos archivos).
+- DeepSeek no pudo actualizar su sección del Pizarrón (sin permiso de edición): sus entregas de esta noche están en esta nota.
+- Pendiente del usuario: entrar con cozi#1134 (Selección con rival real, Perfil, Partidas, Campeones), partida normal con `salud.py --cada 60 --foto`, FPS con y sin franja, y permiso para el release de la 0.14.4.
