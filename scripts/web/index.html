@@ -576,7 +576,9 @@ const EN_PARTIDA = ["GameStart", "InProgress", "Reconnect", "WaitingForStats", "
 
 // ===== Ventanas nuevas (artboards *_Vino). Datos: s.rendimiento.vistas (scripts/vistas.py, en caché) =====
 const VS = s => (s.rendimiento && s.rendimiento.vistas) || null;
-const sinDatos = (t, sub) => [`<div><h1>${t}</h1><span class="sub">${esc(sub || "")}</span></div><div class="card"><span class="sub">Aún no tienes partidas aquí: Racha arma esta vista con tu historial. Si no lo tienes, ve a <a href="#" onclick="ver('ajustes');return false" style="color:var(--acc);font-weight:700">Ajustes</a>, pega tu código de acceso y dale a Descargar.</span></div>`, ""];
+let SIN_HIST = "";  // sin historial: el porqué que manda el servidor (cuenta ajena, descargando); vacío, el texto de siempre
+const sinDatosCard = () => `<div class="card"><span class="sub">${SIN_HIST ? esc(SIN_HIST) : `Aún no tienes partidas aquí: Racha arma esta vista con tu historial. Si no lo tienes, ve a <a href="#" onclick="ver('ajustes');return false" style="color:var(--acc);font-weight:700">Ajustes</a>, pega tu código de acceso y dale a Descargar.`}</span></div>`;
+const sinDatos = (t, sub) => [`<div><h1>${t}</h1><span class="sub">${esc(sub || "")}</span></div>${sinDatosCard()}`, ""];
 const fmin = v => v == null ? "–" : signo(v, 0);
 
 let ANI = 0;  // ids únicos de los degradados de cada anillo
@@ -596,12 +598,15 @@ const ETQ = {"Pickéalo": "ok", "Estable": "amber", "Bajando": "red", "Evítalo 
 const FASE_CS = {PLANNING: "planeación", BAN_PICK: "bans y picks", FINALIZATION: "últimos segundos", GAME_STARTING: "cargando"};
 const ROLMIN = {TOP: "top", JUNGLE: "jungla", MIDDLE: "mid", BOTTOM: "bot", UTILITY: "support"};
 
+const draftCab = (s, pos) => `<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1>Draft</h1><span class="sub">${esc(ROL[pos] || pos)} · ${s.fase === "ChampSelect" ? (FASE_CS[s.crono && s.crono.fase] || "champ select") : "vista previa: así se verá en champ select"}</span></div>
+    ${s.fase === "ChampSelect" && s.crono ? `<span style="border:1px solid var(--acc);border-radius:10px;padding:10px 16px;font-weight:700;font-size:18px" aria-label="Tiempo de la fase">${(() => { const t = Math.max(0, Math.round(s.crono.ms / 1000 - (Date.now() / 1000 - s.crono.t))); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); })()}</span>` : ""}</div>`;
+
 function draftV(s) {  // Draft_Vino: fase de bans y picks antes de ver a tu rival
-  const V = VS(s); if (!V) return sinDatos("Draft");
+  const V = VS(s);
+  if (!V) return s.fase === "ChampSelect" && s.pos ? [draftCab(s, s.pos) + sinDatosCard(), ""] : sinDatos("Draft");  // hallazgo 22: rol y reloj sin historial
   const pos = s.pos || V.pos, d = V.draft[pos] || {bans: [], frecuentes: [], pool: []}, rol = ROLMIN[pos] || pos;
   const main = `
-  <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1>Draft</h1><span class="sub">${esc(ROL[pos] || pos)} · ${s.fase === "ChampSelect" ? (FASE_CS[s.crono && s.crono.fase] || "champ select") : "vista previa: así se verá en champ select"}</span></div>
-    ${s.fase === "ChampSelect" && s.crono ? `<span style="border:1px solid var(--acc);border-radius:10px;padding:10px 16px;font-weight:700;font-size:18px" aria-label="Tiempo de la fase">${(() => { const t = Math.max(0, Math.round(s.crono.ms / 1000 - (Date.now() / 1000 - s.crono.t))); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); })()}</span>` : ""}</div>
+  ${draftCab(s, pos)}
   <div class="card"><div class="cab2"><h2>Banea</h2><span class="sub" style="font-size:12px">contra quien peor te va en ${esc(rol)}</span></div>
     ${d.bans.length ? d.bans.map(b => `<div class="filaV">${img("champion", b.rival, "item", b.rival)}<div class="txt"><b>${esc(b.rival)} <span class="tag red">${b.v}-${b.n - b.v}</span></b><small>${esc(b.por_que)}</small></div></div>`).join("")
       : '<span class="sub">Ningún rival con 3+ partidas en el rol te baja del win rate.</span>'}</div>
@@ -1006,7 +1011,8 @@ async function tick() {
     if (s.v !== v) {
       v = s.v;
       if (s.fase !== ultFase) { if (ultFase !== undefined) elegida = null; ultFase = s.fase; }
-      TOPE = (((s.rendimiento || {}).vistas || {}).regla_hoy || {}).tope ?? 2;  // F12: el tope de muertes de tu coach en toda la app
+      TOPE = (((s.rendimiento || {}).vistas || {}).regla_hoy || {}).tope ?? 2;
+      SIN_HIST = s.rendimiento ? "" : s.descarga || "";  // F12: el tope de muertes de tu coach en toda la app
       const vista = elegida || (s.fase === "ChampSelect" ? (s.draft ? "companion" : "draft") : EN_PARTIDA.includes(s.fase) || s.fin || s.revision ? "envivo" : "inicio");
       for (const b of VISTAS) { const e = document.getElementById("b-" + b); vista === b ? e.setAttribute("aria-current", "page") : e.removeAttribute("aria-current"); }
       const [m, a] = vista === "inicio" ? inicio(s) : vista === "draft" ? draftV(s) : vista === "envivo" ? envivo(s) : vista === "campeones" ? campeonesV(s)
