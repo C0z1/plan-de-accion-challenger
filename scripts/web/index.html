@@ -613,7 +613,9 @@ function tableroH(s) {  // bans y picks de la selección, como en el cliente (si
     <div class="txt"><b>${p.campeon ? esc(p.campeon) : p.eligiendo ? "Eligiendo…" : "—"}${p.campeon && !p.fijo ? ' <span class="sub" style="font-size:12px">(hover)</span>' : ""}</b>
     <small>${mio ? (p.yo ? "Tú" : "Aliado") + (p.pos ? " · " + esc(ROLMIN[p.pos] || p.pos) : "") : "Rival"}</small></div></div>`;
   const tu = t.turno ? (t.turno.mio ? `Te toca ${t.turno.tipo === "ban" ? "banear" : "elegir"}` : `${t.turno.aliado ? "Tu equipo" : "El rival"} ${t.turno.tipo === "ban" ? "banea" : "elige"}`) : "";
-  return `<div class="card"><div class="cab2"><h2>Selección</h2><span class="sub" style="font-size:12px">${esc(tu)}</span></div>
+  const com = s.comentario && s.comentario.length ? `<div class="card" role="status" aria-live="polite"><div class="cab2"><h2>Racha comenta</h2><span class="sub" style="font-size:12px">con tu historial</span></div>
+    ${s.comentario.map(c => `<div class="filaV oscura"><span>${esc(c.texto)}</span></div>`).join("")}</div>` : "";
+  return com + `<div class="card"><div class="cab2"><h2>Selección</h2><span class="sub" style="font-size:12px">${esc(tu)}</span></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div><span class="sub" style="font-size:12px">Tus bans</span><div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px">${bans(t.bans.mios)}</div>${t.mio.map(p => fila(p, true)).join("")}</div>
       <div><span class="sub" style="font-size:12px">Bans rivales</span><div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px">${bans(t.bans.suyos)}</div>${t.suyo.map(p => fila(p, false)).join("")}</div>
@@ -825,7 +827,8 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
       ${av("aviso_minions", "Minions al 10", "Si vas bajo tu meta de config.json al minuto 10.")}
       ${av("aviso_muertes", "Muertes del 14 al 25", "Al llegar a 2 muertes desde el 14.")}
       ${av("aviso_regreso", "Plan de regreso", "Del min 10 al 14, si vas abajo de nivel: un consejo para igualar.")}
-      ${av("aviso_pico", "Pico de poder del rival", "Cuando tu rival termina un ítem completo y te saca ventaja en ítems.")}</div>
+      ${av("aviso_pico", "Pico de poder del rival", "Cuando tu rival termina un ítem completo y te saca ventaja en ítems.")}
+      ${"speechSynthesis" in window ? fila("Leer el draft en voz alta", "En champ select, Racha dice en voz alta sus comentarios nuevos.", tog("t-voz", aj.voz === true, false, `ajuste('voz',${aj.voz !== true})`, "Leer el draft en voz alta")) : ""}</div>
     ${ayudaV(s, aj)}
     ${coachV(s)}
     ${glosarioV()}
@@ -987,6 +990,15 @@ async function ajuste(clave, on) {
 function ventana(accion, extra) {
   fetch("/api/ventana", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({accion, ...extra})}).catch(() => {});
 }
+let VER0 = null;  // versión de Racha con la que se cargó esta página
+const DICHO = new Set();  // claves de comentarios ya leídos en voz alta en esta selección
+function hablar(s) {  // solo los comentarios nuevos, en champ select y con el ajuste prendido
+  if (s.fase !== "ChampSelect") { DICHO.clear(); return; }
+  if (!(s.ajustes && s.ajustes.voz === true) || !("speechSynthesis" in window)) return;
+  const nuevos = (s.comentario || []).filter(c => !DICHO.has(c.clave)); if (!nuevos.length) return;
+  speechSynthesis.cancel();
+  nuevos.forEach(c => { DICHO.add(c.clave); const u = new SpeechSynthesisUtterance(c.texto); u.lang = "es-MX"; speechSynthesis.speak(u); });
+}
 let recortada = false;
 function recortar() {  // la barra que Edge dibuja por dentro = outerHeight - innerHeight: se recorta para que solo quede la nuestra
   const alto = window.outerHeight - window.innerHeight;
@@ -1037,7 +1049,8 @@ async function tick() {
       for (const b of VISTAS) { const e = document.getElementById("b-" + b); vista === b ? e.setAttribute("aria-current", "page") : e.removeAttribute("aria-current"); }
       const [m, a] = vista === "inicio" ? inicio(s) : vista === "draft" ? draftV(s) : vista === "envivo" ? envivo(s) : vista === "campeones" ? campeonesV(s)
         : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? (s.previa ? champSelect({...s, draft: s.previa}) : draftV(s)) : vista === "perfil" ? perfil(s) : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida
-      document.getElementById("barra-v").hidden = !s.sin_marco; document.body.classList.toggle("sin-marco", !!s.sin_marco);
+      if (s.version && (VER0 ??= s.version) !== s.version) return location.reload();  // Racha se actualizó con la ventana abierta: la página nueva
+      hablar(s); document.getElementById("barra-v").hidden = !s.sin_marco; document.body.classList.toggle("sin-marco", !!s.sin_marco);
       if (s.sin_marco && !recortada) { recortada = true; recortar(); }
       const pc = s.pantalla_completa && ["ChampSelect", "InProgress"].includes(s.fase) ? `<div class="aviso red" role="status">Tu LoL está en <b>Pantalla completa</b>: así la franja de Racha no se ve encima del juego. Cámbialo a <b>Sin bordes</b> (Esc → Video → Modo de ventana); se aplica al instante.</div>` : "";
       const nv = (s.nueva ? `<div class="aviso teal" role="status">Hay una versión nueva de Racha (${esc(s.nueva.version)}). ${s.nueva.estado ? esc(s.nueva.estado) + " " : ""}<a href="${esc(s.nueva.url)}" target="_blank" rel="noopener" style="color:inherit;font-weight:800">Descárgala aquí →</a></div>` : "") + pc;

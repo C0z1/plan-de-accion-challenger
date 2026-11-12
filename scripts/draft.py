@@ -327,3 +327,34 @@ if __name__ == "__main__":  # companion.py lo importa
         draft(sys.argv[1], ROLES[rol])
     else:
         guia()
+
+
+ROL_TXT = {"TOP": "top", "JUNGLE": "jungla", "MIDDLE": "mid", "BOTTOM": "bot", "UTILITY": "support"}
+
+
+def comentario(tab, pos, rival=None, minimo=3):
+    """Racha comenta el draft (plan de Fable, 0.16): hasta 4 frases de dato con tu historial, nunca órdenes (Riot: no
+    dictar decisiones). tab: companion.tablero(); rival: tu rival de línea si se sabe. [{"clave", "texto"}]."""
+    if not tab: return []
+    rol, out = ROL_TXT.get(pos, "tu rol"), []
+    rec = lambda rs: f"{sum(g['win'] for g in rs)}-{len(rs) - sum(g['win'] for g in rs)}"
+    yo = next((p for p in tab.get("mio") or [] if p.get("yo")), {})
+    if yo.get("campeon") and rival:  # tu hover (o pick) contra tu rival de línea ya fijado
+        mv = [g for g in games if key(g["opp"]) == key(rival) and g["pos"] == pos and key(g["champ"]) == key(yo["campeon"])]
+        if len(mv) >= minimo:
+            o = gd(mv); out.append({"clave": f"cruce:{yo['campeon']}:{rival}", "texto": f"Con {yo['campeon']} contra {rival}: {rec(mv)}" + (f", oro al 14 {o}" if o != "-" else "")})
+    if yo.get("fijo") and yo.get("campeon"):
+        rs = [g for g in games if g["pos"] == pos and key(g["champ"]) == key(yo["campeon"])]
+        if len(rs) >= minimo: out.append({"clave": f"tuyo:{yo['campeon']}", "texto": f"Tu {yo['campeon']} en {rol}: {wr(rs)}, {len(rs)} partidas"})
+    baneados = {key(c): c for c in (tab.get("bans") or {}).get("mios", []) + (tab.get("bans") or {}).get("suyos", [])}
+    mas = max(pool(pos, 1).items(), key=lambda x: len(x[1]), default=(None, []))
+    if mas[0] and key(mas[0]) in baneados and len(mas[1]) >= minimo:
+        out.append({"clave": f"ban_pool:{mas[0]}", "texto": f"Tu más jugado en {rol}, {mas[0]} ({len(mas[1])} partidas), está en los bans"})
+    for k, c in baneados.items():
+        vs = [g for g in games if key(g["opp"]) == k and g["pos"] == pos]
+        if len(vs) >= minimo and sum(g["win"] for g in vs) / len(vs) < base:
+            out.append({"clave": f"ban_cruce:{c}", "texto": f"{c} está en los bans: vas {rec(vs)} contra {c} en {rol}"})
+    for p in tab.get("suyo") or []:  # solo campeones fijados (el tablero no trae hovers rivales)
+        en = [g for g in games if p.get("campeon") and key(p["campeon"]) in {key(e) for e in g["enemies"]}]
+        if len(en) >= minimo: out.append({"clave": f"rival:{p['campeon']}", "texto": f"Contra {p['campeon']} en el equipo rival: {rec(en)}"})
+    return out[:4]

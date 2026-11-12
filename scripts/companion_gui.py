@@ -43,6 +43,7 @@ def usar_cuenta(cuenta, puuid):
     """Cambia la carpeta de partidas a la de esa cuenta (multi-cuenta, 2026-11-12: el usuario probó con otra cuenta suya y
     Racha no mostraba nada). True si cambió."""
     global RAW
+    if not puuid: return False  # sin puuid no se sabe de quién es: no se toca la carpeta (vigilar_cuenta siempre lo manda)
     nueva = carpeta_de(cuenta, puuid)
     if nueva == RAW: return False
     RAW = nueva; os.environ["DATOS_DIR"] = str(nueva)
@@ -112,6 +113,7 @@ AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "avi
                "metricas": False,  # métricas anónimas: solo si el amigo las prende (v0.8)
                "grupo": False,  # aparecer en la tabla del grupo (Riot ID y win rate a los demás): solo si lo prende
                "franja_objetivos": True, "franja_linea": True, "franja_regla": True,  # piezas de la franja en partida (A4)
+               "voz": False,  # Racha lee en voz alta sus comentarios del draft (sin sonido por defecto, PLAN-ENVIVO §5)
                "franja_pos": "arriba"}  # esquina de la franja: único ajuste que no es booleano
 OPCIONES = {"franja_pos": ("arriba", "abajo")}  # lista blanca de los ajustes de texto
 
@@ -274,6 +276,14 @@ def recomendaciones(pos, rivales):
     with DRAFT: return [(r, dict(draft.datos_draft(r, pos), ficha=draft.ficha(r, pos)) if r else None) for r in rivales]
 
 
+def comentario(tab, pos, rival=None):
+    """draft.comentario con los mismos guardas que recomendaciones(): cuenta ajena o sin partidas, nada."""
+    if ajeno(CUENTA[0]): return []
+    try: import draft
+    except (AssertionError, OSError, ValueError, KeyError): return []
+    with DRAFT: return draft.comentario(tab, pos, rival)
+
+
 DRAFT = threading.Lock()  # el reload de draft (hilo post-partida) no debe pisar un datos_draft a medias
 POST = []  # el hilo post-partida vivo, si hay
 
@@ -374,7 +384,11 @@ def trabajador(q):
                 if isinstance(tm.get("adjustedTimeLeftInPhase"), (int, float)):
                     q.put(("crono", {"fase": tm.get("phase"), "ms": tm["adjustedTimeLeftInPhase"], "t": time.time()}))
                 tab = companion.tablero(s, nl := nl or companion.nombres_lcu() or companion.nombres() or dict(NOMBRES))
-                if tab != tab_ant: q.put(("tablero", tab)); tab_ant = tab
+                if tab != tab_ant:
+                    q.put(("tablero", tab)); tab_ant = tab
+                    rv = [nl.get(i) for i in ids]  # tu rival de línea: el único de tu rol, o el más probable (Riot oculta roles)
+                    rv = rv[0] if len(rv) == 1 else rival_probable(pos, rv) if rv else None
+                    q.put(("comentario", comentario(tab, pos, rv)))
                 if ids and (pos, ids) != visto:
                     m = m or companion.nombres() or dict(NOMBRES); visto = (pos, ids)
                     nombres = [m.get(i) for i in ids]
