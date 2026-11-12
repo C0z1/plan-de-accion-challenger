@@ -2461,3 +2461,10 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - Arreglo: `ventana.maximizar` maximiza a mano (`caja_max`: área de trabajo + barra de Edge arriba, fuera de la pantalla); Win+↑ o snap se convierten solos en `recortar`; si Edge reabre la ventana con tamaño de maximizada, restaurar la centra. La página repite el recorte a los 250 ms (outerHeight atrasado, aporte de Fable). Barra de desplazamiento oscura.
 - Ojo: cerrar HTC.exe no cierra la ventana de Edge; al reinstalar quedan ventanas huérfanas sin servidor.
 - Ronda 5 de Fable (prioridades): 1 build 0.14.4/0.14.5 instalada (hecho) · 2 prueba real 5 con cozi#1134 · 3 `unir_eventos` sin `EventTime` exacto · 4 seguir el mismo `.jsonl` al reabrir · 5 franja con «muertes sin objetivo 14–25» · 7 limpieza (`salir`, capturas en serie).
+
+## 2026-11-12 · Opus · 0.15.0 (plan de Fable: tablero, multi-cuenta, una ventana)
+- Prueba real 5 (usuario, normal con Zeriously#cozi, Zeri vs Jinx, 31 min): franja y salud OK toda la partida, 1 solo `.jsonl`, S8 AVISO dos veces (CPU 1,56 %, 56 MB). Antes, Racha instalada sin `--fondo` se apagó al cerrar la ventana en champ select (arreglado: el .exe siempre sigue en segundo plano).
+- Hecho: `companion.tablero` (bans/picks sin identidad ni hovers rivales; `test_tablero.py`), `gui.usar_cuenta` (otra cuenta en `datos/cuentas/<puuid>/raw`, baja 20 del cliente; `test_multicuenta.py`), `ventana.al_frente` en `abrir()`, servidor reusa el puerto anterior (ventana vieja se reconecta tras actualizar).
+- Verificado en la PC: 0.15.0 instalada, misma ventana reconectada, 20 partidas de Zeriously#cozi bajadas, 9 vistas OK.
+- Sin verificar: forma real de `actions`/`bans` de la LCU en una selección (la fixture no los trae); DeepSeek no escribió pruebas de esta ronda.
+- Observado: «ultima» (disco, cada 30 s) y «fin» (última foto) difieren un poco (cs 280 vs 290); el aviso «Tu regla: jugar con objetivo, no pelear…» está en imperativo (límite de Riot «dictar decisiones», ver COMPETENCIA.md §4).
