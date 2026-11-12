@@ -67,17 +67,17 @@ class RepoCongelado(unittest.TestCase):
 
     def test_instalado_scripts_junto_al_exe(self):
         with tempfile.TemporaryDirectory() as d:
-            base = pathlib.Path(d); (base / "scripts").mkdir()
+            base = pathlib.Path(d).resolve(); (base / "scripts").mkdir()
             self.assertEqual(self._repo(base / "HTC.exe"), base)
 
     def test_dist_htc_repo_dos_arriba(self):
         with tempfile.TemporaryDirectory() as d:
-            base = pathlib.Path(d); (base / "scripts").mkdir(); (base / "dist" / "HTC").mkdir(parents=True)
+            base = pathlib.Path(d).resolve(); (base / "scripts").mkdir(); (base / "dist" / "HTC").mkdir(parents=True)
             self.assertEqual(self._repo(base / "dist" / "HTC" / "HTC.exe"), base)
 
     def test_sin_scripts_cae_a_la_carpeta_del_exe(self):
         with tempfile.TemporaryDirectory() as d:
-            base = pathlib.Path(d); (base / "HTC").mkdir()
+            base = pathlib.Path(d).resolve(); (base / "HTC").mkdir()
             self.assertEqual(self._repo(base / "HTC" / "HTC.exe"), base / "HTC")
 
 
