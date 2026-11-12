@@ -709,8 +709,8 @@ function envivoAram(s, m, prev) {  // ARAM y modos sin líneas: marcador, tu KDA
 }
 
 function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estado en vivo; al terminar, la línea final
-  const prev = !s.meta && !s.fin && s.ultima && !EN_PARTIDA.includes(s.fase);
-  const m = s.meta || (prev ? s.ultima : null), f = s.fin;
+  const prev = !s.fin && !!(s.meta || s.ultima) && !EN_PARTIDA.includes(s.fase);  // hallazgo 23: una partida que acabó sin pantalla de fin ya no está «En partida»
+  const m = prev && s.meta ? {...s.meta, recibido: null} : s.meta || (prev ? s.ultima : null), f = s.fin;  // recibido null: timers quietos
   if (!m && !f) return [otraFase(s), ""];
   if (m && !f && m.modo === "ARAM") return envivoAram(s, m, prev);
   const x = f || m, min = x.minuto ?? 0, reglas = [];
