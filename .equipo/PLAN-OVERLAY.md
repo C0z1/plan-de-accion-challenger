@@ -74,3 +74,6 @@ Se quedan `overlay`, `franja_pos`, `franja_linea` («nivel y farm, min 0–14»)
 4) Pruebas: falta validar alpha premultiplicado sobre fondo blanco y negro sin halo. Falta mover la ventana entre monitores con distinto DPI y cambio de escala en caliente. Falta minimizar/restaurar/alt-tab con UpdateLayeredWindow. Falta congelar el exe con Pillow y pintar un frame. Falta probar `franja_pos="abajo"` para ver si tapa chat o HUD; y con reducir movimiento activado. Agrega fixtures de `ajustes.json` viejo con claves `partes` y sin claves nuevas.
 
 5) Cambios antes de construir: implementa conversion a BGRA premultiplicado y prueba alpha en fase 0. Haz el Plan B como candidato principal si Tk no soporta bien WS_EX_LAYERED. Reescribe textos segun politica, elimina "una mas" y revisa "Tu plan". Define `cs_meta` explicitamente y usa umbral flotante. Incluye freeze y DPI por monitor desde fase 0/1.
+
+## Decisiones del usuario (2026-11-12)
+1. Pillow: sí. 2. Timers de Dragón y Barón: fuera de la franja (siguen en En vivo). 3. Contador de muertes 14–25: siempre.
