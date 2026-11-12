@@ -22,6 +22,37 @@ for _s in ("stdout", "stderr"):  # el .exe no tiene consola: los scripts hacen s
 import companion  # noqa: E402
 
 RAW = pathlib.Path(os.environ.get("DATOS_DIR") or REPO / "datos" / "raw")
+BASE = RAW  # la carpeta del dueño de Racha en esta PC; otra cuenta del cliente usa datos/cuentas/<puuid>/raw
+
+
+def dueno_de(raw):
+    try: a = json.loads((raw / "perfil.json").read_text())["account"]; return f"{a['gameName']}#{a['tagLine']}"
+    except (OSError, ValueError, KeyError, TypeError): return None
+
+
+def carpeta_de(cuenta, puuid):
+    """Dónde van las partidas de la cuenta con sesión en el cliente: la del dueño (o la base sin dueño todavía, como un
+    amigo recién instalado) o una carpeta propia por puuid (estable ante cambios de nombre)."""
+    import re
+    d = dueno_de(BASE)
+    if not cuenta or not d or d.casefold() == cuenta.casefold() or not re.fullmatch(r"[A-Za-z0-9_-]{20,100}", str(puuid or "")): return BASE
+    return BASE.parent / "cuentas" / puuid / "raw"
+
+
+def usar_cuenta(cuenta, puuid):
+    """Cambia la carpeta de partidas a la de esa cuenta (multi-cuenta, 2026-11-12: el usuario probó con otra cuenta suya y
+    Racha no mostraba nada). True si cambió."""
+    global RAW
+    nueva = carpeta_de(cuenta, puuid)
+    if nueva == RAW: return False
+    RAW = nueva; os.environ["DATOS_DIR"] = str(nueva)
+    import builds; builds.RAW = nueva
+    with DRAFT:
+        for m in ("vistas", "draft", "revision"): sys.modules.pop(m, None)  # leen la carpeta al importarse
+    return True
+
+
+def es_base(): return RAW == BASE
 FIN = ("PreEndOfGame", "EndOfGame")
 FASES = {None: "Cliente cerrado", "None": "Sin actividad", "Lobby": "En lobby", "Matchmaking": "Buscando partida",
          "ReadyCheck": "Partida encontrada", "ChampSelect": "Champ select", "InProgress": "En partida",
@@ -110,8 +141,7 @@ CUENTA = [None]  # «gameName#tag» con sesión en el cliente (la pone companion
 
 def dueno():
     """«gameName#tag» de la cuenta cuyas partidas están en disco (perfil.json), o None."""
-    try: a = json.loads((RAW / "perfil.json").read_text())["account"]; return f"{a['gameName']}#{a['tagLine']}"
-    except (OSError, ValueError, KeyError, TypeError): return None
+    return dueno_de(RAW)
 
 
 def ajeno(cuenta):
@@ -327,7 +357,7 @@ def trabajador(q):
     """El mismo bucle que companion.main, pero manda eventos a la ventana en vez de imprimir."""
     m, visto, fase_ant, real, archivo, ult, estado, fallos = None, None, "inicio", None, None, 0, {"avisado": set()}, 0
     ult_disco = 0  # la foto se lee cada SONDEO_VIVO s (F4: ver la muerte a tiempo) pero al disco va cada 30 s
-    error = foto = None
+    error = foto = nl = tab_ant = None  # nl: championId -> alias del cliente, para el tablero de Draft
     while True:
         fase = None  # si lcu() lanza, cuenta como cliente caído
         try:
@@ -343,13 +373,15 @@ def trabajador(q):
                 tm = s.get("timer") or {}  # cronómetro de la fase (solo lectura), para el reloj de Draft_Vino
                 if isinstance(tm.get("adjustedTimeLeftInPhase"), (int, float)):
                     q.put(("crono", {"fase": tm.get("phase"), "ms": tm["adjustedTimeLeftInPhase"], "t": time.time()}))
+                tab = companion.tablero(s, nl := nl or companion.nombres_lcu() or companion.nombres() or dict(NOMBRES))
+                if tab != tab_ant: q.put(("tablero", tab)); tab_ant = tab
                 if ids and (pos, ids) != visto:
                     m = m or companion.nombres() or dict(NOMBRES); visto = (pos, ids)
                     nombres = [m.get(i) for i in ids]
                     if len(nombres) > 1 and (p := rival_probable(pos, nombres)): nombres = [p]  # el rival de línea más probable
                     q.put(("draft", pos, recomendaciones(pos, nombres), len(ids) > 1))
                 elif not ids and pos and visto != pos: q.put(("pos", pos)); visto = pos  # bans y picks antes del rival
-            elif fase != "ChampSelect": visto = None
+            elif fase != "ChampSelect": visto = tab_ant = None
             if jugando and time.time() - ult >= SONDEO_VIVO:
                 d = companion.unir_eventos(companion.vivo(), foto if archivo else None); ult = time.time(); foto = d or foto  # Reconnect reinicia los eventos; sin archivo es otra partida (revisión del asistente, 12)
                 if ult - ult_disco >= 30: archivo, ult_disco = companion.capturar(archivo, d), ult
@@ -369,7 +401,7 @@ def trabajador(q):
             if txt != error: q.put(aviso(txt)); error = txt  # el mismo error cada 3 s no inunda la ventana
         # fuera del try (como companion.main): una excepción no deja la fase vieja ni repite el evento de fase cada 3 s
         fase_ant, real, fallos = fase, fase or real, 0 if fase else fallos + 1
-        time.sleep(companion.espera(fallos))
+        time.sleep(1 if fase == "ChampSelect" else companion.espera(fallos))  # en selección, el tablero sigue los hovers al segundo
 
 
 # ---------- ventana ----------

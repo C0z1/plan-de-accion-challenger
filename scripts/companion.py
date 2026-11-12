@@ -472,6 +472,29 @@ def rivales(s):
     return pos, sorted(p["championId"] for p in elegidos)
 
 
+def tablero(s, m):
+    """Bans y picks de la selección para Draft (lo mismo que muestra el cliente). m: championId -> alias.
+    Política de Riot: nada de identidad (summonerId, puuid, nombres: en ranked vienen ocultos) ni hovers del rival: de
+    ellos solo los campeones ya fijados y sus bans hechos."""
+    if not isinstance(s, dict): return None
+    yo, acciones = s.get("localPlayerCellId"), [a for g in s.get("actions") or [] for a in g or [] if isinstance(a, dict)]
+    hechos = {a.get("actorCellId") for a in acciones if a.get("type") == "pick" and a.get("completed")}
+    ahora = next((a for a in acciones if a.get("isInProgress") and not a.get("completed")), None)
+    nom = lambda i: m.get(i) if i else None
+    def bans(mios):
+        b = (s.get("bans") or {}).get("myTeamBans" if mios else "theirTeamBans") or []
+        if not b: b = [a.get("championId") for a in acciones if a.get("type") == "ban" and a.get("completed") and bool(a.get("isAllyAction")) == mios]
+        return [n for n in map(nom, b) if n]
+    eligiendo = ahora.get("actorCellId") if ahora else None
+    mio = [{"celda": p.get("cellId"), "pos": POS.get(p.get("assignedPosition") or ""), "yo": p.get("cellId") == yo,
+            "campeon": nom(p.get("championId") or p.get("championPickIntent")), "fijo": p.get("cellId") in hechos or (not acciones and bool(p.get("championId"))),
+            "eligiendo": p.get("cellId") == eligiendo} for p in s.get("myTeam") or [] if isinstance(p, dict)]
+    suyo = [{"celda": p.get("cellId"), "campeon": nom(p.get("championId")) if (p.get("cellId") in hechos or not acciones) else None,
+             "eligiendo": p.get("cellId") == eligiendo} for p in s.get("theirTeam") or [] if isinstance(p, dict)]
+    turno = {"tipo": ahora.get("type"), "mio": eligiendo == yo, "aliado": bool(ahora.get("isAllyAction"))} if ahora else None
+    return {"turno": turno, "bans": {"mios": bans(True), "suyos": bans(False)}, "mio": mio, "suyo": suyo}
+
+
 def nombres_lcu():
     """championId -> alias («MonkeyKing», como championName de la Riot API) de la lista local del cliente: sirve sin partidas."""
     s = lcu("/lol-game-data/assets/v1/champion-summary.json")

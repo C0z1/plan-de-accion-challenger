@@ -51,6 +51,16 @@ def buscar(titulo="Racha", con_barra=False):
     return hallada[0] if hallada else None
 
 
+def al_frente(titulo="Racha"):
+    """Si ya hay una ventana de Racha, la restaura y la trae al frente: True. Si no, False (hay que abrir una)."""
+    w = _win()
+    if not w or not (h := buscar(titulo)): return False
+    u = w[2]
+    if u.IsIconic(h): u.ShowWindow(h, 9)
+    u.SetForegroundWindow(h)  # Windows puede negarlo si otro programa tiene el foco: la ventana igual queda restaurada
+    return True
+
+
 def sin_marco(segundos=15, al_listo=None):
     """Espera a que Edge abra la ventana de Racha y le quita la barra de título (deja WS_THICKFRAME: se redimensiona)."""
     w = _win()

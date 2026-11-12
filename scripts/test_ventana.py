@@ -24,6 +24,13 @@ class TestVentana(unittest.TestCase):
         self.assertEqual((y + 37, y + al - 7), (0, 1032))  # recortada (de 37 al borde de abajo): llena justo el área de trabajo
         self.assertEqual(ventana.caja_max((1920, 0, 3840, 1080), 9, 46, 9), (1911, -46, 1938, 1135))  # 2.º monitor, 125 %
 
+    def test_abrir_no_duplica(self):  # 2026-11-12: con --fondo, Racha abrió su ventana en champ select y otra a mano: quedaron dos
+        import companion_web
+        with mock.patch.object(ventana, "al_frente", return_value=True), mock.patch("subprocess.Popen") as p:
+            companion_web.abrir("http://127.0.0.1:1/"); p.assert_not_called()
+        with mock.patch.object(ventana, "al_frente", return_value=False), mock.patch("subprocess.Popen") as p,                 mock.patch("shutil.which", return_value="msedge"), mock.patch("threading.Thread"):
+            companion_web.abrir("http://127.0.0.1:1/"); p.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

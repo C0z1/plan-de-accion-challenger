@@ -236,7 +236,10 @@ function reglaPlan(r, i) {  // Seleccion_Vino: número, la regla con una línea 
     <span class="tuboH" style="flex:none;width:100%" role="img" aria-label="${f == null ? "sin dato" : `Cumples ${r.ok} de ${r.n}`}"><i style="width:${(f || 0) * 100}%;background:linear-gradient(90deg,${col})"></i></span></div></div>`;
 }
 
-function champSelect(s) {
+function champSelect(s) {  // con el tablero de la selección al final (si estás en champ select)
+  const [m, a] = champSelect0(s); return [m + tableroH(s), a];
+}
+function champSelect0(s) {
   const d = s.draft, rec = d.recs[0], pos = ROL[d.pos] || d.pos;
   if (d.recs.length > 1)  // sin rol de los rivales: una fila por rival
     return [`<h1>Selección de campeón</h1><span class="sub">${esc(pos)} · rol de los rivales desconocido</span>
@@ -602,12 +605,27 @@ const ROLMIN = {TOP: "top", JUNGLE: "jungla", MIDDLE: "mid", BOTTOM: "bot", UTIL
 const draftCab = (s, pos) => `<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1>Draft</h1><span class="sub">${esc(ROL[pos] || pos)} · ${s.fase === "ChampSelect" ? (FASE_CS[s.crono && s.crono.fase] || "champ select") : "vista previa: así se verá en champ select"}</span></div>
     ${s.fase === "ChampSelect" && s.crono ? `<span style="border:1px solid var(--acc);border-radius:10px;padding:10px 16px;font-weight:700;font-size:18px" aria-label="Tiempo de la fase">${(() => { const t = Math.max(0, Math.round(s.crono.ms / 1000 - (Date.now() / 1000 - s.crono.t))); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); })()}</span>` : ""}</div>`;
 
+function tableroH(s) {  // bans y picks de la selección, como en el cliente (sin nombres de nadie ni hovers del rival)
+  const t = s.fase === "ChampSelect" && s.tablero; if (!t) return "";
+  const bans = l => l.length ? l.map(c => img("champion", c, "item", c)).join("") : '<span class="sub" style="font-size:12px">sin bans</span>';
+  const fila = (p, mio) => `<div class="filaV${p.eligiendo ? "" : " oscura"}" style="${p.eligiendo ? "outline:2px solid var(--acc);" : ""}${p.yo ? "background:var(--card)" : ""}">
+    ${p.campeon ? img("champion", p.campeon, "item", p.campeon) : '<span class="item" style="display:inline-block;border-radius:8px;background:var(--dark3)"></span>'}
+    <div class="txt"><b>${p.campeon ? esc(p.campeon) : p.eligiendo ? "Eligiendo…" : "—"}${p.campeon && !p.fijo ? ' <span class="sub" style="font-size:12px">(hover)</span>' : ""}</b>
+    <small>${mio ? (p.yo ? "Tú" : "Aliado") + (p.pos ? " · " + esc(ROLMIN[p.pos] || p.pos) : "") : "Rival"}</small></div></div>`;
+  const tu = t.turno ? (t.turno.mio ? `Te toca ${t.turno.tipo === "ban" ? "banear" : "elegir"}` : `${t.turno.aliado ? "Tu equipo" : "El rival"} ${t.turno.tipo === "ban" ? "banea" : "elige"}`) : "";
+  return `<div class="card"><div class="cab2"><h2>Selección</h2><span class="sub" style="font-size:12px">${esc(tu)}</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div><span class="sub" style="font-size:12px">Tus bans</span><div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px">${bans(t.bans.mios)}</div>${t.mio.map(p => fila(p, true)).join("")}</div>
+      <div><span class="sub" style="font-size:12px">Bans rivales</span><div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px">${bans(t.bans.suyos)}</div>${t.suyo.map(p => fila(p, false)).join("")}</div>
+    </div></div>`;
+}
+
 function draftV(s) {  // Draft_Vino: fase de bans y picks antes de ver a tu rival
   const V = VS(s);
-  if (!V) return s.fase === "ChampSelect" && s.pos ? [draftCab(s, s.pos) + sinDatosCard(), ""] : sinDatos("Draft");  // hallazgo 22: rol y reloj sin historial
+  if (!V) return s.fase === "ChampSelect" && s.pos ? [draftCab(s, s.pos) + tableroH(s) + sinDatosCard(), ""] : sinDatos("Draft");  // hallazgo 22: rol y reloj sin historial
   const pos = s.pos || V.pos, d = V.draft[pos] || {bans: [], frecuentes: [], pool: []}, rol = ROLMIN[pos] || pos;
   const main = `
-  ${draftCab(s, pos)}
+  ${draftCab(s, pos)}${tableroH(s)}
   <div class="card"><div class="cab2"><h2>Banea</h2><span class="sub" style="font-size:12px">contra quien peor te va en ${esc(rol)}</span></div>
     ${d.bans.length ? d.bans.map(b => `<div class="filaV">${img("champion", b.rival, "item", b.rival)}<div class="txt"><b>${esc(b.rival)} <span class="tag red">${b.v}-${b.n - b.v}</span></b><small>${esc(b.por_que)}</small></div></div>`).join("")
       : '<span class="sub">Ningún rival con 3+ partidas en el rol te baja del win rate.</span>'}</div>

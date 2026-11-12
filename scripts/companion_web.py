@@ -5,7 +5,7 @@ Uso:
   python scripts/companion_web.py --demo     champ select con datos de ejemplo (sin cliente)
   python scripts/companion_web.py --no-abrir no abre ventana (para pruebas)
   python scripts/companion_web.py --fondo    en segundo plano (arranca con Windows): abre la ventana sola al abrir el cliente de LoL
-Sin --fondo, el servidor se cierra solo si la ventana deja de preguntar 60 s. Si ya hay un HTC abierto, abre su ventana y sale."""
+Sin --fondo, desde el código, el servidor se cierra solo si la ventana deja de preguntar 60 s (el .exe instalado sigue en segundo plano). Si ya hay un HTC abierto, abre su ventana y sale."""
 import html, http.server, json, os, pathlib, queue, re, shutil, subprocess, sys, threading, time, urllib.parse, urllib.request, webbrowser
 
 import companion_gui as gui  # noqa: E402  (trae REPO, sys.path del .exe y el trabajador)
@@ -16,7 +16,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
+          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
 VERSION = "0.14.5"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -54,7 +54,7 @@ def evento(e):
             abrir(URL[0])  # el cliente acaba de abrir y no hay ventana de HTC (si la hubiera, preguntaría cada 2 s)
         if ESTADO["fase"] in ("InProgress", "Reconnect") and e[1] not in ("InProgress", "Reconnect"):  # hallazgo 24: «Tu última partida» = la que acaba de terminar
             threading.Thread(target=vistas_previas, args=(ESTADO.get("rendimiento"),), daemon=True).start()
-        if e[1] == "ChampSelect": s.update(draft=None, fin=None, meta=None, pos=None, avisos=[]); USADO.add("champ_select")
+        if e[1] == "ChampSelect": s.update(tablero=None, draft=None, fin=None, meta=None, pos=None, avisos=[]); USADO.add("champ_select")
         if e[1] in ("ChampSelect", "InProgress"): s["pantalla_completa"] = companion.pantalla_completa()  # la franja no se vería
         if e[1] == "InProgress" and ESTADO["ajustes"].get("overlay", True): USADO.add("overlay")
         if e[1] in ("Lobby", "Matchmaking", "ReadyCheck"): s.update(aviso=None, perfil=gui.perfil(ESTADO["rango"], ESTADO["cuenta"]))
@@ -73,11 +73,16 @@ def evento(e):
         USADO.add("revision"); threading.Thread(target=refrescar, daemon=True).start(); threading.Thread(target=ping, daemon=True).start()
     elif tipo == "rango": s = {"rango": e[1] or ESTADO["rango"]}; s["perfil"] = gui.perfil(s["rango"], ESTADO["cuenta"])
     elif tipo == "cuenta":  # la cuenta con sesión en el cliente: manda sobre perfil.json (un amigo, u otra cuenta en tu PC)
-        gui.CUENTA[0] = e[1]; s = {"cuenta": e[1], "perfil": gui.perfil(ESTADO["rango"], e[1]), "icono": e[2] if len(e) > 2 else None}
+        gui.CUENTA[0] = e[1]
+        if gui.usar_cuenta(e[1], e[3] if len(e) > 3 else None):  # otra cuenta: su propia carpeta; se bajan sus últimas 20 del cliente
+            s.update(descarga=None, previa=None, ultima=None, rendimiento=None)
+            if not any(gui.RAW.glob("*_*.json")): threading.Thread(target=descargar_todo, daemon=True).start()
+        s.update(cuenta=e[1], perfil=gui.perfil(ESTADO["rango"], e[1]), icono=e[2] if len(e) > 2 else None)
         threading.Thread(target=refrescar, daemon=True).start()  # si el historial en disco es de otra cuenta, se oculta
     elif tipo == "cliente": s = {"cliente": e[1]}
     elif tipo == "region": s = {"region": e[1], **({"plataforma": e[2]} if len(e) > 2 else {})}
     elif tipo == "crono": s = {"crono": e[1]}
+    elif tipo == "tablero": s = {"tablero": e[1]}
     elif tipo == "aviso":  # F8: los consejos de la partida se guardan todos (el nuevo ya no borra al anterior)
         s = {"aviso": e[1]}
         if e[1].get("tipo") == "consejo":
@@ -162,7 +167,7 @@ def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la c
         if gui.ajeno(gui.CUENTA[0]): r = None; ESTADO["descarga"] = AJENA  # la cuenta pudo llegar mientras se calculaba (hallazgo 20)
         ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1, **({} if r is not None else {"previa": None}))
     vistas_previas(r)  # siempre: «ultima» es la última partida grabada en esta PC, también con cuenta ajena (ronda 4)
-    if r is not None: tus_builds()  # tu build propia relee las timelines: al final (auditoría de rendimiento)
+    if r is not None and gui.es_base(): tus_builds()  # «Tu build» (datos/meta) es del dueño  # tu build propia relee las timelines: al final (auditoría de rendimiento)
     builds_del_backend(); sync_nube()
 
 
@@ -178,7 +183,7 @@ def sync_nube():
     import nube
     if not nube.sesion(): return
     with LOCK: e = dict(ESTADO)
-    nube.sincronizar(None if gui.ajeno(gui.CUENTA[0]) else e.get("rendimiento"), e.get("cuenta"), e.get("plataforma"), e.get("ajustes"))
+    nube.sincronizar(None if gui.ajeno(gui.CUENTA[0]) or not gui.es_base() else e.get("rendimiento"), e.get("cuenta"), e.get("plataforma"), e.get("ajustes"))
     with LOCK: ESTADO.update(nube=nube_publica(), v=ESTADO["v"] + 1)
 
 
@@ -332,7 +337,7 @@ def descargar_todo(n=100):
     try:
         def aviso(t):
             with LOCK: ESTADO.update(descarga=t, v=ESTADO["v"] + 1)
-        if not gui.puede_descargar():  # sin invitación ni key: tus últimas 20 desde tu propio cliente de LoL
+        if not gui.puede_descargar() or not gui.es_base():  # sin invitación ni key (u otra cuenta: la key baja la del dueño): las últimas 20 del cliente
             import cliente_v5
             aviso("Bajando tus últimas 20 partidas desde tu cliente de LoL…")
             nuevas, msg = cliente_v5.descargar()
@@ -428,7 +433,7 @@ def vigilar_cuenta(q, cada=10):
         nueva = s.get("gameName") and (c := f"{s['gameName']}#{s.get('tagLine', '')}") != ultima
         if nueva:
             ultima = c; q.put(("rango", companion.rango(companion.lcu("/lol-ranked/v1/current-ranked-stats"))))
-            q.put(("cuenta", c, s.get("profileIconId")))
+            q.put(("cuenta", c, s.get("profileIconId"), s.get("puuid")))
             if ESTADO.get("conectado"): threading.Thread(target=primera_vez, daemon=True).start()  # LoL recién abierto
         if s.get("gameName") and (nueva or vuelta % 6 == 0):  # tus últimas partidas del cliente (sin key): al conectar y cada minuto
             h = companion.lcu("/lol-match-history/v1/products/lol/current-summoner/matches?begIndex=0&endIndex=19")
@@ -634,11 +639,13 @@ class H(http.server.BaseHTTPRequestHandler):
 
 
 def abrir(url):
+    import ventana
+    if ventana.al_frente(): return  # ya hay una ventana de Racha (aunque esté minimizada y Edge frene su sondeo): no abrir otra
     edge = shutil.which("msedge") or next((str(p) for p in (pathlib.Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
                                                             pathlib.Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe")) if p.exists()), None)
     if edge:
         subprocess.Popen([edge, f"--app={url}", "--window-size=1440,1024"])
-        import ventana  # sin barra de título de Windows (Ventana_Vino); si no se puede, queda la barra normal
+        # sin barra de título de Windows (Ventana_Vino); si no se puede, queda la barra normal
         def listo():
             with LOCK: ESTADO.update(sin_marco=True, v=ESTADO["v"] + 1)
         threading.Thread(target=ventana.sin_marco, kwargs={"al_listo": listo}, daemon=True).start()
@@ -665,15 +672,25 @@ def otro_htc():
     except (OSError, ValueError): return None
 
 
+class Servidor(http.server.ThreadingHTTPServer):
+    allow_reuse_address = False  # en Windows SO_REUSEADDR deja tomar un puerto que otro programa está usando
+
+
 def main(argv=None):
     argv = sys.argv[1:] if argv is None else argv
     unico = not ({"--demo", "--no-abrir"} & set(argv))  # las pruebas y la demo no tocan al HTC real
     if unico and (url := otro_htc()):
         if "--fondo" not in argv: abrir(url)
         return
-    srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H); url = f"http://127.0.0.1:{srv.server_port}/"
-    URL[0], FONDO[0] = url, "--fondo" in argv
-    if FONDO[0]: VIVO[0] = 0  # aún no hay ventana: si el cliente ya está abierto, la primera fase la abre
+    srv = None
+    if unico:  # el puerto de la vez anterior: una ventana que quedó abierta (actualización, reinicio) se reconecta sola
+        try: srv = Servidor(("127.0.0.1", int(PUERTO.read_text())), H)
+        except (OSError, ValueError): pass
+    srv = srv or Servidor(("127.0.0.1", 0), H); url = f"http://127.0.0.1:{srv.server_port}/"
+    # la versión instalada sigue en segundo plano al cerrar la ventana: si no, en partida no había franja (lo vio el usuario,
+    # 2026-11-12: cerró la ventana en champ select y Racha se apagó). Desde el código, cerrar la ventana sigue cerrando todo.
+    URL[0], FONDO[0] = url, "--fondo" in argv or (getattr(sys, "frozen", False) and unico)
+    if "--fondo" in argv: VIVO[0] = 0  # aún no hay ventana: si el cliente ya está abierto, la primera fase la abre
     ESTADO["autoarranque"] = autoarranque(); ESTADO["nube"] = nube_publica()
     if unico:
         try: PUERTO.parent.mkdir(parents=True, exist_ok=True); PUERTO.write_text(str(srv.server_port))
@@ -688,7 +705,7 @@ def main(argv=None):
     threading.Thread(target=demo if "--demo" in argv else gui.trabajador, args=(q,), daemon=True).start()
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     print(url, flush=True)
-    if not FONDO[0] and "--no-abrir" not in argv: abrir(url)
+    if "--fondo" not in argv and "--no-abrir" not in argv: abrir(url)
     seguir = lambda: FONDO[0] or time.time() - VIVO[0] < 60  # la ventana pregunta cada 2 s: si se cerró (y no es --fondo), salimos
     if "--overlay" in argv or not ({"--demo", "--no-abrir", "--sin-overlay"} & set(argv)):
         def leer():
