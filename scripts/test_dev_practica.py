@@ -24,6 +24,12 @@ class Candado(unittest.TestCase):
                        escribir=lambda *a: escrito.append(a) or True)
             self.assertEqual((r, bool(escrito)), (sale, sale), fase)
 
+    def test_espera_antes_de_elegir(self):  # B3 (ronda 4): N s en la selección para capturar las vistas
+        fases, dormidas = iter(["None", "InProgress"]), []
+        lcu = lambda p: next(fases) if p.endswith("phase") else None
+        self.assertTrue(d.main(["245", "--espera", "25"], lcu=lcu, escribir=lambda *a: True, dormir=dormidas.append))
+        self.assertEqual(dormidas[0], 25)
+
     def test_seco_no_escribe(self):
         escrito = []
         self.assertTrue(d.main(["--seco"], lcu=lambda p: "None" if p.endswith("phase") else None,

@@ -17,7 +17,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "sin_marco": False, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
-VERSION = "0.14.3"  # HTC; también invalida la caché de rendimiento
+VERSION = "0.14.4"  # HTC; también invalida la caché de rendimiento
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
 PUERTO = gui.REPO / "datos" / "cache" / "htc.port"  # el HTC que ya corre: otro arranque abre su ventana en vez de duplicarse
@@ -58,7 +58,8 @@ def evento(e):
         if e[1] in ("Lobby", "Matchmaking", "ReadyCheck"): s.update(aviso=None, perfil=gui.perfil(ESTADO["rango"], ESTADO["cuenta"]))
     elif tipo == "draft": s = {"draft": {**draft_json(e[1], e[2]), "probable": bool(e[3]) if len(e) > 3 else False}}
     elif tipo == "meta":  # el mismo gameTime que la foto anterior: juego en pausa (práctica, custom): los timers se congelan
-        pausa = e[1].get("t") is not None and e[1].get("t") == (ESTADO.get("meta") or {}).get("t")
+        antes = (ESTADO.get("meta") or {}).get("t")
+        pausa = e[1].get("t") is not None and antes is not None and abs(e[1]["t"] - antes) <= companion.TEMBLOR
         s = {"meta": {**e[1], "texto": gui.texto_meta(e[1]), "recibido": time.time(), "pausa": pausa}}  # «recibido»: el overlay descuenta los timers
     elif tipo == "fin":  # el tope de tu coach (F12) también en la línea final; y el ping sale aunque no llegue la revisión de Riot
         tope = ((((ESTADO.get("rendimiento") or {}).get("vistas") or {}).get("regla_hoy")) or {}).get("tope", 2)
@@ -152,7 +153,9 @@ def aplicar_coach(r, c=None):
 
 def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la cola
     r = None if gui.ajeno(gui.CUENTA[0]) else aplicar_coach(rendimiento_rapido())  # historial de otra cuenta: no mostrarlo como tuyo
-    with LOCK: ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1)
+    with LOCK:
+        if gui.ajeno(gui.CUENTA[0]): r = None  # la cuenta pudo llegar mientras se calculaba (hallazgo 20)
+        ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1, **({} if r is not None else {"previa": None}))
     if r is not None: vistas_previas(r); tus_builds()  # tu build propia relee las timelines: al final (auditoría de rendimiento)
     builds_del_backend(); sync_nube()
 
@@ -190,7 +193,9 @@ def vistas_previas(r):
             d = json.loads(lineas[-1]); d = d.get("foto", d)
             if (m := companion.meta_fase(d)): ultima = {**m, "texto": gui.texto_meta(m), "recibido": None, "archivo": fs[-1].stem}
     except (OSError, ValueError, KeyError, IndexError, AttributeError): ultima = None
-    with LOCK: ESTADO.update(previa=previa, ultima=ultima, v=ESTADO["v"] + 1)
+    with LOCK:
+        if gui.ajeno(gui.CUENTA[0]): previa = None  # un hilo viejo pudo seguir aquí después de que la cuenta ajena limpió (hallazgo 20)
+        ESTADO.update(previa=previa, ultima=ultima, v=ESTADO["v"] + 1)
 
 
 RELEASES = "https://api.github.com/repos/C0z1/racha.gg/releases/latest"

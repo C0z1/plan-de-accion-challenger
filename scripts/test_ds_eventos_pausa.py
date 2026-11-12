@@ -142,6 +142,47 @@ class UnirEventos(unittest.TestCase):
                          [("GameStart", 0.0), ("ChampionKill", 1000.0)])
 
 
+    def test_temblor_float32_no_cuenta_como_otra_partida(self):
+        """El gameTime tiembla un paso de float32 al reconectar (122.41705322 → 122.41704559): misma partida."""
+        previa = foto([GS0, {"EventName": "MinionsSpawning", "EventTime": 30.0}], t=122.41705322)
+        d = foto([{"EventName": "GameStart", "EventTime": 122.41704559}], t=122.41704559)
+        self.assertEqual(nombres(unir()(d, copy.deepcopy(previa))),
+                         [("GameStart", 0.0), ("MinionsSpawning", 30.0)])
+
+
+    def test_cadena_de_dos_reconexiones_y_foto_en_pausa_siempre_dos_eventos(self):
+        previa = foto([GS0, {"EventName": "MinionsSpawning", "EventTime": 30.0}], t=122.4)
+        unida = unir()(foto([{"EventName": "GameStart", "EventTime": 500.0}], t=500.0), copy.deepcopy(previa))
+        self.assertEqual(len(unida["events"]["Events"]), 2)
+        pausa = foto([GS0, {"EventName": "MinionsSpawning", "EventTime": 30.0}], t=122.4)  # reloj congelado, mismos eventos
+        unida = unir()(pausa, copy.deepcopy(unida))
+        self.assertEqual(len(unida["events"]["Events"]), 2)
+        unida = unir()(foto([{"EventName": "GameStart", "EventTime": 600.0}], t=600.0), copy.deepcopy(unida))
+        self.assertEqual(len(unida["events"]["Events"]), 2)
+        self.assertEqual(len({clave(e) for e in unida["events"]["Events"]}), 2)
+
+
+    def test_dragon_previo_se_conserva_con_temblor_de_49e4_tras_reinicio(self):
+        previa = foto([GS0, {"EventName": "DragonKill", "EventTime": 400.0, "KillerName": "Yo"}], t=8220.0)
+        d = foto([{"EventName": "GameStart", "EventTime": 8219.99951}], t=8219.99951)
+        self.assertEqual(nombres(unir()(d, copy.deepcopy(previa))),
+                         [("GameStart", 0.0), ("DragonKill", 400.0)])
+
+
+    def test_diferencia_de_11_s_es_otra_partida(self):
+        previa = foto([GS0], t=123.5)
+        d = foto([GS0, DRAGON], t=122.4); original = d["events"]["Events"]
+        out = unir()(d, copy.deepcopy(previa))
+        self.assertIs(out, d); self.assertIs(out["events"]["Events"], original)
+
+
+    def test_reloj_mucho_menor_es_otra_partida(self):
+        previa = foto([GS0, DRAGON], t=1500)
+        d = foto([GS0], t=12); original = d["events"]["Events"]
+        out = unir()(d, copy.deepcopy(previa))
+        self.assertIs(out, d); self.assertIs(out["events"]["Events"], original)
+
+
 class Pausa(unittest.TestCase):
     META = {"minuto": 17, "objetivos": {"dragon": 400, "baron": None}, "recibido": 1000.0}
 

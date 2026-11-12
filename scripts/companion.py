@@ -125,6 +125,7 @@ def historial(h, nombres):
 
 
 VIVO = DIR.parent / "datos" / "vivo"
+TEMBLOR = 1  # s: tras reconectar el gameTime tiembla un paso de float32 (7,6e-6 s a los 2 min; 4,9e-4 s a los 100 min) — hallazgo 21
 
 
 def vivo():
@@ -163,7 +164,7 @@ def unir_eventos(d, previos):
     Devuelve d (modificada); nunca toca `previos`."""
     ev = lambda x: ((x or {}).get("events") or {}).get("Events")
     t = lambda x: ((x or {}).get("gameData") or {}).get("gameTime") or 0
-    if not d or not isinstance(ev(d), list) or not ev(previos) or t(previos) > t(d): return d  # otra partida: nada que unir
+    if not d or not isinstance(ev(d), list) or not ev(previos) or t(previos) > t(d) + TEMBLOR: return d  # otra partida: nada que unir
     reinicio = lambda e: e.get("EventName") == "GameStart" and (e.get("EventTime") or 0) > 0
     if not any(map(reinicio, ev(d))) and len(ev(d)) >= len(ev(previos)): return d
     clave = lambda e: tuple(sorted((k, str(v)) for k, v in e.items() if k != "EventID"))

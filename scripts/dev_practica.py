@@ -1,5 +1,5 @@
 """Solo desarrollo (no va en el .exe): abre una Herramienta de práctica para probar Racha en una partida real.
-  python scripts/dev_practica.py [campeónId, 245 = Ekko] [--seco]   lobby → selección → elige y confirma → espera InProgress
+  python scripts/dev_practica.py [campeónId, 245 = Ekko] [--seco] [--espera N]   lobby → selección (N s antes de elegir) → elige y confirma → espera InProgress
   python scripts/dev_practica.py salir                              termina la partida de práctica
   python scripts/dev_practica.py reconectar                         vuelve a la partida de práctica (prueba de Reconnect)
 Nunca toca colas ranked/normales ni el ready-check: se niega fuera de las fases None/Lobby."""
@@ -17,6 +17,8 @@ def puede(fase): return fase in ("None", "Lobby")  # nunca interrumpir una cola,
 
 def main(args, lcu=c.lcu, escribir=c.lcu_escribir, dormir=time.sleep):
     seco = "--seco" in args; args = [a for a in args if a != "--seco"]
+    espera = 0
+    if "--espera" in args: i = args.index("--espera"); espera = int(args[i + 1]); del args[i:i + 2]  # para capturar las vistas en la selección
     w = (lambda m, p, b=None: print("seco:", m, p) or True) if seco else escribir
     if args in (["salir"], ["reconectar"]):  # solo una partida de práctica: en una partida real early-exit sería abandonar
         s = lcu("/lol-gameflow/v1/session") or {}
@@ -32,6 +34,7 @@ def main(args, lcu=c.lcu, escribir=c.lcu_escribir, dormir=time.sleep):
         print("no se pudo crear el lobby"); return False
     if not w("POST", "/lol-lobby/v1/lobby/custom/start-champ-select"): print("no arrancó la selección"); return False
     if seco: return True
+    if espera: dormir(espera)
     for _ in range(60):
         dormir(2); s = lcu("/lol-champ-select/v1/session")
         for a in (a for g in (s or {}).get("actions", []) for a in g):

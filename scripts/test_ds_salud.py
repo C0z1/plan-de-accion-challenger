@@ -169,6 +169,12 @@ class S7aS9(unittest.TestCase):
         """edad_proceso 200 >= ARRANQUE: dos pasadas altas es FALLA."""
         self.assertEqual(nivel(sano(cpu=1.5, cpu_antes=1.5, rss_mb=100, edad_proceso=200), "S8"), "FALLA")
 
+    def test_s8_lectura_anterior_del_arranque_no_cuenta(self):
+        """cpu_antes medido a los 28 s de abrir Racha (precalculo) no vale como pasada anterior."""
+        self.assertEqual(nivel(sano(cpu=1.41, cpu_antes=2.03, rss_mb=61, edad_proceso=340, edad_antes=28), "S8"), "AVISO")
+        self.assertEqual(nivel(sano(cpu=1.41, cpu_antes=2.03, rss_mb=61, edad_proceso=340, edad_antes=200), "S8"), "FALLA")
+        self.assertEqual(nivel(sano(cpu=1.41, cpu_antes=2.03, rss_mb=61, edad_proceso=340, edad_antes=None), "S8"), "FALLA")
+
     def test_rss_200_justo_ok_y_201_falla(self):
         self.assertEqual(nivel(sano(cpu=0.1, rss_mb=200), "S8"), "OK")
         self.assertEqual(nivel(sano(cpu=0.1, rss_mb=201), "S8"), "FALLA")
