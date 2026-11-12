@@ -14,6 +14,7 @@
 --red:#FF8A8A;--redbg:#4A1E26;--redfg:#FFB3B3;--okbg:#1F3A30;--okfg:#A8D8C0;--neutro:#9A8290;
 --muted3:#CDD3DC;--dark4:#3D2130;--ondark:#FFFFFF;--ondark2:#B8BCC6;--ontint:#161A21;--ontint2:#3F4652}
 *{box-sizing:border-box}
+html{scrollbar-color:var(--line) var(--dark2)}  /* oscura: la clara del sistema resaltaba con la ventana maximizada */
 body{margin:0;background:var(--bg);color:var(--txt);font-family:Mulish,'Segoe UI',sans-serif;font-size:16px}
 .sub,small,p{font-family:Inter,'Segoe UI',sans-serif}  /* acuerdo 21: Inter en textos secundarios, Mulish en títulos y cifras */
 .app{display:flex;min-height:100vh}
@@ -973,7 +974,8 @@ function recortar() {  // la barra que Edge dibuja por dentro = outerHeight - in
   const alto = window.outerHeight - window.innerHeight;
   if (alto > 0) ventana("recortar", {alto, dpr: window.devicePixelRatio || 1});
 }
-window.addEventListener("resize", () => { if (recortada) recortar(); });
+let tRec;  // outerHeight puede llegar atrasado al resize (al maximizar con Win+↑ no se recortaba): se repite al rato
+window.addEventListener("resize", () => { if (!recortada) return; recortar(); clearTimeout(tRec); tRec = setTimeout(recortar, 250); });
 async function descargar() {
   try { await fetch("/api/descargar", {method: "POST", headers: {"X-HTC": "1"}}); } catch (e) {}
   v = -1; tick();

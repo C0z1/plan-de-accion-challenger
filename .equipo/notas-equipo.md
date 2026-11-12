@@ -2455,3 +2455,9 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - Observación sin tocar: si Racha se reabre a media partida, la grabación sigue en un `.jsonl` nuevo (la partida queda en dos archivos).
 - DeepSeek no pudo actualizar su sección del Pizarrón (sin permiso de edición): sus entregas de esta noche están en esta nota.
 - Pendiente del usuario: entrar con cozi#1134 (Selección con rival real, Perfil, Partidas, Campeones), partida normal con `salud.py --cada 60 --foto`, FPS con y sin franja, y permiso para el release de la 0.14.4.
+
+## 2026-11-12 · Opus · 0.14.5: ventana maximizada
+- El usuario vio dos barras al maximizar (la de Edge asomaba encima de la nuestra). Medido en su PC: con ShowWindow(3) el área cliente coincide con la pantalla y la barra de Edge cae dentro; recortar más deja un hueco. El plan de Fable (medir desde el área cliente) tenía ese problema y no se usó.
+- Arreglo: `ventana.maximizar` maximiza a mano (`caja_max`: área de trabajo + barra de Edge arriba, fuera de la pantalla); Win+↑ o snap se convierten solos en `recortar`; si Edge reabre la ventana con tamaño de maximizada, restaurar la centra. La página repite el recorte a los 250 ms (outerHeight atrasado, aporte de Fable). Barra de desplazamiento oscura.
+- Ojo: cerrar HTC.exe no cierra la ventana de Edge; al reinstalar quedan ventanas huérfanas sin servidor.
+- Ronda 5 de Fable (prioridades): 1 build 0.14.4/0.14.5 instalada (hecho) · 2 prueba real 5 con cozi#1134 · 3 `unir_eventos` sin `EventTime` exacto · 4 seguir el mismo `.jsonl` al reabrir · 5 franja con «muertes sin objetivo 14–25» · 7 limpieza (`salir`, capturas en serie).
