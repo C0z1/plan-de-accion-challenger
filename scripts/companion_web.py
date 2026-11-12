@@ -52,6 +52,8 @@ def evento(e):
         s = {"fase": e[1]}
         if FONDO[0] and ESTADO["fase"] in (None, "inicio") and e[1] is not None and time.time() - VIVO[0] > 6:
             abrir(URL[0])  # el cliente acaba de abrir y no hay ventana de HTC (si la hubiera, preguntaría cada 2 s)
+        if ESTADO["fase"] in ("InProgress", "Reconnect") and e[1] not in ("InProgress", "Reconnect"):  # hallazgo 24: «Tu última partida» = la que acaba de terminar
+            threading.Thread(target=vistas_previas, args=(ESTADO.get("rendimiento"),), daemon=True).start()
         if e[1] == "ChampSelect": s.update(draft=None, fin=None, meta=None, pos=None, avisos=[]); USADO.add("champ_select")
         if e[1] in ("ChampSelect", "InProgress"): s["pantalla_completa"] = companion.pantalla_completa()  # la franja no se vería
         if e[1] == "InProgress" and ESTADO["ajustes"].get("overlay", True): USADO.add("overlay")

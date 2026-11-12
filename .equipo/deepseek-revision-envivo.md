@@ -69,3 +69,14 @@ DeepSeek (Sonnet de reemplazo), 2026-11-11. Lectura de los diffs y pruebas suelt
 
 ### Endpoints LCU nuevos
 `POST /lol-gameflow/v1/reconnect` (solo `reconectar`, con candado de modo) y `GET /lol-gameflow/v1/session` (lectura para el candado). Estado de política: sin verificar, igual que el resto (`deepseek-politica-overlay.md`).
+
+## Ronda 4 (7f4cf03 → HEAD; hallazgos 19–24)
+
+- `TEMBLOR` (`companion.py:128` y `unir_eventos:167`): cubre el temblor float32 (DS-4). Un retroceso > 1 s (el serrucho ~10 s de práctica al reconectar) hace que `unir_eventos` devuelva `d` sin unir y la grabación pierde los eventos previos al reconectar — aceptado en el plan solo para práctica/custom.
+- `evento` hallazgo 24 (`companion_web.py:55-56`): lanza `vistas_previas(rendimiento)` al salir de InProgress/Reconnect (no en InProgress↔Reconnect); pasa el rendimiento de antes de terminar. Correcto; redundante con `refrescar()` al terminar normal (una lectura de .jsonl de más, inocua).
+- `pausa` con `TEMBLOR` (`companion_web.py:63-65`): con `t` int, `abs(t−antes) ≤ 1` = igual o ±1 s (122→123 es pausa, DS-5). Correcto.
+- `refrescar`/`vistas_previas` (hallazgo 20): `r=None` + `previa=None` con cuenta ajena, y `vistas_previas` corre siempre para conservar `ultima`; el chequeo de `ajeno` dentro del LOCK cubre el hilo viejo. `tus_builds` se salta con cuenta ajena (correcto).
+- `salud.py` S8 (hallazgo 19): `viejo()` exige `edad_proceso` y `edad_antes` ≥ ARRANQUE; al arrancar la anterior es joven y no hay FALSA. Correcto.
+- `dev_practica.py --espera N`: correcto; en `--seco` no duerme (el `dormir` va tras el `return`).
+- `index.html` (hallazgos 22 y 23): `sinDatosCard`/`SIN_HIST`/`draftCab` muestran rol, reloj y el porqué sin historial; `envivo` ya no deja «En partida» a una partida cerrada sin pantalla de fin y congela timers con `recibido:null`. Correcto; el texto viene de `s.descarga`.
+- Sin hallazgo nuevo de gravedad A/M.
