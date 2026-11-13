@@ -75,6 +75,8 @@ def estado(meta, ahora, aj=None, regla=None, aviso=None, marcas=None, racha_oro=
         return {"tipo": "item", "a": {"item": p["id"], "campeon": p["nombre"], "anillo": p["i"] / p["de"], "color": "oro", "insignia": f"{p['i']}/{p['de']}"},
                 "num": p["nombre"][:16].rstrip(), "etq": "build OTPs" if p.get("fuente") == "mejores" else "tu build",
                 "b": {"icono": None, "color": "oro", "num": f"{p['falta']:,}".replace(",", " "), "etq": "oro que falta"}, "chip": None}  # dato: nunca «compra»
+    pl = meta.get("plan")
+    if pl and t0 < ITEM_DESDE and on_aj(aj, "franja_plan") and meta.get("modo") != "ARAM" and (ini := inicio(pl, t0, camp)): return ini
     if meta.get("modo") == "ARAM":
         tu, ellos = meta.get("kills") or [0, 0]
         return {"tipo": "aram", "a": {"campeon": camp, "anillo": 1.0, "color": "rosa", "insignia": meta.get("nivel")},
@@ -116,6 +118,32 @@ def estado(meta, ahora, aj=None, regla=None, aviso=None, marcas=None, racha_oro=
             "b": bpart, "chip": (f"Eq {eq:+d}"[:CHIP_MAX], "salvia" if eq >= 0 else "rojo") if eq is not None else None}
 
 
+def coma(x, dec=1): return f"{x:.{dec}f}".replace(".", ",")  # decimales en español
+
+
+def inicio(pl, t, camp):
+    """Los primeros 90 s (PLAN-OVERLAY-2, fase 2), por reloj de juego y solo con tu historial: el match, tu regla y tu nota
+    del matchup. None si ese tramo no tiene dato (sigue la vista de línea)."""
+    a = {"campeon": camp, "anillo": 1.0, "color": "rosa", "insignia": None}
+    if t < 30:
+        riv = {"campeon": pl["rival"], "anillo": 1.0, "color": "gris", "insignia": None}
+        if pl.get("n"):
+            b = {"icono": None, "color": "rosa", "num": f"{pl['v']}–{pl['n'] - pl['v']}", "etq": "tu récord"}
+            chip = (f"WR {round(pl['wr'] * 100)}%", "gris") if (pl.get("n_rol") or 0) >= 5 and pl.get("wr") is not None else None
+        else:
+            b = {"icono": None, "color": "rosa", "num": f"{round((pl.get('wr') or 0) * 100)}%", "etq": f"tu WR · {pl.get('n_rol') or 0} partidas"}
+            chip = ("1ª vez", "gris")
+        return {"tipo": "match", "a": a, "rival": riv, "flecha": {"txt": "vs", "color": "gris"}, "b": b, "chip": chip}
+    if t < 60 and pl.get("regla"):
+        tu = pl.get("tu")
+        return {"tipo": "plan", "a": a, "lineas": [f"Tu regla · {pl['regla']}"] + ([f"tu media {coma(tu['media'], 0 if float(tu['media']).is_integer() else 1)} · la cumples {round(tu['cumple'] * 100)} %"] if tu else []), "chip": None}
+    if 60 <= t < 90:
+        if pl.get("nota"): return {"tipo": "plan", "a": a, "lineas": [f"Tu nota · {pl['nota']}"], "chip": None}
+        if pl.get("m6") is not None and pl.get("m6_ref") is not None and not pl.get("m6_pocas"):
+            return {"tipo": "plan", "a": a, "lineas": [f"Contra {pl['rival']}: {coma(pl['m6'])} muertes antes del 6", f"tu media {coma(pl['m6_ref'])}"], "chip": None}
+    return None
+
+
 def on_aj(aj, k): return (aj or {}).get(k, True) is not False
 
 
@@ -123,7 +151,7 @@ def textos(e):
     """Los textos de la pastilla en orden de lectura: para replay (lista negra) y salud."""
     if not e: return []
     b = e.get("b") or {}
-    out = [e.get("texto"), e.get("num"), e.get("etq"), (e.get("flecha") or {}).get("txt"), b.get("num"), b.get("etq"), (e.get("chip") or (None,))[0]]
+    out = [e.get("texto"), *(e.get("lineas") or []), e.get("num"), e.get("etq"), (e.get("flecha") or {}).get("txt"), b.get("num"), b.get("etq"), (e.get("chip") or (None,))[0]]
     return [str(x) for x in out if x not in (None, "")]
 
 
@@ -201,6 +229,10 @@ def pintar(e, esc=1.0, icono=None):
         return x + max(d.textlength(num, font=f17), d.textlength(etq, font=f11)) / (esc * S)
 
     x = medallon(14, e["a"]) + 12
+    if e.get("lineas"):  # plan del inicio: renglones ya armados (el primero en blanco, el segundo como etiqueta)
+        for i, l in enumerate(e["lineas"][:2]):
+            d.text((k(x), k(36 + (i - (len(e["lineas"][:2]) - 1) / 2) * 18)), l, font=_fuente(k(13 if i == 0 else 11)), fill=(TXT if i == 0 else ETQ) + (255,), anchor="lm")
+        return im.resize((W, H), Image.LANCZOS)
     if e["tipo"] == "aviso":  # el texto corto en dos renglones como mucho
         f, lin = _fuente(k(12)), [""]
         for p in e["texto"].split():

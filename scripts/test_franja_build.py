@@ -56,5 +56,31 @@ class Momentos(unittest.TestCase):
         for t in overlay.textos(e): self.assertNotRegex(t.lower(), r"compra|vuelve|recall|backea")
 
 
+PLAN = {"rival": "Ahri", "v": 3, "n": 4, "wr": 0.55, "n_rol": 80, "regla": "69+ minions al 10", "tu": {"media": 74, "cumple": 0.75},
+        "nota": None, "m6": 0.5, "m6_ref": 0.7, "m6_pocas": False}
+
+
+class Inicio(unittest.TestCase):  # fase 2: match, regla y nota los primeros 90 s
+    def e(self, t, **kw): return overlay.estado({**META, "t": t, "plan": {**PLAN, **kw}}, 0)
+
+    def test_tramos(self):
+        self.assertEqual([self.e(t)["tipo"] for t in (0, 29, 30, 59, 60, 89, 90)], ["match", "match", "plan", "plan", "plan", "plan", "linea"])
+        self.assertEqual(overlay.textos(self.e(10)), ["vs", "3–1", "tu récord", "WR 55%"])
+        self.assertEqual(self.e(40)["lineas"], ["Tu regla · 69+ minions al 10", "tu media 74 · la cumples 75 %"])
+        self.assertEqual(self.e(70)["lineas"], ["Contra Ahri: 0,5 muertes antes del 6", "tu media 0,7"])
+        self.assertEqual(self.e(70, nota="pega fuerte al 6")["lineas"], ["Tu nota · pega fuerte al 6"])
+
+    def test_sin_datos(self):
+        self.assertEqual(self.e(10, n=0)["chip"], ("1ª vez", "gris"))
+        self.assertEqual(self.e(70, m6=None)["tipo"], "linea")  # sin nota ni dato: sigue la línea
+        self.assertEqual(self.e(40, regla=None)["tipo"], "linea")
+        self.assertEqual(overlay.estado({**META, "t": 10}, 0)["tipo"], "linea")  # sin plan
+        self.assertEqual(overlay.estado({**META, "t": 10, "plan": PLAN}, 0, {"franja_plan": False})["tipo"], "linea")
+
+    def test_sin_ordenes_ni_prediccion(self):
+        for t in (10, 40, 70):
+            for x in overlay.textos(self.e(t)): self.assertNotRegex(x.lower(), r"compra|juega|evita|pelea|gana|estimado|probab")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -204,7 +204,7 @@ REGLAS_CHAMP = {
                metrica="dano", meta="1+ kill sobre tu rival", minuto="14")],
     "Yone": [R("No necesitas ganar la línea: no fuerces tradeos, escala.",
                "con oro < 0 al 14 ganas 57% (21/37); Ekko, 43%", 37, fuente="convertir.py",
-               metrica="linea", meta="escala, no fuerces", minuto="14")],
+               metrica="linea", meta="escalar sin forzar tradeos", minuto="14")],
     "Mordekaiser": [R("Busca un kill antes del 14.", "90% con 1+ kill antes del 14 contra 45% con 0", 21, True, "early.py",
                       metrica="dano", meta="1+ kill antes del 14", minuto="14")],
 }
@@ -216,7 +216,7 @@ R_MUERTES = R("≤ 2 muertes del 14 al 25; antes de un dragón, heraldo o barón
               metrica="muertes", meta="≤ 2 muertes del 14 al 25", minuto="14+", campo="m25", ok=lambda x: x <= 2)
 R_RIO = R("Con nivel arriba en top, no empujes pasado el río sin ver al jungla rival.",
           "pasado el río con nivel arriba mueres ×2.43 por 10 min (top/bot)", 270, fuente="nivel6.py",
-          metrica="vision", meta="ver al jungla antes de pasar el río", minuto="6")
+          metrica="vision", meta="jungla a la vista antes de cruzar el río", minuto="6")
 
 
 
