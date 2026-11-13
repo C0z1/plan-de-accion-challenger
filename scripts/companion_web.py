@@ -18,7 +18,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "mi_pick": None, "lobby": None, "comentario": None, "mover_franja": False, "al_dia": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
-VERSION = "0.24.1"  # HTC; también invalida la caché de rendimiento
+VERSION = "0.24.2"  # HTC; también invalida la caché de rendimiento
 ESTADO["version"] = VERSION  # la página se recarga si cambia (Racha se actualizó con la ventana abierta)
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -49,14 +49,25 @@ def mi_pick(tab, draft=None):
     rival = recs[0].get("rival") if len(recs) == 1 else None  # rival de línea solo si es uno
     ant = ESTADO.get("mi_pick") or {}
     fijo = bool(yo.get("fijo"))
-    if (ant.get("champ"), ant.get("pos"), ant.get("fijo"), ant.get("rival")) == (yo["campeon"], pos, fijo, rival): return ant
+    if (ant.get("champ"), ant.get("pos"), ant.get("fijo"), ant.get("rival")) == (yo["campeon"], pos, fijo, rival) and ant.get("build"): return ant  # sin build: se reintenta
     import builds
     mu = None
     if rival:
         try: import matchups; mu = matchups.para_ficha(yo["campeon"], pos, rival)
         except Exception: mu = None  # sin datos de matchup: la build general
-    return {"champ": yo["campeon"], "pos": pos, "fijo": fijo, "rival": rival, "build": builds.guardado_dict(yo["campeon"], pos),
+    return {"champ": yo["campeon"], "pos": pos, "fijo": fijo, "rival": rival, "build": build_para(yo["campeon"], pos),
             "matchup": {"runa": mu["runa"], "n": mu["n"]} if mu and mu.get("pagina") and mu.get("runa") else None}
+
+
+def build_para(champ, pos):
+    """La build guardada (los mejores o la tuya) y, sin ella, la página recomendada por el cliente (fuente "riot", sin WR)."""
+    import builds
+    if (b := builds.guardado_dict(champ, pos)): return b
+    try:
+        _, runas, cs = builds.ddragon()
+        r = companion.runas_recomendadas(cs[builds.norm(champ)][1], pos)
+    except Exception: return None  # sin Data Dragon o sin cliente: el mensaje de «sin build»
+    return {"fuente": "riot", "runa": [runas.get(r["keystone"]) or str(r["keystone"]), None], "pagina_ids": r["pagina_ids"]} if r else None
 
 
 def poner_pick(mp):
@@ -705,7 +716,7 @@ class H(http.server.BaseHTTPRequestHandler):
             import builds
             try:
                 d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 300)))
-                b = builds.guardado_dict(str(d["champ"]), str(d["pos"])) or {}
+                b = build_para(str(d["champ"]), str(d["pos"])) or {}
                 pag = None
                 if d.get("rival"):  # la página del matchup (muchas partidas Master+), si hay datos
                     try: import matchups; pag = (matchups.para_ficha(str(d["champ"]), str(d["pos"]), str(d["rival"])) or {}).get("pagina")

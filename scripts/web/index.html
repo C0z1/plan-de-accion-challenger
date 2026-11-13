@@ -1056,7 +1056,7 @@ function miPick(s) {  // tu campeón en hover o fijado: sus runas arriba, con el
   const p = s.fase === "ChampSelect" && s.mi_pick; if (!p) return "";
   const b = p.build, mu = p.matchup;  // con datos del matchup, su página manda (mains Master+ contra tu rival)
   const txt = mu ? `${esc(mu.runa.nombre)} · ${pct(mu.runa.wr)} contra ${esc(p.rival)} (n=${mu.n}, mains Master+)`
-    : b && b.runa ? `${esc(b.runa[0])} · ${pct(b.runa[1])} · ${b.fuente === "tu" ? "tu build" : quienBuild(b)}` : `Aún no hay build guardada de ${esc(p.champ)} en ${esc(ROL[p.pos] || p.pos)}.`;
+    : b && b.fuente === "riot" ? `${esc(b.runa[0])} · recomendada por Riot` : b && b.runa ? `${esc(b.runa[0])} · ${pct(b.runa[1])} · ${b.fuente === "tu" ? "tu build" : quienBuild(b)}` : `Aún no hay build guardada de ${esc(p.champ)} en ${esc(ROL[p.pos] || p.pos)}.`;
   return `<div class="card" style="flex-direction:row;align-items:center;gap:14px;flex-wrap:wrap">${img("champion", p.champ, "ico40")}
     <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><b>${p.fijo ? "Tus runas con" : "Runas para"} ${esc(p.champ)}</b>
       <span class="sub" style="font-size:13px">${txt}</span></div>

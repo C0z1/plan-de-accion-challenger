@@ -301,7 +301,8 @@ class MiPick(unittest.TestCase):
     def tab(self, draft=True, **yo): return {"draft": draft, "mio": [{"yo": False, "fijo": True, "campeon": "Zed", "pos": "MIDDLE"}, {"yo": True, "pos": "BOTTOM", **yo}]}
 
     def setUp(self):
-        for p in (mock.patch("builds.guardado_dict", return_value=self.B), mock.patch.dict(w.ESTADO, mi_pick=None, tablero=None, draft=None)):
+        for p in (mock.patch("builds.guardado_dict", return_value=self.B), mock.patch.dict(w.ESTADO, mi_pick=None, tablero=None, draft=None),
+                  mock.patch.object(w.companion, "runas_recomendadas", return_value=None)):  # sin cliente: nada de la página de Riot
             p.start(); self.addCleanup(p.stop)
         self.ab = mock.patch.object(w, "abrir").start(); self.addCleanup(mock.patch.stopall)
 
@@ -372,6 +373,28 @@ class Lobby(unittest.TestCase):
         with mock.patch.dict(w.ESTADO, fase="InProgress", plataforma="la1", lobby=None), mock.patch.object(w.companion, "lcu", return_value={"puuid": "yo" * 20}),              mock.patch.object(w.companion, "nombres_lcu", return_value={}), mock.patch.object(w.companion, "backend", side_effect=e) as be:
             w.armar_lobby(intentos=2, espera=0)
             self.assertIsNone(w.ESTADO["lobby"]); self.assertEqual(be.call_count, 2)
+
+
+
+class RunasRiot(unittest.TestCase):
+    """Sin build guardada: la página recomendada del cliente (9 ids con fragmentos); forma rara = None."""
+    PAG = [{"perks": [{"id": i} for i in (8010, 8009, 9105, 8014, 8451, 8444, 5008, 5008, 5001)], "primaryPerkStyleId": 8000, "secondaryPerkStyleId": 8400}]
+
+    def test_recomendadas(self):
+        rutas = []
+        r = w.companion.runas_recomendadas(84, "MIDDLE", leer=lambda u: rutas.append(u) or self.PAG)
+        self.assertEqual(r["keystone"], 8010); self.assertEqual(r["pagina_ids"]["subStyleId"], 8400)
+        self.assertTrue(rutas[0].endswith("/champion/84/position/middle/map/11"))
+        for malo in (None, [], [{"perks": [{"id": 1}]}], {"error": 1}, [{"perks": [{"id": "x"}] * 9, "primaryPerkStyleId": 8000, "secondaryPerkStyleId": 8400}]):
+            self.assertIsNone(w.companion.runas_recomendadas(84, "MIDDLE", leer=lambda u: malo))
+
+    def test_build_para(self):
+        dd = ({}, {8010: "Conquistador"}, {"akali": ("Akali", 84, "Assassin")})
+        with mock.patch("builds.guardado_dict", return_value=None), mock.patch("builds.ddragon", return_value=dd),              mock.patch.object(w.companion, "lcu", return_value=self.PAG) as l:
+            b = w.build_para("Akali", "MIDDLE")
+        self.assertEqual((b["fuente"], b["runa"]), ("riot", ["Conquistador", None])); self.assertEqual(len(b["pagina_ids"]["selectedPerkIds"]), 9)
+        with mock.patch("builds.guardado_dict", return_value={"fuente": "tu"}), mock.patch.object(w.companion, "lcu") as l:
+            self.assertEqual(w.build_para("Akali", "MIDDLE"), {"fuente": "tu"}); l.assert_not_called()  # la guardada manda
 
 
 if __name__ == "__main__":

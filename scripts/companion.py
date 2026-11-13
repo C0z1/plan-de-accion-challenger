@@ -76,6 +76,19 @@ def lcu_escribir(metodo, path, cuerpo=None):
     except FALLAS: return False
 
 
+def runas_recomendadas(cid, pos, leer=None):
+    """La primera página recomendada del propio cliente para ese campeón y rol (sin key; respaldo para campeones sin
+    build guardada): {keystone, pagina_ids} o None. Endpoint no documentado: cualquier forma rara da None."""
+    try: r = (leer or lcu)(f"/lol-perks/v1/recommended-pages/champion/{int(cid)}/position/{str(pos or 'middle').lower()}/map/11")
+    except (TypeError, ValueError): return None
+    p = next((x for x in r if isinstance(x, dict)), None) if isinstance(r, list) else None
+    if not p: return None
+    ids = [x.get("id") if isinstance(x, dict) else x for x in p.get("perks") or []]
+    pag = {"primaryStyleId": p.get("primaryPerkStyleId"), "subStyleId": p.get("secondaryPerkStyleId"), "selectedPerkIds": ids}
+    if len(ids) != 9 or not all(isinstance(i, int) for i in ids + [pag["primaryStyleId"], pag["subStyleId"]]): return None
+    return {"keystone": ids[0], "pagina_ids": pag}
+
+
 def importar_runas(nombre, pagina, leer=None, escribir=None):
     """Crea en el cliente la página de runas `pagina` ({primaryStyleId, subStyleId, selectedPerkIds[9]}) y la deja activa.
     Solo en selección de campeón y solo cuando el jugador pulsa el botón: Racha nunca elige, banea ni acepta por ti.
