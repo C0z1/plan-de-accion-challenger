@@ -34,10 +34,11 @@ SKILL = "QWER"
 class SinKey(Exception): pass
 
 
-def get(url, ttl=None, riot=False):
-    """JSON de la URL, con caché en datos/meta/ (ttl en s; None = para siempre). 404 → None. Sin key/401/403 → SinKey."""
+def get(url, ttl=None, riot=False, guardar=True):
+    """JSON de la URL, con caché en datos/meta/ (ttl en s; None = para siempre). 404 → None. Sin key/401/403 → SinKey.
+    guardar=False: sin caché (partidas y timelines del rastreo de matchups: pesan ~900 KB y se descartan tras la fila)."""
     f = META / "cache" / (re.sub(r"[^\w.-]+", "_", url.split("://", 1)[1])[:180] + ".json")
-    if f.exists() and (ttl is None or time.time() - f.stat().st_mtime < ttl):
+    if guardar and f.exists() and (ttl is None or time.time() - f.stat().st_mtime < ttl):
         return json.loads(f.read_text(encoding="utf-8"))
     hdr = {"User-Agent": "plan-challenger"}
     if riot:
@@ -55,6 +56,7 @@ def get(url, ttl=None, riot=False):
             if e.code < 500 or intento == 3: raise
             time.sleep(5)
     if riot: time.sleep(1.2)  # dev key: 100 llamadas cada 2 min
+    if not guardar: return data
     f.parent.mkdir(parents=True, exist_ok=True)
     f.write_text(json.dumps(data), encoding="utf-8")
     return data
