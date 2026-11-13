@@ -99,6 +99,16 @@ class TestPintar(unittest.TestCase):
                 self.assertEqual(im.getpixel((0, 0))[3], 0)  # esquina redonda: transparente
                 self.assertGreater(im.getpixel((im.width // 2, 2))[3], 150)  # fondo translúcido
 
+    def test_pulso_engorda_el_borde(self):  # fase B: dos pulsos al entrar un aviso o un momento
+        try: import PIL  # noqa: F401
+        except ImportError: self.skipTest("sin Pillow")
+        e = overlay.estado(META, 0, aviso={"franja": 0, "corto": "Min 12: 2 muertes"})
+        a, b = overlay.pintar(e), overlay.pintar({**e, "pulso": True})
+        self.assertGreater(b.getpixel((190, 3))[3], a.getpixel((190, 3))[3] - 1)
+        self.assertNotEqual(list(a.getdata()), list(b.getdata()))
+        self.assertEqual(sum(overlay.SACUDIDA), -1 + 0)  # termina en 0 y casi simétrica: la ventana vuelve a su lugar
+        self.assertEqual(overlay.SACUDIDA[-1], 0)
+
     def test_escala(self):
         self.assertEqual([overlay.escala(None), overlay.escala((0, 0, 1280, 720)), overlay.escala((0, 0, 3840, 2160)), overlay.escala((0, 0, 9, 4000))], [1.0, 0.75, 2.0, 2.0])
 

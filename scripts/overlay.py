@@ -156,7 +156,8 @@ def pintar(e, esc=1.0, icono=None):
     alarma = e["tipo"] == "aviso" or (e["tipo"] == "peleas" and e["chip"][1] == "rojo")
     momento = {"igualaste": SALVIA, "oro14": ORO}.get(e["tipo"])  # fase 2: borde del color del momento
     d.rounded_rectangle((0, 0, W * S - 1, H * S - 1), radius=k(16), fill=(60, 14, 26, 240) if alarma else (11, 7, 9, 214),
-                        outline=ROJO + (255,) if alarma else momento + (255,) if momento else ROSA + (90,), width=k(2) if alarma or momento else max(1, k(1)))
+                        outline=ROJO + (255,) if alarma else momento + (255,) if momento else ROSA + (90,),
+                        width=k(3.5) if e.get("pulso") else k(2) if alarma or momento else max(1, k(1)))  # pulso: el borde engorda un instante
     f17, f11 = _fuente(k(17)), _fuente(k(11))
 
     def anillo(cx, r, frac, col, ancho=3):
@@ -277,6 +278,18 @@ def visible(s, ahora):
             and recibido is not None and ahora - recibido < FRESCA)
 
 
+def animar():
+    """¿Windows deja animar? (Configuración > Accesibilidad > Efectos de animación; SPI_GETCLIENTAREAANIMATION). Fuera de Windows, no."""
+    try:
+        import ctypes
+        v = ctypes.c_int(1); ctypes.windll.user32.SystemParametersInfoW(0x1042, 0, ctypes.byref(v), 0); return bool(v.value)
+    except (AttributeError, OSError): return False
+
+
+SACUDIDA = (-5, 5, -3, 3, -1, 0)  # px, cada 60 ms al entrar un aviso (≈ 0,4 s; solo se mueve la ventana, sin repintar)
+PULSOS = (True, False, True, False)  # borde grueso / normal cada 250 ms: dos pulsos al entrar un aviso o un momento
+
+
 def escala(juego):
     """Tamaño de la pastilla según el alto del juego (1080 = 1), en pasos de 0,25 entre 0,75 y 2."""
     alto = (juego[3] - juego[1]) if juego else 1080
@@ -319,7 +332,7 @@ def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None, icono=None):
     root = tk.Tk(); root.withdraw(); root.title("Racha franja"); root.overrideredirect(True); root.attributes("-topmost", True)
     root.update_idletasks(); atravesable(root)
     hwnd = ctypes.windll.user32.GetParent(root.winfo_id()) if hasattr(ctypes, "windll") else None
-    mostrada, ultimo, errores, marcas = [False], [None], set(), {}
+    mostrada, ultimo, errores, marcas, tipo_ant, gen = [False], [None], set(), {}, [None], [0]
 
     def tick():
         if not seguir(): root.destroy(); return
@@ -336,13 +349,23 @@ def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None, icono=None):
         e = estado(s.get("meta"), ahora, aj, regla, s.get("aviso"), marcas, oro) if visible(s, ahora) else None
         if not e:
             if mostrada[0]: root.withdraw(); mostrada[0] = False
-            ultimo[0] = None; return
+            ultimo[0] = tipo_ant[0] = None; gen[0] += 1; return
         juego = rect_juego(); esc = escala(juego)
         px, py = colocar(juego, (root.winfo_screenwidth(), root.winfo_screenheight()), round(72 * esc), x, aj.get("franja_pos"), y, fraccion_util(), round(380 * esc))
         clave = (repr(e), esc, px, py)
         if clave == ultimo[0] and mostrada[0]: return  # nada cambió: no se repinta
         if not mostrada[0]: root.deiconify(); root.attributes("-topmost", True); mostrada[0] = True  # la ventana en capas solo se ve tras mostrarla
-        if hwnd: mostrar(hwnd, pintar(e, esc, icono), px, py)
+        gen[0] += 1; g = gen[0]  # los pasos de una animación vieja no pisan un estado nuevo ni una franja oculta (DeepSeek)
+        img = pintar(e, esc, icono)
+        if hwnd: mostrar(hwnd, img, px, py)
+        if hwnd and e["tipo"] in ("aviso", "igualaste", "oro14") and e["tipo"] != tipo_ant[0] and animar():  # al entrar: sacudida (aviso) y dos pulsos
+            imgs = (pintar({**e, "pulso": True}, esc, icono), img)
+            vale = lambda: gen[0] == g and mostrada[0]
+            for i, p in enumerate(PULSOS): root.after(250 * (i + 1), lambda p=p: vale() and mostrar(hwnd, imgs[0 if p else 1], px, py))
+            if e["tipo"] == "aviso":
+                for i, dx in enumerate(SACUDIDA):
+                    root.after(60 * (i + 1), lambda dx=dx: vale() and ctypes.windll.user32.SetWindowPos(hwnd, 0, px + round(dx * esc), py, 0, 0, 0x15))  # NOSIZE|NOZORDER|NOACTIVATE
+        tipo_ant[0] = e["tipo"]
         ultimo[0] = clave
 
     tick(); root.mainloop()
