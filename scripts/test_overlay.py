@@ -52,6 +52,39 @@ class TestEstado(unittest.TestCase):  # la pastilla 380×72 (plan del overlay de
                 self.assertLessEqual(len(txt), 12)
 
 
+class TestFase2(unittest.TestCase):  # «Igualaste» y la moneda del 14 (PLAN-OVERLAY.md, fase 2)
+    def test_igualaste_3_s(self):
+        m = {}
+        overlay.marcar(m, {**META, "t": 400, "nivel": 5, "nivel_rival": 6}, 100.0)
+        overlay.marcar(m, {**META, "t": 410, "nivel": 6, "nivel_rival": 6}, 110.0)
+        e = lambda ahora: overlay.estado({**META, "t": 410, "nivel": 6, "nivel_rival": 6}, ahora, marcas=m)["tipo"]
+        self.assertEqual((e(112.9), e(113.1)), ("igualaste", "linea"))
+        m2 = {}; overlay.marcar(m2, {**META, "t": 400, "nivel": 6, "nivel_rival": 6}, 100.0)  # ya iba igual: no es igualar
+        m3 = {}; overlay.marcar(m3, {**META, "t": 400, "nivel": 5, "nivel_rival": 6}, 100.0)
+        overlay.marcar(m3, {**META, "t": 410, "rival": "Zed", "nivel": 6, "nivel_rival": 6}, 110.0)  # cambió el rival: no cuenta
+        self.assertNotIn("igualo", m3)
+        self.assertNotIn("igualo", m2)
+
+    def test_oro14_5_s_y_racha(self):
+        m = {}; oro = {"tu": 5400, "rival": 5060}
+        overlay.marcar(m, {**META, "t": 835, "oro": oro}, 100.0); self.assertNotIn("oro14", m)
+        overlay.marcar(m, {**META, "t": 845, "oro": oro}, 110.0)
+        e = overlay.estado({**META, "t": 845, "muertes14": 0}, 114.9, marcas=m, racha_oro={"ok": 4, "n": 5})
+        self.assertEqual((e["tipo"], e["num"], e["b"]["num"], e["chip"]), ("oro14", "+350", "4 / 5", ("Arriba", "salvia")))
+        self.assertEqual(overlay.estado({**META, "t": 845, "muertes14": 0}, 115.1, marcas=m)["tipo"], "peleas")
+        overlay.marcar(m, {**META, "t": 900, "oro": {"tu": 0, "rival": 9000}}, 200.0); self.assertEqual(m["oro14"][1], 340)  # una sola vez
+
+    def test_otra_partida_vacia_marcas(self):
+        m = {}; overlay.marcar(m, {**META, "t": 900, "oro": {"tu": 1, "rival": 0}}, 0.0)
+        overlay.marcar(m, {**META, "t": 10}, 1.0); self.assertNotIn("oro14", m)
+
+    def test_sin_ordenes(self):
+        m = {"igualo": 0.0, "oro14": (0.0, -200)}
+        for e in (overlay.estado({**META, "t": 845, "nivel": 6, "nivel_rival": 6}, 1.0, marcas=m, racha_oro={"ok": 1, "n": 5}),
+                  overlay.estado({**META, "t": 400, "nivel": 6, "nivel_rival": 6}, 1.0, marcas={"igualo": 0.0})):
+            for txt in overlay.textos(e): self.assertNotRegex(txt, r"(?i)pelea|juega|farmea|puedes|debes")
+
+
 class TestPintar(unittest.TestCase):
     def test_tamano_esquinas_y_peor_caso(self):
         try: import PIL  # noqa: F401

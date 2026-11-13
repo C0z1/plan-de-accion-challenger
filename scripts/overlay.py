@@ -21,7 +21,27 @@ def ritmo(cs_meta, t):
     return cs_meta * max(0, t - 75) / 525
 
 
-def estado(meta, ahora, aj=None, regla=None, aviso=None):
+IGUALO_S, ORO14_S = 3, 5  # fase 2 del plan: cuánto duran «Igualaste» y la moneda del 14
+
+
+def marcar(m, meta, ahora):
+    """Memoria entre fotos para los momentos de la fase 2 (estado() es pura): igualar a tu rival en nivel y cruzar el 14.
+    m: dict que vive en correr(); se vacía solo si empieza otra partida (el reloj de juego baja)."""
+    if not meta or meta.get("modo") == "ARAM": return m
+    t = meta.get("t") or 0
+    if t < m.get("t", 0) - 30: m.clear()  # otra partida (30 s de margen por el temblor al reconectar)
+    m["t"] = t
+    nv, nvr = meta.get("nivel"), meta.get("nivel_rival")
+    if meta.get("rival") != m.get("rival"): m["rival"] = meta.get("rival"); m.pop("d", None)  # otro rival de línea: sin «Igualaste» falso (DeepSeek)
+    if nv is not None and nvr is not None:
+        if m.get("d", 0) < 0 <= nv - nvr and meta.get("rival"): m["igualo"] = ahora
+        m["d"] = nv - nvr
+    oro = meta.get("oro") or {}
+    if t >= LINEA_HASTA and "oro14" not in m: m["oro14"] = (ahora, oro["tu"] - oro["rival"]) if oro.get("tu") is not None and oro.get("rival") is not None else None
+    return m
+
+
+def estado(meta, ahora, aj=None, regla=None, aviso=None, marcas=None, racha_oro=None):
     """Qué muestra la pastilla (plan del overlay de Fable con la revisión de DeepSeek), o None. Solo datos y tu regla,
     nunca órdenes (Riot: no dictar decisiones). Huecos: a (tu medallón), rival (opcional), b (anillo + número), chip."""
     if not meta: return None
@@ -31,6 +51,18 @@ def estado(meta, ahora, aj=None, regla=None, aviso=None):
     if aviso and aviso.get("franja") is not None and aviso.get("corto") and ahora - aviso["franja"] < AVISO_SEGUNDOS:
         return {"tipo": "aviso", "a": {"campeon": camp, "anillo": 1.0, "color": "rojo", "insignia": None, "atenuado": True},
                 "texto": aviso["corto"], "chip": None}
+    mk = marcas or {}
+    if (o := mk.get("oro14")) and ahora - o[0] < ORO14_S and meta.get("modo") != "ARAM":  # la moneda del 14 (fase 2)
+        dif = round(o[1] / 50) * 50; r = racha_oro or {}
+        return {"tipo": "oro14", "a": {"campeon": camp, "anillo": 1.0, "color": "oro", "insignia": "14"},
+                "num": f"{dif:+d}", "etq": "oro en ítems vs rival", "moneda": True,
+                "b": {"icono": None, "color": "oro", "num": f"{r['ok']} / {r['n']}", "etq": "racha de oro"} if r.get("n") else None,
+                "chip": ("Arriba", "salvia") if dif >= 0 else ("Abajo", "rojo")}
+    if mk.get("igualo") is not None and ahora - mk["igualo"] < IGUALO_S and meta.get("rival") and meta.get("nivel") is not None:  # «Igualaste» (fase 2)
+        return {"tipo": "igualaste", "a": {"campeon": camp, "anillo": 1.0, "color": "salvia", "insignia": meta["nivel"]},
+                "rival": {"campeon": meta["rival"], "anillo": 1.0, "color": "gris", "insignia": meta.get("nivel_rival")},
+                "flecha": {"txt": "=", "color": "salvia"}, "b": {"icono": None, "color": "salvia", "num": "Igualaste", "etq": f"nivel {meta['nivel']}"},
+                "chip": ("Igualado", "salvia")}  # dato, no consejo (DeepSeek)
     if meta.get("modo") == "ARAM":
         tu, ellos = meta.get("kills") or [0, 0]
         return {"tipo": "aram", "a": {"campeon": camp, "anillo": 1.0, "color": "rosa", "insignia": meta.get("nivel")},
@@ -122,8 +154,9 @@ def pintar(e, esc=1.0, icono=None):
     S = 2; W, H = round(380 * esc), round(72 * esc); k = lambda v: round(v * esc * S)
     im = Image.new("RGBA", (W * S, H * S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
     alarma = e["tipo"] == "aviso" or (e["tipo"] == "peleas" and e["chip"][1] == "rojo")
+    momento = {"igualaste": SALVIA, "oro14": ORO}.get(e["tipo"])  # fase 2: borde del color del momento
     d.rounded_rectangle((0, 0, W * S - 1, H * S - 1), radius=k(16), fill=(60, 14, 26, 240) if alarma else (11, 7, 9, 214),
-                        outline=ROJO + (255,) if alarma else ROSA + (90,), width=k(2) if alarma else max(1, k(1)))
+                        outline=ROJO + (255,) if alarma else momento + (255,) if momento else ROSA + (90,), width=k(2) if alarma or momento else max(1, k(1)))
     f17, f11 = _fuente(k(17)), _fuente(k(11))
 
     def anillo(cx, r, frac, col, ancho=3):
@@ -164,7 +197,7 @@ def pintar(e, esc=1.0, icono=None):
     if e.get("rival"):
         fl = e["flecha"]; d.text((k(x + 9), k(36)), fl["txt"], font=_fuente(k(13)), fill=COLORES[fl["color"]][0] + (255,), anchor="mm")
         x = medallon(x + 20, e["rival"]) + 12
-    elif e.get("num"): x = dos(x, e["num"], e["etq"]) + 12
+    elif e.get("num"): x = dos(x, e["num"], e["etq"], ORO if e.get("moneda") else TXT) + 12
     if e.get("b"):
         b = e["b"]; c1 = COLORES.get(b["color"], COLORES["rosa"])[0]
         d.line((k(x), k(18), k(x), k(54)), fill=(255, 255, 255, 31), width=max(1, k(1))); x += 12
@@ -286,7 +319,7 @@ def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None, icono=None):
     root = tk.Tk(); root.withdraw(); root.title("Racha franja"); root.overrideredirect(True); root.attributes("-topmost", True)
     root.update_idletasks(); atravesable(root)
     hwnd = ctypes.windll.user32.GetParent(root.winfo_id()) if hasattr(ctypes, "windll") else None
-    mostrada, ultimo, errores = [False], [None], set()
+    mostrada, ultimo, errores, marcas = [False], [None], set(), {}
 
     def tick():
         if not seguir(): root.destroy(); return
@@ -298,7 +331,9 @@ def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None, icono=None):
     def dibujar():
         s = leer() or {}; ahora = time.time(); aj = s.get("ajustes") or {}
         regla = (((s.get("rendimiento") or {}).get("vistas") or {}).get("regla_hoy"))  # tu regla, no la del autor
-        e = estado(s.get("meta"), ahora, aj, regla, s.get("aviso")) if visible(s, ahora) else None
+        marcar(marcas, s.get("meta"), ahora)
+        oro = (((s.get("rendimiento") or {}).get("resumen") or {}).get("racha_oro14"))
+        e = estado(s.get("meta"), ahora, aj, regla, s.get("aviso"), marcas, oro) if visible(s, ahora) else None
         if not e:
             if mostrada[0]: root.withdraw(); mostrada[0] = False
             ultimo[0] = None; return
