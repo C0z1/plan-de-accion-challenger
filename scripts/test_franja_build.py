@@ -24,6 +24,8 @@ class Proximo(unittest.TestCase):
         self.assertEqual(companion.proximo(BUILD, [["3152", ""]], 0, ITEMS)["id"], "3157")
         self.assertIsNone(companion.proximo(BUILD, [["3152", ""], ["3157", ""]], 0, ITEMS))  # core completo
         self.assertIsNone(companion.proximo(None, [], 0, ITEMS)); self.assertIsNone(companion.proximo(BUILD, [], 0, {}))
+        raro = {"core": [("Ornn", "7000"), ("Zhonya", "3157")], "fuente": "tu"}
+        self.assertEqual(companion.proximo(raro, [], 0, ITEMS)["id"], "3157")  # el que no está en Data Dragon se salta
 
 
 META = {"campeon": "Sylas", "rival": "Ahri", "t": 700, "nivel": 9, "nivel_rival": 9, "items": [["1052", ""]],

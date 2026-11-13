@@ -313,7 +313,7 @@ def proximo(build, mios, oro, items):
     for n, (nombre, iid) in enumerate(core, 1):
         if tengo.get(iid): tengo[iid] -= 1; continue
         c = costo_falta(iid, Counter(tengo), items)
-        if c is None: return None
+        if c is None: continue  # fuera de Data Dragon (p. ej. mejoras de Ornn): se salta y sigue el core (DeepSeek)
         return {"id": iid, "nombre": nombre, "i": n, "de": len(core), "falta": max(0, round((c - (oro or 0)) / 50) * 50), "fuente": build["fuente"]}
     return None
 
