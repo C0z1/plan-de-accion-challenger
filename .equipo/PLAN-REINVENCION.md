@@ -50,3 +50,8 @@ Decisiones del usuario:
 4) Huecos: mediciones dinámicas (CPU/memoria con transiciones, document.hidden, partida), pruebas en Edge --app real, fallback portapapeles, accesibilidad foco/teclado, límites API/caché.
 
 5) Orden: fusionar 0.19 Ritual con 0.20 Viaje; posponer tarjetas y enfoque. Falta una regla contextual generada por tu historial (coach visible), no solo regla fija.
+
+## Decisiones del usuario (2026-11-12)
+1. Estela con las correcciones: sí, construir (0.18.0).
+2. Inicio como ritual con descanso tras 2 derrotas: sí.
+3. Tarjetas con Riot ID oculto por defecto; ladder LAN por el backend: sí.

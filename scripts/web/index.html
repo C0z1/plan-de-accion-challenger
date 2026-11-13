@@ -10,7 +10,7 @@
 <style>
 @font-face{font-family:Mulish;src:url(/fonts/mulish.woff2) format("woff2");font-weight:200 1000;font-display:swap}
 @font-face{font-family:Inter;src:url(/fonts/inter.woff2) format("woff2");font-weight:100 900;font-display:swap}
-:root{--bg:#24111A;--card:#36192A;--txt:#F2F4F7;--muted:#D2BAC4;--soft:#AE95A0;--line:#5A2D40;--dark:#0B0709;--dark2:#1A1014;--dark3:#2C1420;
+:root{--bg:#24111A;--card:#36192A;--txt:#F2F4F7;--muted:#D2BAC4;--soft:#C9B2BC;--line:#5A2D40;--dark:#0B0709;--dark2:#1A1014;--dark3:#2C1420;
 --acc:#F28DB0;--acc2:#F8C3D6;--amber:#F28DB0;--amberbg:#4A2236;--amberfg:#F8C3D6;--teal:#A8D8C0;--tealbg:#1F3A30;--tealfg:#A8D8C0;
 --red:#FF8A8A;--redbg:#4A1E26;--redfg:#FFB3B3;--okbg:#1F3A30;--okfg:#A8D8C0;--neutro:#9A8290;
 --muted3:#CDD3DC;--dark4:#3D2130;--ondark:#FFFFFF;--ondark2:#B8BCC6;--ontint:#161A21;--ontint2:#3F4652}
@@ -33,14 +33,13 @@ h1{margin:0;font-size:28px}h2{margin:0;font-size:20px}
 .ico{width:58px;height:58px;border-radius:10px;background:var(--dark3);object-fit:cover}
 .big{display:flex;align-items:baseline;gap:8px;margin-top:8px}.big b{font-size:32px}.big span{color:var(--soft)}
 .tag{align-self:flex-start;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap}
-@keyframes itmIn{0%{opacity:0;transform:perspective(400px) translateY(16px) rotateX(60deg) scale(.82);filter:blur(5px)}55%{opacity:1;filter:blur(0)}100%{opacity:1;transform:none}}
-@keyframes borde{to{background-position:300% 0}}@keyframes sheen{0%,78%{left:-70%}100%{left:150%}}@keyframes chispa{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
-@keyframes coreGlow{0%,100%{box-shadow:0 0 0 0 rgba(242,141,176,.55),0 8px 20px rgba(0,0,0,.5)}50%{box-shadow:0 0 0 7px rgba(242,141,176,0),0 0 28px rgba(242,141,176,.75)}}
-.itm{position:relative;width:52px;height:52px;border-radius:12px;padding:2px;background:linear-gradient(90deg,#F28DB0,#A33A63,#F8C3D6,#F28DB0);background-size:300% 100%;animation:itmIn .9s cubic-bezier(.22,1,.36,1) both,borde 7s linear .9s infinite;box-shadow:0 6px 16px rgba(0,0,0,.45);flex:none}
+@keyframes itmIn{0%{opacity:0;transform:perspective(400px) translateY(16px) rotateX(60deg) scale(.82)}55%{opacity:1}100%{opacity:1;transform:none}}
+@keyframes sheen{0%,78%{transform:translateX(-175%)}100%{transform:translateX(375%)}}@keyframes chispa{0%,100%{opacity:0;transform:scale(.4)}50%{opacity:1;transform:scale(1)}}
+.itm{position:relative;width:52px;height:52px;border-radius:12px;padding:2px;background:linear-gradient(90deg,#F28DB0,#A33A63,#F8C3D6,#F28DB0);background-size:300% 100%;animation:itmIn .9s cubic-bezier(.22,1,.36,1) both;box-shadow:0 6px 16px rgba(0,0,0,.45);flex:none}
 .itm img{width:100%;height:100%;border-radius:10px;display:block}
-.itm .sh{position:absolute;inset:2px;border-radius:10px;overflow:hidden;pointer-events:none}.itm .sh::after{content:"";position:absolute;top:0;bottom:0;left:-70%;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);animation:sheen 6.5s cubic-bezier(.45,0,.2,1) infinite}
-.itm-ch{position:absolute;top:-3px;right:-3px;width:7px;height:7px;border-radius:50%;background:#FFE6EF;box-shadow:0 0 8px 2px rgba(242,141,176,.9);animation:chispa 6.5s ease-in-out infinite}
-.itm.core{animation:itmIn .7s cubic-bezier(.22,1,.36,1) both,coreGlow 2.6s ease-in-out .7s infinite}
+.itm .sh{position:absolute;inset:2px;border-radius:10px;overflow:hidden;pointer-events:none}.itm .sh::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);animation:sheen 6.5s cubic-bezier(.45,0,.2,1) 2}
+.itm-ch{position:absolute;top:-3px;right:-3px;width:7px;height:7px;border-radius:50%;background:#FFE6EF;box-shadow:0 0 8px 2px rgba(242,141,176,.9);animation:chispa 6.5s ease-in-out 2}
+.itm.core{animation:itmIn .7s cubic-bezier(.22,1,.36,1) both;box-shadow:0 0 0 3px rgba(242,141,176,.35),0 0 24px rgba(242,141,176,.55)}
 @media (prefers-reduced-motion:reduce){.itm,.itm .sh::after,.itm-ch{animation:none}}
 .amber{background:var(--amberbg);color:var(--amberfg)}.teal{background:var(--tealbg);color:var(--tealfg)}.red{background:var(--redbg);color:var(--redfg)}.ok{background:var(--okbg);color:var(--okfg)}
 .pie{margin-top:auto;font-size:12px;color:var(--muted);line-height:1.4}.pie b{color:var(--txt)}
@@ -81,12 +80,12 @@ details summary{cursor:pointer;color:var(--muted)}
 .mini b.v{color:var(--teal)}.mini b.d{color:var(--red)}
 /* Tubos_Kit (acuerdo 9): vidrio con contorno, líquido que se llena, brillo y ola en la punta */
 .tuboH{position:relative;display:block;height:10px;border-radius:5px;background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12),inset 0 4px 10px rgba(0,0,0,.35);overflow:hidden;flex:0 0 160px}
-.tuboH i{position:absolute;inset:0 auto 0 0;border-radius:0 5px 5px 0;animation:llenarH 1.6s cubic-bezier(.22,1,.36,1) both}
+.tuboH i{position:absolute;inset:0 auto 0 0;border-radius:0 5px 5px 0;transform-origin:left;animation:llenarH 1.6s cubic-bezier(.22,1,.36,1) both}
 .tuboH i::before{content:"";position:absolute;left:0;right:0;top:3px;height:3px;background:rgba(255,255,255,.25);filter:blur(1px)}
-.tuboH i::after{content:"";position:absolute;right:-6px;top:0;width:10px;height:40px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='40' viewBox='0 0 10 40'%3E%3Cpath d='M0 0 Q10 2 5 5 T5 10 T5 15 T5 20 T5 25 T5 30 T5 35 T5 40 H0 Z' fill='%23ffffff' fill-opacity='.55'/%3E%3C/svg%3E") 0 0/10px 40px;animation:olaV 3s linear infinite}
+.tuboH i::after{content:"";position:absolute;right:-6px;top:0;width:10px;height:40px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='40' viewBox='0 0 10 40'%3E%3Cpath d='M0 0 Q10 2 5 5 T5 10 T5 15 T5 20 T5 25 T5 30 T5 35 T5 40 H0 Z' fill='%23ffffff' fill-opacity='.55'/%3E%3C/svg%3E") 0 0/10px 40px;animation:olaV 3s linear 2}
 @keyframes olaV{from{transform:translateY(0)}to{transform:translateY(-50%)}}
 .tuboH u{position:absolute;top:0;bottom:0;width:2px;background:#fff}
-@keyframes llenarH{from{width:0}}
+@keyframes llenarH{from{transform:scaleX(0)}}
 @media (prefers-reduced-motion:reduce){.tuboH i,.tuboH i::after{animation:none}}
 .atajo{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--dark2);color:var(--txt);font:600 15px Mulish,'Segoe UI',sans-serif;cursor:pointer;text-align:left}
 .atajo:hover{border-color:var(--acc)}
@@ -96,12 +95,11 @@ details.otras[open]>div{background:var(--dark2);border-radius:10px;padding:8px 1
 .ico20{width:20px;height:20px;border-radius:4px}
 .anillo{position:relative;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .anillo svg{position:absolute;inset:0;overflow:visible}
-.anillo .arco{animation:arco 1.8s cubic-bezier(.22,1,.36,1) both}.anillo .orbita{transform-origin:center;animation:gira 22s linear infinite}
-.anillo .pulso{position:absolute;inset:8%;border-radius:50%;background:radial-gradient(circle,#F28DB088,transparent 70%);filter:blur(8px);animation:pulso 4.5s ease-in-out infinite}
+.anillo .arco{animation:arco 1.8s cubic-bezier(.22,1,.36,1) both}.anillo .orbita{transform-origin:center;animation:gira 22s var(--sal) 1}
+.anillo .pulso{position:absolute;inset:8%;border-radius:50%;background:radial-gradient(circle,#F28DB088,transparent 70%);filter:blur(8px);animation:pulso 4.5s ease-in-out 2}
 @keyframes pulso{0%,100%{opacity:.35;transform:scale(.9)}50%{opacity:.75;transform:scale(1.06)}}
 .anillo .retrato{width:60%;height:60%;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2px rgba(0,0,0,.4);position:relative}
-@keyframes arco{from{stroke-dashoffset:var(--c)}}@keyframes gira{to{transform:rotate(360deg)}}@keyframes respira{50%{box-shadow:0 0 36px rgba(242,141,176,.45)}}
-.quieto *,.quieto *::before{animation:none!important}
+@keyframes arco{from{stroke-dashoffset:var(--c)}}@keyframes gira{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.anillo *{animation:none!important}}
 .retrato2{width:96px;height:96px;border-radius:50%;border:3px solid var(--acc);object-fit:cover}
 .forma{display:flex;gap:4px;margin-top:6px}.forma i{width:12px;height:12px;border-radius:3px;background:#FF8A8A}.forma i.v{background:#A8D8C0}
@@ -131,8 +129,8 @@ details.alt summary{cursor:pointer;color:var(--muted);font-size:14px;padding:6px
 .dos{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
 .tog{width:48px;height:28px;border-radius:14px;border:1px solid var(--soft);background:var(--dark3);position:relative;cursor:pointer;flex-shrink:0}
 *:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.tog i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s}
-.tog[aria-checked=true]{background:var(--acc)}.tog[aria-checked=true] i{left:24px}.tog:disabled{opacity:.4;cursor:default}
+.tog i{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s var(--sal)}
+.tog[aria-checked=true]{background:var(--acc)}.tog[aria-checked=true] i{transform:translateX(20px)}.tog:disabled{opacity:.4;cursor:default}
 .mvp{font-size:12px;font-weight:700;padding:3px 8px;border-radius:4px}
 /* Seleccion_Vino */
 .tres .card.stat{min-height:196px;border-radius:16px;padding:18px 20px;gap:10px}.stat .big{margin-top:0}.stat .big b{font-size:34px}.stat .pie{font-size:14px}
@@ -150,6 +148,53 @@ details.alt summary{cursor:pointer;color:var(--muted);font-size:14px;padding:6px
 .falla>div{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--dark2);border:1px solid var(--line)}
 .falla .ic{width:36px;height:36px;border-radius:8px}.falla .txt{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}.falla small{font-size:12px;color:var(--muted)}
 .btn{background:var(--acc);color:#24111A;border:none;border-radius:10px;padding:12px 16px;font:700 14px Mulish,'Segoe UI',sans-serif;cursor:pointer}
+/* Estela (0.18.0, PLAN-REINVENCION.md): la racha como una estela de luz. Solo se anima transform, opacity y
+   stroke-dashoffset; nada se mueve en partida, con la ventana oculta ni con «Reducir movimiento». Sin bucles infinitos
+   salvo el cometa de carga: cualquier bucle visible hace que Edge redibuje toda la ventana (medido: 15–20 % de un núcleo
+   contra 0,4 % quieta), así que la aurora es fija y los adornos dan 1–2 vueltas al entrar a la vista. */
+:root{--bg:#1E0E16;--e1:#A33A63;--e2:#F28DB0;--e3:#F8C3D6;--e4:#A8D8C0;--oro:#F2C46B;
+--estela:linear-gradient(90deg,var(--e1),var(--e2),var(--e3),var(--e4));
+--vidrio:linear-gradient(180deg,rgba(68,32,58,.86),rgba(42,20,32,.86));--filo:inset 0 1px 0 rgba(255,255,255,.10);
+--s1:var(--filo),0 2px 4px rgba(0,0,0,.25);--s2:var(--s1),0 18px 40px rgba(0,0,0,.40);
+--sal:cubic-bezier(.22,1,.36,1);--pasa:cubic-bezier(.45,0,.25,1)}
+html{background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='.07'/%3E%3C/svg%3E")}
+body{background:none;position:relative;isolation:isolate}
+body::before,body::after{content:"";position:fixed;z-index:-1;border-radius:50%;pointer-events:none;}
+body::before{left:-10%;top:-30%;width:70vw;height:90vh;background:radial-gradient(closest-side,rgba(242,141,176,.20),rgba(242,141,176,0));}
+body::after{right:-15%;bottom:-35%;width:75vw;height:95vh;background:radial-gradient(closest-side,rgba(168,216,192,.11),rgba(168,216,192,0));}
+nav{background:rgba(54,25,42,.72)}
+nav button{position:relative;overflow:hidden;transition:color .12s}
+nav button[aria-current]{background:rgba(11,7,9,.6);box-shadow:none}
+nav button[aria-current]::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--e1),var(--e2),var(--e3),var(--e4))}
+nav button[aria-current]::after{content:"";position:absolute;left:0;top:0;width:3px;height:34%;background:#fff;box-shadow:0 0 10px #fff;animation:navluz 2.6s var(--pasa) 2}
+@keyframes navluz{from{transform:translateY(-100%)}to{transform:translateY(300%)}}
+.card{position:relative;background:var(--vidrio);border-radius:20px;box-shadow:var(--s2)}
+.card::before{content:"";position:absolute;left:24px;right:24px;top:0;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(242,141,176,0),var(--e3),var(--e4),rgba(168,216,192,0));opacity:.8;pointer-events:none}
+.cab2{border-radius:20px 20px 0 0}
+.tres .card.stat{border-radius:20px}
+.btn{position:relative;overflow:hidden;background:var(--estela);color:#1E0E16;font-weight:900;border-radius:12px;box-shadow:0 8px 24px rgba(242,141,176,.30);transition:transform .12s var(--sal)}
+.btn:active,.btn2:active,.atajo:active,.filtro:active{transform:scale(.97)}
+.btn.principal{height:52px;padding:0 26px;font-size:16px}
+.atajo,.campc,.filaV,.err,.pfila,nav button,.btn,.btn2{transition:transform .12s var(--sal),color .12s,border-color .12s,background-color .12s}
+.atajo:hover,.campc:hover,.err:hover,button.filaV:hover,.pfila:not(.cab):hover{transform:translateY(-2px)}
+nav button:hover{transform:translateX(2px)}.btn:hover{transform:translateY(-1px)}
+.btn.principal::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));transform:translateX(-120%);animation:reflejo 5s var(--pasa) 2}
+@keyframes reflejo{0%,70%{transform:translateX(-120%)}100%{transform:translateX(280%)}}
+.heroe{font-size:72px;line-height:1;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#FFFFFF,var(--e3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.etq{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--e3)}
+.vacio-e{display:flex;align-items:center;gap:18px}.vacio-e svg{flex-shrink:0;opacity:.35}
+.carga{display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 0}
+.carga .cometa{animation:cometa 1.6s var(--pasa) infinite}
+@keyframes cometa{from{stroke-dashoffset:0}to{stroke-dashoffset:-1000}}
+@keyframes entra{from{opacity:0;transform:translateY(14px)}}
+main:not(.repinta)>*,aside:not(.repinta)>*{animation:entra .8s var(--sal) both}
+main>:nth-child(2),aside>:nth-child(2){animation-delay:.06s}main>:nth-child(3),aside>:nth-child(3){animation-delay:.12s}
+main>:nth-child(4),aside>:nth-child(4){animation-delay:.18s}main>:nth-child(5),aside>:nth-child(5){animation-delay:.24s}main>:nth-child(n+6),aside>:nth-child(n+6){animation-delay:.3s}
+.repinta .tuboH i,.repinta .anillo .arco,.repinta .itm{animation:none!important}  /* un refresco de datos no repite las entradas */
+.quieto *,.quieto *::before,.quieto *::after,.quieto body::before,.quieto body::after,
+.enjuego *,.enjuego *::before,.enjuego *::after,.enjuego body::before,.enjuego body::after,
+.oculta *,.oculta *::before,.oculta *::after,.oculta body::before,.oculta body::after{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after,body::before,body::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -530,7 +575,7 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
   ${pasos}
   <div class="card"><div class="cab2"><h2>Hoy</h2><span class="sub" style="font-size:12px">${hoy.length ? `${v}-${hoy.length - v}` : "sin partidas"}${t ? (t.racha >= 2 ? " · para" : " · sin tilt") : ""}</span></div>
     ${hoy.length ? `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${hoy.slice(-6).map(g => `<div class="mini">${img("champion", g.campeon, "item", g.campeon)}<b class="${g.win ? "v" : "d"}">${g.win ? "V" : "D"}</b>${esc(g.fecha)}</div>`).join("")}
-      ${t.tras2.n ? `<div style="flex:1;min-width:220px"><b>${t.racha >= 2 ? "Llevas 2 derrotas seguidas: descansa 15 min" : "Tras 2 derrotas seguidas, paras"}</b><br><span class="sub" style="font-size:13px">Llegaste a 2 seguidas ${t.llegas} veces; la partida siguiente: ${t.tras2.v}-${t.tras2.n - t.tras2.v}${t.pocas ? " (pista: pocas partidas)" : ""}.</span></div>` : ""}</div>`
+      ${t && t.tras2 && t.tras2.n ? `<div style="flex:1;min-width:220px"><b>${t.racha >= 2 ? "Llevas 2 derrotas seguidas: descansa 15 min" : "Tras 2 derrotas seguidas, paras"}</b><br><span class="sub" style="font-size:13px">Llegaste a 2 seguidas ${t.llegas} veces; la partida siguiente: ${t.tras2.v}-${t.tras2.n - t.tras2.v}${t.pocas ? " (pista: pocas partidas)" : ""}.</span></div>` : ""}</div>`
       : `<span class="sub">Aún no juegas hoy.</span>`}</div>
   ${oroCard(R && R.resumen.racha_oro14)}
   ${hoyCard(VS(s))}
@@ -565,7 +610,9 @@ const EN_PARTIDA = ["GameStart", "InProgress", "Reconnect", "WaitingForStats", "
 // ===== Ventanas nuevas (artboards *_Vino). Datos: s.rendimiento.vistas (scripts/vistas.py, en caché) =====
 const VS = s => (s.rendimiento && s.rendimiento.vistas) || null;
 let SIN_HIST = "";  // sin historial: el porqué que manda el servidor (cuenta ajena, descargando); vacío, el texto de siempre
-const sinDatosCard = () => `<div class="card"><span class="sub">${SIN_HIST ? esc(SIN_HIST) : `Aún no tienes partidas aquí: Racha arma esta vista con tu historial. Si no lo tienes, ve a <a href="#" onclick="ver('ajustes');return false" style="color:var(--acc);font-weight:700">Ajustes</a>, pega tu código de acceso y dale a Descargar.`}</span></div>`;
+const LOGO = (n = 56) => `<svg aria-hidden="true" width="${n}" height="${n}" viewBox="0 0 256 256"><rect x="34" y="150" width="38" height="56" rx="9" fill="#A33A63"/><rect x="80" y="114" width="38" height="92" rx="9" fill="#F28DB0"/><rect x="126" y="78" width="38" height="128" rx="9" fill="#F8C3D6"/><rect x="172" y="42" width="38" height="164" rx="9" fill="#A8D8C0"/></svg>`;
+const CARGA = t => `<div class="carga" role="status"><svg aria-hidden="true" width="260" height="40" viewBox="0 0 260 40" fill="none" style="overflow:visible"><defs><linearGradient id="ec" x1="0" x2="1"><stop offset="0" stop-color="#A33A63"/><stop offset=".33" stop-color="#F28DB0"/><stop offset=".67" stop-color="#F8C3D6"/><stop offset="1" stop-color="#A8D8C0"/></linearGradient></defs><path d="M6 30 C 70 30, 90 8, 150 10 S 230 6, 254 4" stroke="url(#ec)" stroke-width="3" stroke-linecap="round" opacity=".35"/><path class="cometa" d="M6 30 C 70 30, 90 8, 150 10 S 230 6, 254 4" stroke="#fff" stroke-width="3" stroke-linecap="round" pathLength="1000" stroke-dasharray="90 910"/></svg><span class="sub" style="font-size:13px">${esc(t)}</span></div>`;
+const sinDatosCard = () => `<div class="card vacio-e">${LOGO()}<span class="sub">${SIN_HIST ? esc(SIN_HIST) : `Aún no tienes partidas aquí: Racha arma esta vista con tu historial. Si no lo tienes, ve a <a href="#" onclick="ver('ajustes');return false" style="color:var(--acc);font-weight:700">Ajustes</a>, pega tu código de acceso y dale a Descargar.`}</span></div>`;
 const sinDatos = (t, sub) => [`<div><h1>${t}</h1><span class="sub">${esc(sub || "")}</span></div>${sinDatosCard()}`, ""];
 const fmin = v => v == null ? "–" : signo(v, 0);
 
@@ -798,7 +845,7 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
           ${fila("Código de acceso", s.conectado && !s.nube ? "Conectado a racha.gg: tus partidas se bajan solas." : "Te lo da quien administra Racha.", (s.conectado && !s.nube ? '<span class="tag ok" style="align-self:center">✓ Conectado</span> ' : "") + '<span style="display:flex;gap:8px"><input id="acceso" type="password" autocomplete="off" aria-label="Código de acceso" placeholder="código" style="width:130px;height:40px;background:var(--dark3);border:1px solid var(--soft);border-radius:10px;color:var(--txt);padding:8px 10px;font:inherit"><button class="btn2" onclick="guardarAcceso()">Guardar</button></span>')}</details>
 </div>
       <div class="card"><div class="cab2"><h2>Apariencia</h2></div>
-        ${fila("Reducir movimiento", "Tubos y anillos sin ola ni brillo.", tog("t-rm", rm, false, "quieto()", "Reducir movimiento"))}
+        ${fila("Reducir movimiento", "Todo quieto: sin aurora, cometas, olas ni brillos.", tog("t-rm", rm, false, "quieto()", "Reducir movimiento"))}
         ${fila("Siempre encima en partida", "La franja queda sobre el juego (en modo sin bordes).", tog("t-overlay", aj.overlay !== false, false, `ajuste('overlay',${aj.overlay === false})`, "Siempre encima en partida"))}
         ${fila("Posición de la franja", "Dónde se ve en partida.", `<span role="group" aria-label="Posición de la franja" style="display:flex;gap:8px">${[["arriba", "Arriba"], ["abajo", "Abajo"]].map(([k, t]) => `<button class="btn2" aria-pressed="${(aj.franja_pos || "arriba") === k}" ${(aj.franja_pos || "arriba") === k ? 'style="border-color:var(--rosa,#F28DB0)"' : ""} onclick="ajuste('franja_pos','${k}')">${t}</button>`).join("")}</span>`)}
         ${av("franja_linea", "Franja: nivel y farm", "Hasta el minuto 14: tu nivel contra tu rival y tu CS contra tu ritmo.")}
@@ -1003,7 +1050,9 @@ function quieto() {
 }
 try { if (localStorage.getItem("htc-quieto")) document.documentElement.classList.add("quieto"); } catch (e) {}
 
-let elegida = location.hash.slice(1) || null, ultFase;  // vista que eligió el usuario (o #vista en la URL); se olvida al cambiar de fase
+document.addEventListener("visibilitychange", () => document.documentElement.classList.toggle("oculta", document.hidden));
+let ultVista;  // la vista pintada la última vez (Estela: entradas solo al cambiar)
+let elegida = location.hash.slice(1).split("&")[0] || null, ultFase;  // #vista (y &medir para dev_medir.py)  // vista que eligió el usuario (o #vista en la URL); se olvida al cambiar de fase
 function ver(x) { elegida = x; v = -1; tick(); }
 
 let v = -1;
@@ -1024,11 +1073,14 @@ async function tick() {
         : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? (s.previa ? champSelect({...s, draft: s.previa}) : draftV(s)) : vista === "perfil" ? perfil(s) : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida
       if (s.version && (VER0 ??= s.version) !== s.version) return location.reload();  // Racha se actualizó con la ventana abierta: la página nueva
       hablar(s);
+      if (!document.body.dataset.medida && /medir/.test(location.hash)) document.body.dataset.medida = Math.round(performance.now());  // dev_medir.py: primer pintado con datos
       const pc = s.pantalla_completa && ["ChampSelect", "InProgress"].includes(s.fase) ? `<div class="aviso red" role="status">Tu LoL está en <b>Pantalla completa</b>: así la franja de Racha no se ve encima del juego. Cámbialo a <b>Sin bordes</b> (Esc → Video → Modo de ventana); se aplica al instante.</div>` : "";
       const nv = (s.nueva ? `<div class="aviso teal" role="status">Hay una versión nueva de Racha (${esc(s.nueva.version)}). ${s.nueva.estado ? esc(s.nueva.estado) + " " : ""}<a href="${esc(s.nueva.url)}" target="_blank" rel="noopener" style="color:inherit;font-weight:800">Descárgala aquí →</a></div>` : "") + pc;
       const av = nv + (s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}" role="status">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "");
-      const mn = document.getElementById("main"); mn.classList.toggle("ancho", !a); mn.innerHTML = av + m;  // sin columna derecha (Partidas_Vino): a todo el ancho
-      const as = document.getElementById("aside"); as.innerHTML = a; as.hidden = !a;
+      const rep = vista === ultVista; ultVista = vista;  // un refresco de datos en la misma vista no repite las entradas
+      document.documentElement.classList.toggle("enjuego", ["GameStart", "InProgress", "Reconnect"].includes(s.fase));  // nada se mueve mientras juegas
+      const mn = document.getElementById("main"); mn.classList.toggle("ancho", !a); mn.classList.toggle("repinta", rep); mn.innerHTML = av + m;  // sin columna derecha (Partidas_Vino): a todo el ancho
+      const as = document.getElementById("aside"); as.classList.toggle("repinta", rep); as.innerHTML = a; as.hidden = !a;
       document.querySelectorAll("details").forEach(d => { if (ABIERTOS.has(d.querySelector("summary")?.textContent)) d.open = true; });
     }
   } catch (e) {  // sin servidor o una vista que truena: no son lo mismo y el usuario debe poder reportarlo
