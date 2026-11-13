@@ -780,6 +780,7 @@ function envivoAram(s, m, prev) {  // ARAM y modos sin líneas: marcador, tu KDA
   const [tu, ellos] = m.kills || [0, 0], [tt, te] = m.torres || [0, 0], am = m.amenazas || [];
   const main = `
   <div><h1>${prev ? "Tu última partida" : "En partida"} · ARAM</h1><span class="sub">${esc(m.campeon || "")} · minuto ${m.minuto ?? 0}${prev ? " · foto en vivo" : ""}</span></div>
+  ${prev ? "" : lobbyCard(s)}
   <div class="card"><div class="cab2"><h2>Marcador</h2><span class="sub" style="font-size:12px">${prev ? "al final de la partida" : "se actualiza cada 30 s"}</span></div>
     <div style="display:flex;gap:40px;align-items:baseline"><div><span class="sub">Kills</span><br><b style="font-size:44px;color:var(--teal)">${tu}</b> <span class="sub" style="font-size:22px">vs</span> <b style="font-size:44px;color:var(--red)">${ellos}</b></div>
       <div><span class="sub">Torres</span><br><b style="font-size:30px">${tt} – ${te}</b></div></div></div>
@@ -816,6 +817,17 @@ function estelaCard(e) {  // recap 0.19: la partida como una estela de oro (sube
       <text x="${M}" y="${H + 16}" font-size="12" fill="#C9B2BC">0:00</text><text x="${W - M}" y="${H + 16}" text-anchor="end" font-size="12" fill="#C9B2BC">${mm(e.dur)}${fin}</text></svg>
     ${ms.map(m => `<div class="filaV"><span style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${col(m)}"></span><span style="font-size:14px">${esc(m.texto)}</span></div>`).join("")}</div>`;
 }
+const RANGO_ES = {IRON: "Hierro", BRONZE: "Bronce", SILVER: "Plata", GOLD: "Oro", PLATINUM: "Platino", EMERALD: "Esmeralda", DIAMOND: "Diamante", MASTER: "Maestro", GRANDMASTER: "Gran Maestro", CHALLENGER: "Retador"};
+function lobbyCard(s) {  // los 10 de la partida: rango de Solo/Duo y win rate de temporada con su n; solo números, sin juicios
+  const L = s.lobby; if (!L || !EN_PARTIDA.includes(s.fase)) return "";
+  const fila = j => { const r = j.rango; return `<div style="display:flex;align-items:center;gap:10px;min-width:0${j.yo ? ";box-shadow:inset 3px 0 0 var(--acc);padding-left:6px" : ""}">${img("champion", j.campeon, "ico40", j.campeon || "")}
+    <div style="display:flex;flex-direction:column;min-width:0"><b style="font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(j.riot_id || j.campeon || "?")}</b>
+      <span class="sub" style="font-size:12px">${r ? `${RANGO_ES[r.tier] || esc(r.tier)}${r.division ? " " + esc(r.division) : ""} · ${r.lp} LP · ${r.wr != null ? r.wr + " %" : "–"} (${r.n})` : j.rango === undefined ? "buscando…" : "sin rango en Solo/Duo"}${j.runa ? " · " + esc(j.runa) : ""}</span></div></div>`; };
+  const col = (eq, t) => `<div style="display:flex;flex-direction:column;gap:10px;min-width:0"><span class="sub" style="font-size:12px">${t}</span>${L.filter(j => j.equipo === eq).map(fila).join("")}</div>`;
+  return `<div class="card" style="gap:12px"><div class="cab2"><h2>Jugadores</h2><span class="sub" style="font-size:12px">Solo/Duo de temporada · win rate (partidas)</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">${col("mio", "Tu equipo")}${col("suyo", "Rivales")}</div></div>`;
+}
+
 function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estado en vivo; al terminar, la línea final
   const prev = !s.fin && !!(s.meta || s.ultima) && !EN_PARTIDA.includes(s.fase);  // hallazgo 23: una partida que acabó sin pantalla de fin ya no está «En partida»
   const m = prev && s.meta ? {...s.meta, recibido: null} : s.meta || (prev ? s.ultima : null), f = s.fin;  // recibido null: timers quietos
@@ -834,6 +846,7 @@ function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estad
   <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1>${f ? "Fin de partida" : prev ? "Tu última partida" : "En partida"}</h1><span class="sub">${esc(ROL_VIVO || "")}${esc(x.campeon || "")}${x.rival ? " contra " + esc(x.rival) : ""} · fase: ${min < 14 ? "línea" : min < 25 ? "medio juego (14–25)" : "final"}</span></div>
     ${x.t != null ? `<span style="border:1px solid var(--acc);border-radius:10px;padding:10px 16px;font-weight:700;display:flex;gap:8px;align-items:center"><i style="width:8px;height:8px;border-radius:50%;background:var(--acc)"></i>${Math.floor(x.t / 60)}:${String(x.t % 60).padStart(2, "0")}</span>` : ""}</div>
   ${f ? estelaCard((s.revision && s.revision.estela) || f.estela) : ""}
+  ${f || prev ? "" : lobbyCard(s)}
   ${franja(x, !!f)}
   ${(() => { const rh = (VS(s) || {}).regla_hoy; return rh ? `<div class="card" style="gap:6px;box-shadow:0 0 0 1px var(--acc) inset"><span class="sub">Tu regla de hoy · la que más te cuesta (la cumpliste ${rh.ok} de ${rh.n})</span>
     <b style="font-size:17px">${esc(rh.texto)}</b><span class="sub" style="font-size:14px">${esc(rh.numero)}</span></div>` : ""; })()}

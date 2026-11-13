@@ -17,6 +17,7 @@ const PERMITIDO = [
   [new RegExp(`^/lol/match/v5/matches/by-puuid/${ID}/ids$`), RUTEO, 60],
   [new RegExp(`^/lol/match/v5/matches/${ID}(/timeline)?$`), RUTEO, 30 * 86400],  // inmutables
   [new RegExp(`^/lol/league/v4/entries/by-puuid/${ID}$`), PLATAFORMAS, 300],
+  [new RegExp(`^/lol/spectator/v5/active-games/by-summoner/${ID}$`), PLATAFORMAS, 60],  // los 10 de tu partida (vista En partida)
 ];
 const PARAMS = new Set(["start", "count", "queue", "type", "startTime", "endTime"]);
 

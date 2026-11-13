@@ -114,6 +114,18 @@ def rango(s):
             "lp": q.get("leaguePoints") or 0, "wins": v, "losses": d, "n": v + d, "wr": round(100 * v / (v + d)) if v + d else None}
 
 
+def lobby(g, yo, nombres, runas):
+    """Los 10 de spectator-v5 (Riot API, datos públicos de la partida ya empezada; nunca en champ select) como
+    [{equipo: "mio"|"suyo", yo, riot_id, campeon, runa, puuid}], tu equipo primero; sin bots. None sin participantes."""
+    ps = [p for p in (g or {}).get("participants") or [] if isinstance(p, dict) and not p.get("bot") and p.get("puuid")]
+    mio = next((p.get("teamId") for p in ps if p["puuid"] == yo), None)
+    if not ps or mio is None: return None
+    out = [{"equipo": "mio" if p.get("teamId") == mio else "suyo", "yo": p["puuid"] == yo, "riot_id": p.get("riotId") or None,
+            "campeon": nombres.get(p.get("championId")), "runa": runas.get(((p.get("perks") or {}).get("perkIds") or [None])[0]), "puuid": p["puuid"]}
+           for p in ps]
+    return sorted(out, key=lambda j: j["equipo"] != "mio")
+
+
 # Backend de Racha (backend/worker.js en Cloudflare): con tu código de acceso, la app baja tus partidas sin RIOT_KEY.
 # Se fija al desplegar; RACHA_API (entorno) o "api" en datos/cache/acceso.json lo cambian.
 API_DEF = "https://racha-api.racha-api.workers.dev"

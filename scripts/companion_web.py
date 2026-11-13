@@ -17,7 +17,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "mi_pick": None, "comentario": None, "mover_franja": False, "al_dia": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
+          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "mi_pick": None, "lobby": None, "comentario": None, "mover_franja": False, "al_dia": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
 VERSION = "0.23.0"  # HTC; también invalida la caché de rendimiento
 ESTADO["version"] = VERSION  # la página se recarga si cambia (Racha se actualizó con la ventana abierta)
 VIVO = [time.time()]  # último GET de la ventana
@@ -87,6 +87,7 @@ def evento(e):
         if e[1] == "ChampSelect": s.update(tablero=None, mi_pick=None, comentario=None, draft=None, fin=None, meta=None, pos=None, avisos=[]); USADO.add("champ_select")
         if e[1] in ("ChampSelect", "InProgress"): s["pantalla_completa"] = companion.pantalla_completa()  # la franja no se vería
         if e[1] == "InProgress" and ESTADO["ajustes"].get("overlay", True): USADO.add("overlay")
+        if e[1] == "InProgress" and ESTADO["fase"] not in ("InProgress", "Reconnect"): s["lobby"] = None; threading.Thread(target=armar_lobby, daemon=True).start()
         if e[1] in ("Lobby", "Matchmaking", "ReadyCheck"): s.update(aviso=None, perfil=gui.perfil(ESTADO["rango"], ESTADO["cuenta"]))
     elif tipo == "draft":
         s = {"draft": {**draft_json(e[1], e[2]), "probable": bool(e[3]) if len(e) > 3 else False}}
@@ -123,6 +124,7 @@ def evento(e):
             if e[1].get("corto") and franja_libre(ESTADO.get("avisos") or [], time.time()):  # F1: a la franja, sin saturarla
                 s["aviso"] = {**e[1], "franja": time.time()}
             s["avisos"] = (ESTADO.get("avisos") or []) + [s["aviso"]]
+    elif tipo == "lobby": s = {"lobby": [{k: v for k, v in j.items() if k != "puuid"} for j in e[1]]}  # sin puuid en la página
     elif tipo == "pos": s = {"pos": e[1]}  # champ select antes de ver al rival: la ventana Draft
     with LOCK: ESTADO.update(s, v=ESTADO["v"] + 1)
 
@@ -381,6 +383,25 @@ def rango_api(puuid, region):
     return companion.rango({"queues": [{"queueType": e.get("queueType"), "tier": e.get("tier"), "division": e.get("rank"),
                                         "leaguePoints": e.get("leaguePoints"), "wins": e.get("wins"), "losses": e.get("losses")}
                                        for e in es if isinstance(e, dict)]})
+
+
+def armar_lobby(intentos=4, espera=20):
+    """Los 10 jugadores con su rango (vista En partida). Tu puuid sale del cliente; spectator-v5 (1 llamada) y league-v4
+    (10, en serie) por el backend. Riot publica la partida unos segundos después de cargar: se reintenta."""
+    import urllib.error
+    yo = (companion.lcu("/lol-summoner/v1/current-summoner") or {}).get("puuid")
+    plat = ESTADO.get("plataforma") or (gui.cuenta_guardada() or {}).get("region")
+    if not yo or plat not in gui.RUTAS: return
+    for i in range(intentos):
+        if ESTADO["fase"] not in ("InProgress", "Reconnect"): return
+        try: g = companion.backend("GET", f"/v1/riot/{plat}/lol/spectator/v5/active-games/by-summoner/{yo}", base=gui.REPO)
+        except (urllib.error.URLError, OSError, ValueError): g = None  # 404 aún no publicada, 429, sin red
+        try: import builds; runas = builds.ddragon()[1]
+        except Exception: runas = {}
+        if (js := companion.lobby(g, yo, {**gui.NOMBRES, **companion.nombres_lcu()}, runas)):
+            for j in js: j["rango"] = rango_api(j.pop("puuid"), plat); evento(("lobby", js))  # fila a fila: se ve llenarse
+            return
+        if i < intentos - 1: time.sleep(espera)
 
 
 def buscar_cuenta(riot_id, region):

@@ -336,5 +336,36 @@ class MiPick(unittest.TestCase):
         self.assertEqual(self.abiertas(), 1)
 
 
+
+class Lobby(unittest.TestCase):
+    """Los 10 de la partida: tu equipo primero, sin bots ni puuid en la página, rango fila a fila."""
+    G = {"participants": [{"puuid": "yo" * 20, "teamId": 100, "championId": 222, "riotId": "Yo#1", "perks": {"perkIds": [8008]}},
+                          {"puuid": "b" * 40, "teamId": 200, "championId": 21, "riotId": "Rival#2", "perks": {"perkIds": [8021]}},
+                          {"puuid": "c" * 40, "teamId": 100, "championId": 1, "bot": True},
+                          {"puuid": "d" * 40, "teamId": 200, "championId": 1, "riotId": "Otro#3"}]}
+
+    def test_puro(self):
+        js = w.companion.lobby(self.G, "yo" * 20, {222: "Jinx", 21: "MissFortune"}, {8008: "Ritmo letal"})
+        self.assertEqual([(j["equipo"], j["yo"], j["campeon"], j["runa"]) for j in js],
+                         [("mio", True, "Jinx", "Ritmo letal"), ("suyo", False, "MissFortune", None), ("suyo", False, None, None)])
+        self.assertIsNone(w.companion.lobby({"participants": []}, "x", {}, {}))
+        self.assertIsNone(w.companion.lobby(self.G, "otro" * 10, {}, {}))  # no estás en esa partida
+
+    def test_armar(self):
+        r = {"tier": "GOLD", "division": "II", "lp": 40, "wins": 6, "losses": 4, "n": 10, "wr": 60}
+        with mock.patch.dict(w.ESTADO, fase="InProgress", plataforma="la1", lobby=None),              mock.patch.object(w.companion, "lcu", return_value={"puuid": "yo" * 20}), mock.patch.object(w.companion, "nombres_lcu", return_value={}),              mock.patch.object(w.companion, "backend", return_value=self.G) as be, mock.patch.object(w, "rango_api", side_effect=[r, None, None]):
+            w.armar_lobby(intentos=1)
+            L = w.ESTADO["lobby"]
+        self.assertEqual(len(L), 3); self.assertEqual(L[0]["rango"], r); self.assertIsNone(L[1]["rango"])
+        self.assertFalse(any("puuid" in j for j in L)); self.assertIn("/lol/spectator/v5/active-games/by-summoner/", be.call_args[0][1])
+
+    def test_sin_partida_reintenta_y_se_rinde(self):
+        import urllib.error
+        e = urllib.error.HTTPError("u", 404, "no", {}, None)
+        with mock.patch.dict(w.ESTADO, fase="InProgress", plataforma="la1", lobby=None), mock.patch.object(w.companion, "lcu", return_value={"puuid": "yo" * 20}),              mock.patch.object(w.companion, "nombres_lcu", return_value={}), mock.patch.object(w.companion, "backend", side_effect=e) as be:
+            w.armar_lobby(intentos=2, espera=0)
+            self.assertIsNone(w.ESTADO["lobby"]); self.assertEqual(be.call_count, 2)
+
+
 if __name__ == "__main__":
     unittest.main()

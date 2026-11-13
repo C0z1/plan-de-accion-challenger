@@ -27,6 +27,8 @@ test("solo las consultas de la app", () => {
   assert.equal(d("/v1/riot/americas/lol/match/v5/matches/by-puuid/p/ids?start=0&count=100&queue=420")[0],
     "https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/p/ids?start=0&count=100&queue=420");
   assert.ok(d("/v1/riot/americas/riot/account/v1/accounts/by-riot-id/cozi/1134"));
+  assert.equal(d("/v1/riot/la1/lol/spectator/v5/active-games/by-summoner/abc")[0], "https://la1.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/abc");
+  assert.equal(d("/v1/riot/americas/lol/spectator/v5/active-games/by-summoner/abc"), null);  // spectator va por plataforma
   assert.equal(d("/v1/riot/la1/lol/match/v5/matches/LA1_1"), null);          // match en host de plataforma
   assert.equal(d("/v1/riot/americas/lol/summoner/v4/summoners/x"), null);    // no permitida
   assert.equal(d("/v1/riot/evil.com/lol/match/v5/matches/LA1_1"), null);     // host inventado
