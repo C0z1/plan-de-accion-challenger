@@ -451,7 +451,7 @@ def trabajador(q):
                 if ult - ult_disco >= 30: archivo, ult_disco = companion.capturar(archivo, d), ult
                 mf, avs = companion.paso_vivo(d, estado, ajustes())  # Ajustes_Vino: cada aviso se puede apagar
                 if mf and mf.get("modo") != "ARAM" and ajustes().get("franja_build", True) is not False:  # tu próximo ítem (franja 0.20)
-                    if not estado.get("build") and time.time() - estado.get("build_t", 0) > 30:  # sin build: se reintenta cada 30 s, no queda vacía
+                    if estado.get("build") is None and time.time() - estado.get("build_t", 0) > 30:  # falló: se reintenta cada 30 s (False = no hay)
                         estado["build"], estado["build_t"] = companion.build_partida(mf.get("campeon"), mf.get("pos")), time.time()
                     try: import builds; mf["proximo"] = companion.proximo(estado["build"], mf.get("items"), mf.get("oro_actual"), builds.ddragon()[0])
                     except Exception as e: mf["proximo"] = None; registrar_franja(f"próximo ítem: {e!r}")

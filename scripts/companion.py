@@ -284,12 +284,17 @@ def meta_fase(d, m10=None):
 
 
 def build_partida(campeon, pos):
-    """El core de la build de la franja (la misma de Selección: OTPs top y, si no hay, la tuya), una vez por partida:
-    {core: [(nombre, id)], fuente} o None."""
+    """El core de la build de la franja (la misma de Selección: OTPs top y, si no hay, la tuya; sin ninguna guardada, la
+    tuya con ese campeón desde tus partidas, 2+), una vez por partida: {core: [(nombre, id)], fuente}, False si no hay o
+    None si falló (se reintenta)."""
     try:
         import builds
         b = builds.guardado_dict(campeon, pos)
-        return {"core": [(c[0], str(c[2])) for c in b["core"]], "fuente": b["fuente"]} if b and b.get("core") else None
+        if not (b and b.get("core")):  # sin build guardada (campeón fuera de tu pool): la tuya con ese campeón, de tus partidas
+            items, runas, _ = builds.ddragon()
+            bs = [builds.build_de(m, t, u, items) for m, t, u in (builds.tuyas(campeon, pos) or builds.tuyas(campeon))]
+            b = dict(builds.resumir(bs, items, runas) or {}, fuente="tu") if len(bs) >= 2 else None
+        return {"core": [(c[0], str(c[2])) for c in b["core"]], "fuente": b["fuente"]} if b and b.get("core") else False  # False: no hay (no reintentar)
     except Exception: return None
 
 

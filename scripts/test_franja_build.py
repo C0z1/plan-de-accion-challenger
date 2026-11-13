@@ -24,12 +24,27 @@ class Proximo(unittest.TestCase):
         self.assertEqual(companion.proximo(BUILD, [["3152", ""]], 0, ITEMS)["id"], "3157")
         self.assertIsNone(companion.proximo(BUILD, [["3152", ""], ["3157", ""]], 0, ITEMS))  # core completo
         self.assertIsNone(companion.proximo(None, [], 0, ITEMS)); self.assertIsNone(companion.proximo(BUILD, [], 0, {}))
+        self.assertIsNone(companion.proximo(False, [], 0, ITEMS))  # «no hay build» (campeón sin partidas)
         raro = {"core": [("Ornn", "7000"), ("Zhonya", "3157")], "fuente": "tu"}
         self.assertEqual(companion.proximo(raro, [], 0, ITEMS)["id"], "3157")  # el que no está en Data Dragon se salta
 
 
 META = {"campeon": "Sylas", "rival": "Ahri", "t": 700, "nivel": 9, "nivel_rival": 9, "items": [["1052", ""]],
         "proximo": {"id": "3152", "nombre": "Cinturón Cohete Hextech", "i": 1, "de": 3, "falta": 1250, "fuente": "mejores"}}
+
+
+class BuildDeRespaldo(unittest.TestCase):  # campeón fuera de tu pool: la build sale de tus partidas con él (2+)
+    def test_respaldo_y_no_hay(self):
+        from unittest import mock
+        import builds
+        bs = [{"core": ["3032", "3085", "3031"], "botas": "3006", "runas": [8000, 8008, (8008,)], "skills": "QWE"}] * 2
+        with mock.patch.object(builds, "guardado_dict", return_value=None), mock.patch.object(builds, "ddragon", return_value=({}, {}, {})),                 mock.patch.object(builds, "tuyas", return_value=[(1, 2, 3)] * 2), mock.patch.object(builds, "build_de", side_effect=bs),                 mock.patch.object(builds, "resumir", return_value={"core": [("Yun Tal", .5, "3032"), ("Runaan", .5, "3085"), ("Filo", .5, "3031")]}):
+            b = companion.build_partida("Zeri", "BOTTOM")
+        self.assertEqual(([i for _, i in b["core"]], b["fuente"]), (["3032", "3085", "3031"], "tu"))
+        with mock.patch.object(builds, "guardado_dict", return_value=None), mock.patch.object(builds, "ddragon", return_value=({}, {}, {})),                 mock.patch.object(builds, "tuyas", return_value=[]):
+            self.assertIs(companion.build_partida("Zeri", "BOTTOM"), False)  # no hay: no se reintenta
+        with mock.patch.object(builds, "guardado_dict", side_effect=OSError):
+            self.assertIsNone(companion.build_partida("Zeri", "BOTTOM"))  # falló: se reintenta
 
 
 class Momentos(unittest.TestCase):
