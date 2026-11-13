@@ -18,7 +18,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "mi_pick": None, "lobby": None, "comentario": None, "mover_franja": False, "al_dia": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
-VERSION = "0.24.0"  # HTC; también invalida la caché de rendimiento
+VERSION = "0.24.1"  # HTC; también invalida la caché de rendimiento
 ESTADO["version"] = VERSION  # la página se recarga si cambia (Racha se actualizó con la ventana abierta)
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -38,29 +38,32 @@ def draft_json(pos, recs):
 
 
 def mi_pick(tab, draft=None):
-    """{champ, pos, rival, build, matchup} de tu campeón ya fijado en un draft (no ARAM: llega sin acciones), o None.
-    Solo relee disco si cambió campeón, rol o rival respecto a ESTADO["mi_pick"]."""
+    """{champ, pos, fijo, rival, build, matchup} de tu campeón en un draft (no ARAM: llega sin acciones), o None.
+    En hover (fijo False) ya se pueden poner sus runas; la ventana sube solo al fijar (poner_pick).
+    Solo relee disco si cambió campeón, rol, fijado o rival respecto a ESTADO["mi_pick"]."""
     if not (tab or {}).get("draft"): return None
-    yo = next((p for p in tab.get("mio") or [] if p.get("yo") and p.get("fijo") and p.get("campeon")), None)
+    yo = next((p for p in tab.get("mio") or [] if p.get("yo") and p.get("campeon")), None)
     if not yo: return None
     pos = yo.get("pos") or ESTADO.get("pos") or "MIDDLE"  # normales a ciegas: sin rol, mid como draft.py
     recs = (draft or {}).get("recs") or []
     rival = recs[0].get("rival") if len(recs) == 1 else None  # rival de línea solo si es uno
     ant = ESTADO.get("mi_pick") or {}
-    if (ant.get("champ"), ant.get("pos"), ant.get("rival")) == (yo["campeon"], pos, rival): return ant
+    fijo = bool(yo.get("fijo"))
+    if (ant.get("champ"), ant.get("pos"), ant.get("fijo"), ant.get("rival")) == (yo["campeon"], pos, fijo, rival): return ant
     import builds
     mu = None
     if rival:
         try: import matchups; mu = matchups.para_ficha(yo["campeon"], pos, rival)
         except Exception: mu = None  # sin datos de matchup: la build general
-    return {"champ": yo["campeon"], "pos": pos, "rival": rival, "build": builds.guardado_dict(yo["campeon"], pos),
+    return {"champ": yo["campeon"], "pos": pos, "fijo": fijo, "rival": rival, "build": builds.guardado_dict(yo["campeon"], pos),
             "matchup": {"runa": mu["runa"], "n": mu["n"]} if mu and mu.get("pagina") and mu.get("runa") else None}
 
 
 def poner_pick(mp):
-    """Lo que cambia en ESTADO; si cambió tu campeón o rol (no solo el rival) y hay runas que mostrar, Racha al frente sin foco."""
+    """Lo que cambia en ESTADO; al fijar (o cambiar de campeón o rol ya fijado) con runas que mostrar, Racha al frente sin foco.
+    El hover y la llegada del rival solo actualizan la tarjeta."""
     ant = ESTADO.get("mi_pick") or {}
-    if mp and (mp["champ"], mp["pos"]) != (ant.get("champ"), ant.get("pos")) and ((mp["build"] or {}).get("pagina_ids") or mp["matchup"]):
+    if mp and mp["fijo"] and (mp["champ"], mp["pos"], True) != (ant.get("champ"), ant.get("pos"), ant.get("fijo")) and ((mp["build"] or {}).get("pagina_ids") or mp["matchup"]):
         threading.Thread(target=abrir, args=(URL[0], False), daemon=True).start()
     return {} if mp is ant or (mp is None and not ant) else {"mi_pick": mp}
 

@@ -307,8 +307,15 @@ class MiPick(unittest.TestCase):
 
     def abiertas(self): time.sleep(.1); return self.ab.call_count
 
-    def test_hover_nada_fijo_una_vez_sin_foco(self):
-        w.evento(("tablero", self.tab(fijo=False, campeon="Zeri"))); self.assertIsNone(w.ESTADO["mi_pick"])
+    def test_hover_tarjeta_sin_ventana(self):  # en hover ya puedes poner sus runas; la ventana no salta
+        w.evento(("tablero", self.tab(fijo=False, campeon="Zeri")))
+        self.assertEqual((w.ESTADO["mi_pick"]["champ"], w.ESTADO["mi_pick"]["fijo"]), ("Zeri", False))
+        w.evento(("tablero", self.tab(fijo=False, campeon="Jinx"))); self.assertEqual(w.ESTADO["mi_pick"]["champ"], "Jinx")
+        w.evento(("tablero", self.tab(fijo=False, campeon=None))); self.assertIsNone(w.ESTADO["mi_pick"])  # intent vacío
+        self.assertEqual(self.abiertas(), 0)
+
+    def test_hover_luego_fijo_una_vez_sin_foco(self):
+        w.evento(("tablero", self.tab(fijo=False, campeon="Zeri"))); self.assertEqual(self.abiertas(), 0)
         w.evento(("tablero", self.tab(fijo=True, campeon="Zeri")))
         self.assertEqual((w.ESTADO["mi_pick"]["champ"], w.ESTADO["mi_pick"]["pos"], w.ESTADO["mi_pick"]["build"]), ("Zeri", "BOTTOM", self.B))
         w.evento(("tablero", self.tab(fijo=True, campeon="Zeri")))

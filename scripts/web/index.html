@@ -313,7 +313,7 @@ function champSelect0(s) {
       ${b.runa ? `<span style="width:1px;height:44px;background:var(--line);margin:0 4px"></span><div style="display:flex;flex-direction:column;gap:2px"><b style="font-size:14px">${esc(b.runa[0])}</b><span class="sub" style="font-size:12px">${pct(b.runa[1])}</span></div>` : ""}
       ${b.skills ? `<span style="margin-left:auto;display:flex;align-items:center;gap:6px">${b.skills[0].split(">").map((k, i) => `${i ? '<span class="sub">›</span>' : ""}<b style="width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-size:14px;${i === 0 ? "background:var(--acc);color:var(--ontint)" : "background:var(--dark3);color:var(--txt)"}">${esc(k.trim())}</b>`).join("")}</span>` : ""}
     </div>${b.vs_tu ? `<span class="sub" style="font-size:14px"><b style="color:var(--txt)">Tú contra ellos:</b> ${esc(b.vs_tu)}</span>` : ""}
-    ${b.pagina_ids && s.fase === "ChampSelect" && !s.mi_pick ? `<span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn2" data-champ="${esc(pq.champ)}" data-pos="${esc(d.pos)}" onclick="ponerRunas(this.dataset.champ,this.dataset.pos)">Poner estas runas</button>
+    ${b.pagina_ids && s.fase === "ChampSelect" && !(s.mi_pick && s.mi_pick.fijo) ? `<span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn2" data-champ="${esc(pq.champ)}" data-pos="${esc(d.pos)}" onclick="ponerRunas(this.dataset.champ,this.dataset.pos)">Poner estas runas</button>
       <span class="sub" style="font-size:13px" role="status" aria-live="polite">${esc(runasMsg)}</span></span>` : ""}</div>` : ""}
   ${(rec.avisos || []).map(a => `<div class="aviso red">${esc(a)}</div>`).join("")}`;
   const est = pq.est, x = v => Math.max(0, Math.min(100, (v - .4) / .3 * 100));  // escala 40–70%
@@ -1047,18 +1047,18 @@ function matchupCard(fi, pos, s) {  // muchas partidas Master+ (PLAN-MATCHUPS.md
     <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
       ${mu.runa ? `<span class="sub" style="font-size:13px">Runa: <b style="color:var(--txt)">${esc(mu.runa.nombre)}</b> ${pct(mu.runa.wr)} (n=${mu.runa.n})${mu.runa.alternativa ? " · alternativa con mejor WR" : ""}</span>` : ""}
       ${mu.primer ? `<span class="sub" style="font-size:13px">Primer ítem: <b style="color:var(--txt)">${esc(mu.primer.nombre)}</b> ${pct(mu.primer.wr)} (n=${mu.primer.n})</span>` : ""}
-      ${mu.pagina && s.fase === "ChampSelect" && !s.mi_pick ? `<button class="btn2" data-champ="${esc(fi.champ)}" data-pos="${esc(pos)}" data-rival="${esc(fi.rival)}" onclick="ponerRunas(this.dataset.champ,this.dataset.pos,this.dataset.rival)">Poner las runas del matchup</button>
+      ${mu.pagina && s.fase === "ChampSelect" && !(s.mi_pick && s.mi_pick.fijo) ? `<button class="btn2" data-champ="${esc(fi.champ)}" data-pos="${esc(pos)}" data-rival="${esc(fi.rival)}" onclick="ponerRunas(this.dataset.champ,this.dataset.pos,this.dataset.rival)">Poner las runas del matchup</button>
         <span class="sub" style="font-size:13px" role="status" aria-live="polite">${esc(runasMsg)}</span>` : ""}</div></div>`;
 }
 let runasMsg = "";
 let ultPick;
-function miPick(s) {  // al fijar tu campeón: sus runas arriba, con el botón (Racha nunca las pone sin tu clic)
+function miPick(s) {  // tu campeón en hover o fijado: sus runas arriba, con el botón (Racha nunca las pone sin tu clic)
   const p = s.fase === "ChampSelect" && s.mi_pick; if (!p) return "";
   const b = p.build, mu = p.matchup;  // con datos del matchup, su página manda (mains Master+ contra tu rival)
   const txt = mu ? `${esc(mu.runa.nombre)} · ${pct(mu.runa.wr)} contra ${esc(p.rival)} (n=${mu.n}, mains Master+)`
     : b && b.runa ? `${esc(b.runa[0])} · ${pct(b.runa[1])} · ${b.fuente === "tu" ? "tu build" : quienBuild(b)}` : `Aún no hay build guardada de ${esc(p.champ)} en ${esc(ROL[p.pos] || p.pos)}.`;
   return `<div class="card" style="flex-direction:row;align-items:center;gap:14px;flex-wrap:wrap">${img("champion", p.champ, "ico40")}
-    <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><b>Tus runas con ${esc(p.champ)}</b>
+    <div style="display:flex;flex-direction:column;gap:2px;min-width:0"><b>${p.fijo ? "Tus runas con" : "Runas para"} ${esc(p.champ)}</b>
       <span class="sub" style="font-size:13px">${txt}</span></div>
     ${mu || (b && b.pagina_ids) ? `<button class="btn2" style="margin-left:auto" data-champ="${esc(p.champ)}" data-pos="${esc(p.pos)}" data-rival="${esc(mu ? p.rival : "")}" onclick="ponerRunas(this.dataset.champ,this.dataset.pos,this.dataset.rival || undefined)">Poner estas runas</button>
       <span class="sub" style="font-size:13px" role="status" aria-live="polite">${esc(runasMsg)}</span>` : ""}</div>`;
@@ -1178,7 +1178,8 @@ async function tick() {
     if (s.v !== v) {
       v = s.v;
       if (s.fase !== ultFase) { if (ultFase !== undefined) elegida = null; ultFase = s.fase; }
-      const mpk = s.mi_pick && s.mi_pick.champ; if (mpk !== ultPick) { if (mpk) elegida = null; ultPick = mpk; }  // fijaste campeón: a la selección
+      const mp = s.mi_pick || {}, mpk = mp.champ ? mp.champ + (mp.fijo ? "|fijo" : "") : undefined;
+      if (mpk !== ultPick) { if ((ultPick || "").split("|")[0] !== (mp.champ || "")) runasMsg = ""; if (mp.fijo) elegida = null; ultPick = mpk; }  // otro campeón: sin el «Listo» viejo; fijaste: a la selección
       TOPE = (((s.rendimiento || {}).vistas || {}).regla_hoy || {}).tope ?? 2;
       SIN_HIST = s.rendimiento ? "" : s.descarga || "";  // F12: el tope de muertes de tu coach en toda la app
       const vista = elegida || (s.fase === "ChampSelect" ? (s.draft ? "companion" : "draft") : EN_PARTIDA.includes(s.fase) || s.fin || s.revision ? "envivo" : "inicio");
