@@ -15,14 +15,14 @@ import companion_gui as g  # noqa: E402
 class AvisoDict(unittest.TestCase):
     def test_post_partida_key_caducada_es_aviso_error(self):
         q = queue.Queue()
-        orig = g.script, g.time.sleep, g.puede_descargar
-        g.script, g.time.sleep, g.puede_descargar = (lambda *a: (2, "")), (lambda s: None), (lambda: True)
+        orig = g.script, g.time.sleep, g.puede_descargar, g.guardar_del_cliente, g.es_base
+        g.script, g.time.sleep, g.puede_descargar, g.guardar_del_cliente, g.es_base = (lambda *a: (2, "")), (lambda s: None), (lambda: True), (lambda q: False), (lambda: True)
         try:
             g._post_partida(q)
         finally:
-            g.script, g.time.sleep, g.puede_descargar = orig
+            g.script, g.time.sleep, g.puede_descargar, g.guardar_del_cliente, g.es_base = orig
         avisos = [e[1] for e in list(q.queue) if e[0] == "aviso"]
-        self.assertEqual(len(avisos), 1)
+        self.assertEqual(len(avisos), 2)  # la key caducada y, como el cliente tampoco la tenía, «queda pendiente» (2026-11-12)
         self.assertEqual((avisos[0]["tipo"], avisos[0]["minuto"]), ("error", None))
         self.assertIn("RIOT_KEY", avisos[0]["texto"])
 

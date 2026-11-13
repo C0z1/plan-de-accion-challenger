@@ -40,6 +40,14 @@ class GuardarDelCliente(unittest.TestCase):
             g._post_partida(queue.Queue())
         gc.assert_called_once(); sc.assert_not_called()  # no corre descargar.py con el Riot ID del dueño
 
+    def test_key_caducada_guarda_desde_el_cliente(self):  # 2026-11-12: RIOT_KEY puesta pero Riot responde 401
+        q = queue.Queue()
+        with mock.patch.object(g, "puede_descargar", return_value=True), mock.patch.object(g, "es_base", return_value=True),                 mock.patch.object(g.time, "sleep"), mock.patch.object(g, "script", side_effect=[(2, ""), (0, "")]),                 mock.patch.object(g, "guardar_del_cliente", return_value=True) as gc, mock.patch.object(g, "parsear_revision", return_value={"champ": "Zeri"}),                 mock.patch.object(g, "ultima_partida", return_value={}):
+            g._post_partida(q)
+        gc.assert_called_once()
+        tipos = [q.get_nowait()[0] for _ in range(q.qsize())]
+        self.assertIn("revision", tipos)
+
     def test_al_dia_recalcula_si_entra_algo(self):
         with mock.patch.object(cliente_v5, "descargar", return_value=(2, "2 nuevas")), mock.patch.object(w, "refrescar") as r:
             w.al_dia()

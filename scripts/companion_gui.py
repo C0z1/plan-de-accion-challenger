@@ -335,14 +335,14 @@ def post_partida(q):
 CLIENTE_ESPERA, CLIENTE_INTENTOS = 20, 9  # s entre intentos y cuántos (3 min): el cliente publica la partida al rato de terminar
 
 
-def guardar_del_cliente(q, espera=None, intentos=None, dormir=time.sleep):
+def guardar_del_cliente(q, espera=None, intentos=None, dormir=None):
     """Guarda la partida recién jugada desde tu propio cliente (sin key): cliente_v5 la baja a la carpeta de la cuenta
     activa con su timeline. True si entró alguna partida nueva (pedido del usuario, 2026-11-12: al salir de la partida
     se guarda sola, también sin key y con otra cuenta)."""
     import cliente_v5
     q.put(("post_espera", "Guardando tu partida desde el cliente…"))
     for _ in range(CLIENTE_INTENTOS if intentos is None else intentos):
-        dormir(CLIENTE_ESPERA if espera is None else espera)
+        (dormir or time.sleep)(CLIENTE_ESPERA if espera is None else espera)  # time.sleep al llamar: las pruebas lo cambian
         try: nuevas, _ = cliente_v5.descargar()
         except Exception: nuevas = 0  # cliente cerrándose o a medias: se reintenta
         if nuevas: return True
@@ -359,8 +359,8 @@ def _post_partida(q):
             code, _ = script("descargar.py", "5")
             if code != 3: break
             q.put(("post_espera", "Riot aún no publica la partida: reintento en 2 min…")); time.sleep(120)
-        if code == 2: q.put(aviso("Key de Riot caducada: copia la nueva del portal (se abrió) y guárdala con setx RIOT_KEY <key>")); return
-        if code and not guardar_del_cliente(q): q.put(aviso(f"No pude descargar la partida (código {code}); queda pendiente.")); return  # con key caída: el cliente
+        if code == 2: q.put(aviso("Key de Riot caducada: copia la nueva del portal (se abrió) y guárdala con setx RIOT_KEY <key>. Mientras, la partida se guarda desde tu cliente."))
+        if code and not guardar_del_cliente(q): q.put(aviso(f"No pude descargar la partida (código {code}); queda pendiente.")); return  # key caducada o caída: el cliente
     if "draft" in sys.modules:
         with DRAFT: importlib.reload(sys.modules["draft"])  # partidas nuevas para el próximo champ select
     code, out = script("revision.py", "1")
