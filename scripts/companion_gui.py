@@ -116,11 +116,13 @@ AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "avi
                "voz": False,
                "franja_plan": True,  # la franja muestra el match, tu regla y tu nota los primeros 90 s (0.20)
                "franja_build": True,  # la franja muestra tu próximo ítem al morir o al comprar (0.20)
-               "franja_pos": "arriba"}  # esquina de la franja: único ajuste que no es booleano
-OPCIONES = {"franja_pos": ("arriba", "abajo")}  # lista blanca de los ajustes de texto
+               "franja_pos": "arriba", "franja_x": 0.22, "franja_y": 0.0}  # esquina de la franja: único ajuste que no es booleano
+OPCIONES = {"franja_pos": ("arriba", "abajo", "libre")}  # lista blanca de los ajustes de texto
+FRACCIONES = ("franja_x", "franja_y")  # posición libre de la franja: fracción del juego (0–1), la eligió el usuario arrastrándola
 
 
 def valido(clave, v):
+    if clave in FRACCIONES: return isinstance(v, (int, float)) and not isinstance(v, bool) and 0 <= v <= 1
     return v in OPCIONES[clave] if clave in OPCIONES else isinstance(v, bool)
 
 

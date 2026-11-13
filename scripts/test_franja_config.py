@@ -41,6 +41,15 @@ class Ajustes(unittest.TestCase):
         for clave, v in (("franja_pos", "lado"), ("franja_pos", True), ("franja_pos", None), ("franja_linea", "abajo"), ("overlay", "arriba")):
             with self.assertRaises(ValueError): g.guardar_ajuste(clave, v)
 
+    def test_posicion_libre(self):  # la franja se arrastra a donde quieras (Ajustes > Mover la franja)
+        self.assertEqual(g.guardar_ajuste("franja_pos", "libre")["franja_pos"], "libre")
+        self.assertEqual(g.guardar_ajuste("franja_x", 0.5)["franja_x"], 0.5); g.guardar_ajuste("franja_y", 0)
+        for v in (-0.1, 1.5, "0.5", True, None):
+            with self.assertRaises(ValueError): g.guardar_ajuste("franja_x", v)
+        self.assertEqual(overlay.libre((1920, 0, 4480, 1440), (1920, 1080), 0.5, 0.5, 380, 72), (1920 + 1280, 720))  # otro monitor
+        self.assertEqual(overlay.libre(None, (1920, 1080), 1.0, 1.0, 380, 72), (1540, 1008))  # nunca se sale
+        self.assertEqual(overlay.fraccion((1920, 0, 4480, 1440), (1920, 1080), 3200, 720), (0.5, 0.5))
+
     def test_archivo_con_valor_malo_vuelve_al_defecto(self):
         g.AJUSTES_F.write_text(json.dumps({"franja_pos": "lado", "franja_regla": "no"}))
         self.assertEqual((g.ajustes()["franja_pos"], g.ajustes()["franja_regla"]), ("arriba", True))

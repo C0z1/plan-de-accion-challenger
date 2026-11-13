@@ -896,7 +896,9 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
       <div class="card"><div class="cab2"><h2>Apariencia</h2></div>
         ${fila("Reducir movimiento", "Todo quieto: sin aurora, cometas, olas ni brillos.", tog("t-rm", rm, false, "quieto()", "Reducir movimiento"))}
         ${fila("Siempre encima en partida", "La franja queda sobre el juego (en modo sin bordes).", tog("t-overlay", aj.overlay !== false, false, `ajuste('overlay',${aj.overlay === false})`, "Siempre encima en partida"))}
-        ${fila("Posición de la franja", "Dónde se ve en partida.", `<span role="group" aria-label="Posición de la franja" style="display:flex;gap:8px">${[["arriba", "Arriba"], ["abajo", "Abajo"]].map(([k, t]) => `<button class="btn2" aria-pressed="${(aj.franja_pos || "arriba") === k}" ${(aj.franja_pos || "arriba") === k ? 'style="border-color:var(--rosa,#F28DB0)"' : ""} onclick="ajuste('franja_pos','${k}')">${t}</button>`).join("")}</span>`)}
+        ${fila("Posición de la franja", "Dónde se ve en partida.", `<span role="group" aria-label="Posición de la franja" style="display:flex;gap:8px">${[["arriba", "Arriba"], ["abajo", "Abajo"], ...(aj.franja_pos === "libre" ? [["libre", "Donde la dejaste"]] : [])].map(([k, t]) => `<button class="btn2" aria-pressed="${(aj.franja_pos || "arriba") === k}" ${(aj.franja_pos || "arriba") === k ? 'style="border-color:var(--rosa,#F28DB0)"' : ""} onclick="ajuste('franja_pos','${k}')">${t}</button>`).join("")}</span>`)}
+        ${fila("Mover la franja", s.mover_franja ? "Arrástrala con el mouse a donde quieras: se guarda sola. En partida, cambia a Racha con Alt+Tab para terminar." : "Muéstrala y arrástrala a donde quieras (también fuera de partida).",
+          `<button class="btn2" aria-pressed="${!!s.mover_franja}" ${s.mover_franja ? 'style="border-color:var(--rosa,#F28DB0)"' : ""} onclick="moverFranja(${!s.mover_franja})">${s.mover_franja ? "Listo" : "Mover"}</button>`)}
         ${av("franja_linea", "Franja: nivel y farm", "Hasta el minuto 14: tu nivel contra tu rival y tu CS contra tu ritmo.")}
         ${av("franja_regla", "Franja: muertes y peleas", "Del 14 al 25: tus muertes contra tu tope y tu participación en kills.")}
         ${av("franja_build", "Franja: tu próximo ítem", "Al morir o al comprar: el siguiente ítem de tu build y el oro que falta.")}
@@ -1062,6 +1064,10 @@ async function google() {
 }
 async function nube(accion) {
   try { await fetch(accion === "sync" ? "/api/google/sync" : "/api/google/" + accion, {method: "POST", headers: {"X-HTC": "1"}}); } catch (e) {}
+  v = -1; tick();
+}
+async function moverFranja(on) {
+  try { await fetch("/api/mover_franja", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({on})}); } catch (e) {}
   v = -1; tick();
 }
 async function ajuste(clave, on) {

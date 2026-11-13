@@ -307,6 +307,32 @@ def colocar(juego, pantalla, alto_franja, x=0.22, pos=None, margen=6, util=1.0, 
     return px, y0 + margen
 
 
+def libre(juego, pantalla, fx, fy, ancho, alto):
+    """(x, y) de la franja en la posición que eligió el usuario: fracción del juego (o de la pantalla sin juego), sin salirse."""
+    x0, y0, x1, y1 = juego if juego else (0, 0, *pantalla)
+    return (int(max(x0, min(x1 - ancho, x0 + (x1 - x0) * fx))), int(max(y0, min(y1 - alto, y0 + (y1 - y0) * fy))))
+
+
+def fraccion(juego, pantalla, x, y):
+    """La inversa de libre(): (fx, fy) de una posición en pantalla, en [0, 1] y con 3 decimales (libre() la mantiene adentro)."""
+    x0, y0, x1, y1 = juego if juego else (0, 0, *pantalla)
+    return tuple(round(max(0.0, min(1.0, (v - a) / max(1, b - a))), 3) for v, a, b in ((x, x0, x1), (y, y0, y1)))
+
+
+EJEMPLO = {"tipo": "plan", "a": {"campeon": None, "anillo": 1.0, "color": "rosa", "insignia": None},
+           "lineas": ["Arrástrame a donde quieras", "se guarda sola · «Listo» en Ajustes"], "chip": None}
+
+
+def interactiva(hwnd, on):
+    """Modo mover: la franja recibe los clics (sin TRANSPARENT ni NOACTIVATE) para poder arrastrarla; al salir, vuelve a
+    dejarlos pasar al juego."""
+    try:
+        import ctypes
+        u = ctypes.windll.user32; ex = u.GetWindowLongW(hwnd, -20)
+        u.SetWindowLongW(hwnd, -20, (ex & ~0x20 & ~0x08000000) if on else (ex | 0x20 | 0x08000000))
+    except (AttributeError, OSError): pass
+
+
 def fraccion_util():
     """Alto del área de trabajo de Windows / alto de pantalla (ambos de la misma API: no importa la escala de DPI); 1.0 si falla."""
     try:
@@ -378,7 +404,7 @@ def mostrar(hwnd, im, x, y):
     return bool(ok)
 
 
-def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None, icono=None):
+def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None, icono=None, guardar=lambda clave, v: None):
     """Bucle de tkinter (hilo principal): la pastilla en una ventana en capas (alfa por píxel), siempre encima y
     atravesable. leer() -> estado de HTC; seguir() -> False para cerrar; icono(tipo, nombre) -> PNG en bytes o None.
     Solo se repinta cuando cambia lo que muestra (la foto llega cada 10 s)."""
@@ -389,6 +415,24 @@ def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None, icono=None):
     root.update_idletasks(); atravesable(root)
     hwnd = ctypes.windll.user32.GetParent(root.winfo_id()) if hasattr(ctypes, "windll") else None
     mostrada, ultimo, errores, marcas, tipo_ant, gen = [False], [None], set(), {}, [None], [0]
+    mov = {"on": False, "agarre": None, "pos": None}  # modo mover (Ajustes): arrastrar con el botón izquierdo, se guarda al soltar
+
+    def arrastrar():  # solo en modo mover: lee el mouse cada 16 ms mientras el botón izquierdo está apretado sobre la franja
+        if not mov["on"] or not hwnd: return
+        import ctypes.wintypes as w
+        u = ctypes.windll.user32; p, r = w.POINT(), w.RECT()
+        u.GetCursorPos(ctypes.byref(p)); u.GetWindowRect(hwnd, ctypes.byref(r))
+        if u.GetAsyncKeyState(0x01) & 0x8000:
+            if mov["agarre"] is None and r.left <= p.x < r.right and r.top <= p.y < r.bottom: mov["agarre"] = (p.x - r.left, p.y - r.top)
+            if mov["agarre"]:
+                nx, ny = p.x - mov["agarre"][0], p.y - mov["agarre"][1]
+                u.SetWindowPos(hwnd, 0, nx, ny, 0, 0, 0x15); mov["pos"] = (nx, ny)
+        elif mov["agarre"] is not None:  # soltó: se guarda como fracción del juego (sirve en cualquier resolución)
+            mov["agarre"] = None
+            fx, fy = fraccion(rect_juego(), (root.winfo_screenwidth(), root.winfo_screenheight()), *mov["pos"])
+            guardar("franja_x", fx); guardar("franja_y", fy); guardar("franja_pos", "libre")
+            ultimo[0] = None  # que el próximo tick la recoloque con lo guardado
+        root.after(16, arrastrar)
 
     def tick():
         if not seguir(): root.destroy(); return
@@ -399,15 +443,22 @@ def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None, icono=None):
 
     def dibujar():
         s = leer() or {}; ahora = time.time(); aj = s.get("ajustes") or {}
+        if bool(s.get("mover_franja")) != mov["on"]:  # entra o sale del modo mover
+            mov["on"] = bool(s.get("mover_franja")); interactiva(hwnd, mov["on"]) if hwnd else None; ultimo[0] = None
+            if mov["on"]: root.after(16, arrastrar)
+        if mov["on"] and mov["agarre"] is not None: return  # mientras la arrastras, el tick no la recoloca
         regla = (((s.get("rendimiento") or {}).get("vistas") or {}).get("regla_hoy"))  # tu regla, no la del autor
         marcar(marcas, s.get("meta"), ahora)
         oro = (((s.get("rendimiento") or {}).get("resumen") or {}).get("racha_oro14"))
         e = estado(s.get("meta"), ahora, aj, regla, s.get("aviso"), marcas, oro) if visible(s, ahora) else None
+        if mov["on"] and not e: e = EJEMPLO  # en modo mover se ve aunque no estés en partida
         if not e:
             if mostrada[0]: root.withdraw(); mostrada[0] = False
             ultimo[0] = tipo_ant[0] = None; gen[0] += 1; return
         juego = rect_juego(); esc = escala(juego)
-        px, py = colocar(juego, (root.winfo_screenwidth(), root.winfo_screenheight()), round(72 * esc), x, aj.get("franja_pos"), y, fraccion_util(), round(380 * esc))
+        pant = (root.winfo_screenwidth(), root.winfo_screenheight())
+        if aj.get("franja_pos") == "libre": px, py = libre(juego, pant, aj.get("franja_x", x), aj.get("franja_y", 0), round(380 * esc), round(72 * esc))
+        else: px, py = colocar(juego, pant, round(72 * esc), x, aj.get("franja_pos"), y, fraccion_util(), round(380 * esc))
         clave = (repr(e), esc, px, py)
         if clave == ultimo[0] and mostrada[0]: return  # nada cambió: no se repinta
         if not mostrada[0]: root.deiconify(); root.attributes("-topmost", True); mostrada[0] = True  # la ventana en capas solo se ve tras mostrarla

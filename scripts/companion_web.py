@@ -17,7 +17,7 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "comentario": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
+          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "comentario": None, "mover_franja": False, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
 VERSION = "0.20.0"  # HTC; también invalida la caché de rendimiento
 ESTADO["version"] = VERSION  # la página se recarga si cambia (Racha se actualizó con la ventana abierta)
 VIVO = [time.time()]  # último GET de la ventana
@@ -280,6 +280,13 @@ def buscar_version():
     inst = instalador_de(d) if getattr(sys, "frozen", False) else None  # desde el código fuente solo se avisa
     with LOCK: ESTADO.update(nueva={"version": d["tag_name"], "url": d["html_url"], "estado": "Bajando la actualización…" if inst else None}, v=ESTADO["v"] + 1)
     if inst: actualizar(d["tag_name"], *inst)
+
+
+def guardar_franja(clave, v):
+    """La franja guarda su posición al soltarla (modo mover): como un ajuste más, también en la nube."""
+    try: a = gui.guardar_ajuste(clave, v)
+    except (ValueError, OSError): return
+    with LOCK: ESTADO.update(ajustes=a, v=ESTADO["v"] + 1)
 
 
 def al_dia():
@@ -630,10 +637,13 @@ class H(http.server.BaseHTTPRequestHandler):
                 refrescar()
                 with LOCK: ESTADO.update(descarga="Listo: tus estadísticas están al día.", v=ESTADO["v"] + 1)
             threading.Thread(target=recargar, daemon=True).start(); return self.enviar(200, b"{}", "application/json")
-        if self.path not in ("/api/autoarranque", "/api/ajuste"): return self.enviar(404, b"", "text/plain")
+        if self.path not in ("/api/autoarranque", "/api/ajuste", "/api/mover_franja"): return self.enviar(404, b"", "text/plain")
         try: d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 200))); on = d["on"]
         except (ValueError, KeyError, TypeError): return self.enviar(400, b"", "text/plain")
-        if self.path == "/api/autoarranque" and not isinstance(on, bool): return self.enviar(400, b"", "text/plain")
+        if self.path in ("/api/autoarranque", "/api/mover_franja") and not isinstance(on, bool): return self.enviar(400, b"", "text/plain")
+        if self.path == "/api/mover_franja":  # Ajustes > Mover la franja: se muestra y se puede arrastrar; se guarda sola al soltar
+            with LOCK: ESTADO.update(mover_franja=on, v=ESTADO["v"] + 1)
+            return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/ajuste":  # guardar_ajuste valida cada clave (booleano, o la lista blanca de franja_pos)
             try: a = gui.guardar_ajuste(d.get("clave"), on)
             except (ValueError, OSError): return self.enviar(400, b"", "text/plain")
@@ -723,7 +733,7 @@ def main(argv=None):
                 f = gui.REPO / "datos" / "salud" / "franja.log"; f.parent.mkdir(parents=True, exist_ok=True)
                 with f.open("a", encoding="utf-8") as h: h.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {txt}\n")
             except OSError: pass
-        try: import overlay; overlay.correr(leer, seguir, registrar=registrar, icono=imagen)  # franja en partida; ocupa el hilo principal (tkinter)
+        try: import overlay; overlay.correr(leer, seguir, registrar=registrar, icono=imagen, guardar=guardar_franja)  # franja en partida; ocupa el hilo principal (tkinter)
         except Exception as e: registrar(f"sin franja: {e!r}")  # sin tkinter o sin pantalla: HTC sigue sin overlay
     while seguir(): time.sleep(2)
     ventana.cerrar(); srv.shutdown()
