@@ -138,14 +138,13 @@ class Riot(unittest.TestCase):
         with mock.patch.object(builds, "_backend", lambda m, ruta, c=None: llamadas.append((m, ruta, c))):
             self.assertEqual(builds.subir(), 1)
         self.assertEqual(list(llamadas[0][2]), ["Yone|MIDDLE"])  # «tu build» no se sube
-        servidor = {"/v1/builds": [{"clave": "Yone|MIDDLE", "ts": 5}, {"clave": "Ahri|MIDDLE", "ts": 5}],
-                    "/v1/builds/Ahri%7CMIDDLE": {"datos": dict(r, n=99)}}
+        servidor = {"/v1/builds/_todas": [{"clave": "Yone|MIDDLE", "ts": 5, "datos": dict(r, n=1)}, {"clave": "Ahri|MIDDLE", "ts": 5, "datos": dict(r, n=99)}]}
         pedidas = []
         def falso(m, ruta, c=None): pedidas.append(ruta); return servidor.get(ruta)
         with mock.patch.object(builds, "_backend", falso):
             self.assertEqual(builds.bajar(), 1)  # Yone ya la calculaste tú: no se pisa
             self.assertEqual(builds.bajar(), 0)  # ya al día: no se vuelve a pedir
-        self.assertNotIn("/v1/builds/Yone%7CMIDDLE", pedidas)
+        self.assertEqual(set(pedidas), {"/v1/builds/_todas"})  # una sola consulta, no una por clave
         d = json.loads(f.read_text(encoding="utf-8"))
         self.assertEqual((d["Ahri|MIDDLE"]["n"], d["Yone|MIDDLE"]["n"]), (99, r["n"]))
         self.assertEqual(builds.guardado_dict("Ahri", "MIDDLE")["fuente"], "mejores")
@@ -197,6 +196,81 @@ class Riot(unittest.TestCase):
         self.assertEqual((c, [(nm, len(v), sum(x["win"] for x in v)) for nm, v in pp]), ("Mage", [("1", 5, 5), ("2", 5, 0)]))
         self.assertIsNone(builds.por_clase(bs[:5], ITEMS, cl))  # un solo ítem en la clase: no hay comparación
         self.assertIsNone(builds.por_clase([b("1", None, True)], ITEMS, cl))
+
+
+class Ladder(unittest.TestCase):
+    """--ladder: builds Master+ de todos los campeones; cada partida da las de todos los del ladder que jugaron."""
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
+        m = pathlib.Path(self.tmp.name)
+        for p in (mock.patch.object(builds, "META", m), mock.patch.object(builds, "FILAS", m / "builds-filas.jsonl"),
+                  mock.patch.object(builds, "ddragon", return_value=(ITEMS, {}, {}))):
+            p.start(); self.addCleanup(p.stop)
+
+    def mt(self, puuid, version="15.22.3", **kw):
+        m, tl = partida(puuid, **kw); m["info"]["gameVersion"] = version; return m, tl
+
+    def test_parches(self):
+        self.assertEqual(builds.parches_validos("15.22.1"), {"15.22", "15.21"})
+        self.assertEqual(builds.parches_validos("16.1.1"), {"16.1"})
+
+    def test_fila_solo_ladder_sin_remake(self):
+        m, tl = partida("top1")
+        self.assertEqual([b["champ"] for b in builds.fila_ladder(m, tl, {"top1", "nadie"}, ITEMS)], ["Yone"])
+        self.assertEqual(len(builds.fila_ladder(m, tl, {"top1", "x2", "x3"}, ITEMS)), 3)  # un match, varias builds
+        m["info"]["gameDuration"] = 400; self.assertEqual(builds.fila_ladder(m, tl, {"top1"}, ITEMS), [])
+
+    def test_rastrear_reanuda_y_filtra_parche(self):
+        lad = dict(entries=[dict(puuid="top1", leaguePoints=900), dict(puuid="top2", leaguePoints=800)])
+        mts = {"M1": self.mt("top1"), "M2": self.mt("top1", version="15.10.1"), "M3": self.mt("top2", pos="TOP")}
+        pedidas = []
+        def get(url, ttl=None, riot=False, guardar=True):
+            pedidas.append(url)
+            if "versions.json" in url: return ["15.22.1"]
+            if "challengerleagues" in url: return lad
+            if "leagues" in url: return dict(entries=[])
+            if "top1/ids" in url: return ["M1", "M2"]
+            if "top2/ids" in url: return ["M1", "M3"]
+            mid = url.rsplit("/", 2)[-2] if url.endswith("timeline") else url.rsplit("/", 1)[-1]
+            return mts[mid][1] if url.endswith("timeline") else mts[mid][0]
+        with mock.patch.object(builds, "get", get):
+            self.assertEqual(builds.rastrear_ladder(regiones=["kr"]), 2)  # M1 y M3; M2 es de otro parche
+            self.assertEqual(sum("timeline" in u for u in pedidas), 2)
+            self.assertEqual(builds.rastrear_ladder(regiones=["kr"]), 0)  # reanuda: nada nuevo
+        filas = [json.loads(l) for l in builds.FILAS.read_text(encoding="utf-8").splitlines()]
+        self.assertEqual([(f["id"], len(f["builds"])) for f in filas], [("M1", 1), ("M2", 0), ("M3", 1)])
+
+    def test_sinkey_guarda_lo_bajado(self):
+        def get(url, ttl=None, riot=False, guardar=True):
+            if "versions.json" in url: return ["15.22.1"]
+            if "challengerleagues" in url: return dict(entries=[dict(puuid="top1", leaguePoints=1)])
+            if "leagues" in url: return dict(entries=[])
+            if "ids" in url: return ["M1", "M2"]
+            if url.endswith("M2"): raise builds.SinKey("caducó")
+            return self.mt("top1")[1] if url.endswith("timeline") else self.mt("top1")[0]
+        with mock.patch.object(builds, "get", get), self.assertRaises(builds.SinKey): builds.rastrear_ladder(regiones=["kr"])
+        self.assertEqual(len(builds.FILAS.read_text(encoding="utf-8").splitlines()), 1)
+
+    def test_agregar_umbral_y_mezclar(self):
+        m, tl = partida("top1")
+        b = json.loads(json.dumps(builds.build_de(m, tl, "top1", ITEMS)))  # como sale del JSONL: listas, no tuplas
+        filas = [dict(id=f"M{i}", parche="15.22", builds=[b]) for i in range(25)] + [dict(id="R", parche="15.22", builds=[dict(b, pos="TOP")])]
+        builds.FILAS.write_text(chr(10).join(json.dumps(f) for f in filas), encoding="utf-8")
+        a = builds.agregar_ladder()
+        self.assertEqual(list(a), ["Yone|MIDDLE"]); self.assertEqual((a["Yone|MIDDLE"]["n"], a["Yone|MIDDLE"]["origen"]), (25, "ladder"))
+        self.assertEqual(builds.agregar_ladder(minimo=30), {})
+        (builds.META / "builds.json").write_text(json.dumps({"Yone|MIDDLE": {"jugadores": ["Faker"]}, "_bajadas": {"x": 1}}), encoding="utf-8")
+        self.assertEqual(builds.mezclar(a), 0)  # el onetrick manda
+        d = json.loads((builds.META / "builds.json").read_text(encoding="utf-8"))
+        self.assertEqual((d["Yone|MIDDLE"], d["_bajadas"]), ({"jugadores": ["Faker"]}, {"x": 1}))
+        self.assertEqual(builds.mezclar(a, pisar_onetricks=True), 1)
+
+    def test_subir_en_trozos(self):
+        (builds.META / "builds.json").write_text(json.dumps({f"C{i:03}|TOP": {"n": i} for i in range(250)}), encoding="utf-8")
+        envios = []
+        with mock.patch.object(builds, "_backend", lambda m, r, c=None: envios.append(len(c))):
+            self.assertEqual(builds.subir(), 250)
+        self.assertEqual(envios, [100, 100, 50])
 
 
 if __name__ == "__main__":

@@ -76,6 +76,10 @@ export async function extra(request, env, url, quienEs) {
     const {results} = await DB.prepare("SELECT clave, ts FROM builds ORDER BY clave").bind().all();
     return json(results || []);
   }
+  if (ruta === "/v1/builds/_todas" && m === "GET") {  // builds.bajar: las ~220 del ladder en una consulta, no una por clave
+    const {results} = await DB.prepare("SELECT clave, datos, ts FROM builds ORDER BY clave").bind().all();
+    return json((results || []).map(r => ({clave: r.clave, ts: r.ts, datos: JSON.parse(r.datos)})));
+  }
   if (ruta.startsWith("/v1/builds/") && m === "GET") {
     let clave; try { clave = decodeURIComponent(ruta.slice(11)); } catch { return json({error: "sin build todavía"}, 404); }
     const f = CLAVE.test(clave) && await DB.prepare("SELECT datos, ts FROM builds WHERE clave = ?").bind(clave).first();
@@ -114,7 +118,8 @@ export async function extra(request, env, url, quienEs) {
     const d = await cuerpo(request);
     const pares = d && typeof d === "object" && !Array.isArray(d) ? Object.entries(d) : null;
     if (!pares || pares.length > 300 || !pares.every(([k, v]) => CLAVE.test(k) && JSON.stringify(v).length < 20000)) return json({error: "builds inválidas"}, 400);
-    for (const [k, v] of pares) await DB.prepare("INSERT OR REPLACE INTO builds (clave, datos, ts) VALUES (?, ?, ?)").bind(k, JSON.stringify(v), ahora()).run();
+    const t = ahora();  // en lote: D1 gratis corta cerca de 50 consultas sueltas por invocación
+    await DB.batch(pares.map(([k, v]) => DB.prepare("INSERT OR REPLACE INTO builds (clave, datos, ts) VALUES (?, ?, ?)").bind(k, JSON.stringify(v), t)));
     return json({ok: true, n: pares.length});
   }
   if (ruta === "/v1/admin/invitados" && m === "GET") {

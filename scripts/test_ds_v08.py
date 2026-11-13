@@ -25,7 +25,7 @@ class Builds(unittest.TestCase):
         p = self.meta(None)
         with mock.patch.object(builds, "_backend", return_value=[]) as b:
             self.assertEqual(builds.bajar(), 0)
-        b.assert_called_once_with("GET", "/v1/builds")
+        b.assert_called_once_with("GET", "/v1/builds/_todas")
         self.assertFalse(p.exists())  # n=0: no se toca builds.json
 
     def test_bajar_servidor_que_devuelve_none(self):
@@ -38,8 +38,7 @@ class Builds(unittest.TestCase):
         p = self.meta("{}")
         datos = {"core": [["Liche", 0.6, "3100"]]}
         def falso(m, ruta, c=None, base=None):
-            if ruta == "/v1/builds": return [{"clave": "Kai'Sa|BOTTOM", "ts": 5}]
-            if ruta == "/v1/builds/Kai%27Sa%7CBOTTOM": return {"datos": datos}  # el apóstrofo y el | van escapados
+            if ruta == "/v1/builds/_todas": return [{"clave": "Kai'Sa|BOTTOM", "ts": 5, "datos": datos}]
             raise AssertionError(f"ruta inesperada: {ruta}")
         with mock.patch.object(builds, "_backend", falso):
             self.assertEqual(builds.bajar(), 1)
@@ -52,8 +51,7 @@ class Builds(unittest.TestCase):
     def test_bajar_con_builds_json_roto_no_tumba(self):
         p = self.meta("{ esto no es json")
         def falso(m, ruta, c=None, base=None):
-            if ruta == "/v1/builds": return [{"clave": "Yone|MIDDLE", "ts": 1}]
-            if ruta.startswith("/v1/builds/"): return {"datos": {"n": 2}}
+            if ruta == "/v1/builds/_todas": return [{"clave": "Yone|MIDDLE", "ts": 1, "datos": {"n": 2}}]
             raise AssertionError(ruta)
         with mock.patch.object(builds, "_backend", falso):
             self.assertEqual(builds.bajar(), 1)
@@ -62,14 +60,13 @@ class Builds(unittest.TestCase):
     def test_bajar_ts_mas_nuevo_rebaja_y_viejo_no(self):
         p = self.meta(json.dumps({"_bajadas": {"A|B": 10, "C|D": 100}}))
         def falso(m, ruta, c=None, base=None):
-            if ruta == "/v1/builds": return [{"clave": "A|B", "ts": 20}, {"clave": "C|D", "ts": 50}]
-            if ruta.startswith("/v1/builds/"): return {"datos": {"ruta": ruta}}
+            if ruta == "/v1/builds/_todas": return [{"clave": "A|B", "ts": 20, "datos": {"ruta": "A|B"}}, {"clave": "C|D", "ts": 50, "datos": {"ruta": "C|D"}}]
             raise AssertionError(ruta)
         with mock.patch.object(builds, "_backend", falso):
             self.assertEqual(builds.bajar(), 1)  # solo A|B (10 < 20); C|D ya está al día (100 >= 50)
         d = json.loads(p.read_text(encoding="utf-8"))
         self.assertEqual(d["_bajadas"], {"A|B": 20, "C|D": 100})
-        self.assertEqual(d["A|B"], {"ruta": "/v1/builds/A%7CB"})
+        self.assertEqual(d["A|B"], {"ruta": "A|B"})
 
     def test_guardado_dict_ignora_bajadas(self):
         build = {"core": [["Liche", 0.6, "3100"]], "n": 5}

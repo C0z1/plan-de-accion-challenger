@@ -12,7 +12,8 @@ function d1() {  // adaptador mínimo de la API de D1 sobre SQLite en memoria
   return {prepare: sql => ({bind: (...a) => ({
     first: async () => db.prepare(sql).get(...a) ?? null,
     all: async () => ({results: db.prepare(sql).all(...a)}),
-    run: async () => db.prepare(sql).run(...a)})})};
+    run: async () => db.prepare(sql).run(...a)})}),
+    batch: async ss => { const out = []; for (const s of ss) out.push(await s.run()); return out; }};
 }
 const jwt = p => "x." + Buffer.from(JSON.stringify(p)).toString("base64url") + ".y";
 const ID = {aud: "cliente-racha", iss: "https://accounts.google.com", exp: Math.floor(Date.now() / 1000) + 600, email_verified: true, sub: "g-1", email: "ana@gmail.com", name: "Ana"};
@@ -103,6 +104,8 @@ test("admin sube builds y un invitado las lee; un no-admin no puede subir", asyn
   assert.deepEqual(b.datos.items, [1, 2]);
   assert.equal((await (await worker.fetch(conCodigo("/v1/builds", "codigo-beto1"), env, ctx)).json())[0].clave, "Ahri|MIDDLE");
   assert.equal((await worker.fetch(conCodigo("/v1/builds/" + encodeURIComponent("Zed|MIDDLE"), "codigo-beto1"), env, ctx)).status, 404);
+  const todas = await (await worker.fetch(conCodigo("/v1/builds/_todas", "codigo-beto1"), env, ctx)).json();
+  assert.deepEqual(todas.map(x => [x.clave, x.datos.items]), [["Ahri|MIDDLE", [1, 2]]]);
   assert.equal((await worker.fetch(req("/v1/builds"), env, ctx)).status, 401);
 });
 

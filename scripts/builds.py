@@ -2,6 +2,7 @@
 Uso: python scripts/builds.py <Campeón> [rol]     (rol: top, mid, jungla, bot, support; sin rol, cualquiera)
      python scripts/builds.py --pool              (tus campeones con 10+ partidas → datos/analisis-builds-<fecha>.md)
      python scripts/builds.py --subir             (admin: sube las de los mejores de builds.json al backend, para todos)
+     python scripts/builds.py --ladder [N]        (admin, de noche: builds Master+ de todos los campeones con N partidas; reanudable)
 
 Fuentes:
   Los mejores: Riot API (necesita RIOT_KEY). Challenger y Grandmaster de LAN (la1) y Corea (kr), de más a menos LP;
@@ -208,6 +209,94 @@ def mejores(cid, nombre, pos=None, por_region=2, partidas=20, ahora=None, top_n=
             if hallados >= por_region: break
     return out
 
+FILAS = META / "builds-filas.jsonl"  # una línea por partida del ladder: {id, parche, builds}; se reanuda saltando ids
+LIGAS = ("challengerleagues", "grandmasterleagues", "masterleagues")
+
+
+def parches_validos(version):
+    """«15.22.1» de Data Dragon → {"15.22", "15.21"}: el parche actual y el anterior (en el 1 de temporada, solo el actual)."""
+    a, b = (int(x) for x in version.split(".")[:2])
+    return {f"{a}.{b}"} | ({f"{a}.{b - 1}"} if b > 1 else set())
+
+
+def fila_ladder(match, timeline, ladder, items):
+    """Las builds de los participantes de esa partida que están en el ladder Master+ (sin rol o remake: nada)."""
+    if (match["info"].get("gameDuration") or 0) < 900: return []
+    out = []
+    for p in match["info"]["participants"]:
+        if p.get("puuid") in ladder and p.get("teamPosition"):
+            try: out.append(build_de(match, timeline, p["puuid"], items))
+            except (KeyError, IndexError, StopIteration): pass  # una partida rara no tumba el rastreo
+    return out
+
+
+def rastrear_ladder(partidas=5000, por_jugador=20, regiones=None):
+    """Admin, de noche: partidas ranked de jugadores Master+ (ladder de LA1, KR y EUW, intercalados por LP) y, de cada
+    partida, la build de cada participante del ladder: ~2 llamadas por partida para hasta 10 builds. Reanudable (FILAS);
+    lanza SinKey si la key caduca: lo bajado queda guardado. Devuelve cuántas partidas agregó."""
+    import itertools
+    items, _, _ = ddragon()
+    validos = parches_validos(get("https://ddragon.leagueoflegends.com/api/versions.json", ttl=DIA)[0])
+    vistas = set()
+    if FILAS.exists():
+        for l in FILAS.read_text(encoding="utf-8").splitlines():
+            try: vistas.add(json.loads(l)["id"])
+            except (ValueError, KeyError): pass
+    colas, ladder = [], set()
+    for plat in regiones or REGIONES:
+        es = [e for liga in LIGAS for e in (get(f"https://{plat}.api.riotgames.com/lol/league/v4/{liga}/by-queue/RANKED_SOLO_5x5", ttl=DIA, riot=True) or {}).get("entries", []) if e.get("puuid")]
+        ladder |= {e["puuid"] for e in es}
+        colas.append([(plat, e["puuid"]) for e in sorted(es, key=lambda e: -e["leaguePoints"])])
+    nuevas = 0
+    META.mkdir(parents=True, exist_ok=True)
+    with FILAS.open("a", encoding="utf-8") as f:
+        for plat, puuid in (x for t in itertools.zip_longest(*colas) for x in t if x):
+            ruta = REGIONES[plat]
+            for mid in get(f"https://{ruta}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?queue=420&count={por_jugador}", ttl=DIA, riot=True) or []:
+                if mid in vistas: continue
+                vistas.add(mid)
+                mt = get(f"https://{ruta}.api.riotgames.com/lol/match/v5/matches/{mid}", riot=True, guardar=False)
+                parche = ".".join(str((mt or {}).get("info", {}).get("gameVersion", "")).split(".")[:2])
+                if not mt or parche not in validos or not any(p.get("puuid") in ladder for p in mt["info"]["participants"]):
+                    f.write(json.dumps({"id": mid, "parche": parche, "builds": []}) + "\n"); continue  # vista: no se repite
+                tl = get(f"https://{ruta}.api.riotgames.com/lol/match/v5/matches/{mid}/timeline", riot=True, guardar=False)
+                bs = fila_ladder(mt, tl, ladder, items) if tl else []
+                f.write(json.dumps({"id": mid, "parche": parche, "builds": bs}, ensure_ascii=False) + "\n"); f.flush()
+                nuevas += 1
+                if nuevas >= partidas: return nuevas
+    return nuevas
+
+
+def agregar_ladder(filas=None, minimo=20, cuota=0.10, validos=None):
+    """{«Campeón|POS»: resumen} de FILAS: solo roles con `minimo`+ partidas y `cuota`+ del uso del campeón, marcados
+    origen "ladder". Los campeones raros quedan fuera (en la app cae a la página recomendada por Riot)."""
+    items, runas, _ = ddragon()
+    por, tot = {}, Counter()
+    for l in pathlib.Path(filas or FILAS).read_text(encoding="utf-8").splitlines() if pathlib.Path(filas or FILAS).exists() else []:
+        try: r = json.loads(l)
+        except ValueError: continue
+        if validos and r.get("parche") not in validos: continue
+        for b in r.get("builds") or []:
+            ru = b["runas"]; b["runas"] = (ru[0], ru[1], tuple(ru[2]), *([tuple(ru[3])] if len(ru) > 3 else []))  # JSON → tuplas (Counter)
+            por.setdefault(f"{b['champ']}|{b['pos']}", []).append(b); tot[b["champ"]] += 1
+    return {k: dict(resumir(bs, items, runas), origen="ladder") for k, bs in sorted(por.items())
+            if len(bs) >= minimo and len(bs) / tot[k.split("|")[0]] >= cuota}
+
+
+def mezclar(nuevas, pisar_onetricks=False):
+    """Mezcla en builds.json sin borrar lo demás; las de onetricks (`jugadores`, de --pool) mandan sobre las del ladder."""
+    f = META / "builds.json"
+    try: d = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError): d = {}
+    n = 0
+    for k, v in nuevas.items():
+        if not pisar_onetricks and (d.get(k) or {}).get("jugadores"): continue
+        d[k] = v; n += 1
+    META.mkdir(parents=True, exist_ok=True)
+    tmp = f.with_suffix(".tmp"); tmp.write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8"); tmp.replace(f)
+    return n
+
+
 def tuyas(nombre, pos=None):
     """[(match, timeline, puuid)] de tus partidas en datos/raw con ese campeón (y rol), sin remakes."""
     yo = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
@@ -330,7 +419,9 @@ def subir():
     try: d = json.loads((META / "builds.json").read_text(encoding="utf-8"))
     except (OSError, ValueError): return 0
     mejores = {k: v for k, v in d.items() if k.count("|") == 1 and v}
-    if mejores: _backend("PUT", "/v1/builds", mejores)
+    ks = sorted(mejores)
+    for i in range(0, len(ks), 100):  # el backend acepta hasta 300 por envío
+        _backend("PUT", "/v1/builds", {k: mejores[k] for k in ks[i:i + 100]})
     return len(mejores)
 
 
@@ -341,14 +432,13 @@ def bajar():
     try: d = json.loads(f.read_text(encoding="utf-8"))
     except (OSError, ValueError): d = {}
     try:
-        lista = _backend("GET", "/v1/builds") or []
+        lista = _backend("GET", "/v1/builds/_todas") or []  # todas en una consulta (antes, una por clave)
         bajadas = d.get("_bajadas") or {}  # clave → ts de la versión bajada
         n = 0
         for b in lista:
             k = b.get("clave", "")
             if k in d and k not in bajadas or bajadas.get(k, -1) >= (b.get("ts") or 0): continue  # la propia o ya al día
-            r = _backend("GET", "/v1/builds/" + urllib.request.quote(k, safe=""))
-            if r and r.get("datos"): d[k] = r["datos"]; bajadas[k] = b.get("ts") or 0; n += 1
+            if b.get("datos"): d[k] = b["datos"]; bajadas[k] = b.get("ts") or 0; n += 1
     except (OSError, ValueError, urllib.error.URLError): return 0
     if n:
         d["_bajadas"] = bajadas
@@ -385,15 +475,19 @@ if __name__ == "__main__":
     if sys.argv[1] == "--subir":
         try: print(f"Listo: {subir()} builds subidas al backend.")
         except urllib.error.HTTPError as e: sys.exit("El backend no aceptó las builds" + (" (solo el admin puede subirlas)." if e.code == 403 else f" ({e.code})."))
+    elif sys.argv[1] == "--ladder":  # admin, de noche: builds Master+ de todos los campeones (luego --subir)
+        n = int(sys.argv[2]) if len(sys.argv) > 2 else 5000
+        try: print(f"{rastrear_ladder(n)} partidas nuevas.")
+        except SinKey as e: print(f"Se cortó: {e}. Renueva la key y repite: sigue donde quedó.")
+        except KeyboardInterrupt: print("Cortado: sigue donde quedó la próxima vez.")
+        print(f"Listo: {mezclar(agregar_ladder())} builds del ladder en builds.json. Súbelas con builds.py --subir.")
     elif sys.argv[1] == "--pool":
         partes, guarda = [f"# Builds de los mejores contra la tuya ({datetime.now():%Y-%m-%d})\n"], {}
         for ch, pos in pool():
             t, rt, tu = informe(ch, pos); partes.append(t)
             if rt: guarda[f"{ch}|{pos}"] = rt
             if tu: guarda[f"{ch}|{pos}|tu"] = tu
-        if guarda:
-            META.mkdir(parents=True, exist_ok=True)
-            (META / "builds.json").write_text(json.dumps(guarda, ensure_ascii=False), encoding="utf-8")
+        if guarda: mezclar(guarda, pisar_onetricks=True)  # sin borrar las del ladder ni _bajadas
         out = BASE / "datos" / f"analisis-builds-{datetime.now():%Y-%m-%d}.md"
         out.write_text("\n".join(partes), encoding="utf-8")
         print("\n".join(partes)); print(f"→ {out.relative_to(BASE)}")
