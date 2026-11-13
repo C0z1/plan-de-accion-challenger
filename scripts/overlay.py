@@ -22,6 +22,7 @@ def ritmo(cs_meta, t):
 
 
 IGUALO_S, ORO14_S = 3, 5  # fase 2 del plan: cuánto duran «Igualaste» y la moneda del 14
+MUERTE_ESPERA, COMPRA_S, ITEM_DESDE = 6, 8, 90  # ÍTEM (PLAN-OVERLAY-2): 6 s tras morir, 8 s tras comprar, nunca antes de 1:30
 
 
 def marcar(m, meta, ahora):
@@ -36,6 +37,11 @@ def marcar(m, meta, ahora):
     if nv is not None and nvr is not None:
         if m.get("d", 0) < 0 <= nv - nvr and meta.get("rival"): m["igualo"] = ahora
         m["d"] = nv - nvr
+    muerto, items = bool(meta.get("muerto")), [str(i[0]) for i in meta.get("items") or []]
+    if muerto and not m.get("muerto"): m["muerte"] = ahora
+    if not muerto: m.pop("muerte", None)
+    if "items" in m and items != m["items"]: m["compra"] = ahora  # cambió tu inventario: solo pasa en la tienda o muerto
+    m["muerto"], m["items"] = muerto, items
     oro = meta.get("oro") or {}
     if t >= LINEA_HASTA and "oro14" not in m: m["oro14"] = (ahora, oro["tu"] - oro["rival"]) if oro.get("tu") is not None and oro.get("rival") is not None else None
     return m
@@ -63,6 +69,12 @@ def estado(meta, ahora, aj=None, regla=None, aviso=None, marcas=None, racha_oro=
                 "rival": {"campeon": meta["rival"], "anillo": 1.0, "color": "gris", "insignia": meta.get("nivel_rival")},
                 "flecha": {"txt": "=", "color": "salvia"}, "b": {"icono": None, "color": "salvia", "num": "Igualaste", "etq": f"nivel {meta['nivel']}"},
                 "chip": ("Igualado", "salvia")}  # dato, no consejo (DeepSeek)
+    p, t0 = meta.get("proximo"), meta.get("t") or 0
+    if p and t0 >= ITEM_DESDE and on_aj(aj, "franja_build") and ((mk.get("muerte") is not None and ahora - mk["muerte"] >= MUERTE_ESPERA)
+                                                                or (mk.get("compra") is not None and ahora - mk["compra"] < COMPRA_S)):
+        return {"tipo": "item", "a": {"item": p["id"], "campeon": p["nombre"], "anillo": p["i"] / p["de"], "color": "oro", "insignia": f"{p['i']}/{p['de']}"},
+                "num": p["nombre"][:16].rstrip(), "etq": "build OTPs" if p.get("fuente") == "mejores" else "tu build",
+                "b": {"icono": None, "color": "oro", "num": f"{p['falta']:,}".replace(",", " "), "etq": "oro que falta"}, "chip": None}  # dato: nunca «compra»
     if meta.get("modo") == "ARAM":
         tu, ellos = meta.get("kills") or [0, 0]
         return {"tipo": "aram", "a": {"campeon": camp, "anillo": 1.0, "color": "rosa", "insignia": meta.get("nivel")},
@@ -104,6 +116,9 @@ def estado(meta, ahora, aj=None, regla=None, aviso=None, marcas=None, racha_oro=
             "b": bpart, "chip": (f"Eq {eq:+d}"[:CHIP_MAX], "salvia" if eq >= 0 else "rojo") if eq is not None else None}
 
 
+def on_aj(aj, k): return (aj or {}).get(k, True) is not False
+
+
 def textos(e):
     """Los textos de la pastilla en orden de lectura: para replay (lista negra) y salud."""
     if not e: return []
@@ -133,12 +148,12 @@ def _png(icono, tipo, nombre, px):
     except Exception: return None
 
 
-def _retrato(nombre, px, icono, apagado=False):
+def _retrato(nombre, px, icono, apagado=False, item=None):
     """Retrato circular del campeón, en caché; sin imagen, un círculo con la inicial. apagado: gris y más oscuro."""
     from PIL import Image, ImageDraw, ImageOps
-    k = ("r", nombre, px, apagado)
+    k = ("r", item or nombre, px, apagado)
     if k in _CACHE: return _CACHE[k]
-    im = _png(icono, "champion", nombre, px)
+    im = _png(icono, "item", item, px) if item else _png(icono, "champion", nombre, px)
     if im is None:
         im = Image.new("RGBA", (px, px), ROSA3 + (255,))
         ImageDraw.Draw(im).text((px / 2, px / 2), (nombre or "?")[:1], font=_fuente(int(px * .5)), fill=TXT + (255,), anchor="mm")
@@ -173,7 +188,7 @@ def pintar(e, esc=1.0, icono=None):
                 d.arc((cx - r, k(36) - r, cx + r, k(36) + r), -90 + i * paso + 6, -90 + (i + 1) * paso - 6,
                       fill=ROJO + (217,) if i >= n - m.get("apagados", 0) else ROSA2 + (255,), width=k(3.5))
         else: anillo(cx, r, m.get("anillo"), c1)
-        im.alpha_composite(_retrato(m.get("campeon"), k(28), icono, m.get("atenuado")), (cx - k(14), k(36) - k(14)))
+        im.alpha_composite(_retrato(m.get("campeon"), k(28), icono, m.get("atenuado"), m.get("item")), (cx - k(14), k(36) - k(14)))
         if m.get("insignia") is not None:
             t = str(m["insignia"]); f = _fuente(k(10)); w = max(k(18), d.textlength(t, font=f) + k(8))
             d.rounded_rectangle((cx - w / 2, k(50), cx + w / 2, k(66)), radius=k(8), fill=c1 + (255,))

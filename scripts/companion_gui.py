@@ -113,7 +113,8 @@ AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "avi
                "metricas": False,  # métricas anónimas: solo si el amigo las prende (v0.8)
                "grupo": False,  # aparecer en la tabla del grupo (Riot ID y win rate a los demás): solo si lo prende
                "franja_linea": True, "franja_regla": True,  # piezas de la franja en partida (A4)
-               "voz": False,  # Racha lee en voz alta sus comentarios del draft (sin sonido por defecto, PLAN-ENVIVO §5)
+               "voz": False,
+               "franja_build": True,  # la franja muestra tu próximo ítem al morir o al comprar (0.20)  # Racha lee en voz alta sus comentarios del draft (sin sonido por defecto, PLAN-ENVIVO §5)
                "franja_pos": "arriba"}  # esquina de la franja: único ajuste que no es booleano
 OPCIONES = {"franja_pos": ("arriba", "abajo")}  # lista blanca de los ajustes de texto
 
@@ -420,9 +421,13 @@ def trabajador(q):
                 d = companion.unir_eventos(companion.vivo(), foto if archivo else None); ult = time.time(); foto = d or foto  # Reconnect reinicia los eventos; sin archivo es otra partida (revisión del asistente, 12)
                 if ult - ult_disco >= 30: archivo, ult_disco = companion.capturar(archivo, d), ult
                 mf, avs = companion.paso_vivo(d, estado, ajustes())  # Ajustes_Vino: cada aviso se puede apagar
+                if mf and mf.get("modo") != "ARAM" and ajustes().get("franja_build", True) is not False:  # tu próximo ítem (franja 0.20)
+                    if "build" not in estado: estado["build"] = companion.build_partida(mf.get("campeon"), mf.get("pos"))
+                    try: import builds; mf["proximo"] = companion.proximo(estado["build"], mf.get("items"), mf.get("oro_actual"), builds.ddragon()[0])
+                    except Exception: mf["proximo"] = None  # sin Data Dragon: sin próximo ítem
                 if mf: q.put(("meta", mf))
                 for _, txt, minuto in avs: q.put(aviso(txt, "consejo", minuto))
-            elif not jugando and fase != "Reconnect": archivo = None; estado["avisado"] = set()  # al reconectar es la misma partida (D10)
+            elif not jugando and fase != "Reconnect": archivo = None; estado["avisado"] = set(); estado.pop("build", None)  # al reconectar es la misma partida (D10)
             if fase in FIN and real not in FIN:
                 if r := companion.resumen_fin(foto):  # sin key, esto es lo que hay al terminar
                     try: import postpartida; r = {**r, "momentos": [m["texto"] for m in postpartida.momentos_vivo(foto)], "estela": postpartida.estela_vivo(foto)}  # F11: al instante

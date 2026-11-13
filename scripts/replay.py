@@ -11,7 +11,8 @@ AVISO_CORTO = 48  # plan F1: caracteres del aviso en la franja
 LISTA_NEGRA = (  # lo que la franja y los avisos nunca dicen (lista de DeepSeek, avisos-v011.md); se busca como palabra completa
     "cooldown", "enfriamiento", "flash", "destello", "ultimate", "definitiva", "smite", "castigo",  # timers que no se ven
     "respawn", "reaparece", "mmr", "elo", "probabilidad", "campamento",  # reaparición rival, rating, conclusiones, jungla
-    "el jungla está", "el jungla va", "troll", "inting", "afk")  # posiciones que no ves y juicios de compañeros
+    "el jungla está", "el jungla va", "troll", "inting", "afk",
+    "compra", "cómpralo", "vuelve a base", "backea", "recall")  # la franja dice el dato del ítem, nunca la orden (PLAN-OVERLAY-2)  # posiciones que no ves y juicios de compañeros
 VENTANAS = {"aviso_nivel": (5, 7), "aviso_regreso": (10, 14), "aviso_muertes": (14, 24), "aviso_minions": (10, 11)}  # minuto de juego; el pico no tiene ventana
 PIEZAS_LINEA = re.compile(r"^(ritmo|CS vs|Nivel |[+-]\d+$)")  # textos de la pastilla que solo existen en la Grieta
 BORRAR = {"rawDescription", "rawDisplayName", "rawChampionName", "rawSkinName", "skinID", "skinName", "fullRunes", "runes",

@@ -277,8 +277,45 @@ def meta_fase(d, m10=None):
             "rival_cs": rs.get("creepScore"), "rival_items": [[i["itemID"], i.get("displayName") or ""] for i in (rival or {}).get("items") or [] if i.get("itemID") and not i.get("consumable") and i.get("slot") != 6][:6],  # slot 6 = trinket
             "objetivos": objetivos(d, me), "t": int(((d.get("gameData") or {}).get("gameTime") or 0)), "kda": kda(me),
             "oro": oro_lineas(d, me, rival), "participacion": participacion(d, me),
+            "pos": POS.get(str(me.get("position") or "").lower(), "MIDDLE"),  # sin posición (normales a ciegas): mid, como draft.py
+            "oro_actual": int((((d or {}).get("activePlayer") or {}).get("currentGold") or 0)),
             "muerto": bool(me.get("isDead")), "revive": round(me.get("respawnTimer") or 0) if me.get("isDead") else None,  # F4: solo los tuyos
             "items": [[i["itemID"], i.get("displayName") or ""] for i in me.get("items") or [] if i.get("itemID") and not i.get("consumable") and i.get("slot") != 6][:6]}
+
+
+def build_partida(campeon, pos):
+    """El core de la build de la franja (la misma de Selección: OTPs top y, si no hay, la tuya), una vez por partida:
+    {core: [(nombre, id)], fuente} o None."""
+    try:
+        import builds
+        b = builds.guardado_dict(campeon, pos)
+        return {"core": [(c[0], str(c[2])) for c in b["core"]], "fuente": b["fuente"]} if b and b.get("core") else None
+    except Exception: return None
+
+
+def costo_falta(item, tengo, items):
+    """Oro que cuesta completar `item` con lo que ya llevas (cada componente tuyo se usa una vez): receta recursiva de
+    Data Dragon (gold.base = costo de combinar). None si el ítem no está en Data Dragon."""
+    it = items.get(str(item))
+    if not it: return None
+    if tengo.get(str(item), 0) > 0: tengo[str(item)] -= 1; return 0
+    partes = [costo_falta(c, tengo, items) for c in it.get("from") or []]
+    return None if None in partes else ((it.get("gold") or {}).get("base") or 0) + sum(partes)
+
+
+def proximo(build, mios, oro, items):
+    """Tu próximo ítem del core: {id, nombre, i, de, falta (oro que falta, en múltiplos de 50, ≥ 0), fuente}; None sin
+    build, con el core completo o sin datos. mios: [[id, nombre]] de meta_fase; oro: tu oro actual."""
+    from collections import Counter
+    if not build or not items: return None
+    tengo = Counter(str(i[0]) for i in mios or [])
+    core = build["core"]
+    for n, (nombre, iid) in enumerate(core, 1):
+        if tengo.get(iid): tengo[iid] -= 1; continue
+        c = costo_falta(iid, Counter(tengo), items)
+        if c is None: return None
+        return {"id": iid, "nombre": nombre, "i": n, "de": len(core), "falta": max(0, round((c - (oro or 0)) / 50) * 50), "fuente": build["fuente"]}
+    return None
 
 
 def completos(p, leg=None):

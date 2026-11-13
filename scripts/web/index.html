@@ -899,6 +899,7 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
         ${fila("Posición de la franja", "Dónde se ve en partida.", `<span role="group" aria-label="Posición de la franja" style="display:flex;gap:8px">${[["arriba", "Arriba"], ["abajo", "Abajo"]].map(([k, t]) => `<button class="btn2" aria-pressed="${(aj.franja_pos || "arriba") === k}" ${(aj.franja_pos || "arriba") === k ? 'style="border-color:var(--rosa,#F28DB0)"' : ""} onclick="ajuste('franja_pos','${k}')">${t}</button>`).join("")}</span>`)}
         ${av("franja_linea", "Franja: nivel y farm", "Hasta el minuto 14: tu nivel contra tu rival y tu CS contra tu ritmo.")}
         ${av("franja_regla", "Franja: muertes y peleas", "Del 14 al 25: tus muertes contra tu tope y tu participación en kills.")}
+        ${av("franja_build", "Franja: tu próximo ítem", "Al morir o al comprar: el siguiente ítem de tu build y el oro que falta.")}
         ${fila("Arrancar con Windows", a == null ? "Solo en la versión instalada." : "Corre en segundo plano y se abre sola cuando abres LoL.", tog("t-auto", !!a, a == null, "autoarranque(!" + !!a + ")", "Arrancar con Windows"))}</div>
     </div>
     <div class="card" style="align-self:flex-start"><div class="cab2"><h2>Avisos en partida</h2></div>
