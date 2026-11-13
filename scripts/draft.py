@@ -298,7 +298,9 @@ def ficha(rival, pos, champ=None):
         cs.append(dict(rival=o, v=w, wr=round(w / len(rs), 3), ic=[round(x, 3) for x in wilson(w, len(rs))],
                        est=round(shrink(w, len(rs), p0), 3), **medidas(rs), pocas=len(rs) < 5))
     cs.sort(key=lambda x: x["est"])
-    return dict(champ=c, rival=nombre, pos=pos, por_que=por_que, cuidado=cuidado, reglas=[tu_regla(r, mv, mias, nombre, c) for r in reglas(c, pos)],
+    try: import matchups; mu = matchups.para_ficha(c, pos, nombre)  # de muchas partidas Master+ (PLAN-MATCHUPS.md); None sin datos
+    except Exception: mu = None
+    return dict(champ=c, rival=nombre, pos=pos, por_que=por_que, cuidado=cuidado, matchup=mu, reglas=[tu_regla(r, mv, mias, nombre, c) for r in reglas(c, pos)],
                 counters=dict(lista=cs[:3], ref=medidas(mias)))
 
 

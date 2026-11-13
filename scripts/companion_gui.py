@@ -305,12 +305,16 @@ def plan_partida(campeon, rival, pos):
     except (AssertionError, OSError, ValueError, KeyError): return None
     try:
         with DRAFT: f = draft.ficha(rival, pos or "MIDDLE", champ=campeon)
-        if not f or draft.key(f["champ"]) != draft.key(campeon): return None  # tu campeón no está en tu pool del rol
+        if not f or draft.key(f["champ"]) != draft.key(campeon):  # tu campeón no está en tu pool del rol: solo lo de muchas partidas
+            import matchups; mu = matchups.para_ficha(campeon, pos or "MIDDLE", rival)
+            return {"rival": rival, "v": 0, "n": 0, "wr": None, "n_rol": 0, "regla": None, "tu": None, "nota": None, "m6": None, "m6_ref": None,
+                    "m6_pocas": True, "dato": (mu.get("frases") or [None])[0]} if mu and mu.get("frases") else None
         pq, c = f["por_que"], f["cuidado"]
         r0 = next((r for r in f["reglas"] if r.get("meta")), None)
         return {"rival": f["rival"], "v": pq["v"], "n": pq["n"], "wr": pq["wr_rol"], "n_rol": pq["n_rol"],
                 "regla": r0["meta"] if r0 else None, "tu": (r0 or {}).get("tu"), "nota": (c.get("notas") or [None])[0],
-                "m6": c.get("muertes6"), "m6_ref": (c.get("ref") or {}).get("muertes6"), "m6_pocas": c.get("pocas")}
+                "m6": c.get("muertes6"), "m6_ref": (c.get("ref") or {}).get("muertes6"), "m6_pocas": c.get("pocas"),
+                "dato": ((f.get("matchup") or {}).get("frases") or [None])[0]}  # la frase top del matchup (muchas partidas)
     except Exception: return None
 
 
@@ -455,10 +459,11 @@ def trabajador(q):
                         estado["build"], estado["build_t"] = companion.build_partida(mf.get("campeon"), mf.get("pos")), time.time()
                     try: import builds; mf["proximo"] = companion.proximo(estado["build"], mf.get("items"), mf.get("oro_actual"), builds.ddragon()[0])
                     except Exception as e: mf["proximo"] = None; registrar_franja(f"próximo ítem: {e!r}")
-                if mf and mf.get("modo") != "ARAM" and ajustes().get("franja_plan", True) is not False and (mf.get("t") or 0) < 120:  # MATCH, PLAN, CUIDADO
-                    if not estado.get("plan") and time.time() - estado.get("plan_t", 0) > 30:
+                if mf and mf.get("modo") != "ARAM" and ajustes().get("franja_plan", True) is not False:  # MATCH, PLAN, CUIDADO (90 s) y el dato del matchup
+                    if not estado.get("plan") and time.time() - estado.get("plan_t", 0) > 30 and ((mf.get("t") or 0) < 120 or "plan" not in estado):
                         estado["plan"], estado["plan_t"] = plan_partida(mf.get("campeon"), mf.get("rival"), mf.get("pos")), time.time()
-                    mf["plan"] = estado["plan"]
+                    if (mf.get("t") or 0) < 120: mf["plan"] = estado["plan"]
+                    mf["dato"] = (estado.get("plan") or {}).get("dato")  # la frase top del matchup, para la expandida al morir
                 if mf: q.put(("meta", mf))
                 for _, txt, minuto in avs: q.put(aviso(txt, "consejo", minuto))
             elif not jugando and fase != "Reconnect": archivo = None; estado["avisado"] = set(); [estado.pop(k, None) for k in ("build", "build_t", "plan", "plan_t")]  # al reconectar es la misma partida (D10)

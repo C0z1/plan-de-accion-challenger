@@ -651,8 +651,11 @@ class H(http.server.BaseHTTPRequestHandler):
             try:
                 d = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 300)))
                 b = builds.guardado_dict(str(d["champ"]), str(d["pos"])) or {}
+                pag = None
+                if d.get("rival"):  # la página del matchup (muchas partidas Master+), si hay datos
+                    import matchups; pag = (matchups.para_ficha(str(d["champ"]), str(d["pos"]), str(d["rival"])) or {}).get("pagina")
             except (ValueError, KeyError, TypeError): return self.enviar(400, b"", "text/plain")
-            ok, msg = companion.importar_runas(str(d["champ"]), b.get("pagina_ids"))
+            ok, msg = companion.importar_runas(str(d["champ"]) + (f" vs {d['rival']}" if pag else ""), pag or b.get("pagina_ids"))
             return self.enviar(200 if ok else 409, json.dumps({"ok": ok, "mensaje": msg}).encode(), "application/json")
         if self.path in ("/api/reporte", "/api/invitar"):
             try:

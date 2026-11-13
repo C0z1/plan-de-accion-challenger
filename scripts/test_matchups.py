@@ -39,6 +39,11 @@ class Fila(unittest.TestCase):
         self.assertTrue(f["primero6"])  # A llegó a 6 antes
         self.assertEqual((f["runa"], len(f["pagina"])), (8112, 11))
 
+    def test_empate_y_fotograma_a_medias(self):
+        f = M.fila(partida(), timeline([], UPS_A, UPS_A), "yo"); self.assertIsNone(f["primero6"])  # llegaron juntos a 6
+        t = timeline([]); del t["info"]["frames"][10]["participantFrames"]["6"]
+        f = M.fila(partida(), t, "yo"); self.assertIsNotNone(f); self.assertIsNone(f["csd10"])  # la fila sigue, el dato falta
+
     def test_bot_cuenta_al_support(self):
         f = M.fila(partida("BOTTOM"), timeline([mata(4 * MIN, 1, 10), mata(5 * MIN, 5, 6), mata(6 * MIN, 10, 5)]), "yo")
         self.assertEqual([m["gana"] for m in f["muertes"]], ["A", "A", "B"])  # víctima support rival; asesino support mío; víctima mi support
@@ -98,6 +103,29 @@ class Frases(unittest.TestCase):
             p.write_text('{"Zeri|MIDDLE|MissFortune": {"n": 2', encoding="utf-8"); self.assertIsNone(M.guardado("Zeri", "MIDDLE", "MissFortune", p))  # cortado
             p.write_text(json.dumps({"Zeri|MIDDLE|MissFortune": {"n": 150}}), encoding="utf-8")
             self.assertEqual(M.guardado("Zeri", "MIDDLE", "MissFortune", p)["n"], 150)
+
+
+class Integracion(unittest.TestCase):  # la ficha de la selección, la franja y las runas usan el matchup
+    def test_para_ficha_y_runas(self):
+        d = M.agregar(filas_sinteticas(200))
+        with tempfile.TemporaryDirectory() as t:
+            p = pathlib.Path(t, "m.json"); p.write_text(json.dumps(d), encoding="utf-8")
+            f = M.para_ficha("Zeri", "MIDDLE", "MissFortune", p)
+        self.assertTrue(f["frases"][0].startswith("Zeri gana el nivel 6-8 contra Miss Fortune"))
+        self.assertEqual((f["n"], f["parches"]), (200, ["16.22"]))
+        self.assertEqual(f["pagina"], {"primaryStyleId": 8100, "subStyleId": 8000, "selectedPerkIds": [8112, 8139, 8138, 8135, 9111, 8017, 5005, 5008, 5001]})
+        self.assertIsNone(M.para_ficha("Zeri", "MIDDLE", "Ahri", p))  # sin ese matchup
+        self.assertIsNone(M.pagina_lcu({"pagina_ids": [1, 2, 3]}))
+
+    def test_franja_usa_el_dato(self):
+        import overlay
+        pl = {"rival": "MissFortune", "n": 0, "wr": None, "n_rol": 0, "regla": None, "tu": None, "nota": None, "m6": None, "m6_ref": None,
+              "m6_pocas": True, "dato": "Zeri gana el nivel 6-8 contra Miss Fortune: 70 % de las muertes de línea (n=200)"}
+        e = overlay.estado({"campeon": "Zeri", "rival": "MissFortune", "t": 70, "nivel": 1, "nivel_rival": 1, "plan": pl}, 0)
+        self.assertEqual(e["lineas"], ["Zeri gana el nivel 6-8 contra Miss Fortune:", "70 % de las muertes de línea (n=200)"])
+        self.assertIsNone(overlay.estado({"campeon": "Zeri", "rival": "MissFortune", "t": 10, "plan": pl}, 0)["b"])  # 1ª vez sin WR propio
+        x = overlay.extra_muerto({"muerto": True, "objetivos": {"tuyos": {}, "rival": {}}, "dato": pl["dato"]}, {}, {"texto": "regla"})
+        self.assertTrue(x["regla"].startswith("Zeri gana el nivel 6-8"))  # al morir, el dato del matchup antes que tu regla
 
 
 if __name__ == "__main__":

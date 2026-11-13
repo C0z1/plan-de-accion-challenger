@@ -64,7 +64,7 @@
 |---|---|
 |  **Hecho con tus partidas** | Nada de «farmea más». Racha descubre, por ejemplo, que *con 2 muertes o menos del minuto 14 al 25 ganas el 68%, y con 3 o más, el 43%*. |
 |  **Aparece sola** | Se abre cuando abres LoL y cambia de pantalla según la fase: champ select, partida y final. Cero clics. |
-|  **Juego limpio** | Solo lee lo que el cliente ofrece a las apps. No juega por ti, no toca el juego y no da ventajas injustas. |
+|  **Juego limpio** | Lee lo que el cliente ofrece a las apps y solo escribe tu página de runas cuando pulsas «Poner las runas». No juega por ti, no toca el juego y no da ventajas injustas. |
 |  **Tus datos son tuyos** | Tus partidas viven en tu computadora. La cuenta en la nube es opcional y la borras con un botón. |
 
 ##  Qué más te da
@@ -125,7 +125,7 @@ Tus partidas y tus ajustes viven en tu computadora. Si activas la cuenta en la n
 <summary>Para desarrolladores</summary>
 <br>
 
-Racha está hecha en Python sin dependencias. Corre un servidor local y muestra la ventana con Edge en modo app. Solo lee de tres fuentes: la Riot API (con tu key o tu código de acceso), la API local del cliente (LCU) y la Live Client Data API.
+Racha está hecha en Python (con Pillow para dibujar la franja). Corre un servidor local y muestra la ventana con Edge en modo app. Lee de tres fuentes: la Riot API (con tu key o tu código de acceso), la API local del cliente (LCU) y la Live Client Data API. Solo escribe en el cliente tu página de runas, cuando pulsas el botón. Los datos de matchup salen de partidas Master+ agregadas (sin nombres de jugadores).
 
 ```bash
 python scripts/companion_web.py --demo      # la app con datos de ejemplo, sin cliente

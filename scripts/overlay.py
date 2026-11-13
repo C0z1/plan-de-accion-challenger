@@ -58,6 +58,7 @@ def extra_muerto(meta, aj, regla):
     tu, el = o.get("tuyos") or {}, o.get("rival") or {}  # foto a medias: conteos en 0, no un error (DeepSeek)
     marcador = " · ".join(f"{n} {tu.get(k, 0)}–{el.get(k, 0)}" for n, k in (("Dragones", "dragones"), ("Torres", "torres"), ("Larvas", "larvas"), ("Barón", "baron")))
     r = (regla or {}).get("texto")
+    if meta.get("dato"): return {"marcador": marcador, "regla": corta(meta["dato"], 62)}  # muchas partidas Master+ antes que tu regla
     return {"marcador": marcador, "regla": corta("Tu regla · " + r, 62) if r else None}
 
 
@@ -145,6 +146,13 @@ def corta(t, n):
     return c + "…"
 
 
+def partir(t, n=46):
+    """Un dato largo en dos renglones de la pastilla (el segundo, la parte entre paréntesis o el resto)."""
+    if len(t) <= n: return [t]
+    i = t.rfind(":", 0, n) + 1 or t.rfind(" ", 0, n)
+    return [t[:i].strip(), corta(t[i:].strip(), 52)]
+
+
 def coma(x, dec=1): return f"{x:.{dec}f}".replace(".", ",")  # decimales en español
 
 
@@ -158,7 +166,7 @@ def inicio(pl, t, camp):
             b = {"icono": None, "color": "rosa", "num": f"{pl['v']}–{pl['n'] - pl['v']}", "etq": "tu récord"}
             chip = (f"WR {round(pl['wr'] * 100)}%", "gris") if (pl.get("n_rol") or 0) >= 5 and pl.get("wr") is not None else None
         else:
-            b = {"icono": None, "color": "rosa", "num": f"{round((pl.get('wr') or 0) * 100)}%", "etq": f"tu WR · {pl.get('n_rol') or 0} partidas"}
+            b = {"icono": None, "color": "rosa", "num": f"{round(pl['wr'] * 100)}%", "etq": f"tu WR · {pl.get('n_rol') or 0} partidas"} if pl.get("wr") is not None else None
             chip = ("1ª vez", "gris")
         return {"tipo": "match", "a": a, "rival": riv, "flecha": {"txt": "vs", "color": "gris"}, "b": b, "chip": chip}
     if t < 60 and pl.get("regla"):
@@ -166,6 +174,7 @@ def inicio(pl, t, camp):
         return {"tipo": "plan", "a": a, "lineas": [f"Tu regla · {pl['regla']}"] + ([f"tu media {coma(tu['media'], 0 if float(tu['media']).is_integer() else 1)} · la cumples {round(tu['cumple'] * 100)} %"] if tu else []), "chip": None}
     if 60 <= t < 90:
         if pl.get("nota"): return {"tipo": "plan", "a": a, "lineas": [f"Tu nota · {pl['nota']}"], "chip": None}
+        if pl.get("dato"): return {"tipo": "plan", "a": a, "lineas": partir(pl["dato"]), "chip": None}  # muchas partidas Master+ (PLAN-MATCHUPS)
         if pl.get("m6") is not None and pl.get("m6_ref") is not None and not pl.get("m6_pocas"):
             return {"tipo": "plan", "a": a, "lineas": [f"Contra {pl['rival']}: {coma(pl['m6'])} muertes antes del 6", f"tu media {coma(pl['m6_ref'])}"], "chip": None}
     return None

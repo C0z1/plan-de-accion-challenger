@@ -306,6 +306,7 @@ function champSelect0(s) {
     ${plan(fi.reglas).map(reglaPlan).join("")}
   </div>
   ${c.notas.length ? `<div class="card"><span class="sub">Tu nota: ${c.notas.map(esc).join(" · ")}</span></div>` : ""}
+  ${matchupCard(fi, d.pos, s)}
   ${b ? `<div class="card" style="gap:14px"><div class="cab2"><h2>Build</h2><span class="sub" style="font-size:12px">${b.fuente === "tu" ? "Tu build" : quienBuild(b)} · ${pct(b.wr)}</span></div>
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
       ${b.core.map(([n, p, id], i) => `${i ? '<span class="sub" style="font-size:18px">→</span>' : ""}<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><span class="itm ${i === 0 ? "core" : ""}">${img("item", id, "", n)}<span class="sh"></span>${i ? '<span class="itm-ch"></span>' : ""}</span><span class="sub" style="font-size:12px">${i === 0 ? '<b style="color:var(--acc);letter-spacing:.06em">CORE</b> · ' : ""}${pct(p)}</span></div>`).join("")}
@@ -1026,10 +1027,20 @@ async function copiarCampo(id, b) {
   try { await navigator.clipboard.writeText(document.getElementById(id).value); b.textContent = "Copiado"; }
   catch (e) { document.getElementById(id).select(); b.textContent = "Selecciónalo y cópialo con Ctrl+C"; }
 }
+function matchupCard(fi, pos, s) {  // muchas partidas Master+ (PLAN-MATCHUPS.md): datos históricos del matchup, nunca órdenes
+  const mu = fi && fi.matchup; if (!mu || !(mu.frases || []).length) return "";
+  return `<div class="card" style="gap:10px"><div class="cab2"><h2>Matchup</h2><span class="sub" style="font-size:12px">mains Master+ · ${mu.n} partidas${(mu.parches || []).length ? " · parches " + mu.parches.map(esc).join(", ") : ""}</span></div>
+    ${mu.frases.map(f => `<div class="filaV oscura"><span style="font-size:14px">${esc(f)}</span></div>`).join("")}
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+      ${mu.runa ? `<span class="sub" style="font-size:13px">Runa: <b style="color:var(--txt)">${esc(mu.runa.nombre)}</b> ${pct(mu.runa.wr)} (n=${mu.runa.n})${mu.runa.alternativa ? " · alternativa con mejor WR" : ""}</span>` : ""}
+      ${mu.primer ? `<span class="sub" style="font-size:13px">Primer ítem: <b style="color:var(--txt)">${esc(mu.primer.nombre)}</b> ${pct(mu.primer.wr)} (n=${mu.primer.n})</span>` : ""}
+      ${mu.pagina && s.fase === "ChampSelect" ? `<button class="btn2" data-champ="${esc(fi.champ)}" data-pos="${esc(pos)}" data-rival="${esc(fi.rival)}" onclick="ponerRunas(this.dataset.champ,this.dataset.pos,this.dataset.rival)">Poner las runas del matchup</button>
+        <span class="sub" style="font-size:13px" role="status" aria-live="polite">${esc(runasMsg)}</span>` : ""}</div></div>`;
+}
 let runasMsg = "";
-async function ponerRunas(champ, pos) {  // A5: solo con tu clic; Racha no elige, banea ni acepta por ti
+async function ponerRunas(champ, pos, rival) {  // A5: solo con tu clic; Racha no elige, banea ni acepta por ti. Con rival: la página del matchup
   runasMsg = "Poniendo las runas…"; v = -1; tick();
-  try { const r = await fetch("/api/runas", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({champ, pos})}); runasMsg = (await r.json()).mensaje || ""; }
+  try { const r = await fetch("/api/runas", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({champ, pos, rival})}); runasMsg = (await r.json()).mensaje || ""; }
   catch (e) { runasMsg = "No se pudo hablar con Racha."; }
   v = -1; tick();
 }

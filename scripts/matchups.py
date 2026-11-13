@@ -57,16 +57,18 @@ def fila(match, timeline, puuid):
             nivel = lambda pid: _nivel_en(ups[pid], t) if ups[pid] else ((fr[min(len(fr) - 1, t // 60000)]["participantFrames"].get(str(pid)) or {}).get("level") or 1)  # sin LEVEL_UP (timeline del cliente): el del fotograma
             muertes.append({"t": t // 1000, "gana": gana, "na": nivel(a["participantId"]), "nb": nivel(b["participantId"]),
                             "solo": not e.get("assistingParticipantIds")})
-        pf = lambda m, pid, k: fr[m]["participantFrames"][str(pid)][k] if len(fr) > m else None
-        dif = lambda m, f: (f(m, a["participantId"]) - f(m, b["participantId"])) if len(fr) > m else None
+        pf = lambda m, pid, k: ((fr[m].get("participantFrames") or {}).get(str(pid)) or {}).get(k) if len(fr) > m else None  # fotograma a medias: None (DeepSeek)
+        def dif(m, f):
+            x, y = (f(m, a["participantId"]), f(m, b["participantId"])) if len(fr) > m else (None, None)
+            return None if x is None or y is None else x - y
         oro, xp = (lambda m, pid: pf(m, pid, "totalGold")), (lambda m, pid: pf(m, pid, "xp"))
-        cs = lambda m, pid: (pf(m, pid, "minionsKilled") or 0) + (pf(m, pid, "jungleMinionsKilled") or 0)
+        cs = lambda m, pid: None if pf(m, pid, "minionsKilled") is None else pf(m, pid, "minionsKilled") + (pf(m, pid, "jungleMinionsKilled") or 0)
         s6 = [sorted(ups[x["participantId"]])[4] if len(ups[x["participantId"]]) >= 5
               else next((i * 60000 for i, f_ in enumerate(fr) if ((f_["participantFrames"].get(str(x["participantId"])) or {}).get("level") or 0) >= 6), None) for x in (a, b)]  # 5.º LEVEL_UP = nivel 6; si no, el primer fotograma en 6
         st_ = a.get("perks", {}).get("styles") or [{}, {}]
         return {"parche": ".".join(str(info.get("gameVersion", "")).split(".")[:2]), "A": a["championName"], "B": b["championName"], "pos": pos,
                 "win": bool(a.get("win")), "gd": {m: dif(m, oro) for m in (5, 10, 14)}, "xpd14": dif(14, xp), "csd10": dif(10, cs),
-                "primero6": None if None in s6 else s6[0] < s6[1], "muertes": muertes,
+                "primero6": None if None in s6 or s6[0] == s6[1] else s6[0] < s6[1], "muertes": muertes,  # empate: no cuenta (DeepSeek)
                 "runa": (st_[0].get("selections") or [{}])[0].get("perk"),
                 "pagina": [st_[0].get("style"), st_[1].get("style")] + [s.get("perk") for x in st_[:2] for s in x.get("selections") or []]
                           + [a.get("perks", {}).get("statPerks", {}).get(k) for k in ("offense", "flex", "defense")],
@@ -146,6 +148,32 @@ def guardado(a, pos, b, archivo=None):
     except (OSError, ValueError): return None
     m = d.get(f"{a}|{pos}|{b}") if isinstance(d, dict) else None
     return m if m and m.get("n", 0) >= MIN_PARTIDAS else None
+
+
+def pagina_lcu(m):
+    """La página de runas del matchup en el formato que importa el cliente, o None."""
+    p = (m or {}).get("pagina_ids")
+    return {"primaryStyleId": p[0], "subStyleId": p[1], "selectedPerkIds": p[2:11]} if p and len(p) == 11 and all(isinstance(x, int) for x in p) else None
+
+
+def legible(n): return "".join(" " + c if c.isupper() and i else c for i, c in enumerate(str(n))).replace("  ", " ")  # MissFortune → Miss Fortune
+
+
+def para_ficha(a, pos, b, archivo=None):
+    """Lo del matchup para la selección y la franja: {frases, n, parches, runa, primer, pagina}; None sin datos suficientes."""
+    m = guardado(a, pos, b, archivo)
+    if not m: return None
+    try:
+        import builds; items, runas, _ = builds.ddragon()
+    except Exception: items, runas = {}, {}
+    try: parches = json.loads(pathlib.Path(archivo or SALIDA).read_text(encoding="utf-8")).get("_parches") or []
+    except (OSError, ValueError): parches = []
+    nom_r = lambda i: runas.get(i) or runas.get(str(i)) or str(i)
+    nom_i = lambda i: (items.get(str(i)) or {}).get("name") or str(i)
+    r, p = m.get("runa"), m.get("primer")
+    return {"frases": frases(m, legible(a), legible(b), nom_r), "n": m["n"], "parches": parches,
+            "runa": {**r, "nombre": nom_r(r["id"])} if r else None, "primer": {**p, "nombre": nom_i(p["id"])} if p else None,
+            "pagina": pagina_lcu(m)}
 
 
 def rastrear(campeon, pos, jugadores=60, partidas=40, regiones=None):
