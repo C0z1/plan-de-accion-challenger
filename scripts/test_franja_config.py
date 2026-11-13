@@ -50,6 +50,10 @@ class Ajustes(unittest.TestCase):
         self.assertEqual(overlay.libre(None, (1920, 1080), 1.0, 1.0, 380, 72), (1540, 1008))  # nunca se sale
         self.assertEqual(overlay.fraccion((1920, 0, 4480, 1440), (1920, 1080), 3200, 720), (0.5, 0.5))
 
+    def test_mover_se_apaga_solo(self):
+        w.ESTADO["mover_franja"] = 123.0; w.apagar_mover(999.0); self.assertEqual(w.ESTADO["mover_franja"], 123.0)  # otra sesión de mover: no la toca
+        w.apagar_mover(123.0); self.assertFalse(w.ESTADO["mover_franja"])
+
     def test_archivo_con_valor_malo_vuelve_al_defecto(self):
         g.AJUSTES_F.write_text(json.dumps({"franja_pos": "lado", "franja_regla": "no"}))
         self.assertEqual((g.ajustes()["franja_pos"], g.ajustes()["franja_regla"]), ("arriba", True))

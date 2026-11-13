@@ -18,7 +18,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "comentario": None, "mover_franja": False, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
-VERSION = "0.20.0"  # HTC; también invalida la caché de rendimiento
+VERSION = "0.20.1"  # HTC; también invalida la caché de rendimiento
 ESTADO["version"] = VERSION  # la página se recarga si cambia (Racha se actualizó con la ventana abierta)
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -280,6 +280,14 @@ def buscar_version():
     inst = instalador_de(d) if getattr(sys, "frozen", False) else None  # desde el código fuente solo se avisa
     with LOCK: ESTADO.update(nueva={"version": d["tag_name"], "url": d["html_url"], "estado": "Bajando la actualización…" if inst else None}, v=ESTADO["v"] + 1)
     if inst: actualizar(d["tag_name"], *inst)
+
+
+MOVER_S = 90  # el modo mover se apaga solo: una franja que capta clics no puede quedarse así por olvido (DeepSeek)
+
+
+def apagar_mover(desde):
+    with LOCK:
+        if ESTADO.get("mover_franja") == desde: ESTADO.update(mover_franja=False, v=ESTADO["v"] + 1)
 
 
 def guardar_franja(clave, v):
@@ -642,7 +650,8 @@ class H(http.server.BaseHTTPRequestHandler):
         except (ValueError, KeyError, TypeError): return self.enviar(400, b"", "text/plain")
         if self.path in ("/api/autoarranque", "/api/mover_franja") and not isinstance(on, bool): return self.enviar(400, b"", "text/plain")
         if self.path == "/api/mover_franja":  # Ajustes > Mover la franja: se muestra y se puede arrastrar; se guarda sola al soltar
-            with LOCK: ESTADO.update(mover_franja=on, v=ESTADO["v"] + 1)
+            with LOCK: ESTADO.update(mover_franja=time.time() if on else False, v=ESTADO["v"] + 1)
+            if on: threading.Timer(MOVER_S, apagar_mover, args=(ESTADO["mover_franja"],)).start()
             return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/ajuste":  # guardar_ajuste valida cada clave (booleano, o la lista blanca de franja_pos)
             try: a = gui.guardar_ajuste(d.get("clave"), on)
