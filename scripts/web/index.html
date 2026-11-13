@@ -183,6 +183,11 @@ nav button:hover{transform:translateX(2px)}.btn:hover{transform:translateY(-1px)
 .barra-r{width:22px;border-radius:7px;transform-origin:50% 100%;animation:sube .7s var(--sal) both}
 @keyframes sube{from{transform:scaleY(0)}}
 .repinta .barra-r{animation:none}
+.act{position:fixed;top:14px;right:18px;z-index:60;display:flex;align-items:center;gap:8px}
+.act button{height:34px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:rgba(11,7,9,.72);color:var(--txt);font:800 13px Mulish,'Segoe UI',sans-serif;cursor:pointer;transition:transform .12s var(--sal),border-color .12s}
+.act button:hover{border-color:var(--acc)}.act button:active{transform:scale(.97)}.act button.nueva{background:var(--estela);color:#1E0E16;border:none}
+.act span{font-size:12px;color:var(--muted);max-width:260px;text-align:right}
+.ver{position:fixed;right:12px;bottom:8px;z-index:60;font:600 11px Inter,'Segoe UI',sans-serif;color:var(--soft);opacity:.75;pointer-events:none}
 .heroe{font-size:72px;line-height:1;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#FFFFFF,var(--e3));-webkit-background-clip:text;background-clip:text;color:transparent}
 .etq{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--e3)}
 .vacio-e{display:flex;align-items:center;gap:18px}.vacio-e svg{flex-shrink:0;opacity:.35}
@@ -203,6 +208,8 @@ main>:nth-child(4),aside>:nth-child(4){animation-delay:.18s}main>:nth-child(5),a
 </style>
 </head>
 <body>
+<div id="act" class="act" aria-live="polite"></div>
+<span id="ver" class="ver" aria-label="Versión de Racha"></span>
 <div class="app">
 <nav aria-label="Secciones">
 <button id="b-inicio" aria-label="Inicio" aria-current="page" onclick="ver('inicio')"></button>
@@ -1071,6 +1078,17 @@ async function moverFranja(on) {
   try { await fetch("/api/mover_franja", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({on})}); } catch (e) {}
   v = -1; tick();
 }
+async function actualizar() {
+  try { await fetch("/api/actualizar", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: "{}"}); } catch (e) {}
+  v = -1; tick();
+}
+function barraAct(s) {  // arriba a la derecha: «Actualizar» (busca, baja e instala sola); con versión nueva, resaltado
+  const n = s.nueva, al = s.al_dia && Date.now() / 1000 - s.al_dia < 8;
+  const enCurso = n && n.estado && /Buscando|Bajando|Lista/.test(n.estado);
+  document.getElementById("act").innerHTML = (n && n.estado ? `<span>${esc(n.estado)}</span>` : al ? `<span>Racha está al día ✓</span>` : "")
+    + (enCurso ? "" : `<button class="${n && n.version ? "nueva" : ""}" onclick="actualizar()" title="Busca la versión nueva y la instala (nunca a mitad de partida)">${n && n.version ? "Actualizar a " + esc(n.version) : "Actualizar"}</button>`);
+  document.getElementById("ver").textContent = s.version ? "Racha v" + s.version : "";
+}
 async function ajuste(clave, on) {
   try { await fetch("/api/ajuste", {method: "POST", headers: {"X-HTC": "1", "Content-Type": "application/json"}, body: JSON.stringify({clave, on})}); } catch (e) {}
   v = -1; tick();
@@ -1131,10 +1149,10 @@ async function tick() {
       const [m, a] = vista === "inicio" ? inicio(s) : vista === "draft" ? draftV(s) : vista === "envivo" ? envivo(s) : vista === "campeones" ? campeonesV(s)
         : vista === "errores" ? erroresV(s) : vista === "ajustes" ? ajustesV(s) : vista === "companion" && !s.draft ? (s.previa ? champSelect({...s, draft: s.previa}) : draftV(s)) : vista === "perfil" ? perfil(s) : vista === "partidas" ? [partidas(s), ""] : s.draft ? champSelect(s) : [otraFase(s), ""];  // el último champ select se puede volver a ver en partida
       if (s.version && (VER0 ??= s.version) !== s.version) return location.reload();  // Racha se actualizó con la ventana abierta: la página nueva
-      hablar(s);
+      hablar(s); barraAct(s);
       if (!document.body.dataset.medida && /medir/.test(location.hash)) document.body.dataset.medida = Math.round(performance.now());  // dev_medir.py: primer pintado con datos
       const pc = s.pantalla_completa && ["ChampSelect", "InProgress"].includes(s.fase) ? `<div class="aviso red" role="status">Tu LoL está en <b>Pantalla completa</b>: así la franja de Racha no se ve encima del juego. Cámbialo a <b>Sin bordes</b> (Esc → Video → Modo de ventana); se aplica al instante.</div>` : "";
-      const nv = (s.nueva ? `<div class="aviso teal" role="status">Hay una versión nueva de Racha (${esc(s.nueva.version)}). ${s.nueva.estado ? esc(s.nueva.estado) + " " : ""}<a href="${esc(s.nueva.url)}" target="_blank" rel="noopener" style="color:inherit;font-weight:800">Descárgala aquí →</a></div>` : "") + pc;
+      const nv = "";  // la versión nueva va en el botón de arriba a la derecha (barraAct)
       const av = nv + (s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}" role="status">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "");
       const rep = vista === ultVista; ultVista = vista;  // un refresco de datos en la misma vista no repite las entradas
       document.documentElement.classList.toggle("enjuego", ["GameStart", "InProgress", "Reconnect"].includes(s.fase));  // nada se mueve mientras juegas

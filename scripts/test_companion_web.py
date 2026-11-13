@@ -1,5 +1,5 @@
 """Pruebas de companion_web.py sin red, sin cliente ni navegador: estado JSON y HTTP servido."""
-import io, http.client, http.server, json, pathlib, threading, unittest
+import io, http.client, http.server, json, pathlib, threading, time, unittest
 from unittest import mock
 
 import companion_web as w
@@ -145,6 +145,20 @@ class Http(unittest.TestCase):
         c = http.client.HTTPConnection("127.0.0.1", self.srv.server_port, timeout=5)
         c.request("POST", "/api/ventana", body=b'{"accion":"cerrar"}', headers={"X-HTC": "1", "Content-Type": "application/json", "Content-Length": "19"})
         self.assertNotEqual(c.getresponse().status, 200)
+
+    def test_api_actualizar(self):  # botón «Actualizar» de arriba a la derecha (2026-11-13)
+        with mock.patch.object(w, "buscar_version") as b:
+            c = http.client.HTTPConnection("127.0.0.1", self.srv.server_port, timeout=5)
+            c.request("POST", "/api/actualizar", body=b"{}", headers={"X-HTC": "1", "Content-Type": "application/json", "Content-Length": "2"})
+            self.assertEqual(c.getresponse().status, 200); time.sleep(.2); b.assert_called_once()
+        c = http.client.HTTPConnection("127.0.0.1", self.srv.server_port, timeout=5)
+        c.request("POST", "/api/actualizar", body=b"{}", headers={"Content-Type": "application/json", "Content-Length": "2"})
+        self.assertEqual(c.getresponse().status, 403)
+
+    def test_al_dia_y_una_sola_a_la_vez(self):
+        with mock.patch.object(w, "_buscar_version"): w.ESTADO["nueva"] = None; w.buscar_version()
+        self.assertIsNone(w.ESTADO["nueva"]); self.assertIsNotNone(w.ESTADO["al_dia"])
+        with w.ACTUALIZANDO, mock.patch.object(w, "_buscar_version") as b: w.buscar_version(); b.assert_not_called()
 
     def test_icono(self):
         st, b = self.get("/icono.png"); self.assertEqual(st, 200); self.assertEqual(b[1:4], b"PNG")

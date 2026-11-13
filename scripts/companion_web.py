@@ -17,8 +17,8 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "comentario": None, "mover_franja": False, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
-VERSION = "0.21.1"  # HTC; también invalida la caché de rendimiento
+          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "comentario": None, "mover_franja": False, "al_dia": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
+VERSION = "0.21.2"  # HTC; también invalida la caché de rendimiento
 ESTADO["version"] = VERSION  # la página se recarga si cambia (Racha se actualizó con la ventana abierta)
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -270,8 +270,28 @@ def actualizar(version, url, sha, espera=30):
     subprocess.Popen([str(destino), "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/RACHA=" + ("--fondo" if FONDO[0] and not ventana.viva() else "")])  # con ventana abierta, vuelve con ventana
 
 
+ACTUALIZANDO = threading.Lock()  # una sola búsqueda/descarga/instalación a la vez (al arrancar, cada 30 min o con el botón)
+BUSCAR_CADA = 1800  # s: una versión publicada aparece sin reiniciar Racha
+
+
+def vigilar_version(cada=BUSCAR_CADA):
+    """Busca versión nueva al arrancar y cada `cada` s (pedido del usuario, 2026-11-13: que no tengan que instalar a mano)."""
+    while True:
+        buscar_version(); time.sleep(cada)
+
+
 def buscar_version():
-    """Al arrancar: ¿hay una versión de Racha más nueva en GitHub Releases? Avisa y, en la versión instalada, se actualiza sola."""
+    """¿Hay una versión de Racha más nueva en GitHub Releases? Avisa y, en la versión instalada, la baja y la instala sola
+    cuando no estés en selección ni en partida. Si ya hay una en curso, no hace nada."""
+    if not ACTUALIZANDO.acquire(blocking=False): return
+    try:
+        _buscar_version()
+        with LOCK:
+            if not (ESTADO.get("nueva") or {}).get("version"): ESTADO.update(nueva=None, al_dia=time.time(), v=ESTADO["v"] + 1)  # no hay nueva: «Al día»
+    finally: ACTUALIZANDO.release()
+
+
+def _buscar_version():
     try:
         req = urllib.request.Request(RELEASES, headers={"User-Agent": "racha", "Accept": "application/vnd.github+json"})
         with urllib.request.urlopen(req, timeout=10) as r: d = json.load(r)
@@ -587,6 +607,9 @@ class H(http.server.BaseHTTPRequestHandler):
                 except (OSError, ValueError): return self.enviar(502, b"", "text/plain")
                 with LOCK: ESTADO.update(nube=None, v=ESTADO["v"] + 1)
             return self.enviar(200, b"{}", "application/json")
+        if self.path == "/api/actualizar":  # botón «Actualizar» (arriba a la derecha): busca, baja e instala ya (o al salir de partida)
+            with LOCK: ESTADO["nueva"] = {**(ESTADO.get("nueva") or {}), "estado": "Buscando la versión nueva…"}; ESTADO["v"] += 1
+            threading.Thread(target=buscar_version, daemon=True).start(); return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/abrir":  # un segundo arranque del .exe: la ventana la abre (o trae al frente) este proceso
             abrir(URL[0]); return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/descargar":  # «Descargar mis partidas»: con tu key o tu código de acceso, en su hilo
@@ -728,7 +751,7 @@ def main(argv=None):
     if unico: threading.Thread(target=precargar, daemon=True).start()
     if "--demo" not in argv: threading.Thread(target=vigilar_cuenta, args=(q,), daemon=True).start()
     if unico:  # solo el Racha real: ni la demo ni las pruebas salen a internet ni descargan
-        threading.Thread(target=buscar_version, daemon=True).start(); threading.Thread(target=primera_vez, daemon=True).start()
+        threading.Thread(target=vigilar_version, daemon=True).start(); threading.Thread(target=primera_vez, daemon=True).start()
     threading.Thread(target=demo if "--demo" in argv else gui.trabajador, args=(q,), daemon=True).start()
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     print(url, flush=True)
