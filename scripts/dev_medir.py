@@ -1,7 +1,7 @@
 """Solo desarrollo (no va en el .exe): capturas de cada vista con Edge headless y el tiempo del primer pintado de Inicio
 (plan de reinvención, 0.18). Levanta un Racha propio sin ventana ni franja (--no-abrir) sobre tus datos.
   python scripts/dev_medir.py [carpeta]   (por defecto datos/salud/estela)"""
-import pathlib, re, subprocess, sys, time
+import json, pathlib, re, subprocess, sys, time, urllib.request
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import ventana
 
@@ -19,7 +19,12 @@ def main(argv=None):
     out = pathlib.Path(argv[0] if argv else pathlib.Path(__file__).resolve().parent.parent / "datos" / "salud" / "estela").resolve(); out.mkdir(parents=True, exist_ok=True)  # absoluta: Edge resuelve otra carpeta
     srv = subprocess.Popen([sys.executable, str(pathlib.Path(__file__).with_name("companion_web.py")), "--no-abrir"], stdout=subprocess.PIPE, text=True)
     try:
-        url = srv.stdout.readline().strip(); time.sleep(4)  # que refrescar() calcule el rendimiento
+        url = srv.stdout.readline().strip()
+        for _ in range(120):  # que refrescar() termine de calcular el rendimiento (con la caché vieja puede tardar)
+            try:
+                if json.load(urllib.request.urlopen(url + "api/estado", timeout=5)).get("rendimiento"): break
+            except (OSError, ValueError): pass
+            time.sleep(1)
         for w, h in TAMANOS:
             for v in VISTAS:
                 edge(f"--window-size={w},{h}", f"--screenshot={out / f'{v}-{w}.png'}", "--virtual-time-budget=4000", f"{url}#{v}")

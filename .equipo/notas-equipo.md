@@ -2478,3 +2478,10 @@ Pedido `prompt-deepseek-apoyo2.md` cumplido; informe completo en `C:\Users\felix
 - Hecho: tokens Estela, fondo aurora (fija) + grano, tarjetas de vidrio con filo, nav con estela y cometa, botón con estela, vacío con logo, carga con cometa, entradas solo al cambiar de vista (`.repinta`), quieta en partida (`.enjuego`) y oculta (`.oculta`), reducir movimiento sobre `::after`, animaciones viejas a transform/opacity, `--soft` #C9B2BC (AA). `dev_medir.py` (capturas + primer pintado), `test_ds_estela.py`. Arreglado: Inicio truena con `tilt` null.
 - Medido (`datos/salud/estela-0.18.md`): cualquier bucle infinito visible = 15–20 % de un núcleo en Edge (recompone la ventana entera); sin bucles 0,4–0,8 %. Por eso aurora fija y adornos de 1–2 vueltas: 0,83 % en reposo (era 23,9 %). Primer pintado de Inicio 45–57 ms (headless).
 - Sigue: 0.19 ritual de Inicio + recap en estela + transición entre fases.
+
+## 2026-11-12 · Opus · 0.19.0 «Ritual y recap» (PLAN-REINVENCION.md)
+- Inicio = ritual: racha actual (barras del logo, cifra héroe), regla de hoy, sesión, un `.btn.principal` «Empezar a subir»; descanso de 15 min tras 2 derrotas hoy (`score.tilt` ahora trae `desde` = fin de la última derrota; cuenta regresiva de 1 s solo con el descanso a la vista). Pick de hoy, oro al 14 y atajos al aside.
+- Recap: `postpartida.estela()` / `estela_vivo()` ({dur, win, oro por minuto, momentos con `tuyo`}), clave `estela` en revisión y fin; `estelaCard()` en En vivo (SVG con cometa de 2 vueltas). `test_ds_recap.py`.
+- `startViewTransition` solo al cambiar de vista (nunca quieta/en partida/reducir movimiento). `dev_medir.py` espera el rendimiento.
+- Medido: CPU 1,09 % en reposo, 4,2 % los primeros 30 s; Inicio con 1 botón principal y sin errores en el DOM.
+- Sigue: 0.20 viaje a Challenger (LP por sesión + corte LAN), modo enfoque, tarjetas (Riot ID oculto por defecto).

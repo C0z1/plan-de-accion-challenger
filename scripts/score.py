@@ -134,7 +134,7 @@ def partidas(raw=None):
         try: info = json.loads(f.read_text())["info"]; zs = z_partida(info)
         except (OSError, ValueError, KeyError, TypeError): continue  # una partida dañada no vacía todo el rendimiento
         me = next((p for p in info["participants"] if p["puuid"] == yo), None)
-        if zs and me: gs.append(dict(t=info["gameCreation"], win=me["win"], champ=me["championName"], rol=me["teamPosition"],
+        if zs and me: gs.append(dict(t=info["gameCreation"], fin=info["gameCreation"] + (info.get("gameDuration") or 0) * 1000, win=me["win"], champ=me["championName"], rol=me["teamPosition"],
                                      kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", zs=zs, f=f, pid=me["participantId"],
                                      pids={p["puuid"]: p["participantId"] for p in info["participants"]},
                                      jug={p["puuid"]: [p["championName"], f"{p['kills']}/{p['deaths']}/{p['assists']}"] for p in info["participants"]},
@@ -231,7 +231,7 @@ SESION = 90 * 60 * 1000  # ms entre inicios de partida; más que esto = otra ses
 
 def tilt(raw=None, hoy=None):
     """Para la ventana 2 (pedido 7 del Diseñador): dict {hoy: [{fecha, campeon, win, score}] (en orden),
-    racha: derrotas seguidas al final de tu última sesión si fue hoy (si no, 0), tras2: {n, v, wr, ic} = la partida que sigue a 2+ derrotas
+    racha: derrotas seguidas al final de tu última sesión si fue hoy (si no, 0), desde: fin de esa última derrota (ms) con racha ≥ 2, tras2: {n, v, wr, ic} = la partida que sigue a 2+ derrotas
     seguidas en la misma sesión (partidas a menos de 90 min), llegas: veces que llegaste a 2 seguidas, base: {n, v, wr} = todas, pocas: tras2 n < 20}.
     hoy = date local (por defecto la de hoy)."""
     gs = partidas(raw)[0]
@@ -248,6 +248,7 @@ def tilt(raw=None, hoy=None):
                      for g in gs if d(g).date() == hoy],
                 racha=perdidas if gs and d(gs[-1]).date() == hoy else 0,
                 tras2=dict(n=len(sig), v=v, wr=round(v / len(sig), 2) if sig else None, ic=wilson(v, len(sig))),
+                desde=gs[-1].get("fin") if gs and d(gs[-1]).date() == hoy and perdidas >= 2 else None,  # fin de la última derrota (ms): el descanso de 15 min cuenta desde ahí
                 llegas=llegas,  # veces que llegaste a 2 derrotas seguidas en una sesión (las que no siguieron = paraste)
                 base=dict(n=len(gs), v=vb, wr=round(vb / len(gs), 2) if gs else None),
                 pocas=len(sig) < 20)

@@ -180,10 +180,15 @@ nav button[aria-current]::after{content:"";position:absolute;left:0;top:0;width:
 nav button:hover{transform:translateX(2px)}.btn:hover{transform:translateY(-1px)}
 .btn.principal::after{content:"";position:absolute;top:0;bottom:0;left:0;width:40%;background:linear-gradient(100deg,rgba(255,255,255,0),rgba(255,255,255,.55),rgba(255,255,255,0));transform:translateX(-120%);animation:reflejo 5s var(--pasa) 2}
 @keyframes reflejo{0%,70%{transform:translateX(-120%)}100%{transform:translateX(280%)}}
+.barra-r{width:22px;border-radius:7px;transform-origin:50% 100%;animation:sube .7s var(--sal) both}
+@keyframes sube{from{transform:scaleY(0)}}
+.repinta .barra-r{animation:none}
 .heroe{font-size:72px;line-height:1;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;background:linear-gradient(180deg,#FFFFFF,var(--e3));-webkit-background-clip:text;background-clip:text;color:transparent}
 .etq{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--e3)}
 .vacio-e{display:flex;align-items:center;gap:18px}.vacio-e svg{flex-shrink:0;opacity:.35}
 .carga{display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px 0}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.32s;animation-timing-function:var(--sal)}
+.cometa-r{animation:cometa 3.2s var(--pasa) 2}
 .carga .cometa{animation:cometa 1.6s var(--pasa) infinite}
 @keyframes cometa{from{stroke-dashoffset:0}to{stroke-dashoffset:-1000}}
 @keyframes entra{from{opacity:0;transform:translateY(14px)}}
@@ -557,7 +562,7 @@ function oroCard(r) {  // «Racha de oro al 14»: de tus últimas 5, cuántas ll
     <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><span class="forma" style="margin:0">${m.map(([c, t]) => `<i class="${c}" role="img" aria-label="${t}" title="${t}"${c == "s" ? ' style="background:var(--dark4)"' : ""}></i>`).join("")}</span>
     <span>En <b>${r.ok} de ${r.n}</b> partidas llegaste al 14 con oro igual o mayor que tu rival.${r.ok < r.n / 2 ? " Si vas abajo, prioriza XP y farm." : ""}</span></div></div>`;
 }
-function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan con tu dato, rango y atajos
+function inicio(s) {  // ritual de sesión (0.19): racha, regla de hoy, sesión y un botón; rango, pick de hoy, oro y atajos al costado
   const R = s.rendimiento, t = R && R.tilt, ps = R ? R.resumen.partidas : [], [id, ...resto] = String(s.perfil || "").split(" · ");
   const nombre = id.includes("#") ? id.split("#")[0] : "", cliente = enCliente(s.fase);
   const hoy = t ? t.hoy : (delCliente(s) || []).filter(g => new Date(g.ts).toDateString() === new Date().toDateString()).reverse()
@@ -567,24 +572,42 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
     ${[["Abre el cliente de LoL y entra a tu cuenta (o escribe tu Riot ID en Ajustes).", enCliente(s.fase) || !!s.cuenta], ["Dale a Descargar: tus últimas 20 partidas salen de tu cliente, sin key ni invitación.", !!s.rendimiento], ["Opcional: entra con Google o con un código de invitación para bajar hasta 100 y guardar tu cuenta en la nube.", s.conectado || !!s.nube]].map(([t, ok], i) =>
       `<div class="filaV" style="padding:10px 14px"><span class="num" style="width:32px;height:32px;border-radius:50%;background:${ok ? "var(--okbg)" : "var(--dark4)"};color:${ok ? "var(--okfg)" : "var(--acc2)"};font-size:14px">${ok ? "✓" : i + 1}</span><b style="flex:1;font-size:15px">${t}</b></div>`).join("")}
     <button class="btn" style="align-self:flex-start" onclick="ver('ajustes')">Ir a Ajustes</button></div>` : "";
-  const main = `
-  <div><h1>${nombre ? "Hola, " + esc(nombre) : "Racha"}</h1><span class="sub">${esc(DIAS.format(new Date()).replace(/^./, c => c.toUpperCase()))}</span></div>
-  <div class="card" style="flex-direction:row;align-items:center;gap:20px"><span class="luz ${cliente ? "on" : ""}"><i></i></span>
-    <div style="flex:1"><h2>${cliente ? "Cliente conectado" : "Abre el cliente de LoL"}</h2><span class="sub">${cliente ? esc(FASES[s.fase] ?? s.fase) + " · en champ select Racha cambia solo al draft." : "Racha lo detecta solo y no escribe nada en el cliente."}</span></div>
-    <button class="btn" onclick="ver('perfil')">Ver mi perfil</button></div>
-  ${pasos}
-  <div class="card"><div class="cab2"><h2>Hoy</h2><span class="sub" style="font-size:12px">${hoy.length ? `${v}-${hoy.length - v}` : "sin partidas"}${t ? (t.racha >= 2 ? " · para" : " · sin tilt") : ""}</span></div>
-    ${hoy.length ? `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${hoy.slice(-6).map(g => `<div class="mini">${img("champion", g.campeon, "item", g.campeon)}<b class="${g.win ? "v" : "d"}">${g.win ? "V" : "D"}</b>${esc(g.fecha)}</div>`).join("")}
-      ${t && t.tras2 && t.tras2.n ? `<div style="flex:1;min-width:220px"><b>${t.racha >= 2 ? "Llevas 2 derrotas seguidas: descansa 15 min" : "Tras 2 derrotas seguidas, paras"}</b><br><span class="sub" style="font-size:13px">Llegaste a 2 seguidas ${t.llegas} veces; la partida siguiente: ${t.tras2.v}-${t.tras2.n - t.tras2.v}${t.pocas ? " (pista: pocas partidas)" : ""}.</span></div>` : ""}</div>`
-      : `<span class="sub">Aún no juegas hoy.</span>`}</div>
-  ${oroCard(R && R.resumen.racha_oro14)}
-  ${hoyCard(VS(s))}
-  ${VS(s) && VS(s).reglas.length ? `<div class="card" style="flex:1"><div class="cab2"><h2>Tu regla de hoy</h2><span class="sub" style="font-size:12px">la que más te cuesta</span></div>
-    ${reglaCumple(VS(s).reglas[0], 0)}</div>` : `<div class="card" style="flex:1"><div class="cab2"><h2>Tu regla de hoy</h2><span class="sub" style="font-size:12px">del plan, con tus últimas partidas</span></div>
+  // Ritual de sesión (0.19, PLAN-REINVENCION.md): tu racha, tu regla de hoy, tu sesión y un solo botón. Tras 2 derrotas
+  // seguidas, el descanso de 15 min (un dato de tu historial: no bloquea nada).
+  let rv = 0; const g0 = ps[0]; for (const p of ps) { if (p.win !== (g0 && g0.win)) break; rv++; }  // racha actual (ps: la más nueva primero)
+  const resta = t && t.racha >= 2 && t.desde ? Math.max(0, 900 - (Date.now() - t.desde) / 1000) : 0;
+  const reloj = x => `${Math.floor(x / 60)}:${String(Math.floor(x % 60)).padStart(2, "0")}`;
+  const BARRAS = ["#A33A63", "#F28DB0", "#F8C3D6", "#A8D8C0"];
+  const racha = !g0 ? "" : `<div class="card"><span class="etq">Tu racha</span>
+    <div style="display:flex;align-items:flex-end;gap:10px" role="img" aria-label="${rv} ${g0.win ? "victorias" : "derrotas"} seguidas">
+      ${g0.win ? Array.from({length: Math.min(rv, 4)}, (_, i) => `<span class="barra-r" style="height:${28 + i * 14}px;background:${BARRAS[i]};animation-delay:${i * .12}s"></span>`).join("")
+        : `<span class="barra-r" style="height:28px;background:var(--dark4)"></span>`}
+      <span class="heroe" style="font-size:56px;margin-left:8px">${rv}</span><span class="sub" style="margin-bottom:6px">${g0.win ? (rv === 1 ? "victoria" : "victorias seguidas") : (rv === 1 ? "derrota" : "derrotas seguidas")}</span></div>
+    <span class="sub" style="font-size:13px">${g0.win ? (rv >= 4 ? "Tu racha más larga en la estela: sigue con tu regla." : "Cada victoria suma una barra de la estela.") : "La próxima victoria abre una racha nueva."}</span></div>`;
+  const descanso = !resta ? "" : `<div class="card" style="flex-direction:row;align-items:center;gap:26px;box-shadow:var(--s2),0 0 0 1px rgba(255,138,138,.45) inset">
+    <svg aria-hidden="true" width="108" height="108" viewBox="0 0 108 108" style="flex-shrink:0;transform:rotate(-90deg)"><circle cx="54" cy="54" r="46" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="7"/>
+      <circle id="desc-arco" cx="54" cy="54" r="46" fill="none" stroke="#FF8A8A" stroke-width="7" stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="${289 * (1 - resta / 900)}"/></svg>
+    <div style="display:flex;flex-direction:column;gap:6px"><span class="etq" style="color:var(--redfg)">Descanso</span>
+      <span class="heroe" id="desc-reloj" style="font-size:56px" data-fin="${t.desde + 900000}">${reloj(resta)}</span>
+      <span class="sub" style="font-size:14px">Llevas ${t.racha} derrotas seguidas.${t.tras2 && t.tras2.n ? ` En tu historial, la partida que siguió a 2 derrotas fue ${t.tras2.v}-${t.tras2.n - t.tras2.v}.` : ""} Es un dato: Racha no bloquea nada.</span></div></div>`;
+  const sesion = `<div class="card"><div class="cab2"><h2>Tu sesión</h2><span class="sub" style="font-size:12px">${hoy.length ? `${v}-${hoy.length - v} hoy` : "sin partidas hoy"}</span></div>
+    ${hoy.length ? `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${hoy.slice(-6).map(g => `<div class="mini">${img("champion", g.campeon, "item", g.campeon)}<b class="${g.win ? "v" : "d"}">${g.win ? "V" : "D"}</b>${esc(g.fecha || "")}</div>`).join("")}</div>`
+      : `<span class="sub">Aún no juegas hoy. ${t && t.tras2 && t.tras2.n ? `Si llegas a 2 derrotas seguidas, Racha te muestra tu dato de descanso.` : ""}</span>`}</div>`;
+  const regla = VS(s) && VS(s).reglas.length ? `<div class="card"><div class="cab2"><h2>Tu regla de hoy</h2><span class="sub" style="font-size:12px">la que más te cuesta</span></div>
+    ${reglaCumple(VS(s).reglas[0], 0)}</div>` : `<div class="card"><div class="cab2"><h2>Tu regla de hoy</h2><span class="sub" style="font-size:12px">del plan, con tus últimas partidas</span></div>
     <div class="fila2" style="border:none"><span class="ic red">${ic("muertes")}</span>
       <div class="txt"><b>2 muertes o menos del 14 al 25</b><small>Morir a mitad de partida regala los objetivos.</small></div>
-      ${d25.length ? `<span class="sub" style="font-size:12px">Cumples <b style="color:var(--txt)">${ok}/${d25.length}</b></span>
-      <span class="tuboH" role="img" aria-label="Cumples ${ok} de ${d25.length}"><i style="width:${f * 100}%;background:linear-gradient(90deg,${f >= .5 ? "#3E7A62,#A8D8C0" : "#9A2E3A,#FF8A8A"})"></i></span>` : '<span class="sub">Sin partidas con timeline.</span>'}</div></div>`}`;
+      ${d25.length ? `<span class="sub" style="font-size:12px">Cumples <b style="color:var(--txt)">${ok}/${d25.length}</b></span>` : '<span class="sub">Sin partidas aún</span>'}</div></div>`;
+  const main = `
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px"><div><span class="etq">${esc(DIAS.format(new Date()).replace(/^./, c => c.toUpperCase()))}</span>
+    <h1 style="font-size:40px;font-weight:900;letter-spacing:-.02em;margin-top:6px">${nombre ? "Hola, " + esc(nombre) : "Racha"}</h1></div>
+    <span class="sub" style="display:flex;align-items:center;gap:10px;font-size:13px"><span class="luz ${cliente ? "on" : ""}" style="width:28px;height:28px"><i style="width:10px;height:10px"></i></span>${cliente ? "Cliente conectado · " + esc(FASES[s.fase] ?? s.fase) : "Abre el cliente de LoL"}</span></div>
+  ${pasos}
+  ${descanso}
+  ${racha}
+  ${regla}
+  ${sesion}
+  ${s.rendimiento ? `<button class="btn principal" style="align-self:flex-start" onclick="ver('draft')">Empezar a subir</button>` : ""}`;
   const base = t && t.base.wr, x = w => Math.max(0, Math.min(100, (w - .45) / .2 * 100));
   // Home_Vino: avatar con aro rosa, región · rol; tarjeta de rango con emblema y la meta; atajos a Qué cambiar, errores y partidas
   const rg = s.rango, wr = rg && rg.n ? rg.wr / 100 : base, rol = VS(s) && ROL[VS(s).pos];
@@ -597,6 +620,8 @@ function inicio(s) {  // launcher (Home_Vino): cliente, hoy, la regla del plan c
       <div><b style="font-size:22px">${esc(rangoTxt)}</b><br><span class="sub" style="font-size:13px">Meta: Challenger</span></div></div>` : ""}
     ${wr != null ? `<div style="display:flex;justify-content:space-between;align-items:baseline"><span class="sub">Win rate</span><span><b style="font-size:20px">${pct(wr)}</b> <span class="sub" style="font-size:13px">· meta 60%</span></span></div>
     <span class="tuboH" style="flex:none;width:100%" role="img" aria-label="Win rate ${pct(wr)}, meta 60%"><i style="width:${x(wr)}%;background:linear-gradient(90deg,#3E7A62,#A8D8C0)"></i><u style="left:${x(.6)}%"></u></span>` : ""}</div>` : ""}
+  ${hoyCard(VS(s))}
+  ${oroCard(R && R.resumen.racha_oro14)}
   <div class="est"><span class="sub">Atajos</span>
     <button class="atajo" onclick="ver('perfil')">${VS(s) ? `Qué cambiar (${VS(s).reglas.length} reglas)` : "Qué está fallando"} <span>→</span></button>
     <button class="atajo" onclick="ver('errores')">Tus errores repetidos <span>→</span></button>
@@ -760,6 +785,29 @@ function envivoAram(s, m, prev) {  // ARAM y modos sin líneas: marcador, tu KDA
   return [main, aside];
 }
 
+function estelaCard(e) {  // recap 0.19: la partida como una estela de oro (sube si ibas arriba de tu rival de línea) con 3 momentos
+  if (!e || !e.dur) return "";
+  const W = 680, H = 150, M = 12, ms = (e.momentos || []).filter(m => m && m.t != null);
+  const oro = e.oro || [], tope = Math.max(1000, ...oro.map(Math.abs));
+  const yDe = v => H / 2 - (v / tope) * (H / 2 - M);
+  const xDe = t => M + (W - 2 * M) * Math.min(1, t / e.dur);
+  const pts = oro.length > 1 ? oro.map((v, i) => [xDe(i * 60), yDe(v)]) : [[M, H / 2], [W - M, H / 2]];
+  const camino = pts.map(([x, y], i) => (i ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1)).join(" ");
+  const yEn = t => oro.length > 1 ? yDe(oro[Math.min(oro.length - 1, Math.round(t / 60))]) : H / 2;
+  const col = m => m.tipo === "muerte" || m.tuyo === false ? "#FF8A8A" : m.tipo === "oro" ? "#F2C46B" : "#A8D8C0";  // rojo: tu muerte u objetivo del rival
+  const mm = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
+  const fin = e.win == null ? "" : e.win ? " · Victoria" : " · Derrota";
+  return `<div class="card"><div class="cab2"><h2>Tu partida en una estela</h2><span class="sub" style="font-size:12px">${oro.length > 1 ? "oro contra tu rival de línea" : "los 3 momentos clave"}</span></div>
+    <svg role="img" aria-label="Tu partida: ${oro.length > 1 ? `oro final ${oro[oro.length - 1] >= 0 ? "+" : ""}${oro[oro.length - 1]}` : "sin datos de oro"}; ${ms.length} momentos clave" viewBox="0 0 ${W} ${H + 18}" style="width:100%;height:auto;overflow:visible">
+      <defs><linearGradient id="estR" x1="0" x2="1"><stop offset="0" stop-color="#A33A63"/><stop offset=".33" stop-color="#F28DB0"/><stop offset=".67" stop-color="#F8C3D6"/><stop offset="1" stop-color="#A8D8C0"/></linearGradient></defs>
+      <line x1="${M}" x2="${W - M}" y1="${H / 2}" y2="${H / 2}" stroke="rgba(255,255,255,.08)" stroke-dasharray="3 6"/>
+      <path d="${camino}" fill="none" stroke="url(#estR)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path class="cometa-r" d="${camino}" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" pathLength="1000" stroke-dasharray="90 910"/>
+      ${ms.map(m => { const x = xDe(m.t), y = yEn(m.t); return `<circle cx="${x}" cy="${y}" r="9" fill="#1E0E16" stroke="${col(m)}" stroke-width="3"/><circle cx="${x}" cy="${y}" r="4" fill="${col(m)}"/>
+        <text x="${x}" y="${Math.max(12, y - 16)}" text-anchor="middle" font-size="12" font-weight="800" fill="${col(m)}">${mm(m.t)}</text>`; }).join("")}
+      <text x="${M}" y="${H + 16}" font-size="12" fill="#C9B2BC">0:00</text><text x="${W - M}" y="${H + 16}" text-anchor="end" font-size="12" fill="#C9B2BC">${mm(e.dur)}${fin}</text></svg>
+    ${ms.map(m => `<div class="filaV"><span style="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${col(m)}"></span><span style="font-size:14px">${esc(m.texto)}</span></div>`).join("")}</div>`;
+}
 function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estado en vivo; al terminar, la línea final
   const prev = !s.fin && !!(s.meta || s.ultima) && !EN_PARTIDA.includes(s.fase);  // hallazgo 23: una partida que acabó sin pantalla de fin ya no está «En partida»
   const m = prev && s.meta ? {...s.meta, recibido: null} : s.meta || (prev ? s.ultima : null), f = s.fin;  // recibido null: timers quietos
@@ -777,6 +825,7 @@ function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estad
   const main = `
   <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1>${f ? "Fin de partida" : prev ? "Tu última partida" : "En partida"}</h1><span class="sub">${esc(ROL_VIVO || "")}${esc(x.campeon || "")}${x.rival ? " contra " + esc(x.rival) : ""} · fase: ${min < 14 ? "línea" : min < 25 ? "medio juego (14–25)" : "final"}</span></div>
     ${x.t != null ? `<span style="border:1px solid var(--acc);border-radius:10px;padding:10px 16px;font-weight:700;display:flex;gap:8px;align-items:center"><i style="width:8px;height:8px;border-radius:50%;background:var(--acc)"></i>${Math.floor(x.t / 60)}:${String(x.t % 60).padStart(2, "0")}</span>` : ""}</div>
+  ${f ? estelaCard((s.revision && s.revision.estela) || f.estela) : ""}
   ${franja(x, !!f)}
   ${(() => { const rh = (VS(s) || {}).regla_hoy; return rh ? `<div class="card" style="gap:6px;box-shadow:0 0 0 1px var(--acc) inset"><span class="sub">Tu regla de hoy · la que más te cuesta (la cumpliste ${rh.ok} de ${rh.n})</span>
     <b style="font-size:17px">${esc(rh.texto)}</b><span class="sub" style="font-size:14px">${esc(rh.numero)}</span></div>` : ""; })()}
@@ -1052,6 +1101,7 @@ try { if (localStorage.getItem("htc-quieto")) document.documentElement.classList
 
 document.addEventListener("visibilitychange", () => document.documentElement.classList.toggle("oculta", document.hidden));
 let ultVista;  // la vista pintada la última vez (Estela: entradas solo al cambiar)
+let ultVistaPintada = false;  // la primera pintura no lleva transición
 let elegida = location.hash.slice(1).split("&")[0] || null, ultFase;  // #vista (y &medir para dev_medir.py)  // vista que eligió el usuario (o #vista en la URL); se olvida al cambiar de fase
 function ver(x) { elegida = x; v = -1; tick(); }
 
@@ -1079,9 +1129,15 @@ async function tick() {
       const av = nv + (s.aviso ? `<div class="aviso ${s.aviso.tipo === "consejo" ? "teal" : "red"}" role="status">${s.aviso.minuto != null ? "Min " + s.aviso.minuto + " · " : ""}${esc(s.aviso.texto)}</div>` : "");
       const rep = vista === ultVista; ultVista = vista;  // un refresco de datos en la misma vista no repite las entradas
       document.documentElement.classList.toggle("enjuego", ["GameStart", "InProgress", "Reconnect"].includes(s.fase));  // nada se mueve mientras juegas
-      const mn = document.getElementById("main"); mn.classList.toggle("ancho", !a); mn.classList.toggle("repinta", rep); mn.innerHTML = av + m;  // sin columna derecha (Partidas_Vino): a todo el ancho
-      const as = document.getElementById("aside"); as.classList.toggle("repinta", rep); as.innerHTML = a; as.hidden = !a;
-      document.querySelectorAll("details").forEach(d => { if (ABIERTOS.has(d.querySelector("summary")?.textContent)) d.open = true; });
+      const pintar = () => {
+        const mn = document.getElementById("main"); mn.classList.toggle("ancho", !a); mn.classList.toggle("repinta", rep); mn.innerHTML = av + m;  // sin columna derecha (Partidas_Vino): a todo el ancho
+        const as = document.getElementById("aside"); as.classList.toggle("repinta", rep); as.innerHTML = a; as.hidden = !a;
+        document.querySelectorAll("details").forEach(d => { if (ABIERTOS.has(d.querySelector("summary")?.textContent)) d.open = true; });
+      };
+      const H = document.documentElement.classList;  // transición nativa al cambiar de vista (sin CDN); nunca quieta ni en partida
+      if (!rep && ultVistaPintada && document.startViewTransition && !H.contains("quieto") && !H.contains("enjuego") && !matchMedia("(prefers-reduced-motion: reduce)").matches) document.startViewTransition(pintar);
+      else pintar();
+      ultVistaPintada = true;
     }
   } catch (e) {  // sin servidor o una vista que truena: no son lo mismo y el usuario debe poder reportarlo
     console.error(e); v = -1;
@@ -1105,6 +1161,12 @@ for (const [b, [t, p]] of Object.entries(NAV)) {
   document.getElementById("b-" + b).innerHTML = `<svg aria-hidden="true" width="${n}" height="${n}" viewBox="0 0 24 24" fill="none" stroke="${b === "inicio" ? "#F28DB0" : "currentColor"}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>${t}`;
 }
 tick(); setInterval(tick, 2000);
+setInterval(() => {  // descanso: el reloj y el anillo bajan cada segundo (solo si está a la vista: un texto chico, no la ventana entera)
+  const r = document.getElementById("desc-reloj"); if (!r) return;
+  const x = Math.max(0, (+r.dataset.fin - Date.now()) / 1000);
+  r.textContent = `${Math.floor(x / 60)}:${String(Math.floor(x % 60)).padStart(2, "0")}`;
+  const a = document.getElementById("desc-arco"); if (a) a.setAttribute("stroke-dashoffset", 289 * (1 - x / 900));
+}, 1000);
 </script>
 </body>
 </html>

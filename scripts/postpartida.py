@@ -82,6 +82,31 @@ def momentos(match, timeline, puuid):
     return _tres(cand)
 
 
+def estela(match, timeline, puuid):
+    """La partida como una estela (recap 0.19): {dur (s), win, oro: [tu oro − el de tu rival de línea, por minuto], momentos:
+    [{t, tipo, texto}]}; None sin datos o fuera de la Grieta (sin rival de línea el oro va vacío y la estela queda plana)."""
+    c = _ctx(match, timeline, puuid)
+    if not c or (match.get("info") or {}).get("gameMode", "CLASSIC") != "CLASSIC": return None
+    me, opp, _, fr = c
+    oro = []
+    if opp:
+        try: oro = [f["participantFrames"][str(me["participantId"])]["totalGold"] - f["participantFrames"][str(opp["participantId"])]["totalGold"] for f in fr]
+        except (KeyError, TypeError): oro = []
+    return {"dur": (match["info"].get("gameDuration") or 0), "win": bool(me.get("win")), "oro": oro,
+            "momentos": [{k: m.get(k) for k in ("t", "tipo", "texto", "tuyo")} for m in momentos(match, timeline, puuid)]}
+
+
+def estela_vivo(d):
+    """La estela al instante desde la última foto en vivo: sin oro (en vivo solo se ve el de los ítems), con los momentos."""
+    try:
+        import companion
+        if not companion.grieta(d): return None
+        ms = momentos_vivo(d)
+        return {"dur": int(((d or {}).get("gameData") or {}).get("gameTime") or 0), "win": None, "oro": [],
+                "momentos": [{k: m.get(k) for k in ("t", "tipo", "texto", "tuyo")} for m in ms]} if ms else None  # sin momentos ni oro: nada que dibujar
+    except Exception: return None
+
+
 def _tres(cand):
     """Los 3 de más impacto, en orden cronológico."""
     top = sorted(cand, key=lambda m: (-m["impacto"], m["t"]))[:3]
@@ -103,7 +128,7 @@ def _candidatos(muertes, objs, eq):
     for t, ty, q in objs:
         if (t, ty) in ligados: continue
         mio = q == eq
-        cand.append(dict(t=t // 1000, tipo="objetivo", impacto=VALOR[ty] + (0 if mio else 1),
+        cand.append(dict(t=t // 1000, tipo="objetivo", tuyo=mio, impacto=VALOR[ty] + (0 if mio else 1),
                          texto=f"Min {_mm(t)}: tu equipo tomó {NOMBRE[ty]}." if mio else f"Min {_mm(t)}: el rival tomó {NOMBRE[ty]}."))
     return cand
 

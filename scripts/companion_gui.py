@@ -102,7 +102,7 @@ def ultima_partida():
         import postpartida
         m, tl = json.loads(f.read_text()), json.loads((RAW / "timeline" / f.name).read_text())
         libres = postpartida.muertes_sin_objetivo(m, tl, puuid)
-        out.update(momentos=[x["texto"] for x in postpartida.momentos(m, tl, puuid)],
+        out.update(momentos=[x["texto"] for x in postpartida.momentos(m, tl, puuid)], estela=postpartida.estela(m, tl, puuid),
                    libres=[libres["n"], libres["total"]] if libres["total"] else None)
     except (OSError, ValueError): pass
     return out
@@ -405,7 +405,7 @@ def trabajador(q):
             elif not jugando and fase != "Reconnect": archivo = None; estado["avisado"] = set()  # al reconectar es la misma partida (D10)
             if fase in FIN and real not in FIN:
                 if r := companion.resumen_fin(foto):  # sin key, esto es lo que hay al terminar
-                    try: import postpartida; r = {**r, "momentos": [m["texto"] for m in postpartida.momentos_vivo(foto)]}  # F11: al instante
+                    try: import postpartida; r = {**r, "momentos": [m["texto"] for m in postpartida.momentos_vivo(foto)], "estela": postpartida.estela_vivo(foto)}  # F11: al instante
                     except Exception: pass
                     q.put(("fin", r))
                 foto = None; post_partida(q); m = None
