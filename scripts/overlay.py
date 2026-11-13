@@ -55,7 +55,7 @@ def extra_muerto(meta, aj, regla):
     ven con Tab, sin timers) y tu regla. None si no estás muerto o no hay datos."""
     o = meta.get("objetivos") or {}
     if not meta.get("muerto") or not on_aj(aj, "franja_muerto") or meta.get("modo") == "ARAM" or "tuyos" not in o: return None
-    tu, el = o["tuyos"], o["rival"]
+    tu, el = o.get("tuyos") or {}, o.get("rival") or {}  # foto a medias: conteos en 0, no un error (DeepSeek)
     marcador = " · ".join(f"{n} {tu.get(k, 0)}–{el.get(k, 0)}" for n, k in (("Dragones", "dragones"), ("Torres", "torres"), ("Larvas", "larvas"), ("Barón", "baron")))
     r = (regla or {}).get("texto")
     return {"marcador": marcador, "regla": corta("Tu regla · " + r, 62) if r else None}

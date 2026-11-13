@@ -178,8 +178,8 @@ class TestZonas(unittest.TestCase):  # fase C: ni arriba ni abajo pisan minimapa
     def test_no_pisa_en_ninguna_resolucion(self):
         import salud
         for W, H in ((1920, 1080), (2560, 1440), (1366, 768), (3840, 2160), (1280, 720)):
-            juego = (0, 0, W, H); e = overlay.escala(juego); aw, ah = round(380 * e), round(72 * e)
-            for pos in ("arriba", "abajo"):
+            juego = (0, 0, W, H); e = overlay.escala(juego); aw = round(380 * e)
+            for pos, ah in (("arriba", round(72 * e)), ("abajo", round(72 * e)), ("arriba", round(110 * e)), ("abajo", round(110 * e))):  # también la expandida
                 x, y = overlay.colocar(juego, (W, H), ah, 0.22, pos, 6, 1.0, aw)
                 f = (x / W, y / H, (x + aw) / W, (y + ah) / H)
                 pisa = [z for z, (a, b, c, d) in salud.ZONAS.items() if f[0] < c and f[2] > a and f[1] < d and f[3] > b]
