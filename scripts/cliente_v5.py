@@ -86,7 +86,14 @@ def a_v5(game, timeline, plataforma, campeones=None, puuids=None):
     return match, tl
 
 
+_UNO = __import__("threading").Lock()  # guardado al salir de la partida y puesta al día al conectar: nunca a la vez (DeepSeek)
+
+
 def descargar(raw=None, leer=None, n=20):
+    with _UNO: return _descargar(raw, leer, n)
+
+
+def _descargar(raw=None, leer=None, n=20):
     """Baja del cliente tus últimas n partidas (máx. 20) que aún no estén en datos/raw. Devuelve (nuevas, mensaje)."""
     leer = leer or companion.lcu
     raw = pathlib.Path(raw or os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
