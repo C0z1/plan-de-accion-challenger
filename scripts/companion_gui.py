@@ -115,7 +115,7 @@ AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "avi
                "franja_linea": True, "franja_regla": True,  # piezas de la franja en partida (A4)
                "voz": False,
                "franja_plan": True,  # la franja muestra el match, tu regla y tu nota los primeros 90 s (0.20)
-               "franja_build": True,  # la franja muestra tu próximo ítem al morir o al comprar (0.20)  # Racha lee en voz alta sus comentarios del draft (sin sonido por defecto, PLAN-ENVIVO §5)
+               "franja_build": True,  # la franja muestra tu próximo ítem al morir o al comprar (0.20)
                "franja_pos": "arriba"}  # esquina de la franja: único ajuste que no es booleano
 OPCIONES = {"franja_pos": ("arriba", "abajo")}  # lista blanca de los ajustes de texto
 
@@ -286,6 +286,14 @@ def comentario(tab, pos, rival=None):
     with DRAFT: return draft.comentario(tab, pos, rival)
 
 
+def registrar_franja(txt):
+    """Un error de la franja queda en datos/salud/franja.log en vez de tragarse en silencio."""
+    try:
+        f = REPO / "datos" / "salud" / "franja.log"; f.parent.mkdir(parents=True, exist_ok=True)
+        with f.open("a", encoding="utf-8") as h: h.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {txt}" + chr(10))
+    except OSError: pass
+
+
 def plan_partida(campeon, rival, pos):
     """Lo de la franja al empezar (PLAN-OVERLAY-2, fase 2), una vez por partida y con tu historial: tu récord y WR contra
     ese rival con ese campeón, tu regla con su meta y tu dato, y tu nota del matchup. None si no hay datos o cuenta ajena."""
@@ -440,15 +448,17 @@ def trabajador(q):
                 if ult - ult_disco >= 30: archivo, ult_disco = companion.capturar(archivo, d), ult
                 mf, avs = companion.paso_vivo(d, estado, ajustes())  # Ajustes_Vino: cada aviso se puede apagar
                 if mf and mf.get("modo") != "ARAM" and ajustes().get("franja_build", True) is not False:  # tu próximo ítem (franja 0.20)
-                    if "build" not in estado: estado["build"] = companion.build_partida(mf.get("campeon"), mf.get("pos"))
-                if mf and mf.get("modo") != "ARAM" and ajustes().get("franja_plan", True) is not False and (mf.get("t") or 0) < 120:  # MATCH, PLAN, CUIDADO
-                    if "plan" not in estado: estado["plan"] = plan_partida(mf.get("campeon"), mf.get("rival"), mf.get("pos"))
-                    mf["plan"] = estado["plan"]
+                    if not estado.get("build") and time.time() - estado.get("build_t", 0) > 30:  # sin build: se reintenta cada 30 s, no queda vacía
+                        estado["build"], estado["build_t"] = companion.build_partida(mf.get("campeon"), mf.get("pos")), time.time()
                     try: import builds; mf["proximo"] = companion.proximo(estado["build"], mf.get("items"), mf.get("oro_actual"), builds.ddragon()[0])
-                    except Exception: mf["proximo"] = None  # sin Data Dragon: sin próximo ítem
+                    except Exception as e: mf["proximo"] = None; registrar_franja(f"próximo ítem: {e!r}")
+                if mf and mf.get("modo") != "ARAM" and ajustes().get("franja_plan", True) is not False and (mf.get("t") or 0) < 120:  # MATCH, PLAN, CUIDADO
+                    if not estado.get("plan") and time.time() - estado.get("plan_t", 0) > 30:
+                        estado["plan"], estado["plan_t"] = plan_partida(mf.get("campeon"), mf.get("rival"), mf.get("pos")), time.time()
+                    mf["plan"] = estado["plan"]
                 if mf: q.put(("meta", mf))
                 for _, txt, minuto in avs: q.put(aviso(txt, "consejo", minuto))
-            elif not jugando and fase != "Reconnect": archivo = None; estado["avisado"] = set(); estado.pop("build", None); estado.pop("plan", None)  # al reconectar es la misma partida (D10)
+            elif not jugando and fase != "Reconnect": archivo = None; estado["avisado"] = set(); [estado.pop(k, None) for k in ("build", "build_t", "plan", "plan_t")]  # al reconectar es la misma partida (D10)
             if fase in FIN and real not in FIN:
                 if r := companion.resumen_fin(foto):  # sin key, esto es lo que hay al terminar
                     try: import postpartida; r = {**r, "momentos": [m["texto"] for m in postpartida.momentos_vivo(foto)], "estela": postpartida.estela_vivo(foto)}  # F11: al instante
