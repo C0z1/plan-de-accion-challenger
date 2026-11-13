@@ -55,7 +55,7 @@ def evaluar(d, ahora):
                 if f.get("monitor") != d.get("monitor_juego"): malo.append("otro monitor")
                 if x0 < gx0 or y0 < gy0 or x1 > gx1 or y1 > gy1: malo.append("se sale del juego")
                 if gw and (x1 - x0) / gw > 0.60: malo.append(f"ancho {round((x1 - x0) / gw * 100)} %")
-                if gh and (y1 - y0) / gh > 0.08: malo.append(f"alto {round((y1 - y0) / gh * 100)} %")
+                if gh and (y1 - y0) / gh > 0.11: malo.append(f"alto {round((y1 - y0) / gh * 100)} %")
                 fx0, fy0, fx1, fy1 = ((x0 - gx0) / gw, (y0 - gy0) / gh, (x1 - gx0) / gw, (y1 - gy0) / gh) if gw and gh else (0, 0, 0, 0)
                 malo += [f"pisa {z}" for z, (a, b, c, e2) in ZONAS.items() if fx0 < c and fx1 > a and fy0 < e2 and fy1 > b]
             res("S5", "FALLA" if malo else "OK", f.get("rect"), "encima, dentro del juego, sin zonas prohibidas", ", ".join(malo))

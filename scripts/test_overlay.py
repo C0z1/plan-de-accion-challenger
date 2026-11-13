@@ -85,6 +85,31 @@ class TestFase2(unittest.TestCase):  # «Igualaste» y la moneda del 14 (PLAN-OV
             for txt in overlay.textos(e): self.assertNotRegex(txt, r"(?i)pelea|juega|farmea|puedes|debes")
 
 
+class TestExpandida(unittest.TestCase):  # fase 3: al morir, marcador de objetivos (sin timers) y tu regla
+    O = {"tuyos": {"dragones": 2, "torres": 4, "larvas": 3, "baron": 0}, "rival": {"dragones": 1, "torres": 2, "larvas": 3, "baron": 1},
+         "dragon": 120, "baron": 300}
+
+    def test_solo_muerto(self):
+        R = {"texto": "≤ 2 muertes del 14 al 25; antes de un dragón, heraldo o barón, no pelear si no hace falta."}
+        e = overlay.estado({**META, "t": 1000, "muertes14": 1, "muerto": True, "objetivos": self.O}, 0, regla=R)
+        self.assertEqual(e["extra"]["marcador"], "Dragones 2–1 · Torres 4–2 · Larvas 3–3 · Barón 0–1")
+        self.assertTrue(e["extra"]["regla"].endswith("…") and len(e["extra"]["regla"]) <= 62)
+        self.assertNotIn("extra", overlay.estado({**META, "t": 1000, "muertes14": 1, "objetivos": self.O}, 0))  # vivo
+        self.assertNotIn("extra", overlay.estado({**META, "t": 1000, "muertes14": 1, "muerto": True, "objetivos": self.O}, 0, {"franja_muerto": False}))
+        self.assertNotIn("extra", overlay.estado({**META, "muerto": True}, 0))  # sin objetivos
+
+    def test_sin_timers_y_alto(self):
+        e = overlay.estado({**META, "t": 1000, "muertes14": 1, "muerto": True, "objetivos": self.O}, 0)
+        for t in overlay.textos(e): self.assertNotRegex(t, r"\d:\d\d")  # ningún reloj: solo conteos
+        try: import PIL  # noqa: F401
+        except ImportError: return
+        self.assertEqual(overlay.pintar(e, 1.5).size, (570, 165))
+
+    def test_corta(self):
+        self.assertEqual(overlay.corta("Reloj de Arena de Zhonya", 17), "Reloj de Arena…")
+        self.assertEqual(overlay.corta("Agrietador", 17), "Agrietador")
+
+
 class TestPintar(unittest.TestCase):
     def test_tamano_esquinas_y_peor_caso(self):
         try: import PIL  # noqa: F401

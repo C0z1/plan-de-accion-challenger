@@ -47,7 +47,27 @@ def marcar(m, meta, ahora):
     return m
 
 
+ALTO, ALTO_X = 72, 110  # la pastilla y la expandida (al morir: marcador y tu regla en un segundo renglón)
+
+
+def extra_muerto(meta, aj, regla):
+    """El renglón de la expandida (PLAN-OVERLAY-2, fase 3): mientras estás muerto, el marcador de objetivos (conteos que se
+    ven con Tab, sin timers) y tu regla. None si no estás muerto o no hay datos."""
+    o = meta.get("objetivos") or {}
+    if not meta.get("muerto") or not on_aj(aj, "franja_muerto") or meta.get("modo") == "ARAM" or "tuyos" not in o: return None
+    tu, el = o["tuyos"], o["rival"]
+    marcador = " · ".join(f"{n} {tu.get(k, 0)}–{el.get(k, 0)}" for n, k in (("Dragones", "dragones"), ("Torres", "torres"), ("Larvas", "larvas"), ("Barón", "baron")))
+    r = (regla or {}).get("texto")
+    return {"marcador": marcador, "regla": corta("Tu regla · " + r, 62) if r else None}
+
+
 def estado(meta, ahora, aj=None, regla=None, aviso=None, marcas=None, racha_oro=None):
+    e = _estado(meta, ahora, aj, regla, aviso, marcas, racha_oro)
+    if e and meta and (x := extra_muerto(meta, aj, regla)): e = {**e, "extra": x}
+    return e
+
+
+def _estado(meta, ahora, aj=None, regla=None, aviso=None, marcas=None, racha_oro=None):
     """Qué muestra la pastilla (plan del overlay de Fable con la revisión de DeepSeek), o None. Solo datos y tu regla,
     nunca órdenes (Riot: no dictar decisiones). Huecos: a (tu medallón), rival (opcional), b (anillo + número), chip."""
     if not meta: return None
@@ -73,7 +93,7 @@ def estado(meta, ahora, aj=None, regla=None, aviso=None, marcas=None, racha_oro=
     if p and t0 >= ITEM_DESDE and on_aj(aj, "franja_build") and ((mk.get("muerte") is not None and ahora - mk["muerte"] >= MUERTE_ESPERA)
                                                                 or (mk.get("compra") is not None and ahora - mk["compra"] < COMPRA_S)):
         return {"tipo": "item", "a": {"item": p["id"], "campeon": p["nombre"], "anillo": p["i"] / p["de"], "color": "oro", "insignia": f"{p['i']}/{p['de']}"},
-                "num": p["nombre"][:16].rstrip(), "etq": "build OTPs" if p.get("fuente") == "mejores" else "tu build",
+                "num": corta(p["nombre"], 17), "etq": "build OTPs" if p.get("fuente") == "mejores" else "tu build",
                 "b": {"icono": None, "color": "oro", "num": f"{p['falta']:,}".replace(",", " "), "etq": "oro que falta"}, "chip": None}  # dato: nunca «compra»
     pl = meta.get("plan")
     if pl and t0 < ITEM_DESDE and on_aj(aj, "franja_plan") and meta.get("modo") != "ARAM" and (ini := inicio(pl, t0, camp)): return ini
@@ -118,6 +138,13 @@ def estado(meta, ahora, aj=None, regla=None, aviso=None, marcas=None, racha_oro=
             "b": bpart, "chip": (f"Eq {eq:+d}"[:CHIP_MAX], "salvia" if eq >= 0 else "rojo") if eq is not None else None}
 
 
+def corta(t, n):
+    """t en n caracteres como mucho, cortado en una palabra completa y con «…» si sobra."""
+    if len(t) <= n: return t
+    c = t[:n - 1].rsplit(" ", 1)[0].rstrip(" ,;·:")
+    return c + "…"
+
+
 def coma(x, dec=1): return f"{x:.{dec}f}".replace(".", ",")  # decimales en español
 
 
@@ -151,7 +178,7 @@ def textos(e):
     """Los textos de la pastilla en orden de lectura: para replay (lista negra) y salud."""
     if not e: return []
     b = e.get("b") or {}
-    out = [e.get("texto"), *(e.get("lineas") or []), e.get("num"), e.get("etq"), (e.get("flecha") or {}).get("txt"), b.get("num"), b.get("etq"), (e.get("chip") or (None,))[0]]
+    out = [*(v for v in (e.get("extra") or {}).values()), e.get("texto"), *(e.get("lineas") or []), e.get("num"), e.get("etq"), (e.get("flecha") or {}).get("txt"), b.get("num"), b.get("etq"), (e.get("chip") or (None,))[0]]
     return [str(x) for x in out if x not in (None, "")]
 
 
@@ -194,7 +221,7 @@ def _retrato(nombre, px, icono, apagado=False, item=None):
 def pintar(e, esc=1.0, icono=None):
     """La pastilla (RGBA de 380×72 por esc) para el estado e. Dibujo a 2× y reducción: bordes suaves."""
     from PIL import Image, ImageDraw
-    S = 2; W, H = round(380 * esc), round(72 * esc); k = lambda v: round(v * esc * S)
+    S = 2; W, H = round(380 * esc), round((ALTO_X if e.get("extra") else ALTO) * esc); k = lambda v: round(v * esc * S)
     im = Image.new("RGBA", (W * S, H * S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
     alarma = e["tipo"] == "aviso" or (e["tipo"] == "peleas" and e["chip"][1] == "rojo")
     momento = {"igualaste": SALVIA, "oro14": ORO}.get(e["tipo"])  # fase 2: borde del color del momento
@@ -202,6 +229,10 @@ def pintar(e, esc=1.0, icono=None):
                         outline=ROJO + (255,) if alarma else momento + (255,) if momento else ROSA + (90,),
                         width=k(3.5) if e.get("pulso") else k(2) if alarma or momento else max(1, k(1)))  # pulso: el borde engorda un instante
     f17, f11 = _fuente(k(17)), _fuente(k(11))
+    if (x := e.get("extra")):  # segundo renglón de la expandida: marcador (y tu regla, si cabe)
+        d.line((k(14), k(ALTO), W * S - k(14), k(ALTO)), fill=(255, 255, 255, 31), width=max(1, k(1)))
+        d.text((k(14), k(ALTO + 12)), x["marcador"], font=_fuente(k(12)), fill=TXT + (255,), anchor="lm")
+        if x.get("regla"): d.text((k(14), k(ALTO + 28)), x["regla"], font=f11, fill=ETQ + (255,), anchor="lm")
 
     def anillo(cx, r, frac, col, ancho=3):
         d.ellipse((cx - r, k(36) - r, cx + r, k(36) + r), outline=(255, 255, 255, 26), width=k(ancho))
@@ -455,10 +486,10 @@ def correr(leer, seguir, x=0.22, y=6, registrar=lambda txt: None, icono=None, gu
         if not e:
             if mostrada[0]: root.withdraw(); mostrada[0] = False
             ultimo[0] = tipo_ant[0] = None; gen[0] += 1; return
-        juego = rect_juego(); esc = escala(juego)
+        juego = rect_juego(); esc = escala(juego); alto = round((ALTO_X if e.get("extra") else ALTO) * esc)
         pant = (root.winfo_screenwidth(), root.winfo_screenheight())
-        if aj.get("franja_pos") == "libre": px, py = libre(juego, pant, aj.get("franja_x", x), aj.get("franja_y", 0), round(380 * esc), round(72 * esc))
-        else: px, py = colocar(juego, pant, round(72 * esc), x, aj.get("franja_pos"), y, fraccion_util(), round(380 * esc))
+        if aj.get("franja_pos") == "libre": px, py = libre(juego, pant, aj.get("franja_x", x), aj.get("franja_y", 0), round(380 * esc), alto)
+        else: px, py = colocar(juego, pant, alto, x, aj.get("franja_pos"), y, fraccion_util(), round(380 * esc))
         clave = (repr(e), esc, px, py)
         if clave == ultimo[0] and mostrada[0]: return  # nada cambió: no se repinta
         if not mostrada[0]: root.deiconify(); root.attributes("-topmost", True); mostrada[0] = True  # la ventana en capas solo se ve tras mostrarla

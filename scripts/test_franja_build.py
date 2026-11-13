@@ -52,7 +52,7 @@ class Momentos(unittest.TestCase):
 
     def test_textos_sin_ordenes(self):
         e = overlay.estado(META, 101.0, marcas={"compra": 100.0})
-        self.assertEqual(overlay.textos(e), ["Cinturón Cohete", "build OTPs", "1 250", "oro que falta"])
+        self.assertEqual(overlay.textos(e), ["Cinturón Cohete…", "build OTPs", "1 250", "oro que falta"])
         for t in overlay.textos(e): self.assertNotRegex(t.lower(), r"compra|vuelve|recall|backea")
 
 

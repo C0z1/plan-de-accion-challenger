@@ -115,6 +115,7 @@ AJUSTES_DEF = {"overlay": True, "aviso_nivel": True, "aviso_minions": True, "avi
                "franja_linea": True, "franja_regla": True,  # piezas de la franja en partida (A4)
                "voz": False,
                "franja_plan": True,  # la franja muestra el match, tu regla y tu nota los primeros 90 s (0.20)
+               "franja_muerto": True,  # al morir la franja se expande con el marcador de objetivos y tu regla (0.21)
                "franja_build": True,  # la franja muestra tu próximo ítem al morir o al comprar (0.20)
                "franja_pos": "arriba", "franja_x": 0.22, "franja_y": 0.0}  # esquina de la franja: único ajuste que no es booleano
 OPCIONES = {"franja_pos": ("arriba", "abajo", "libre")}  # lista blanca de los ajustes de texto

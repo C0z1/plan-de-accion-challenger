@@ -6,7 +6,7 @@ import argparse, contextlib, json, pathlib, re, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import companion, overlay
 
-MAX_PIEZAS = 7  # textos de la pastilla 380×72 (plan del overlay): número y etiqueta ×2, flecha, chip
+MAX_PIEZAS = 9  # textos de la pastilla: número y etiqueta ×2, flecha, chip, y al morir el marcador y tu regla
 AVISO_CORTO = 48  # plan F1: caracteres del aviso en la franja
 LISTA_NEGRA = (  # lo que la franja y los avisos nunca dicen (lista de DeepSeek, avisos-v011.md); se busca como palabra completa
     "cooldown", "enfriamiento", "flash", "destello", "ultimate", "definitiva", "smite", "castigo",  # timers que no se ven

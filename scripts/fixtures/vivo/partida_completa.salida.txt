@@ -29,28 +29,28 @@
 13:56 | franja: = · +10 · CS vs rival · Vas bien | aviso: 
 14:26 | franja: 0 / 2 · muertes · 33% · en kills · Vas bien | aviso: 
 14:56 | franja: 0 / 2 · muertes · 33% · en kills · Vas bien | aviso: 
-15:26 | franja: 1 / 2 · muertes · 43% · en kills · Vas bien | aviso: 
+15:26 | franja: Dragones 1–1 · Torres 0–0 · Larvas 0–3 · Barón 0–0 · 1 / 2 · muertes · 43% · en kills · Vas bien | aviso: 
 15:56 | franja: 1 / 2 · muertes · 38% · en kills · Vas bien | aviso: 
 16:27 | franja: 1 / 2 · muertes · 33% · en kills · Vas bien | aviso: 
-16:57 | franja: 2 / 2 · muertes · 40% · en kills · En tu tope | aviso: 2 muertes desde el 14 · tu tope
+16:57 | franja: Dragones 1–1 · Torres 0–1 · Larvas 0–3 · Barón 0–0 · 2 / 2 · muertes · 40% · en kills · En tu tope | aviso: 2 muertes desde el 14 · tu tope
 17:27 | franja: 2 / 2 · muertes · 40% · en kills · En tu tope | aviso: 
 17:57 | franja: 2 / 2 · muertes · 40% · en kills · En tu tope | aviso: 
 18:28 | franja: 2 / 2 · muertes · 40% · en kills · En tu tope | aviso: 
 18:58 | franja: 2 / 2 · muertes · 40% · en kills · En tu tope | aviso: 
-19:28 | franja: 3 / 2 · muertes · 33% · en kills · Sobre tope | aviso: 
+19:28 | franja: Dragones 1–1 · Torres 0–3 · Larvas 0–3 · Barón 0–0 · 3 / 2 · muertes · 33% · en kills · Sobre tope | aviso: 
 19:58 | franja: 3 / 2 · muertes · 33% · en kills · Sobre tope | aviso: 
 20:28 | franja: 3 / 2 · muertes · 33% · en kills · Sobre tope | aviso: 
 20:59 | franja: 3 / 2 · muertes · 33% · en kills · Sobre tope | aviso: 
 21:29 | franja: 3 / 2 · muertes · 31% · en kills · Sobre tope | aviso: 
-21:59 | franja: 4 / 2 · muertes · 31% · en kills · Sobre tope | aviso: 
-22:29 | franja: 4 / 2 · muertes · 31% · en kills · Sobre tope | aviso: 
+21:59 | franja: Dragones 1–2 · Torres 0–4 · Larvas 0–3 · Barón 0–0 · 4 / 2 · muertes · 31% · en kills · Sobre tope | aviso: 
+22:29 | franja: Dragones 1–2 · Torres 0–4 · Larvas 0–3 · Barón 0–0 · 4 / 2 · muertes · 31% · en kills · Sobre tope | aviso: 
 23:00 | franja: 4 / 2 · muertes · 31% · en kills · Sobre tope | aviso: 
 23:30 | franja: 4 / 2 · muertes · 36% · en kills · Sobre tope | aviso: 
-24:00 | franja: 5 / 2 · muertes · 40% · en kills · Sobre tope | aviso: 
+24:00 | franja: Dragones 1–2 · Torres 0–5 · Larvas 0–3 · Barón 0–0 · 5 / 2 · muertes · 40% · en kills · Sobre tope | aviso: 
 24:30 | franja: 5 / 2 · muertes · 40% · en kills · Sobre tope | aviso: 
 25:00 | franja: 5/5/1 · KDA · 40% · en kills | aviso: 
-25:31 | franja: 5/6/2 · KDA · 44% · en kills | aviso: 
-26:01 | franja: 5/6/2 · KDA · 44% · en kills | aviso: 
+25:31 | franja: Dragones 1–2 · Torres 0–6 · Larvas 0–3 · Barón 0–0 · 5/6/2 · KDA · 44% · en kills | aviso: 
+26:01 | franja: Dragones 1–2 · Torres 0–6 · Larvas 0–3 · Barón 0–0 · 5/6/2 · KDA · 44% · en kills | aviso: 
 26:31 | franja: 5/6/2 · KDA · 41% · en kills | aviso: 
 27:01 | franja: 5/6/2 · KDA · 41% · en kills | aviso: 
 27:31 | franja: 5/6/2 · KDA · 41% · en kills | aviso: 
@@ -66,5 +66,5 @@
 32:33 | franja: 11/6/2 · KDA · 57% · en kills | aviso: 
 33:04 | franja: 11/6/2 · KDA · 57% · en kills | aviso: 
 33:34 | franja: 11/6/2 · KDA · 57% · en kills | aviso: 
-34:04 | franja: 12/7/2 · KDA · 56% · en kills | aviso: 
-34:34 | franja: 12/7/2 · KDA · 56% · en kills | aviso: 
+34:04 | franja: Dragones 1–4 · Torres 3–8 · Larvas 0–3 · Barón 0–1 · 12/7/2 · KDA · 56% · en kills | aviso: 
+34:34 | franja: Dragones 1–4 · Torres 3–10 · Larvas 0–3 · Barón 0–1 · 12/7/2 · KDA · 56% · en kills | aviso: 
