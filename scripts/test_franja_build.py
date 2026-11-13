@@ -38,7 +38,7 @@ class BuildDeRespaldo(unittest.TestCase):  # campeón fuera de tu pool: la build
         from unittest import mock
         import builds
         bs = [{"core": ["3032", "3085", "3031"], "botas": "3006", "runas": [8000, 8008, (8008,)], "skills": "QWE"}] * 2
-        with mock.patch.object(builds, "guardado_dict", return_value=None), mock.patch.object(builds, "ddragon", return_value=({}, {}, {})),                 mock.patch.object(builds, "tuyas", return_value=[(1, 2, 3)] * 2), mock.patch.object(builds, "build_de", side_effect=bs),                 mock.patch.object(builds, "resumir", return_value={"core": [("Yun Tal", .5, "3032"), ("Runaan", .5, "3085"), ("Filo", .5, "3031")]}):
+        with mock.patch.object(builds, "guardado_dict", return_value=None), mock.patch.object(builds, "ddragon", return_value=({}, {}, {})),                 mock.patch.object(builds, "tuyas", return_value=[({"info": {"gameMode": "CLASSIC"}}, 2, 3)] * 2), mock.patch.object(builds, "build_de", side_effect=bs),                 mock.patch.object(builds, "resumir", return_value={"core": [("Yun Tal", .5, "3032"), ("Runaan", .5, "3085"), ("Filo", .5, "3031")]}):
             b = companion.build_partida("Zeri", "BOTTOM")
         self.assertEqual(([i for _, i in b["core"]], b["fuente"]), (["3032", "3085", "3031"], "tu"))
         with mock.patch.object(builds, "guardado_dict", return_value=None), mock.patch.object(builds, "ddragon", return_value=({}, {}, {})),                 mock.patch.object(builds, "tuyas", return_value=[]):

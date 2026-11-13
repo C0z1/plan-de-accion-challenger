@@ -292,7 +292,10 @@ def build_partida(campeon, pos):
         b = builds.guardado_dict(campeon, pos)
         if not (b and b.get("core")):  # sin build guardada (campeón fuera de tu pool): la tuya con ese campeón, de tus partidas
             items, runas, _ = builds.ddragon()
-            bs = [builds.build_de(m, t, u, items) for m, t, u in (builds.tuyas(campeon, pos) or builds.tuyas(campeon))]
+            grieta = lambda ps: [x for x in ps if (x[0].get("info") or {}).get("gameMode", "CLASSIC") == "CLASSIC"]  # sin ARAM (DeepSeek)
+            ps = grieta(builds.tuyas(campeon, pos))
+            if len(ps) < 2: ps = grieta(builds.tuyas(campeon))  # pocas en tu rol: todas las del campeón en la Grieta
+            bs = [builds.build_de(m, t, u, items) for m, t, u in ps]
             b = dict(builds.resumir(bs, items, runas) or {}, fuente="tu") if len(bs) >= 2 else None
         return {"core": [(c[0], str(c[2])) for c in b["core"]], "fuente": b["fuente"]} if b and b.get("core") else False  # False: no hay (no reintentar)
     except Exception: return None
