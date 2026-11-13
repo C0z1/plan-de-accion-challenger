@@ -18,7 +18,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "mi_pick": None, "lobby": None, "comentario": None, "mover_franja": False, "al_dia": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
-VERSION = "0.23.0"  # HTC; también invalida la caché de rendimiento
+VERSION = "0.24.0"  # HTC; también invalida la caché de rendimiento
 ESTADO["version"] = VERSION  # la página se recarga si cambia (Racha se actualizó con la ventana abierta)
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
