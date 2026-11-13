@@ -57,6 +57,26 @@ test("login → sesión → cuenta, Riot ID, ajustes, resúmenes y proxy con ses
   assert.equal((await worker.fetch(req("/v1/yo", {token}), env, ctx)).status, 401);  // sesión cerrada
 });
 
+test("una cuenta de Google vinculada a varias de LoL; el grupo cuenta solo la principal", async () => {
+  const {env, ctx} = entorno();
+  const {token} = await (await worker.fetch(req("/v1/login", {method: "POST", body: LOGIN}), env, ctx)).json();
+  await worker.fetch(req("/v1/yo/riot", {method: "PUT", body: {riot_id: "Ana#LAN", region: "la1"}, token}), env, ctx);
+  for (const r of ["Ana#LAN", "Alt#LAN", "Alt#LAN"]) assert.equal((await worker.fetch(req("/v1/yo/cuentas", {method: "PUT", body: {riot_id: r, region: "la1"}, token}), env, ctx)).status, 200);
+  assert.equal((await worker.fetch(req("/v1/yo/cuentas", {method: "PUT", body: {riot_id: "sin-tag", region: "la1"}, token}), env, ctx)).status, 400);
+  const yo = await (await worker.fetch(req("/v1/yo", {token}), env, ctx)).json();
+  assert.deepEqual(yo.cuentas.map(c => c.riot_id), ["Ana#LAN", "Alt#LAN"]);
+  const rs = [{match_id: "LA1_1", ts: 1, resumen: {win: true}, cuenta: "Ana#LAN"}, {match_id: "LA1_2", ts: 2, resumen: {win: false}, cuenta: "Alt#LAN"}];
+  assert.equal((await worker.fetch(req("/v1/yo/resumenes", {method: "PUT", body: rs, token}), env, ctx)).status, 200);
+  assert.equal((await worker.fetch(req("/v1/yo/resumenes", {method: "PUT", body: [{match_id: "LA1_3", resumen: {}, cuenta: "malo"}], token}), env, ctx)).status, 400);
+  const lista = await (await worker.fetch(req("/v1/yo/resumenes", {token}), env, ctx)).json();
+  assert.deepEqual(lista.map(r => r.cuenta), ["Alt#LAN", "Ana#LAN"]);
+  await env.DB.prepare("UPDATE usuarios SET ajustes = ? WHERE google_sub = ?").bind(JSON.stringify({grupo: true}), "g-1").run();
+  const g = await (await worker.fetch(req("/v1/grupo", {token}), env, ctx)).json();
+  assert.deepEqual(g[0].ultimas, [1, 1]);  // la partida de Alt#LAN no se mezcla con la de Ana#LAN
+  assert.equal((await worker.fetch(req("/v1/yo", {method: "DELETE", token}), env, ctx)).status, 200);
+  assert.equal((await env.DB.prepare("SELECT COUNT(*) AS n FROM cuentas_riot").bind().first()).n, 0);  // borrar mis datos también desvincula
+});
+
 test("borrar mis datos", async () => {
   const {env, ctx} = entorno();
   const {token} = await (await worker.fetch(req("/v1/login", {method: "POST", body: LOGIN}), env, ctx)).json();

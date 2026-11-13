@@ -117,14 +117,25 @@ class Sincronizar(unittest.TestCase):
                 nube.sincronizar(rendimiento, "cozi#1134", "LAN", {"overlay": True})
             llamadas = p.call_args_list
             self.assertEqual([c.args[:2] for c in llamadas],
-                             [("PUT", "/v1/yo/riot"), ("PUT", "/v1/yo/ajustes"), ("PUT", "/v1/yo/resumenes")])
+                             [("PUT", "/v1/yo/riot"), ("PUT", "/v1/yo/cuentas"), ("PUT", "/v1/yo/ajustes"), ("PUT", "/v1/yo/resumenes")])
             self.assertEqual(llamadas[0].args[2], {"riot_id": "cozi#1134", "region": "la1"})  # LAN → la1
-            self.assertEqual(llamadas[1].args[2], {"overlay": True})
-            filas = llamadas[2].args[2]
+            self.assertEqual(llamadas[1].args[2], {"riot_id": "cozi#1134", "region": "la1"})  # y queda vinculada a tu Google
+            self.assertEqual(llamadas[2].args[2], {"overlay": True})
+            filas = llamadas[3].args[2]
             self.assertEqual([f["match_id"] for f in filas], [f"LA1_{i}" for i in range(50)])  # máx. 50 y sin la partida sin archivo
-            self.assertEqual(filas[0]["ts"], 1000)
+            self.assertEqual((filas[0]["ts"], filas[0]["cuenta"]), (1000, "cozi#1134"))
             self.assertEqual(filas[0]["resumen"], {"campeon": "Sylas", "rival": "Zed", "win": True, "kda": "5/4/7",
                                                    "score": 5, "puesto_eq": 1, "fecha": "hoy"})
+
+    def test_otra_cuenta_se_vincula_sin_pisar_la_principal(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = escribir_sesion(d, {"token": TOKEN, "email": "a", "nombre": "n", "sync": None})
+            r = {"cuentas": [{"riot_id": "cozi#1134"}, {"riot_id": "Alt#LAN"}]}
+            with mock.patch.object(nube, "SESION_F", f), mock.patch.object(nube, "pedir", return_value=r) as p:
+                nube.sincronizar({"resumen": {"partidas": [dict(archivo="LA1_1", t=1)]}}, "Alt#LAN", "la1", None, principal=False)
+                self.assertEqual(nube.sesion()["cuentas"], ["cozi#1134", "Alt#LAN"])
+            self.assertEqual([c.args[1] for c in p.call_args_list], ["/v1/yo/cuentas", "/v1/yo/resumenes"])  # sin /v1/yo/riot
+            self.assertEqual(p.call_args_list[1].args[2][0]["cuenta"], "Alt#LAN")
 
     def test_401_borra_la_sesion_local(self):
         with tempfile.TemporaryDirectory() as d:
@@ -138,7 +149,7 @@ class NubePublica(unittest.TestCase):
     def test_nunca_incluye_el_token(self):
         s = {"token": TOKEN, "email": "a@b.c", "nombre": "Cozi", "sync": 123.0, "extra": "x"}
         with mock.patch.object(nube, "sesion", return_value=s):
-            self.assertEqual(w.nube_publica(), {"email": "a@b.c", "nombre": "Cozi", "sync": 123.0})
+            self.assertEqual(w.nube_publica(), {"email": "a@b.c", "nombre": "Cozi", "sync": 123.0, "cuentas": None})
             self.assertNotIn("token", w.nube_publica())
 
     def test_sin_sesion_none(self):

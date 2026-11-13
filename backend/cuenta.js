@@ -57,6 +57,8 @@ async function login(request, env) {
   return json({token, email: p.email, nombre: p.name || ""});
 }
 
+const RIOT_ID = /^[^#]{1,32}#[^#]{1,8}$/;
+
 export async function cuenta(request, env, url) {
   // Rutas /v1/login y /v1/yo…; null si la ruta no es de cuenta (sigue el proxy de Riot)
   const ruta = url.pathname, m = request.method;
@@ -72,7 +74,8 @@ export async function cuenta(request, env, url) {
   if (ruta === "/v1/yo" && m === "GET") {
     const u = await DB.prepare("SELECT email, nombre, ajustes, riot_id, region, ultima FROM usuarios WHERE google_sub = ?").bind(sub).first();
     const n = await DB.prepare("SELECT COUNT(*) AS n FROM resumenes WHERE google_sub = ?").bind(sub).first();
-    return json({...u, ajustes: u && u.ajustes ? JSON.parse(u.ajustes) : null, partidas: n ? n.n : 0});
+    const {results: cs} = await DB.prepare("SELECT riot_id, region FROM cuentas_riot WHERE google_sub = ? ORDER BY creado, rowid").bind(sub).all();
+    return json({...u, ajustes: u && u.ajustes ? JSON.parse(u.ajustes) : null, partidas: n ? n.n : 0, cuentas: cs || []});
   }
   let d = null;
   if (m === "PUT" || m === "POST") { try { d = await request.json(); } catch { return json({error: "cuerpo inválido"}, 400); } }
@@ -83,26 +86,38 @@ export async function cuenta(request, env, url) {
   }
   if (ruta === "/v1/yo/riot" && m === "PUT") {
     const {riot_id, region} = d || {};
-    if (!/^[^#]{1,32}#[^#]{1,8}$/.test(riot_id || "") || !/^[a-z0-9]{2,5}$/.test(region || "")) return json({error: "Riot ID o región inválidos"}, 400);
+    if (!RIOT_ID.test(riot_id || "") || !/^[a-z0-9]{2,5}$/.test(region || "")) return json({error: "Riot ID o región inválidos"}, 400);
     await DB.prepare("UPDATE usuarios SET riot_id = ?, region = ?, ultima = ? WHERE google_sub = ?").bind(riot_id, region, ahora(), sub).run();
     return json({ok: true});
   }
+  if (ruta === "/v1/yo/cuentas" && m === "PUT") {  // vincular la cuenta con sesión en tu cliente de LoL (hasta 5)
+    const {riot_id, region} = d || {};
+    if (!RIOT_ID.test(riot_id || "") || !/^[a-z0-9]{2,5}$/.test(region || "")) return json({error: "Riot ID o región inválidos"}, 400);
+    const ya = await DB.prepare("SELECT COUNT(*) AS n FROM cuentas_riot WHERE google_sub = ? AND riot_id != ?").bind(sub, riot_id).first();
+    if (ya && ya.n >= 5) return json({error: "ya tienes 5 cuentas vinculadas"}, 409);
+    await DB.prepare("INSERT INTO cuentas_riot (google_sub, riot_id, region, creado, ultima) VALUES (?, ?, ?, ?, ?) ON CONFLICT(google_sub, riot_id) DO UPDATE SET region = excluded.region, ultima = excluded.ultima")
+      .bind(sub, riot_id, region, ahora(), ahora()).run();
+    const {results} = await DB.prepare("SELECT riot_id, region FROM cuentas_riot WHERE google_sub = ? ORDER BY creado, rowid").bind(sub).all();
+    return json({ok: true, cuentas: results || []});
+  }
   if (ruta === "/v1/yo/resumenes" && m === "PUT") {
     const fs = Array.isArray(d) ? d.slice(0, 50) : null;
-    if (!fs || !fs.every(f => /^[A-Z0-9]{2,5}_\d{1,15}$/.test(f.match_id || "") && JSON.stringify(f.resumen || {}).length < 2000)) return json({error: "resúmenes inválidos"}, 400);
-    for (const f of fs) await DB.prepare("INSERT OR REPLACE INTO resumenes (google_sub, match_id, ts, resumen) VALUES (?, ?, ?, ?)").bind(sub, f.match_id, f.ts || 0, JSON.stringify(f.resumen)).run();
+    if (!fs || !fs.every(f => /^[A-Z0-9]{2,5}_\d{1,15}$/.test(f.match_id || "") && JSON.stringify(f.resumen || {}).length < 2000
+                         && (f.cuenta == null || RIOT_ID.test(f.cuenta)))) return json({error: "resúmenes inválidos"}, 400);
+    await DB.batch(fs.map(f => DB.prepare("INSERT OR REPLACE INTO resumenes (google_sub, match_id, ts, resumen, cuenta) VALUES (?, ?, ?, ?, ?)")
+      .bind(sub, f.match_id, f.ts || 0, JSON.stringify(f.resumen), f.cuenta || null)));
     return json({ok: true, n: fs.length});
   }
   if (ruta === "/v1/yo/resumenes" && m === "GET") {
-    const {results} = await DB.prepare("SELECT match_id, ts, resumen FROM resumenes WHERE google_sub = ? ORDER BY ts DESC LIMIT 500").bind(sub).all();
-    return json((results || []).map(r => ({match_id: r.match_id, ts: r.ts, resumen: JSON.parse(r.resumen)})));
+    const {results} = await DB.prepare("SELECT match_id, ts, resumen, cuenta FROM resumenes WHERE google_sub = ? ORDER BY ts DESC LIMIT 500").bind(sub).all();
+    return json((results || []).map(r => ({match_id: r.match_id, ts: r.ts, cuenta: r.cuenta, resumen: JSON.parse(r.resumen)})));
   }
   if (ruta === "/v1/yo/salir" && m === "POST") {
     await DB.prepare("DELETE FROM sesiones WHERE token_hash = ?").bind(await sha256(request.headers.get("authorization").slice(7))).run();
     return json({ok: true});
   }
   if (ruta === "/v1/yo" && m === "DELETE") {  // borrar mis datos: usuario, sesiones y resúmenes
-    for (const t of ["resumenes", "sesiones", "usuarios"]) await DB.prepare(`DELETE FROM ${t} WHERE google_sub = ?`).bind(sub).run();
+    for (const t of ["resumenes", "cuentas_riot", "sesiones", "usuarios"]) await DB.prepare(`DELETE FROM ${t} WHERE google_sub = ?`).bind(sub).run();
     return json({ok: true});
   }
   return json({error: "no existe"}, 404);

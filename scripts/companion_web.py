@@ -225,7 +225,7 @@ def nube_publica():
     """Lo que la página puede ver de tu sesión (sin el token)."""
     import nube
     s = nube.sesion()
-    return {k: s.get(k) for k in ("email", "nombre", "sync")} if s else None
+    return {k: s.get(k) for k in ("email", "nombre", "sync", "cuentas")} if s else None
 
 
 def sync_nube():
@@ -233,8 +233,9 @@ def sync_nube():
     import nube
     if not nube.sesion(): return
     with LOCK: e = dict(ESTADO)
-    base = not gui.ajeno(gui.CUENTA[0]) and gui.es_base()  # otra cuenta: ni su Riot ID ni partidas, para no mezclarlas en el grupo
-    nube.sincronizar(e.get("rendimiento") if base else None, e.get("cuenta") if base else None, e.get("plataforma"), e.get("ajustes"))
+    ajena = gui.es_base() and gui.ajeno(gui.CUENTA[0])  # la carpeta base es de otra persona: sus partidas no son tuyas
+    nube.sincronizar(None if ajena else e.get("rendimiento"), e.get("cuenta"), e.get("plataforma"), e.get("ajustes"),
+                     principal=gui.es_base() and not ajena)  # otra cuenta tuya: se vincula y sube marcada, sin pisar la principal del grupo
     with LOCK: ESTADO.update(nube=nube_publica(), v=ESTADO["v"] + 1)
 
 

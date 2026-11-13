@@ -63,7 +63,7 @@ export async function extra(request, env, url, quienEs) {
     const {results: us} = await DB.prepare("SELECT google_sub, riot_id FROM usuarios WHERE json_extract(ajustes, '$.grupo') = 1 AND riot_id IS NOT NULL LIMIT 50").bind().all();
     const semana = Date.now() - 7 * 864e5, out = [];
     for (const u of us || []) {
-      const {results: rs} = await DB.prepare("SELECT ts, resumen FROM resumenes WHERE google_sub = ? ORDER BY ts DESC LIMIT 20").bind(u.google_sub).all();
+      const {results: rs} = await DB.prepare("SELECT ts, resumen FROM resumenes WHERE google_sub = ? AND (cuenta IS NULL OR cuenta = ?) ORDER BY ts DESC LIMIT 20").bind(u.google_sub, u.riot_id).all();  // solo la cuenta principal
       const ps = (rs || []).map(r => ({ts: r.ts, ...JSON.parse(r.resumen)}));
       const sem = ps.filter(p => p.ts >= semana), sc = ps.map(p => p.score).filter(x => typeof x === "number");
       out.push({riot_id: u.riot_id, yo: q.id === "g:" + u.google_sub, semana: [sem.filter(p => p.win).length, sem.length],

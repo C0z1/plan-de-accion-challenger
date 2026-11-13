@@ -19,7 +19,16 @@ CREATE TABLE IF NOT EXISTS resumenes (
   match_id   TEXT NOT NULL,
   ts         INTEGER,
   resumen    TEXT NOT NULL,      -- JSON chico: campeón, resultado, KDA, score, reglas, error
+  cuenta     TEXT,               -- riot_id de la partida (v0.27; NULL = de la cuenta principal, de antes)
   PRIMARY KEY (google_sub, match_id)
+);
+CREATE TABLE IF NOT EXISTS cuentas_riot (  -- v0.27: tu Google vinculado a tus cuentas de LoL (migraciones/003_cuentas_riot.sql)
+  google_sub TEXT NOT NULL,
+  riot_id    TEXT NOT NULL,
+  region     TEXT,
+  creado     INTEGER,
+  ultima     INTEGER,
+  PRIMARY KEY (google_sub, riot_id)
 );
 -- v0.8 (todo gratis): builds compartidas, invitaciones, reportes privados y métricas anónimas
 CREATE TABLE IF NOT EXISTS builds (

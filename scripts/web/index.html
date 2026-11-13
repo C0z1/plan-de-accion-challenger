@@ -1094,6 +1094,7 @@ function loginNube(s) {  // Ajustes_Login_Vino (acuerdo 23): sin sesión, el bot
       <span class="tag" style="background:rgba(127,184,158,.16);color:#A8D8C0;align-self:center">✓ Sincronizada</span></div>
     <div style="height:1px;background:var(--line)"></div>
     <span class="sub" style="font-size:14px">Tu cuenta está guardada en la nube${hace == null ? "" : ` · última sincronización ${hace < 1 ? "hace un momento" : "hace " + hace + " min"}`}</span>
+    ${(n.cuentas || []).length ? `<span class="sub" style="font-size:14px">Cuentas de LoL vinculadas: <b style="color:var(--txt)">${n.cuentas.map(esc).join(" · ")}</b> <span style="font-size:12px">(se vincula sola la cuenta con sesión en tu cliente)</span></span>` : ""}
     <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn2" style="color:var(--acc);border-color:rgba(242,141,176,.5)" onclick="nube('sync')">Sincronizar ahora</button>
       <button class="btn2 salir" onclick="nube('salir')">Cerrar sesión</button>
       <button class="btn2 salir" onclick="if(confirmarBorrado())nube('borrar')">Borrar mis datos de la nube</button></div></div>`;

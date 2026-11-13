@@ -77,16 +77,21 @@ def compacto(p):
                 puesto_eq=p.get("puesto_eq"), fecha=p.get("fecha"))
 
 
-def sincronizar(rendimiento=None, cuenta=None, region=None, ajustes=None):
-    """Sube Riot ID, ajustes y el resumen de tus últimas partidas; devuelve la hora de la sincronización o None."""
+def sincronizar(rendimiento=None, cuenta=None, region=None, ajustes=None, principal=True):
+    """Vincula a tu Google la cuenta de LoL con sesión en tu cliente y sube sus partidas (marcadas con su Riot ID) y tus
+    ajustes; la principal (la dueña de la PC) además queda como tu Riot ID del grupo. Devuelve la hora o None."""
     s = sesion()
     if not s: return None
     t = s["token"]
     try:
-        if cuenta and region: pedir("PUT", "/v1/yo/riot", {"riot_id": cuenta, "region": region.lower().replace("lan", "la1").replace("las", "la2")}, t)
+        if cuenta and region:
+            reg = region.lower().replace("lan", "la1").replace("las", "la2")
+            if principal: pedir("PUT", "/v1/yo/riot", {"riot_id": cuenta, "region": reg}, t)
+            r = pedir("PUT", "/v1/yo/cuentas", {"riot_id": cuenta, "region": reg}, t)
+            if isinstance(r, dict) and isinstance(r.get("cuentas"), list): s["cuentas"] = [c.get("riot_id") for c in r["cuentas"] if isinstance(c, dict)]
         if ajustes is not None: pedir("PUT", "/v1/yo/ajustes", ajustes, t)
         ps = ((rendimiento or {}).get("resumen") or {}).get("partidas") or []
-        filas = [dict(match_id=p["archivo"], ts=p.get("t") or 0, resumen=compacto(p)) for p in ps if p.get("archivo")]
+        filas = [dict(match_id=p["archivo"], ts=p.get("t") or 0, resumen=compacto(p), **({"cuenta": cuenta} if cuenta else {})) for p in ps if p.get("archivo")]
         if filas: pedir("PUT", "/v1/yo/resumenes", filas[:50], t)
     except urllib.error.HTTPError as e:
         if e.code == 401: SESION_F.unlink(missing_ok=True)  # la sesión venció o se cerró en otro lado
