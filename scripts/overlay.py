@@ -243,6 +243,7 @@ def rect_juego():
     except Exception: return None
 
 
+ABAJO_X, HUD_Y = 0.30, 0.85  # «abajo»: a la derecha del chat y encima de la barra de habilidades (zonas de salud.py)
 TOPE_DERECHO = 0.76  # el marcador del juego (kills, KDA, CS, reloj) empieza en ~0,78 del ancho (D9 del plan En vivo)
 
 
@@ -251,9 +252,12 @@ def colocar(juego, pantalla, alto_franja, x=0.22, pos=None, margen=6, util=1.0, 
     principal sin la barra de tareas (D4). Si no cabe antes del marcador (pantallas chicas, escala alta), se corre a la izquierda."""
     if juego: x0, y0, x1, y1 = juego
     else: x0, y0, (x1, y1) = 0, 0, pantalla
+    if pos == "abajo":  # abajo: a la derecha del chat (x < 0,25) y encima de la barra de habilidades (y > 0,85), sin pisar el HUD
+        x, y_hud = max(x, ABAJO_X), int(y0 + (y1 - y0) * (HUD_Y if juego else min(HUD_Y, util)))
+        px = max(x0 + margen, min(int(x0 + (x1 - x0) * x), int(x0 + (x1 - x0) * TOPE_DERECHO) - ancho_franja))
+        return px, max(y0, y_hud - alto_franja - margen)
     px = max(x0 + margen, min(int(x0 + (x1 - x0) * x), int(x0 + (x1 - x0) * TOPE_DERECHO) - ancho_franja))
-    if juego: return px, (y1 - alto_franja - margen if pos == "abajo" else y0 + margen)
-    return px, pos_y(pos, y1, alto_franja, margen, util)
+    return px, y0 + margen
 
 
 def fraccion_util():
@@ -296,11 +300,17 @@ def escala(juego):
     return max(0.75, min(2.0, round(alto / 1080 * 4) / 4))
 
 
+def bgra_premultiplicado(im):
+    """Bytes BGRA con el color multiplicado por el alfa: lo que pide UpdateLayeredWindow (sin esto, halos oscuros: DeepSeek)."""
+    from PIL import Image, ImageChops
+    r, g, b, a = im.convert("RGBA").split()
+    return Image.merge("RGBA", tuple(ImageChops.multiply(c, a) for c in (b, g, r)) + (a,)).tobytes()
+
+
 def mostrar(hwnd, im, x, y):
     """Pone la imagen RGBA en la ventana en capas: DIB de 32 bits BGRA premultiplicado (sin premultiplicar salen halos,
     DeepSeek). True si Windows la aceptó."""
     import ctypes, ctypes.wintypes as w
-    from PIL import Image, ImageChops
     u, g, H = ctypes.windll.user32, ctypes.windll.gdi32, ctypes.c_void_p
     u.GetDC.restype = H; u.GetDC.argtypes = [w.HWND]; u.ReleaseDC.argtypes = [w.HWND, H]
     g.CreateCompatibleDC.restype = H; g.CreateCompatibleDC.argtypes = [H]
@@ -310,8 +320,7 @@ def mostrar(hwnd, im, x, y):
     class BLEND(ctypes.Structure): _fields_ = [("op", ctypes.c_byte), ("flags", ctypes.c_byte), ("alpha", ctypes.c_ubyte), ("fmt", ctypes.c_byte)]
     class BIH(ctypes.Structure): _fields_ = [("size", w.DWORD), ("w", ctypes.c_long), ("h", ctypes.c_long), ("planes", w.WORD), ("bits", w.WORD), ("comp", w.DWORD),
                                              ("isize", w.DWORD), ("xp", ctypes.c_long), ("yp", ctypes.c_long), ("used", w.DWORD), ("imp", w.DWORD)]
-    W, Hh = im.size; r, gg, b, a = im.split()
-    px = Image.merge("RGBA", tuple(ImageChops.multiply(c, a) for c in (b, gg, r)) + (a,)).tobytes()  # BGRA premultiplicado
+    W, Hh = im.size; px = bgra_premultiplicado(im)
     sdc = u.GetDC(0); mdc = g.CreateCompatibleDC(sdc); bits = ctypes.c_void_p()
     hb = g.CreateDIBSection(mdc, ctypes.byref(BIH(ctypes.sizeof(BIH), W, -Hh, 1, 32, 0, 0, 0, 0, 0, 0)), 0, ctypes.byref(bits), None, 0)
     if not hb: g.DeleteDC(mdc); u.ReleaseDC(0, sdc); return False

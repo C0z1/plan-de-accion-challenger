@@ -109,6 +109,12 @@ class TestPintar(unittest.TestCase):
         self.assertEqual(sum(overlay.SACUDIDA), -1 + 0)  # termina en 0 y casi simétrica: la ventana vuelve a su lugar
         self.assertEqual(overlay.SACUDIDA[-1], 0)
 
+    def test_premultiplicado_sin_halos(self):  # rojo al 50 %: B=0 G=0 R=128 A=128; transparente: todo 0 (si no, halo)
+        try: from PIL import Image
+        except ImportError: self.skipTest("sin Pillow")
+        im = Image.new("RGBA", (2, 1)); im.putpixel((0, 0), (255, 0, 0, 128)); im.putpixel((1, 0), (255, 255, 255, 0))
+        self.assertEqual(overlay.bgra_premultiplicado(im), bytes([0, 0, 128, 128, 0, 0, 0, 0]))
+
     def test_escala(self):
         self.assertEqual([overlay.escala(None), overlay.escala((0, 0, 1280, 720)), overlay.escala((0, 0, 3840, 2160)), overlay.escala((0, 0, 9, 4000))], [1.0, 0.75, 2.0, 2.0])
 
@@ -132,7 +138,7 @@ class TestVisible(unittest.TestCase):  # D2 + D3 del plan En vivo
 class TestColocar(unittest.TestCase):  # D4: la franja sigue a la ventana del juego
     def test_juego_en_el_segundo_monitor(self):
         self.assertEqual(overlay.colocar((1920, 0, 4480, 1440), (1920, 1080), 30), (1920 + int(2560 * 0.22), 6))
-        self.assertEqual(overlay.colocar((1920, 0, 4480, 1440), (1920, 1080), 30, pos="abajo"), (1920 + int(2560 * 0.22), 1440 - 30 - 6))
+        self.assertEqual(overlay.colocar((1920, 0, 4480, 1440), (1920, 1080), 30, pos="abajo"), (1920 + int(2560 * 0.30), int(1440 * 0.85) - 30 - 6))  # encima del HUD
 
     def test_no_pisa_el_marcador(self):  # D9: 719 px (peor caso medido a 1920) en un juego de 1366 se corre a la izquierda
         x, _ = overlay.colocar((0, 0, 1366, 768), (1366, 768), 34, ancho_franja=719)
@@ -140,7 +146,19 @@ class TestColocar(unittest.TestCase):  # D4: la franja sigue a la ventana del ju
         self.assertEqual(overlay.colocar((0, 0, 1920, 1080), (1920, 1080), 34, ancho_franja=719)[0], int(1920 * 0.22))  # a 1920 cabe: no se mueve
 
     def test_sin_juego_usa_la_pantalla_principal(self):
-        self.assertEqual(overlay.colocar(None, (1920, 1080), 30, pos="abajo", util=0.95), (int(1920 * 0.22), int(1080 * 0.95) - 36))
+        self.assertEqual(overlay.colocar(None, (1920, 1080), 30, pos="abajo", util=0.95), (int(1920 * 0.30), int(1080 * 0.85) - 36))  # encima del HUD, a la derecha del chat
+
+
+class TestZonas(unittest.TestCase):  # fase C: ni arriba ni abajo pisan minimapa, marcador, HUD ni chat (zonas de salud.py)
+    def test_no_pisa_en_ninguna_resolucion(self):
+        import salud
+        for W, H in ((1920, 1080), (2560, 1440), (1366, 768), (3840, 2160), (1280, 720)):
+            juego = (0, 0, W, H); e = overlay.escala(juego); aw, ah = round(380 * e), round(72 * e)
+            for pos in ("arriba", "abajo"):
+                x, y = overlay.colocar(juego, (W, H), ah, 0.22, pos, 6, 1.0, aw)
+                f = (x / W, y / H, (x + aw) / W, (y + ah) / H)
+                pisa = [z for z, (a, b, c, d) in salud.ZONAS.items() if f[0] < c and f[2] > a and f[1] < d and f[3] > b]
+                self.assertEqual(pisa, [], f"{W}x{H} {pos}")
 
 
 class TestVentana(unittest.TestCase):
