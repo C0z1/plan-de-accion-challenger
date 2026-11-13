@@ -150,6 +150,7 @@ def partir(t, n=46):
     """Un dato largo en dos renglones de la pastilla (el segundo, la parte entre paréntesis o el resto)."""
     if len(t) <= n: return [t]
     i = t.rfind(":", 0, n) + 1 or t.rfind(" ", 0, n)
+    if i <= 0: i = n  # sin «:» ni espacios: corte duro (DeepSeek)
     return [t[:i].strip(), corta(t[i:].strip(), 52)]
 
 

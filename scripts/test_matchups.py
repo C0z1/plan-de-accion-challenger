@@ -111,10 +111,11 @@ class Integracion(unittest.TestCase):  # la ficha de la selección, la franja y 
         with tempfile.TemporaryDirectory() as t:
             p = pathlib.Path(t, "m.json"); p.write_text(json.dumps(d), encoding="utf-8")
             f = M.para_ficha("Zeri", "MIDDLE", "MissFortune", p)
+            self.assertIsNone(M.para_ficha("Zeri", "MIDDLE", "Ahri", p))  # sin ese matchup
+            self.assertEqual(M.para_ficha("Zeri", "MIDDLE", "Miss Fortune", p)["n"], 200)  # nombre de la API en vivo (con espacio)
         self.assertTrue(f["frases"][0].startswith("Zeri gana el nivel 6-8 contra Miss Fortune"))
         self.assertEqual((f["n"], f["parches"]), (200, ["16.22"]))
         self.assertEqual(f["pagina"], {"primaryStyleId": 8100, "subStyleId": 8000, "selectedPerkIds": [8112, 8139, 8138, 8135, 9111, 8017, 5005, 5008, 5001]})
-        self.assertIsNone(M.para_ficha("Zeri", "MIDDLE", "Ahri", p))  # sin ese matchup
         self.assertIsNone(M.pagina_lcu({"pagina_ids": [1, 2, 3]}))
 
     def test_franja_usa_el_dato(self):

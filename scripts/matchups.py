@@ -146,8 +146,10 @@ def guardado(a, pos, b, archivo=None):
     """El resumen del matchup (sin red), o None si falta, está cortado o tiene pocas partidas."""
     try: d = json.loads(pathlib.Path(archivo or SALIDA).read_text(encoding="utf-8"))
     except (OSError, ValueError): return None
-    m = d.get(f"{a}|{pos}|{b}") if isinstance(d, dict) else None
-    return m if m and m.get("n", 0) >= MIN_PARTIDAS else None
+    if not isinstance(d, dict): return None
+    k = lambda x: "".join(c for c in str(x).lower() if c.isalnum())  # «Miss Fortune» (en vivo) = «MissFortune» (API); Kai'Sa = KaiSa
+    m = d.get(f"{a}|{pos}|{b}") or next((v for kk, v in d.items() if kk.count("|") == 2 and [k(x) for x in kk.split("|")] == [k(a), k(pos), k(b)]), None)
+    return m if isinstance(m, dict) and m.get("n", 0) >= MIN_PARTIDAS else None
 
 
 def pagina_lcu(m):

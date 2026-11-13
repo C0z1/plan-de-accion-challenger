@@ -18,7 +18,7 @@ IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
           "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "comentario": None, "mover_franja": False, "al_dia": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
-VERSION = "0.21.2"  # HTC; también invalida la caché de rendimiento
+VERSION = "0.22.0"  # HTC; también invalida la caché de rendimiento
 ESTADO["version"] = VERSION  # la página se recarga si cambia (Racha se actualizó con la ventana abierta)
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -653,7 +653,8 @@ class H(http.server.BaseHTTPRequestHandler):
                 b = builds.guardado_dict(str(d["champ"]), str(d["pos"])) or {}
                 pag = None
                 if d.get("rival"):  # la página del matchup (muchas partidas Master+), si hay datos
-                    import matchups; pag = (matchups.para_ficha(str(d["champ"]), str(d["pos"]), str(d["rival"])) or {}).get("pagina")
+                    try: import matchups; pag = (matchups.para_ficha(str(d["champ"]), str(d["pos"]), str(d["rival"])) or {}).get("pagina")
+                    except Exception: pag = None  # sin datos de matchup: la página de la build
             except (ValueError, KeyError, TypeError): return self.enviar(400, b"", "text/plain")
             ok, msg = companion.importar_runas(str(d["champ"]) + (f" vs {d['rival']}" if pag else ""), pag or b.get("pagina_ids"))
             return self.enviar(200 if ok else 409, json.dumps({"ok": ok, "mensaje": msg}).encode(), "application/json")
