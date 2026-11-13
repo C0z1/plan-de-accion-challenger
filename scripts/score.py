@@ -212,7 +212,7 @@ def resumen(n=10, raw=None):
                                mvp=dict(campeon=g["jug"][g["mvp_id"]][0], kda=g["jug"][g["mvp_id"]][1], score=g["mvp_score"], tu=g["mvp_id"] == yo)
                                    if g.get("jug") and g.get("mvp_id") in g["jug"] else None)
                           for g in reversed(gs[-n:])],
-                media=m(gs), ultimas20=m(gs[-20:]), anteriores=m(gs[:-20]),
+                total=len(gs), media=m(gs), ultimas20=m(gs[-20:]), anteriores=m(gs[:-20]),
                 tendencia=[m(gs[i:i + 20]) for i in range(0, len(gs), 20)],
                 por_campeon={c: dict(n=len(v), wr=round(sum(g["win"] for g in v) / len(v), 2), score=m(v))
                              for c, v in sorted(champs.items(), key=lambda x: -len(x[1]))},

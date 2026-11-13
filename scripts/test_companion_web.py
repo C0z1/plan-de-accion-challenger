@@ -84,8 +84,8 @@ class Http(unittest.TestCase):
             return None
         orig, c.lcu, ts = c.lcu, lcu, w.time.sleep
         w.time.sleep = lambda s: None
-        try:
-            with self.assertRaises(KeyboardInterrupt): w.vigilar_cuenta(q)
+        try:  # sin hilos reales: seguirían vivos tras la prueba con el cliente de verdad y bajarían partidas al repo
+            with self.assertRaises(KeyboardInterrupt), mock.patch.object(w, "primera_vez"), mock.patch.object(w, "al_dia"): w.vigilar_cuenta(q)
         finally: c.lcu, w.time.sleep = orig, ts
         self.assertEqual([e[1] for e in list(q.queue) if e[0] == "cuenta"], ["Uno#LAN", "Dos#LAN"])
 
@@ -113,12 +113,13 @@ class Http(unittest.TestCase):
             w.buscar_version()
         self.assertIsNone(w.ESTADO["nueva"])  # solo enlaces de GitHub
 
-    def test_primera_vez_descarga_solo_sin_partidas(self):
+    def test_primera_vez_hasta_tener_el_historial_completo(self):
         import tempfile, os
         with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {"DATOS_DIR": d}),                 mock.patch.object(w, "descargar_todo") as dt, mock.patch.object(w.gui, "puede_descargar", return_value=True),                 mock.patch.object(w.companion, "lcu", return_value={"gameName": "Amigo"}):  # con el cliente abierto
             w.primera_vez(); self.assertEqual(dt.call_count, 1)
-            pathlib.Path(d, "LA1_1.json").write_text("{}"); w.primera_vez(); self.assertEqual(dt.call_count, 1)
-        with mock.patch.object(w, "descargar_todo") as dt, mock.patch.object(w.gui, "puede_descargar", return_value=False):
+            pathlib.Path(d, "LA1_1.json").write_text("{}"); w.primera_vez(); self.assertEqual(dt.call_count, 2)  # con partidas, sin el historial entero
+            pathlib.Path(d, "historial.json").write_text("{}"); w.primera_vez(); self.assertEqual(dt.call_count, 2)  # completo: lo nuevo llega por al_dia
+        with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {"DATOS_DIR": d}), mock.patch.object(w, "descargar_todo") as dt,              mock.patch.object(w.companion, "lcu", return_value=None):  # cliente cerrado: se reintenta al abrir LoL
             w.primera_vez(); dt.assert_not_called()
 
     def test_vistas_previas(self):  # Selección y En vivo no quedan vacías fuera del champ select y de la partida

@@ -123,7 +123,7 @@ def evento(e):
         gui.CUENTA[0] = e[1]
         if gui.usar_cuenta(e[1], e[3] if len(e) > 3 else None):  # otra cuenta: su propia carpeta; se bajan sus últimas 20 del cliente
             s.update(descarga=None, previa=None, ultima=None, rendimiento=None)
-            if not any(gui.RAW.glob("*_*.json")): threading.Thread(target=descargar_todo, daemon=True).start()
+            threading.Thread(target=descargar_todo, daemon=True).start()  # incremental: el historial entero la primera vez, luego solo lo nuevo
         s.update(cuenta=e[1], perfil=gui.perfil(ESTADO["rango"], e[1]), icono=e[2] if len(e) > 2 else None)
         threading.Thread(target=refrescar, daemon=True).start()  # si el historial en disco es de otra cuenta, se oculta
     elif tipo == "cliente": s = {"cliente": e[1]}
@@ -233,7 +233,8 @@ def sync_nube():
     import nube
     if not nube.sesion(): return
     with LOCK: e = dict(ESTADO)
-    nube.sincronizar(None if gui.ajeno(gui.CUENTA[0]) or not gui.es_base() else e.get("rendimiento"), e.get("cuenta"), e.get("plataforma"), e.get("ajustes"))
+    base = not gui.ajeno(gui.CUENTA[0]) and gui.es_base()  # otra cuenta: ni su Riot ID ni partidas, para no mezclarlas en el grupo
+    nube.sincronizar(e.get("rendimiento") if base else None, e.get("cuenta") if base else None, e.get("plataforma"), e.get("ajustes"))
     with LOCK: ESTADO.update(nube=nube_publica(), v=ESTADO["v"] + 1)
 
 
@@ -380,7 +381,7 @@ def primera_vez():
     servidor; sin ella, las últimas 20 desde su cliente)."""
     import os
     raw = pathlib.Path(os.environ.get("DATOS_DIR") or gui.REPO / "datos" / "raw")
-    if any(raw.glob("*_*.json")): return  # sin invitación también: se bajan las del cliente (descargar_todo)
+    if (raw / "historial.json").exists(): return  # historial completo: lo nuevo llega por al_dia y tras cada partida
     if not (companion.lcu("/lol-summoner/v1/current-summoner") or {}).get("gameName"): return  # sin cliente: se reintenta al abrir LoL
     descargar_todo()
 
@@ -444,25 +445,31 @@ def buscar_cuenta(riot_id, region):
                   else f"Guardada: {c['riot_id']}. Bajando tus partidas…")
 
 
-def descargar_todo(n=100):
-    """Baja tus últimas n partidas (descargar.py, con tu key o tu código) y recalcula todo; el avance va a «descarga»."""
+def descargar_todo(n="todo"):
+    """Baja tu historial de clasificatorias (descargar.py, con tu key o tu código; incremental) de la cuenta con sesión en
+    el cliente, aunque no sea la dueña de la PC, a su carpeta; recalcula todo. El avance va a «descarga»."""
     if not DESCARGANDO.acquire(blocking=False):  # ya hay una en curso
         with LOCK: ESTADO.update(descarga="Ya se están bajando tus partidas…", v=ESTADO["v"] + 1)
         return
     try:
         def aviso(t):
             with LOCK: ESTADO.update(descarga=t, v=ESTADO["v"] + 1)
-        if not gui.puede_descargar() or not gui.es_base():  # sin invitación ni key (u otra cuenta: la key baja la del dueño): las últimas 20 del cliente
+        otra = not gui.es_base() and gui.CUENTA[0]  # otra cuenta tuya: se baja la suya (RIOT_ID), no la del dueño
+        if not gui.puede_descargar() or (not gui.es_base() and not otra):  # sin invitación ni key: las últimas 20 del cliente
             import cliente_v5
             aviso("Bajando tus últimas 20 partidas desde tu cliente de LoL…")
             nuevas, msg = cliente_v5.descargar()
             aviso(msg + (" Con una invitación o tu propia key se bajan hasta 100." if nuevas or "ya estaban" in msg else ""))
             if nuevas: refrescar()
             return
-        if gui.ajeno(gui.CUENTA[0]):  # el historial de esta PC es de otra cuenta: bajarlo pisaría su perfil.json
+        if gui.es_base() and gui.ajeno(gui.CUENTA[0]):  # el historial de esta PC es de otra cuenta: bajarlo pisaría su perfil.json
             return aviso(AJENA)
-        aviso("Descargando tus partidas… puede tardar unos minutos la primera vez.")
-        code, out = gui.script("descargar.py", str(n))
+        aviso("Descargando tu historial de clasificatorias… la primera vez puede tardar varios minutos.")
+        antes = os.environ.get("RIOT_ID")
+        if otra: os.environ["RIOT_ID"] = otra  # en este proceso (gui.script): la cuenta activa, no la guardada en Ajustes
+        try: code, out = gui.script("descargar.py", str(n))
+        finally:
+            if otra: os.environ.pop("RIOT_ID", None) if antes is None else os.environ.__setitem__("RIOT_ID", antes)
         if code in (0, 3):
             ult = (out.strip().splitlines() or [""])[-1].strip()
             aviso("Listo: " + (ult[len("listo: "):] if ult.lower().startswith("listo: ") else ult) + " al día."); refrescar()

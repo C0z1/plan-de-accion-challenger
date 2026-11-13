@@ -15,7 +15,10 @@ class Falso(http.server.BaseHTTPRequestHandler):
         if "/riot/account/v1/" in p: return self.responder(200, {"puuid": "P", "gameName": "Amigo", "tagLine": "LAN"})
         if "/league/v4/" in p: return self.responder(200, [])
         if p.endswith("/ids?queue=420&start=0&count=1"): return self.responder(200, ["LA1_9"])
-        if "/matches/LA1_9" in p: return self.responder(200, PARTIDA)
+        if p.endswith("/ids?queue=440&start=0&count=1"): return self.responder(200, [])  # Flex: nada
+        if p.endswith("/ids?queue=420&start=0&count=100"): return self.responder(200, ["LA1_9", "LA1_12"])  # «todo»: menos de 100, fin
+        if p.endswith("/ids?queue=440&start=0&count=100"): return self.responder(200, ["LA1_11"])
+        if "/matches/LA1_" in p and "by-puuid" not in p: return self.responder(200, PARTIDA)
         self.responder(404, {})
     def responder(self, code, d):
         b = json.dumps(d).encode(); self.send_response(code); self.send_header("Content-Type", "application/json")
@@ -31,13 +34,13 @@ class TestBackend(unittest.TestCase):
     @classmethod
     def tearDownClass(cls): cls.srv.shutdown()
 
-    def correr(self, token):
+    def correr(self, token, n="1", d=None):
         Falso.vistos.clear()
-        d = tempfile.mkdtemp()
+        d = d or tempfile.mkdtemp()
         env = {k: v for k, v in os.environ.items() if k not in ("RIOT_KEY",)}
         env.update(RACHA_SOLO_BACKEND="1", RACHA_API=f"http://127.0.0.1:{self.srv.server_port}", RACHA_TOKEN=token,
                    RIOT_ID="Amigo#LAN", RIOT_REGION="la1", DATOS_DIR=d, PYTHONIOENCODING="utf-8")
-        r = subprocess.run([sys.executable, str(DIR / "descargar.py"), "1"], env=env, capture_output=True, text=True, encoding="utf-8", timeout=60)
+        r = subprocess.run([sys.executable, str(DIR / "descargar.py"), n], env=env, capture_output=True, text=True, encoding="utf-8", timeout=60)
         return r, pathlib.Path(d)
 
     def test_baja_con_codigo_sin_key(self):
@@ -46,6 +49,22 @@ class TestBackend(unittest.TestCase):
         self.assertTrue((d / "LA1_9.json").exists() and (d / "timeline" / "LA1_9.json").exists())
         self.assertTrue(all(t == "codigo-ok" and k is None for _, t, k in Falso.vistos))  # nunca manda una key de Riot
         self.assertTrue(Falso.vistos[0][0].startswith("/v1/riot/americas/riot/account/v1/accounts/by-riot-id/Amigo/LAN"))
+
+    def test_todo_solo_y_flex_y_marca(self):
+        r, d = self.correr("codigo-ok", "todo")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(sorted(f.stem for f in d.glob("LA1_*.json")), ["LA1_11", "LA1_12", "LA1_9"])
+        self.assertTrue((d / "historial.json").exists())  # historial completo: la próxima vez solo lo nuevo
+        r, _ = self.correr("codigo-ok", "todo", str(d))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertFalse(any("/matches/LA1_" in p and "by-puuid" not in p for p, *_ in Falso.vistos))  # nada repetido
+
+    def test_no_mezcla_otra_cuenta(self):
+        d = tempfile.mkdtemp()
+        pathlib.Path(d, "perfil.json").write_text(json.dumps({"account": {"puuid": "OTRO", "gameName": "Dueño", "tagLine": "LAN"}}))
+        r, _ = self.correr("codigo-ok", "1", d)
+        self.assertEqual(r.returncode, 4); self.assertIn("Dueño#LAN", r.stderr)
+        self.assertFalse(list(pathlib.Path(d).glob("LA1_*.json")))
 
     def test_codigo_invalido_sale_con_2(self):
         r, _ = self.correr("codigo-malo")

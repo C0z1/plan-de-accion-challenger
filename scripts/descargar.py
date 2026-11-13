@@ -1,5 +1,7 @@
-"""Descarga partidas de Solo/Duo de Riot API a datos/raw/.
-Uso: RIOT_KEY=... [RIOT_ID="Nombre#TAG"] [RIOT_REGION=la1] python scripts/descargar.py [N]
+"""Descarga partidas clasificatorias (Solo/Duo y Flex) de Riot API a datos/raw/.
+Uso: RIOT_KEY=... [RIOT_ID="Nombre#TAG"] [RIOT_REGION=la1] python scripts/descargar.py [N | todo]
+(«todo»: el historial entero que guarda Riot, ~2 años, de lo más nuevo a lo más viejo; reanudable. Ya completo una vez,
+las siguientes corridas solo piden las páginas con partidas nuevas.)
 (sin RIOT_ID usa la cuenta con sesión en el cliente de LoL; RIOT_REGION por defecto la1; RIOT_REGION es la plataforma: na1, la1, la2, br1, euw1, eun1, tr1, ru, me1, kr, jp1, oc1, sg2, tw2, vn2)"""
 import json, os, sys, time, urllib.request, urllib.error, urllib.parse, pathlib, webbrowser
 
@@ -48,7 +50,9 @@ RUTA = {"na1": "americas", "br1": "americas", "la1": "americas", "la2": "america
         "tw2": "sea", "vn2": "sea"}.get(PLATAFORMA) or sys.exit(f"RIOT_REGION desconocida: {PLATAFORMA}")
 CUENTA = "asia" if RUTA == "sea" else RUTA  # account-v1 no existe en sea
 if not NAME or not TAG: sys.exit('RIOT_ID debe ser "Nombre#TAG"')
-N = int(sys.argv[1]) if len(sys.argv) > 1 else 100
+TODO = len(sys.argv) > 1 and sys.argv[1] == "todo"
+N = 10 ** 6 if TODO else int(sys.argv[1]) if len(sys.argv) > 1 else 100
+COLAS = (420, 440)  # Solo/Duo y Flex
 RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 RAW.mkdir(parents=True, exist_ok=True)
 
@@ -96,13 +100,33 @@ def guardar(f, data):  # a .tmp y luego renombrar: un corte no deja JSON a media
 
 acc = get(f"https://{CUENTA}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{urllib.parse.quote(NAME)}/{urllib.parse.quote(TAG)}")
 puuid = acc["puuid"]
+try: viejo = json.loads((RAW / "perfil.json").read_text())["account"]
+except (OSError, ValueError, KeyError, TypeError): viejo = None
+nombre = lambda a: (str(a.get("gameName") or "").lower(), str(a.get("tagLine") or "").lower())
+if viejo and viejo.get("puuid") != puuid and nombre(viejo) != nombre(acc):  # el puuid cambia según la key: se compara el Riot ID
+    print(f"Esta carpeta es de {viejo.get('gameName')}#{viejo.get('tagLine')}: no se mezclan las partidas de otra cuenta.", file=sys.stderr)
+    sys.exit(4)
 league = get(f"https://{PLATAFORMA}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}")
 (RAW / "perfil.json").write_text(json.dumps({"account": acc, "league": league}, indent=1))
 
+MARCA = RAW / "historial.json"  # {"completo": true}: el historial entero ya se bajó una vez
+completo = MARCA.exists()
+conocidos = {f.stem for f in RAW.glob("*_*.json")}
+
+
+def num(mid): return int(mid.rsplit("_", 1)[-1]) if mid.rsplit("_", 1)[-1].isdigit() else 0
+
+
 ids = []
-for start in range(0, N, 100):
-    ids += get(f"https://{RUTA}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids"
-               f"?queue=420&start={start}&count={min(100, N - start)}")
+for cola in COLAS:
+    start = 0
+    while start < N:
+        c = min(100, N - start)
+        pag = get(f"https://{RUTA}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?queue={cola}&start={start}&count={c}") or []
+        ids += pag
+        if len(pag) < c or (completo and any(m in conocidos for m in pag)): break  # sin más, o ya llegamos a lo que tenías
+        start += c
+ids = sorted(set(ids), key=num, reverse=True)  # lo más nuevo primero: un corte deja lo reciente ya bajado
 
 TL = RAW / "timeline"
 TL.mkdir(exist_ok=True)
@@ -120,5 +144,6 @@ for i, mid in enumerate(ids):
         guardar(f, data)
     print(f"{i + 1}/{len(ids)}", end="\r")
 if pendientes: print(f"\nRiot dio 404 en {len(pendientes)} (aún sin procesar, se bajan la próxima vez): {' '.join(pendientes)}", file=sys.stderr)
+elif TODO: MARCA.write_text(json.dumps({"completo": True}))
 print(f"\nlisto: {len(ids) - len(pendientes)} de {len(ids)} partidas")
 sys.exit(3 if pendientes else 0)  # companion.py: 3 = quedó alguna pendiente

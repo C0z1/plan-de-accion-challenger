@@ -143,7 +143,7 @@ class PostBackend(unittest.TestCase):
                     mock.patch.object(w.gui, "script", return_value=(code, "listo\n")) as sc, \
                     mock.patch.object(w, "refrescar") as rf:
                 w.descargar_todo()
-                sc.assert_called_once_with("descargar.py", "100")
+                sc.assert_called_once_with("descargar.py", "todo")
                 rf.assert_called_once()
 
     def test_descargar_codigo_malo_no_refresca(self):

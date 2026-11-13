@@ -444,7 +444,7 @@ function perfil(s) {  // Perfil_Vino (+ acuerdo 21): score, win rate y errores c
   const base = s.rango && s.rango.n ? s.rango.wr / 100 : t.base.wr, E = V && V.errores, rep = E ? Object.keys(ERR).filter(k => (E.partidas[k] || 0) > 0) : [], peor = E && E.n ? Math.max(0, ...rep.map(k => E.partidas[k])) / E.n : 0;
   const fecha = ps.length && ps[ps.length - 1].fecha ? " · " + esc(ps[ps.length - 1].fecha) : "";
   const main = `
-  <div><h1>Tu rendimiento</h1><span class="sub">Últimas ${ps.length} partidas${fecha}</span></div>
+  <div><h1>Tu rendimiento</h1><span class="sub">Últimas ${ps.length} partidas${r.total > ps.length ? ` de ${r.total} guardadas` : ""}${fecha}</span></div>
   <div class="tres">
     <div class="card" style="flex-direction:row;align-items:center;gap:14px;min-width:0;padding:18px">${aro((r.ultimas20 ?? 0) / 100, .5, "#C9B0F0")}
       <div style="min-width:0"><b class="tit">${ic("perfil", 16)} Score</b><div class="big" style="white-space:nowrap"><b>${r.ultimas20 != null ? Math.round(r.ultimas20) : "–"}</b><span>/ 100</span></div>
