@@ -26,15 +26,15 @@ class AvisoDict(unittest.TestCase):
         self.assertEqual((avisos[0]["tipo"], avisos[0]["minuto"]), ("error", None))
         self.assertIn("RIOT_KEY", avisos[0]["texto"])
 
-    def test_post_partida_sin_key_no_descarga_ni_avisa(self):  # beta para amigos sin key
+    def test_post_partida_sin_key_no_corre_descargar(self):  # beta sin key: no corre descargar.py; la partida se guarda del cliente (2026-11-12)
         q, corridos = queue.Queue(), []
-        orig = g.script, g.puede_descargar
-        g.script, g.puede_descargar = (lambda *a: corridos.append(a) or (0, "")), (lambda: False)
+        orig = g.script, g.puede_descargar, g.guardar_del_cliente
+        g.script, g.puede_descargar, g.guardar_del_cliente = (lambda *a: corridos.append(a) or (0, "")), (lambda: False), (lambda q: False)
         try:
             g._post_partida(q)
         finally:
-            g.script, g.puede_descargar = orig
-        self.assertEqual((corridos, list(q.queue)), ([], []))
+            g.script, g.puede_descargar, g.guardar_del_cliente = orig
+        self.assertEqual((corridos, list(q.queue)), ([], []))  # el cliente no la publicó: sin revisión ni avisos de error
 
     def test_recomendaciones_sin_partidas_no_truena(self):  # amigo sin historial en su primer champ select
         import os, subprocess, sys, tempfile

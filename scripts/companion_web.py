@@ -282,6 +282,17 @@ def buscar_version():
     if inst: actualizar(d["tag_name"], *inst)
 
 
+def al_dia():
+    """Al conectar el cliente: baja de él las partidas que falten en la carpeta de la cuenta activa (sin key; las que ya
+    están se saltan). Si entró alguna, recalcula todo."""
+    try:
+        import cliente_v5
+        with DESCARGANDO:
+            nuevas, _ = cliente_v5.descargar()
+        if nuevas: refrescar()
+    except Exception: pass
+
+
 def primera_vez():
     """Alguien sin partidas: su historial se baja solo al abrir Racha con LoL abierto (con invitación, hasta 100 por el
     servidor; sin ella, las últimas 20 desde su cliente)."""
@@ -438,6 +449,7 @@ def vigilar_cuenta(q, cada=10):
             ultima = c; q.put(("rango", companion.rango(companion.lcu("/lol-ranked/v1/current-ranked-stats"))))
             q.put(("cuenta", c, s.get("profileIconId"), s.get("puuid")))
             if ESTADO.get("conectado"): threading.Thread(target=primera_vez, daemon=True).start()  # LoL recién abierto
+            threading.Thread(target=al_dia, daemon=True).start()  # las que se jugaron con Racha cerrada o sin guardar
         if s.get("gameName") and (nueva or vuelta % 6 == 0):  # tus últimas partidas del cliente (sin key): al conectar y cada minuto
             h = companion.lcu("/lol-match-history/v1/products/lol/current-summoner/matches?begIndex=0&endIndex=19")
             if h:
