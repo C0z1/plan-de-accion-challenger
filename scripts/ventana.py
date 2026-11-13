@@ -44,11 +44,16 @@ def ventanas(pid):
     return hallada
 
 
-def al_frente():
-    """Restaura y trae al frente nuestra ventana. False si no hay."""
+def al_frente(foco=True):
+    """Restaura y trae al frente nuestra ventana. foco=False: encima de todo pero sin quitarle el teclado al cliente
+    (al fijar campeón: estabas escribiendo en el chat o en un trade). False si no hay."""
     w = _win()
     if not w or not viva() or not (hs := ventanas(PROC[0].pid)): return False
     u = w[2]
+    if not foco:
+        if u.IsIconic(hs[0]): u.ShowWindow(hs[0], 4)  # SW_SHOWNOACTIVATE
+        for z in (-1, -2): u.SetWindowPos(hs[0], z, 0, 0, 0, 0, 0x13)  # TOPMOST y luego NOTOPMOST: sube sin quedarse fija; NOSIZE|NOMOVE|NOACTIVATE
+        return True
     if u.IsIconic(hs[0]): u.ShowWindow(hs[0], 9)
     u.SetForegroundWindow(hs[0])  # Windows puede negarlo si otro programa tiene el foco: igual queda restaurada
     return True
@@ -72,10 +77,10 @@ def _al_job(pid):
         k.AssignProcessToJobObject(JOB[0], hp); k.CloseHandle(hp)
 
 
-def abrir(url, perfil):
+def abrir(url, perfil, foco=True):
     """Trae al frente la ventana de Racha o abre una (perfil propio: aparte del Edge del usuario). False sin Edge."""
     with LOCK:
-        if al_frente(): return True
+        if al_frente(foco): return True
         if not (e := edge()): return False
         PROC[0] = subprocess.Popen([e, f"--app={url}", f"--user-data-dir={perfil}", "--force-dark-mode", "--disable-features=Translate,msEdgeTranslate", "--lang=es", "--window-size=1440,1024",
                                     "--no-first-run", "--no-default-browser-check"])

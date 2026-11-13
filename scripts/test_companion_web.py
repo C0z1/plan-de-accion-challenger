@@ -293,5 +293,48 @@ class Post(unittest.TestCase):
             self.assertEqual(self.post({"X-HTC": "1"}, b'{"on": "si"}'), 400)
 
 
+
+class MiPick(unittest.TestCase):
+    """Al fijar tu campeón: Racha al frente (sin foco) con sus runas; hover, ARAM o solo el rival no la traen."""
+    B = {"runa": ["Ritmo letal", .55], "pagina_ids": [8008], "fuente": "tu"}
+
+    def tab(self, draft=True, **yo): return {"draft": draft, "mio": [{"yo": False, "fijo": True, "campeon": "Zed", "pos": "MIDDLE"}, {"yo": True, "pos": "BOTTOM", **yo}]}
+
+    def setUp(self):
+        for p in (mock.patch("builds.guardado_dict", return_value=self.B), mock.patch.dict(w.ESTADO, mi_pick=None, tablero=None, draft=None)):
+            p.start(); self.addCleanup(p.stop)
+        self.ab = mock.patch.object(w, "abrir").start(); self.addCleanup(mock.patch.stopall)
+
+    def abiertas(self): time.sleep(.1); return self.ab.call_count
+
+    def test_hover_nada_fijo_una_vez_sin_foco(self):
+        w.evento(("tablero", self.tab(fijo=False, campeon="Zeri"))); self.assertIsNone(w.ESTADO["mi_pick"])
+        w.evento(("tablero", self.tab(fijo=True, campeon="Zeri")))
+        self.assertEqual((w.ESTADO["mi_pick"]["champ"], w.ESTADO["mi_pick"]["pos"], w.ESTADO["mi_pick"]["build"]), ("Zeri", "BOTTOM", self.B))
+        w.evento(("tablero", self.tab(fijo=True, campeon="Zeri")))
+        self.assertEqual(self.abiertas(), 1); self.assertEqual(self.ab.call_args[0][1], False)  # sin robar el foco
+
+    def test_aram_no_dispara(self):
+        w.evento(("tablero", self.tab(draft=False, fijo=True, campeon="Zeri")))
+        self.assertIsNone(w.ESTADO["mi_pick"]); self.assertEqual(self.abiertas(), 0)
+
+    def test_trade_actualiza(self):
+        w.evento(("tablero", self.tab(fijo=True, campeon="Zeri"))); w.evento(("tablero", self.tab(fijo=True, campeon="Jinx")))
+        self.assertEqual(w.ESTADO["mi_pick"]["champ"], "Jinx"); self.assertEqual(self.abiertas(), 2)
+
+    def test_sin_build_no_trae_ventana(self):
+        with mock.patch("builds.guardado_dict", return_value=None):
+            w.evento(("tablero", self.tab(fijo=True, campeon="Zeri")))
+        self.assertEqual(w.ESTADO["mi_pick"]["champ"], "Zeri"); self.assertEqual(self.abiertas(), 0)
+
+    def test_rival_trae_matchup_sin_reabrir(self):
+        w.evento(("tablero", self.tab(fijo=True, campeon="Zeri")))
+        mu = {"runa": {"nombre": "Cadencia letal", "wr": .54, "n": 160}, "n": 420, "pagina": {"x": 1}}
+        with mock.patch("matchups.para_ficha", return_value=mu), mock.patch.object(w, "draft_json", return_value={"pos": "BOTTOM", "recs": [{"rival": "MissFortune"}]}):
+            w.evento(("draft", "BOTTOM", []))
+        self.assertEqual(w.ESTADO["mi_pick"]["rival"], "MissFortune"); self.assertEqual(w.ESTADO["mi_pick"]["matchup"]["n"], 420)
+        self.assertEqual(self.abiertas(), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

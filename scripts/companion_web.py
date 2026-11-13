@@ -17,8 +17,8 @@ if not WEB.exists(): WEB = pathlib.Path(getattr(sys, "_MEIPASS", "")) / "web"  #
 IMG = gui.REPO / "datos" / "meta" / "ddragon" / "img"
 LOCK = threading.Lock()
 ESTADO = {"fase": "inicio", "perfil": gui.perfil(), "draft": None, "meta": None, "fin": None, "revision": None,
-          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "comentario": None, "mover_franja": False, "al_dia": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
-VERSION = "0.22.1"  # HTC; también invalida la caché de rendimiento
+          "aviso": None, "avisos": [], "espera": None, "rango": None, "cuenta": None, "crono": None, "tablero": None, "mi_pick": None, "comentario": None, "mover_franja": False, "al_dia": None, "ajustes": gui.ajustes(), "descarga": None, "nueva": None, "previa": None, "ultima": None, "nube": None, "plataforma": None, "conectado": companion.acceso(gui.REPO) is not None, "icono": None, "region": None, "cliente": None, "rendimiento": None, "pos": None, "autoarranque": None, "admin": None, "grupo": None, "pantalla_completa": None, "coach": gui.coach(), "reporte": None, "invitacion": None, "v": 0}
+VERSION = "0.23.0"  # HTC; también invalida la caché de rendimiento
 ESTADO["version"] = VERSION  # la página se recarga si cambia (Racha se actualizó con la ventana abierta)
 VIVO = [time.time()]  # último GET de la ventana
 URL, FONDO = [None], [False]
@@ -35,6 +35,34 @@ def draft_json(pos, recs):
         out.append({"rival": r, **{k: v for k, v in d.items() if k not in ("vs", "en")}, "v": sum(g["win"] for g in vs), "n": len(vs),
                     "lineas": {"cuidado": cuidado, "counters": counters}})
     return {"pos": pos, "recs": out}
+
+
+def mi_pick(tab, draft=None):
+    """{champ, pos, rival, build, matchup} de tu campeón ya fijado en un draft (no ARAM: llega sin acciones), o None.
+    Solo relee disco si cambió campeón, rol o rival respecto a ESTADO["mi_pick"]."""
+    if not (tab or {}).get("draft"): return None
+    yo = next((p for p in tab.get("mio") or [] if p.get("yo") and p.get("fijo") and p.get("campeon")), None)
+    if not yo: return None
+    pos = yo.get("pos") or ESTADO.get("pos") or "MIDDLE"  # normales a ciegas: sin rol, mid como draft.py
+    recs = (draft or {}).get("recs") or []
+    rival = recs[0].get("rival") if len(recs) == 1 else None  # rival de línea solo si es uno
+    ant = ESTADO.get("mi_pick") or {}
+    if (ant.get("champ"), ant.get("pos"), ant.get("rival")) == (yo["campeon"], pos, rival): return ant
+    import builds
+    mu = None
+    if rival:
+        try: import matchups; mu = matchups.para_ficha(yo["campeon"], pos, rival)
+        except Exception: mu = None  # sin datos de matchup: la build general
+    return {"champ": yo["campeon"], "pos": pos, "rival": rival, "build": builds.guardado_dict(yo["campeon"], pos),
+            "matchup": {"runa": mu["runa"], "n": mu["n"]} if mu and mu.get("pagina") and mu.get("runa") else None}
+
+
+def poner_pick(mp):
+    """Lo que cambia en ESTADO; si cambió tu campeón o rol (no solo el rival) y hay runas que mostrar, Racha al frente sin foco."""
+    ant = ESTADO.get("mi_pick") or {}
+    if mp and (mp["champ"], mp["pos"]) != (ant.get("champ"), ant.get("pos")) and ((mp["build"] or {}).get("pagina_ids") or mp["matchup"]):
+        threading.Thread(target=abrir, args=(URL[0], False), daemon=True).start()
+    return {} if mp is ant or (mp is None and not ant) else {"mi_pick": mp}
 
 
 SIRVIO = {"si": 0, "no": 0, "no_vi": 0}  # «¿te sirvieron los avisos?» (v0.13): contadores para el ping opt-in, sin identidad
@@ -56,11 +84,13 @@ def evento(e):
             abrir(URL[0])  # el cliente acaba de abrir y no hay ventana de Racha
         if ESTADO["fase"] in ("InProgress", "Reconnect") and e[1] not in ("InProgress", "Reconnect"):  # hallazgo 24: «Tu última partida» = la que acaba de terminar
             threading.Thread(target=vistas_previas, args=(ESTADO.get("rendimiento"),), daemon=True).start()
-        if e[1] == "ChampSelect": s.update(tablero=None, comentario=None, draft=None, fin=None, meta=None, pos=None, avisos=[]); USADO.add("champ_select")
+        if e[1] == "ChampSelect": s.update(tablero=None, mi_pick=None, comentario=None, draft=None, fin=None, meta=None, pos=None, avisos=[]); USADO.add("champ_select")
         if e[1] in ("ChampSelect", "InProgress"): s["pantalla_completa"] = companion.pantalla_completa()  # la franja no se vería
         if e[1] == "InProgress" and ESTADO["ajustes"].get("overlay", True): USADO.add("overlay")
         if e[1] in ("Lobby", "Matchmaking", "ReadyCheck"): s.update(aviso=None, perfil=gui.perfil(ESTADO["rango"], ESTADO["cuenta"]))
-    elif tipo == "draft": s = {"draft": {**draft_json(e[1], e[2]), "probable": bool(e[3]) if len(e) > 3 else False}}
+    elif tipo == "draft":
+        s = {"draft": {**draft_json(e[1], e[2]), "probable": bool(e[3]) if len(e) > 3 else False}}
+        s.update(poner_pick(mi_pick(ESTADO.get("tablero"), s["draft"])))  # llegó el rival: runas del matchup, sin volver a traer la ventana
     elif tipo == "meta":  # el mismo gameTime que la foto anterior: juego en pausa (práctica, custom): los timers se congelan
         antes = (ESTADO.get("meta") or {}).get("t")
         pausa = e[1].get("t") is not None and antes is not None and abs(e[1]["t"] - antes) <= companion.TEMBLOR
@@ -84,7 +114,8 @@ def evento(e):
     elif tipo == "cliente": s = {"cliente": e[1]}
     elif tipo == "region": s = {"region": e[1], **({"plataforma": e[2]} if len(e) > 2 else {})}
     elif tipo == "crono": s = {"crono": e[1]}
-    elif tipo == "tablero": s = {"tablero": e[1]}
+    elif tipo == "tablero":
+        s = {"tablero": e[1], **poner_pick(mi_pick(e[1], ESTADO.get("draft")))}  # fijaste campeón: Racha al frente con sus runas
     elif tipo == "comentario": s = {"comentario": e[1]}
     elif tipo == "aviso":  # F8: los consejos de la partida se guardan todos (el nuevo ya no borra al anterior)
         s = {"aviso": e[1]}
@@ -694,9 +725,9 @@ class H(http.server.BaseHTTPRequestHandler):
         self.enviar(200, json.dumps({"on": a}).encode(), "application/json")
 
 
-def abrir(url):
+def abrir(url, foco=True):
     """La ventana de Racha (ventana.py: Edge --app con perfil propio en datos/edge); sin Edge, el navegador."""
-    if not ventana.abrir(url, gui.REPO / "datos" / "edge"): webbrowser.open(url)
+    if not ventana.abrir(url, gui.REPO / "datos" / "edge", foco): webbrowser.open(url)
 
 
 def pedir_abrir(url):

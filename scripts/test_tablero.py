@@ -36,7 +36,7 @@ class TestTablero(unittest.TestCase):
     def test_claves_null(self):
         self.assertIsNone(companion.tablero(None, M))
         t = companion.tablero({"myTeam": None, "theirTeam": None, "actions": None, "bans": None}, M)
-        self.assertEqual(t, {"turno": None, "bans": {"mios": [], "suyos": []}, "mio": [], "suyo": []})
+        self.assertEqual(t, {"turno": None, "bans": {"mios": [], "suyos": []}, "mio": [], "suyo": [], "draft": False})
 
     def test_fixture_sin_acciones(self):  # sesión vieja sin actions: lo fijado por championId, como antes
         s = json.loads((companion.DIR / "fixtures" / "champselect" / "session.json").read_text(encoding="utf-8"))

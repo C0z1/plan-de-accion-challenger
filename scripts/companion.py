@@ -580,7 +580,7 @@ def tablero(s, m):
     suyo = [{"celda": p.get("cellId"), "campeon": nom(p.get("championId")) if (p.get("cellId") in hechos or not acciones) else None,
              "eligiendo": p.get("cellId") == eligiendo} for p in s.get("theirTeam") or [] if isinstance(p, dict)]
     turno = {"tipo": ahora.get("type"), "mio": eligiendo == yo, "aliado": bool(ahora.get("isAllyAction"))} if ahora else None
-    return {"turno": turno, "bans": {"mios": bans(True), "suyos": bans(False)}, "mio": mio, "suyo": suyo}
+    return {"turno": turno, "bans": {"mios": bans(True), "suyos": bans(False)}, "mio": mio, "suyo": suyo, "draft": bool(acciones)}  # ARAM: sin acciones
 
 
 def nombres_lcu():
