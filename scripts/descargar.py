@@ -1,7 +1,8 @@
-"""Descarga partidas clasificatorias (Solo/Duo y Flex) de Riot API a datos/raw/.
+"""Descarga tus clasificatorias Solo/Duo de la temporada actual de Riot API a datos/raw/ (pedido del usuario, 0.31: es lo que
+importa para mejorar; menos llamadas a la key que comparte el grupo).
 Uso: RIOT_KEY=... [RIOT_ID="Nombre#TAG"] [RIOT_REGION=la1] python scripts/descargar.py [N | todo]
-(«todo»: el historial entero que guarda Riot, ~2 años, de lo más nuevo a lo más viejo; reanudable. Ya completo una vez,
-las siguientes corridas solo piden las páginas con partidas nuevas.)
+(«todo»: toda la temporada, de lo más nuevo a lo más viejo; reanudable. Ya completa una vez, las siguientes corridas solo
+piden las páginas con partidas nuevas. RACHA_INICIO (segundos epoch) cambia el inicio de la temporada.)
 (sin RIOT_ID usa la cuenta con sesión en el cliente de LoL; RIOT_REGION por defecto la1; RIOT_REGION es la plataforma: na1, la1, la2, br1, euw1, eun1, tr1, ru, me1, kr, jp1, oc1, sg2, tw2, vn2)"""
 import json, os, sys, time, urllib.request, urllib.error, urllib.parse, pathlib, webbrowser
 
@@ -63,8 +64,23 @@ CUENTA = "asia" if RUTA == "sea" else RUTA  # account-v1 no existe en sea
 if not NAME or not TAG: sys.exit('RIOT_ID debe ser "Nombre#TAG"')
 TODO = bool(ARGV) and ARGV[0] == "todo"
 N = 10 ** 6 if TODO else int(ARGV[0]) if ARGV else 100
-RECIENTES = int(_G.get("RECIENTES") or 100)  # con timeline en la 1.ª pasada; las más viejas, solo la partida (los timelines viejos van al final)
-COLAS = (420, 440)  # Solo/Duo y Flex
+RECIENTES = int(_G.get("RECIENTES") or 1000)  # con timeline (una temporada cabe entera; la 2.ª pasada queda de red) en la 1.ª pasada; las más viejas, solo la partida (los timelines viejos van al final)
+COLAS = (420,)  # Solo/Duo
+
+
+def inicio_temporada():
+    """1 de enero (UTC, en segundos) del año de la temporada actual: el major del parche de Data Dragon + 2010 (16.x → 2026).
+    Es cota inferior: la temporada arranca con el parche X.1 a principios de enero."""
+    import calendar
+    try:
+        with urllib.request.urlopen(urllib.request.Request("https://ddragon.leagueoflegends.com/api/versions.json", headers={"User-Agent": "racha"}), timeout=10) as r:
+            anio = 2010 + int(json.load(r)[0].split(".")[0])
+    except (OSError, ValueError, IndexError, KeyError): anio = time.gmtime().tm_year
+    return calendar.timegm((anio, 1, 1, 0, 0, 0))
+
+
+INICIO = int(_G.get("INICIO") or os.environ.get("RACHA_INICIO") or inicio_temporada())
+assert len(str(INICIO)) == 10, INICIO  # segundos: en milisegundos Riot devuelve una lista vacía sin error
 RAW = pathlib.Path(_G.get("RAW_DIR") or os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 RAW.mkdir(parents=True, exist_ok=True)
 
@@ -134,7 +150,7 @@ for cola in COLAS:
     start = 0
     while start < N:
         c = min(100, N - start)
-        pag = get(f"https://{RUTA}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?queue={cola}&start={start}&count={c}") or []
+        pag = get(f"https://{RUTA}.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids?startTime={INICIO}&queue={cola}&start={start}&count={c}") or []
         ids += pag
         if len(pag) < c or (completo and any(m in conocidos for m in pag)): break  # sin más, o ya llegamos a lo que tenías
         start += c

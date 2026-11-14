@@ -534,7 +534,7 @@ function partidas(s) {  // Partidas: todas las descargadas, filtro por cola, «C
   if (PIDX_k !== k && !cargandoIdx) cargarIndice(k);
   const listo = PIDX && PIDX_k === k, todas = listo ? PIDX : ps20;  // mientras carga, las últimas 20
   const chip = (c, t) => `<button class="filtro ${partCola === c ? "on" : ""}" onclick="partCola='${c}';partMostrar=50;v=-1;tick()">${t}</button>`;
-  const chips = `<div style="display:flex;gap:10px;flex-wrap:wrap">${chip("todas", "Todas")}${chip("420", "Solo/Duo")}${chip("440", "Flex")}${chip("otras", "ARAM y normales")}</div>`;
+  const chips = `<div style="display:flex;gap:10px;flex-wrap:wrap">${chip("todas", "Todas")}${chip("420", "Solo/Duo")}${chip("otras", "ARAM y normales")}</div>`;
   if (partCola === "otras") {  // solo existen las ~20 recientes del cliente: se dice claro
     const ot = (s.cliente || []).filter(p => !["Solo/Duo", "Flex"].includes(p.cola));
     return `<div><h1>Partidas</h1><span class="sub">ARAM y normales · solo las recientes que guarda tu cliente, sin análisis</span></div>${chips}
