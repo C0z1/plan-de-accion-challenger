@@ -5,6 +5,7 @@ import json, statistics as st, sys, time
 from collections import Counter, defaultdict
 
 import draft, score
+import postpartida  # clasificar_muerte: la causa probable de cada muerte
 
 R_KP = dict(texto="Únete a las peleas del 14 en adelante", por_que="Tu participación en kills es lo que más te baja el score",
             metrica="kp", minuto="14+")
@@ -162,9 +163,12 @@ def errores(gs, n=20):
         mio = lambda e: yo in (e.get("killerId"), e.get("victimId")) or yo in (e.get("assistingParticipantIds") or [])
         obj = [e["timestamp"] for e in ev if (e["type"] == "ELITE_MONSTER_KILL" and e.get("killerTeamId") == eq)
                or (e["type"] == "BUILDING_KILL" and e.get("teamId") not in (None, eq))]
+        objs = postpartida._objetivos(ev)
         for e in kills:
             if e.get("victimId") == yo and 14 * 60000 <= e["timestamp"] < 25 * 60000 and not any(-60000 <= t - e["timestamp"] <= 60000 for t in obj):  # ±60 s: morir asegurando o robando no cuenta (scripts/sin_objetivo.py)
-                out["sin_objetivo"].append({**base, "minuto": mm(e["timestamp"])})
+                try: tipo = postpartida.clasificar_muerte(e, me, info["participants"], fr, ev, objs)["tipo"]  # causa probable: gank, 1v1, pelea…
+                except (KeyError, TypeError, IndexError): tipo = None
+                out["sin_objetivo"].append({**base, "minuto": mm(e["timestamp"]), "tipo": tipo})
         if opp and len(fr) > 6:
             pf = fr[6].get("participantFrames") or {}
             nv = lambda pid: (pf.get(str(pid)) or {}).get("level")
@@ -180,7 +184,8 @@ def errores(gs, n=20):
             if len(pelea) >= 3 and caen > len(pelea) - caen and not any(mio(e) for e in pelea): out["sin_pelea"].append({**base, "minuto": mm(pelea[0]["timestamp"])})
             i = j + 1
     cuenta = {k: len({m["archivo"] for m in v}) for k, v in out.items()}
-    return dict(n=vistos, partidas=cuenta, momentos=out)
+    tipos = Counter(m["tipo"] for m in out["sin_objetivo"] if m.get("tipo"))
+    return dict(n=vistos, partidas=cuenta, momentos=out, causa=tipos.most_common(1)[0][0] if tipos else None, tipos=dict(tipos))
 
 
 MIN_HOY = 8  # partidas con el campeón en el rol para recomendarlo: menos, y el estimado es casi tu media

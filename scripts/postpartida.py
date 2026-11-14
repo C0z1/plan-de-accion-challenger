@@ -17,6 +17,66 @@ NOMBRE = {"BARON_NASHOR": "el barón", "ELDER_DRAGON": "el dragón anciano", "DR
 def _mm(ms): return f"{int(ms) // 60000}:{int(ms) // 1000 % 60:02d}"
 
 
+def zona(x, y, team):  # la misma de scripts/nivel6.py y revision.py (que la importa de aquí)
+    own = (x + y < 14800) == (team == 100)
+    if x + y < 5600 or x + y > 24000: return "base propia" if own else "base rival"
+    if abs(x - y) < 1600: z = "mid"
+    elif x < 2300 or y > 12500: z = "top"
+    elif y < 2300 or x > 12500: z = "bot"
+    elif abs(x + y - 14800) < 1500: return "río"
+    else: z = "jungla"
+    return f"{z} ({'lado propio' if own else 'lado rival'})"
+
+
+def EN_ZONA(z):  # «río», «mid (lado rival)» → «el río», «su lado de mid»
+    if z in ("río", "base propia", "base rival"): return {"río": "el río", "base propia": "tu base", "base rival": "su base"}[z]
+    lugar, _, lado = z.partition(" (")
+    return f"{'tu' if lado.startswith('lado propio') else 'su'} lado de {'la jungla' if lugar == 'jungla' else lugar}"
+VENTANA_PELEA, VENTANA_WARD = 15_000, 90_000  # ms: kills de aliados alrededor = pelea; tu ward en el minuto y medio previo
+
+
+def clasificar_muerte(e, me, ps, fr, ev, objs):
+    """Por qué probablemente caíste (pedido del usuario: enseñar, no culpar). {t, tipo, n, jungla, zona, dnivel, ward, obj_tuyo,
+    obj_rival, texto}. tipo: trade (tu equipo tomó un objetivo en ±60 s), torre (no te mató un campeón), pelea (2+ rivales y tus
+    aliados metidos), gank (su jungla entre 2+), varios (2+ rivales sin su jungla: roam o 2v2) o 1v1. Riot no da la posición de
+    los wards ni la oleada: la causa es probable, y así se dice."""
+    t, pid, eq = e["timestamp"], me["participantId"], me["teamId"]
+    equipo = {p.get("participantId"): p.get("teamId") for p in ps}
+    rivales = {i for i in [e.get("killerId")] + list(e.get("assistingParticipantIds") or []) if equipo.get(i) not in (None, eq)}
+    jg = next((p.get("participantId") for p in ps if p.get("teamId") != eq and p.get("teamPosition") == "JUNGLE"), None)
+    pos = e.get("position") or {}
+    z = zona(pos["x"], pos["y"], eq) if "x" in pos and "y" in pos else None
+    aliados = {i for x in ev if x.get("type") == "CHAMPION_KILL" and abs((x.get("timestamp") or 0) - t) <= VENTANA_PELEA
+               for i in [x.get("killerId"), x.get("victimId")] + list(x.get("assistingParticipantIds") or []) if equipo.get(i) == eq and i != pid}
+    tuyo = [(t2, ty) for t2, ty, q in objs if q == eq and ty != "TOWER_BUILDING" and t - 30_000 <= t2 <= t + VENTANA_OBJ]  # un objetivo grande; las torres caen solas
+    suyo = [(t2, ty) for t2, ty, q in objs if q != eq and t <= t2 <= t + VENTANA_OBJ]
+    ward = any(x.get("type") == "WARD_PLACED" and x.get("creatorId") == pid and t - VENTANA_WARD <= (x.get("timestamp") or 0) <= t for x in ev)
+    dnivel = None
+    try:
+        f = fr[min(len(fr) - 1, t // 60000)]["participantFrames"]
+        k = e.get("killerId")
+        if equipo.get(k) not in (None, eq): dnivel = f[str(pid)]["level"] - f[str(k)]["level"]
+    except (KeyError, TypeError, IndexError): pass
+    n = len(rivales)
+    tipo = ("trade" if tuyo else "torre" if not rivales else "pelea" if n >= 2 and aliados else
+            "gank" if n >= 2 and jg in rivales else "varios" if n >= 2 else "1v1")
+    en = f" en {EN_ZONA(z)}" if z else ""
+    nom = lambda o: NOMBRE[max(o, key=lambda x: VALOR[x[1]])[1]]
+    sin_ward = " No vimos un ward tuyo en el minuto y medio anterior: uno antes de avanzar cubre esa ventana." if not ward else \
+        " Tenías un ward reciente: probablemente entraron por otro camino."
+    if tipo == "trade": texto = f"Min {_mm(t)}: caíste, pero tu equipo se llevó {nom(tuyo)}. Buen cambio."
+    elif tipo == "torre": texto = f"Min {_mm(t)}: te remató la torre o los súbditos{en}. Con poca vida, salir un poco antes evita estas."
+    elif tipo == "pelea": texto = f"Min {_mm(t)}: caíste en una pelea contra {n}{en}. Para el replay: quién entró primero y si llegaron todos."
+    elif tipo == "gank": texto = f"Min {_mm(t)}: te alcanzaron entre {n} con su jungla{en}.{sin_ward}"
+    elif tipo == "varios": texto = f"Min {_mm(t)}: te alcanzaron entre {n}{en}.{sin_ward}"
+    else:
+        rival = next((p.get("championName") for p in ps if p.get("participantId") == e.get("killerId")), "tu rival")
+        if dnivel and dnivel < 0: texto = f"Min {_mm(t)}: 1 contra 1 con {rival}, con {-dnivel} nivel{'es' if dnivel < -1 else ''} abajo. Igualar el nivel antes de tradear suele salvar estas."
+        else: texto = f"Min {_mm(t)}: 1 contra 1 con {rival}{en}. Para el replay: qué habilidad clave tenía él y tú no."
+    if suyo and tipo != "trade": texto += f" Después el rival tomó {nom(suyo)}."
+    return dict(t=t, tipo=tipo, n=n, jungla=jg in rivales, zona=z, dnivel=dnivel, ward=ward, obj_tuyo=bool(tuyo), obj_rival=suyo, texto=texto)
+
+
 def _ctx(match, timeline, puuid):
     """(yo, rival, eventos, frames) o None si falta algo; nunca lanza."""
     try:
@@ -49,15 +109,24 @@ def _muertes(me, ev, objs):
             for e in ev if e.get("type") == "CHAMPION_KILL" and e.get("victimId") == pid and "timestamp" in e]
 
 
-def muertes_sin_objetivo(match, timeline, puuid):
-    """{n, total, ratio, lista: [{t, texto}]}: tus muertes tras las que el rival NO tomó objetivo en 60 s. Vacío si faltan datos."""
-    vacio = dict(n=0, total=0, ratio=None, lista=[])
+def muertes(match, timeline, puuid):
+    """[clasificar_muerte(...)] de todas tus muertes; [] sin datos."""
     c = _ctx(match, timeline, puuid)
-    if not c: return vacio
-    me, _, ev, _ = c
-    ms = _muertes(me, ev, _objetivos(ev))
-    libres = [dict(t=t // 1000, texto=f"Min {_mm(t)}: moriste y el rival no tomó ningún objetivo en el minuto siguiente.") for t, o in ms if not o]
-    return dict(n=len(libres), total=len(ms), ratio=round(len(libres) / len(ms), 2) if ms else None, lista=libres)
+    if not c: return []
+    me, _, ev, fr = c
+    ps, objs = match["info"]["participants"], _objetivos(ev)
+    try: return [clasificar_muerte(e, me, ps, fr, ev, objs) for e in ev if e.get("type") == "CHAMPION_KILL" and e.get("victimId") == me["participantId"] and "timestamp" in e]
+    except (KeyError, TypeError): return []
+
+
+def muertes_sin_objetivo(match, timeline, puuid):
+    """{n, total, ratio, por_tipo {tipo: n}, lista: [{t, tipo, texto}]}: tus muertes que tu equipo NO cambió por un objetivo,
+    cada una con su causa probable. Vacío si faltan datos."""
+    ms = muertes(match, timeline, puuid)
+    libres = [dict(t=m["t"] // 1000, tipo=m["tipo"], texto=m["texto"]) for m in ms if m["tipo"] != "trade"]
+    por = {}
+    for m in ms: por[m["tipo"]] = por.get(m["tipo"], 0) + 1
+    return dict(n=len(libres), total=len(ms), ratio=round(len(libres) / len(ms), 2) if ms else None, por_tipo=por, lista=libres)
 
 
 def momentos(match, timeline, puuid):
@@ -69,7 +138,8 @@ def momentos(match, timeline, puuid):
     if not c: return []
     me, opp, ev, fr = c
     eq, objs = me["teamId"], _objetivos(ev)
-    cand = _candidatos(_muertes(me, ev, objs), objs, eq)
+    ms = muertes(match, timeline, puuid)
+    cand = _candidatos(_muertes(me, ev, objs), objs, eq, {m["t"]: m for m in ms})
     if opp:
         try:
             dif = [(f["timestamp"], f["participantFrames"][str(me["participantId"])]["totalGold"] - f["participantFrames"][str(opp["participantId"])]["totalGold"]) for f in fr]
@@ -113,17 +183,20 @@ def _tres(cand):
     return sorted(top, key=lambda m: m["t"])
 
 
-def _candidatos(muertes, objs, eq):
-    """Momentos posibles de tus muertes (con el objetivo rival que cayó después) y de los objetivos sueltos; t en ms."""
+def _candidatos(muertes, objs, eq, clasif=None):
+    """Momentos posibles de tus muertes (con el objetivo rival que cayó después) y de los objetivos sueltos; t en ms.
+    clasif {t: clasificar_muerte}: el texto con la causa probable (sin él, en vivo, solo lo que se ve)."""
     cand, ligados = [], set()
     for t, o in muertes:
+        c = (clasif or {}).get(t)
         if o:
             ligados.update(o)
             t2, ty = max(o, key=lambda x: VALOR[x[1]])
-            texto = f"Min {_mm(t)}: moriste y {(t2 - t) // 1000} s después el rival tomó {NOMBRE[ty]}."
+            texto = f"Min {_mm(t)}: caíste y {(t2 - t) // 1000} s después el rival tomó {NOMBRE[ty]}."
             imp = BASE_MUERTE + VALOR[ty]
         else:
-            texto, imp = f"Min {_mm(t)}: moriste y el rival no tomó ningún objetivo después.", BASE_MUERTE
+            texto, imp = f"Min {_mm(t)}: caíste; el rival no sacó un objetivo de esa muerte.", BASE_MUERTE
+        if c: texto, imp = c["texto"], (0.5 if c["tipo"] == "trade" else imp)  # un buen cambio no es un momento a corregir
         cand.append(dict(t=t // 1000, tipo="muerte", texto=texto, impacto=imp))
     for t, ty, q in objs:
         if (t, ty) in ligados: continue
@@ -190,7 +263,7 @@ def main(argv=None):
     print("Momentos clave:" if mo else "Sin momentos clave.")
     for x in mo: print(f"  - {x['texto']}")
     s = muertes_sin_objetivo(m, tl, puuid)
-    if s["total"]: print(f"Muertes sin objetivo: {s['n']} de {s['total']} ({s['ratio']:.0%})")
+    if s["total"]: print(f"Muertes que tu equipo no cambió por un objetivo: {s['n']} de {s['total']} ({s['ratio']:.0%})")
     for x in s["lista"]: print(f"  - {x['texto']}")
     return 0
 

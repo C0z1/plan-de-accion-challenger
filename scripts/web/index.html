@@ -371,7 +371,7 @@ function franja(m, fin) {  // EnPartida_Vino: nivel con anillos (tú y tu rival)
     <span class="sub" style="text-align:center;font-size:12px;letter-spacing:.12em">${d == null ? "CUENTA DESDE EL 14" : `META: ${TOPE} O MENOS HASTA EL 25`}</span>
     <b class="tit" style="font-size:15px">${ic("muertes", 16)} ${fin ? "Muertes del 14 al 25" : "Muertes desde el 14"}</b>
     <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px"><b style="font-size:26px">${d ?? "–"}<span class="sub" style="font-size:15px"> / ${TOPE}</span></b>
-      ${d != null ? `<span style="font-size:13px;font-weight:700;color:${d > TOPE ? "var(--red)" : d === TOPE ? "var(--acc)" : "var(--teal)"}">${d > TOPE ? "✕ Pasada" : d === TOPE ? "▲ Al límite" : "✓ Bien"}</span>` : ""}</div></div>`;
+      ${d != null ? `<span style="font-size:13px;font-weight:700;color:${d > TOPE ? "var(--red)" : d === TOPE ? "var(--acc)" : "var(--teal)"}">${d > TOPE ? "Sobre tu tope" : d === TOPE ? "▲ Al límite" : "✓ Bien"}</span>` : ""}</div></div>`;
   return `<div class="tres">${nv}${cs}${mu}</div>`;
 }
 
@@ -502,7 +502,7 @@ function partidasCliente(s, cl) {  // últimas ~20 del cliente: resultado, campe
 let partSel = null, partFiltro = "todas";
 const CORTA = {nivel: "Nivel al 6", muertes: "Muertes 14–25", cs: "Minions al 10", kp: "Peleas del 14+"};
 function ficha(v) {  // ✓ / ✕ / – de una regla en una partida
-  return `<span class="fch ${v === true ? "ok" : v === false ? "red" : ""}" role="img" aria-label="${v === true ? "cumplida" : v === false ? "fallada" : "sin dato"}">${v === true ? "✓" : v === false ? "✕" : "–"}</span>`;
+  return `<span class="fch ${v === true ? "ok" : v === false ? "red" : ""}" role="img" aria-label="${v === true ? "lo lograste" : v === false ? "para trabajar" : "sin dato"}">${v === true ? "✓" : v === false ? "○" : "–"}</span>`;
 }
 function puestoTag(p) {
   return p.puesto_eq === 1 ? '<span class="tag" style="background:#F5D88A;color:#3A2A08">★ MVP del equipo</span>' : p.puesto_eq === 5 ? '<span class="tag red">▼ Peor del equipo</span>'
@@ -528,7 +528,7 @@ function partidas(s) {  // Partidas_Vino: filtros, historial en tabla (score, re
       <span role="cell" style="font-size:13px;color:${i.error ? "var(--red)" : "var(--muted)"}">${i.error ? esc((ERR[i.error.clave] || [i.error.clave])[0].replace(/ del 14 al 25$/, "")) + " · min " + esc(i.error.minuto.split(":")[0]) : "—"}</span>
       <span role="cell"><button class="btn2" aria-label="Ver partida de ${esc(p.campeon)}, ${esc(p.fecha)}" onclick="partSel='${esc(p.archivo)}';v=-1;tick()">Ver</button></span></div>`; };
   const i = info(sel), mal = RG.map((t, k) => i.reglas[k] === false ? t : null).filter(Boolean);
-  const mejora = [...(i.error ? [[`${(ERR[i.error.clave] || [i.error.clave])[0]} al min ${i.error.minuto.split(":")[0]}`, (ERR[i.error.clave] || [, , ""])[2]]] : []), ...mal.map(t => [t, "Regla del plan que no cumpliste en esta partida."])].slice(0, 3);
+  const mejora = [...(i.error ? [[`${(ERR[i.error.clave] || [i.error.clave])[0]} al min ${i.error.minuto.split(":")[0]}`, (ERR[i.error.clave] || [, , ""])[2]]] : []), ...mal.map(t => [t, "Quedó pendiente en esta partida; es la que más pesa para la próxima."])].slice(0, 3);
   return `
   <div><h1>Partidas</h1><span class="sub">Últimas ${ps.length} · ${v}-${ps.length - v} · MVP en ${mvp} · peor del equipo en ${peor}</span></div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">${chip("todas", "Todas")}${chip("errores", "Con errores")}${RG.map((t, k) => chip(String(k), `${k + 1} · ${CORTA[V.reglas[k].metrica] || t.slice(0, 18)}`)).join("")}</div>
@@ -632,7 +632,7 @@ function inicio(s) {  // ritual de sesión (0.19): racha, regla de hoy, sesión 
   ${oroCard(R && R.resumen.racha_oro14)}
   <div class="est"><span class="sub">Atajos</span>
     <button class="atajo" onclick="ver('perfil')">${VS(s) ? `Qué cambiar (${VS(s).reglas.length} reglas)` : "Qué está fallando"} <span>→</span></button>
-    <button class="atajo" onclick="ver('errores')">Tus errores repetidos <span>→</span></button>
+    <button class="atajo" onclick="ver('errores')">Para trabajar <span>→</span></button>
     <button class="atajo" onclick="ver('partidas')">Últimas partidas <span>→</span></button></div>
   ${grupoCard(s.grupo)}`;
   return [main, aside];
@@ -751,26 +751,33 @@ function reglaCumple(r, i, num) {  // num: badge 1, 2, 3 (Perfil_Vino) en vez de
 }
 
 const ERR = {
-  sin_objetivo: ["Morir sin objetivo del 14 al 25", "Cada muerte sin objetivo a mitad de partida le regala ventaja al rival.", "abre el replay en el minuto y mira si había dragón, heraldo o torre en juego.",
+  sin_objetivo: ["Muertes del 14 al 25 sin nada a cambio", "A mitad de partida, cada caída abre un objetivo al rival; en estas no hubo uno de tu equipo cerca.", "abre el replay en el minuto: ¿había un objetivo vivo en el minuto siguiente?",
     "Una muerte tuya del 14 al 25 sin dragón, heraldo, barón ni torre de tu equipo en el minuto antes ni en el siguiente (timeline de Riot)."],
-  abajo_6: ["Salir del 6 con nivel abajo", "Pelear con menos nivel antes del 6 suele costar la línea.", "mira el minuto 6: ¿tenías menos nivel que tu rival cuando peleaste?",
+  abajo_6: ["Peleas cerca del 6 con nivel abajo", "Con un nivel menos alrededor del 6, la pelea suele salir cara.", "mira el minuto 6: igualar el nivel antes de tradear suele cambiar estas.",
     "Una kill en la que participas (o mueres) del 5:30 al 7:00 con menos nivel que tu rival al minuto 6."],
-  sin_pelea: ["Pelea perdida sin ti", "Tu participación en kills es lo que más te baja el score.", "busca la pelea grande después del 14 y dónde estabas tú.",
+  sin_pelea: ["Peleas del equipo a las que no llegaste", "Tu participación en kills es lo que más mueve tu score.", "busca la pelea grande después del 14: dónde estabas y si podías llegar a tiempo.",
     "Una pelea del 14 en adelante (3+ muertes en 30 s) que tu equipo pierde, sin kill, asistencia ni muerte tuya."],
 };
-function erroresV(s) {  // Errores_Vino: los 3 errores repetidos con sus momentos
-  const V = VS(s); if (!V) return sinDatos("Tus errores");
+const CAUSA = {  // la causa probable más frecuente (postpartida.clasificar_muerte): qué hacer distinto, sin culpas
+  gank: "La mayoría fueron gank de su jungla: un ward antes de cruzar el río cubre esa ventana.",
+  pelea: "La mayoría fueron en peleas de equipo: en el replay mira si había un objetivo vivo y quién entró primero.",
+  "1v1": "La mayoría fueron 1 contra 1: revisa nivel y habilidades clave antes de entrar.",
+  varios: "La mayoría te alcanzaron entre varios sin su jungla (roams o 2v2): un ward en el camino del rival te avisa antes.",
+  torre: "La mayoría fueron bajo torre: salir con un poco más de vida las evita."};
+const TIPO_MUERTE = {trade: "a cambio de un objetivo", gank: "por gank", pelea: "en peleas", "1v1": "en 1 contra 1", varios: "contra varios", torre: "bajo torre"};
+function erroresV(s) {  // Para trabajar (antes «Errores»): lo que se repite, con la causa probable y qué hacer distinto
+  const V = VS(s); if (!V) return sinDatos("Para trabajar");
   const e = V.errores, orden = Object.keys(ERR).sort((a, b) => e.partidas[b] - e.partidas[a]);
   const main = `
-  <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1>Tus errores</h1><span class="sub">${orden.filter(k => e.partidas[k]).length} se repiten en tus últimas ${e.n} · el que más pesa, arriba</span></div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><h1>Para trabajar</h1><span class="sub">${orden.filter(k => e.partidas[k]).length} patrones se repiten en tus últimas ${e.n} · el más frecuente, arriba</span></div>
     <button class="btn2" onclick="ver('perfil')">← Perfil</button></div>
-  <div class="card"><div class="cab2"><h2>Errores repetidos</h2><span class="sub" style="font-size:12px">el minuto exacto para buscarlo en el replay</span></div>
-    ${orden.map((k, i) => { const [t, pq, como] = ERR[k], n = e.partidas[k], ms = e.momentos[k];
+  <div class="card"><div class="cab2"><h2>Lo que se repite</h2><span class="sub" style="font-size:12px">el minuto exacto para buscarlo en el replay</span></div>
+    ${orden.map((k, i) => { const [t, pq, c0] = ERR[k], n = e.partidas[k], ms = e.momentos[k], como = k === "sin_objetivo" && CAUSA[e.causa] ? CAUSA[e.causa] : c0;
       return `<div class="err ${i === 0 && n ? "top" : ""}"><div style="display:flex;gap:14px;align-items:center"><span class="num" style="width:40px;height:40px;border-radius:50%;background:var(--dark4);color:var(--acc2)">${i + 1}</span>
         <div class="txt" style="flex:1"><b style="font-size:17px">${t}</b><small>${pq}</small></div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px"><span class="sub" style="font-size:12px"><b style="color:var(--txt)">${n}/${e.n}</b> partidas</span>
         <span class="tuboH" style="flex:none;width:140px"><i style="width:${e.n ? n / e.n * 100 : 0}%;background:linear-gradient(90deg,#9A2E3A,#FF8A8A)"></i></span></div></div>
-        ${n ? `<span style="font-size:13px"><b>Cómo verlo:</b> ${como}</span><div class="chips">${ms.slice(0, 4).map(m => `<span class="chip">${img("champion", m.campeon, "mini2", "")} ${m.rival ? "vs " + esc(m.rival) : esc(m.campeon)} · ${esc(m.minuto)} ▶</span>`).join("")}${ms.length > 4 ? `<span class="sub" style="font-size:12px">+${ms.length - 4} más</span>` : ""}</div>` : '<span class="sub" style="font-size:13px">No se repite. Bien.</span>'}</div>`; }).join("")}</div>`;
+        ${n ? `<span style="font-size:13px"><b>Qué probar:</b> ${como}</span><div class="chips">${ms.slice(0, 4).map(m => `<span class="chip">${img("champion", m.campeon, "mini2", "")} ${m.rival ? "vs " + esc(m.rival) : esc(m.campeon)} · ${esc(m.minuto)} ▶</span>`).join("")}${ms.length > 4 ? `<span class="sub" style="font-size:12px">+${ms.length - 4} más</span>` : ""}</div>` : `<span class="sub" style="font-size:13px">No se repitió en tus últimas ${e.n}. Lo lograste.</span>`}</div>`; }).join("")}</div>`;
   const aside = `<h2>Cómo los cuento</h2>${orden.map(k => `<div class="est"><b>${ERR[k][0]}</b><span class="sub" style="font-size:13px">${ERR[k][3]}</span></div>`).join("")}
   <div class="est"><b>Ojo</b><span class="sub" style="font-size:13px">Es lo que se repite, no la causa de perder: úsalo para saber qué revisar.</span></div>`;
   return [main, aside];
@@ -834,12 +841,12 @@ function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estad
   if (!m && !f) return [otraFase(s), ""];
   if (m && !f && m.modo === "ARAM") return envivoAram(s, m, prev);
   const x = f || m, min = x.minuto ?? 0, reglas = [];
-  const est = (ok, cuando) => min < cuando ? ["▲ Ahora", "amber"] : ok ? ["✓ Cumplida", "ok"] : ["✕ Fallada", "red"];
+  const est = (ok, cuando) => min < cuando ? ["▲ Ahora", "amber"] : ok ? ["✓ Lo lograste", "ok"] : ["Para trabajar", "red"];
   if (x.nivel != null && x.nivel_rival != null) reglas.push([`Llega al 6 sin nivel abajo`, `Nivel ${x.nivel} contra ${x.nivel_rival} de ${esc(x.rival || "tu rival")}`, ...est(x.nivel >= x.nivel_rival, 6), 6]);
   if (x.cs_meta) reglas.push([`${x.cs_meta}+ minions al 10`, `${x.cs ?? "?"} CS · minuto ${min}`, ...est((x.cs ?? 0) >= x.cs_meta, 10), 10]);
   const d = f ? x.muertes14_25 : x.muertes14;
   reglas.push([`Juega con objetivo: ${TOPE} muertes o menos del 14 al 25`, d == null ? "Cuenta desde el minuto 14." : `Llevas ${d} desde el 14 · meta: ${TOPE} o menos`,
-    ...(min < 14 ? ["Después", ""] : d > TOPE ? ["✕ Fallada", "red"] : min < 25 && !f ? ["▲ Ahora", "amber"] : ["✓ Cumplida", "ok"]), 14]);
+    ...(min < 14 ? ["Después", ""] : d > TOPE ? ["Para trabajar", "red"] : min < 25 && !f ? ["▲ Ahora", "amber"] : ["✓ Lo lograste", "ok"]), 14]);
   reglas.sort((a, b) => (b[3] === "amber") - (a[3] === "amber"));
   const fase = [[0, 6, "0–6"], [6, 10, "6–10"], [10, 14, "10–14"], [14, 25, "14–25"], [25, 40, "25+"]];
   const main = `
@@ -884,7 +891,7 @@ function envivo(s) {  // EnPartida_Vino: tus reglas en esta partida con su estad
     ${(s.avisos || []).length ? (f.sirvio ? `<span class="sub" style="margin-top:6px" role="status">Gracias: anotado.</span>`
       : `<span class="sub" style="margin-top:6px">¿Te sirvieron los avisos de esta partida?</span><span style="display:flex;gap:8px;flex-wrap:wrap">${[["si", "Sí"], ["no", "No"], ["no_vi", "No los vi"]].map(([k, t]) => `<button class="btn2" onclick="sirvio('${k}')">${t}</button>`).join("")}</span>`) : ""}${f.cotejo === false ? '<span class="tag red">No cuadran tus muertes con los eventos</span>' : ""}</div>` : ""}
   ${s.revision ? `<div class="est"><span class="sub">Revisión (Riot)</span><b>${esc(s.revision.champ)} ${esc(s.revision.kda || "")} · score ${esc(s.revision.score)}</b><span class="sub">Oro al 14 ${esc(s.revision.oro)} · CS al 14 ${esc(s.revision.cs)}</span></div>` : ""}
-  ${s.revision && (s.revision.momentos || []).length ? `<div class="est"><span class="sub">3 momentos clave${s.revision.libres ? ` · ${s.revision.libres[0]} de ${s.revision.libres[1]} muertes sin objetivo a cambio` : ""}</span>
+  ${s.revision && (s.revision.momentos || []).length ? `<div class="est"><span class="sub">3 momentos clave${s.revision.por_tipo ? ` · tus ${s.revision.libres ? s.revision.libres[1] : ""} muertes: ${Object.entries(s.revision.por_tipo).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${n} ${TIPO_MUERTE[k] || k}`).join(", ")}` : ""}</span>
     <ol style="margin:4px 0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px">${s.revision.momentos.map(m => `<li>${esc(m)}</li>`).join("")}</ol></div>` : ""}
   ${s.espera ? `<div class="est"><span class="sub">${esc(s.espera)}</span></div>` : ""}`;
   return [main, aside];

@@ -103,7 +103,7 @@ def ultima_partida():
         m, tl = json.loads(f.read_text()), json.loads((RAW / "timeline" / f.name).read_text())
         libres = postpartida.muertes_sin_objetivo(m, tl, puuid)
         out.update(momentos=[x["texto"] for x in postpartida.momentos(m, tl, puuid)], estela=postpartida.estela(m, tl, puuid),
-                   libres=[libres["n"], libres["total"]] if libres["total"] else None)
+                   libres=[libres["n"], libres["total"]] if libres["total"] else None, por_tipo=libres.get("por_tipo"))
     except (OSError, ValueError): pass
     return out
 

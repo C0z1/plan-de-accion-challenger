@@ -99,7 +99,7 @@ def _foco(p):
     frases.append(f"Esta semana vas {p['v']}-{p['d']} ({p['wr']:.0%}){prev}.")
     if p["regla_foco"]:
         r = p["regla_foco"]
-        frases.append(f"Lo que más te falló fue «{r['texto']}»: la cumples en {r['ok']} de {r['n']} partidas ({r['cumple']:.0%}).")
+        frases.append(f"Tu foco de la semana: «{r['texto']}». La lograste en {r['ok']} de {r['n']} partidas ({r['cumple']:.0%}); una más ya es avance.")
     partes = []
     if p["oro14"]["n"]:
         partes.append(f"llegaste al 14 con oro parejo o arriba de tu rival en {p['oro14']['ok']} de {p['oro14']['n']}")

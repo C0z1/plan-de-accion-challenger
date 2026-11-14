@@ -485,7 +485,7 @@ class RevisionV013(unittest.TestCase):  # arreglos de la revisión de DeepSeek a
         import companion
         r = {"campeon": "Yone", "kda": "3/2/1", "minuto": 30, "cs": 200, "rival": "Zed", "muertes14_25": 1}
         self.assertIn("(meta ≤ 2) ✓", companion.linea_fin(r) or "")
-        self.assertIn("(meta ≤ 0) ✕", companion.linea_fin(r, 0) or "")
+        self.assertIn("(meta ≤ 0) · para trabajar", companion.linea_fin(r, 0) or "")
 
     def test_momentos_solo_en_la_grieta(self):
         import postpartida

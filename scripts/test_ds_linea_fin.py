@@ -87,7 +87,7 @@ class LineaFin(unittest.TestCase):
 
     def test_meta_2_corte(self):
         muertes = [muerte(900 + i) for i in range(3)]
-        self.assertIn("3 (meta ≤ 2) ✕", companion.linea_fin(companion.resumen_fin(foto(1510, muertes))))
+        self.assertIn("3 (meta ≤ 2) · para trabajar", companion.linea_fin(companion.resumen_fin(foto(1510, muertes))))
         self.assertIn("2 (meta ≤ 2) ✓", companion.linea_fin(companion.resumen_fin(foto(1510, muertes[:2]))))
 
 

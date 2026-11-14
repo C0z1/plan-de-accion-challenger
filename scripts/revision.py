@@ -14,15 +14,7 @@ M10 = CFG.get("minions10")  # p. ej. {"campeon": "Sylas", "minimo": 69}; sin él
 NOMBRE = {"MIDDLE": "mid", "TOP": "top", "BOTTOM": "bot", "UTILITY": "bot"}  # misma tabla que scripts/nivel6.py
 
 
-def zone(x, y, team):  # misma función que scripts/nivel6.py
-    own = (x + y < 14800) == (team == 100)
-    if x + y < 5600 or x + y > 24000: return "base propia" if own else "base rival"
-    if abs(x - y) < 1600: z = "mid"
-    elif x < 2300 or y > 12500: z = "top"
-    elif y < 2300 or x > 12500: z = "bot"
-    elif abs(x + y - 14800) < 1500: return "río"
-    else: z = "jungla"
-    return f"{z} ({'lado propio' if own else 'lado rival'})"
+from postpartida import zona as zone  # noqa: E402  (una sola definición; antes estaba copiada aquí)
 
 
 def pasado(z, linea):

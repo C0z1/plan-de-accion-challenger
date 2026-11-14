@@ -102,7 +102,7 @@ class PostpartidaReal(unittest.TestCase):
             self.assertLessEqual(len(mo), 3, f.name)
             self.assertEqual([x["t"] for x in mo], sorted(x["t"] for x in mo), f.name)  # orden cronológico
             s = P.muertes_sin_objetivo(m, t, puuid)  # tampoco lanza
-            self.assertEqual(set(s), {"n", "total", "ratio", "lista"}, f.name)
+            self.assertEqual(set(s), {"n", "total", "ratio", "por_tipo", "lista"}, f.name)
             probadas += 1
         self.assertGreater(probadas, 0)
 

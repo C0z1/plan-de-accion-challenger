@@ -116,7 +116,7 @@ class AvisoNivel(unittest.TestCase):
         d["events"]["Events"] += [kill(t) for t in (500, 900, 1000, 1499, 1500, 1700)]  # 900, 1000, 1499: del 14 al 25
         r = companion.resumen_fin(d)
         self.assertEqual((r["minuto"], r["kda"], r["muertes14_25"], r["muertes14"]), (31, "0/0/0", 3, 5))
-        self.assertEqual(companion.linea_fin(r), "Min 31 · Ekko 0/0/0 contra Zed · CS 38 · muertes del 14 al 25: 3 (meta ≤ 2) ✕")
+        self.assertEqual(companion.linea_fin(r), "Min 31 · Ekko 0/0/0 contra Zed · CS 38 · muertes del 14 al 25: 3 (meta ≤ 2) · para trabajar")
         d["gameData"]["gameTime"] = 700; d["allPlayers"][0]["scores"] = None  # acabó antes del 14, scores null
         self.assertEqual(companion.linea_fin(companion.resumen_fin(d)), "Min 11 · Ekko 0/0/0 contra Zed · CS ?")
         for x in (None, {}): self.assertIsNone(companion.linea_fin(companion.resumen_fin(x)))
