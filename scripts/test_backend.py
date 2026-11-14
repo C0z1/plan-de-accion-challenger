@@ -59,6 +59,22 @@ class TestBackend(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertFalse(any("/matches/LA1_" in p and "by-puuid" not in p for p, *_ in Falso.vistos))  # nada repetido
 
+    def test_dos_pasadas_lista_primero_y_detalles_al_final(self):  # 0.30: la lista completa enseguida; los timelines viejos al final
+        import runpy, unittest.mock as um
+        d, lineas = tempfile.mkdtemp(), []
+        env = {"RACHA_SOLO_BACKEND": "1", "RACHA_API": f"http://127.0.0.1:{self.srv.server_port}", "RACHA_TOKEN": "codigo-ok", "RIOT_REGION": "la1"}
+        Falso.vistos.clear()
+        with um.patch.dict(os.environ, env), um.patch.dict(os.environ, {"RIOT_KEY": ""}):
+            os.environ.pop("RIOT_KEY")
+            try: runpy.run_path(str(DIR / "descargar.py"), run_name="__main__", init_globals=dict(ARGV=["todo"], RAW_DIR=d, RIOT_ID_G="Amigo#LAN", RECIENTES=1, ECO=lineas.append))
+            except SystemExit as e: self.assertIn(e.code, (0, None))
+        rutas = [p for p, *_ in Falso.vistos if "/matches/LA1_" in p and "by-puuid" not in p]
+        self.assertEqual(rutas[:3], ["/v1/riot/americas/lol/match/v5/matches/LA1_12", "/v1/riot/americas/lol/match/v5/matches/LA1_12/timeline",
+                                     "/v1/riot/americas/lol/match/v5/matches/LA1_11"])  # la más nueva completa; las demás, primero la partida
+        self.assertTrue(rutas[-1].endswith("/timeline"))  # los detalles viejos, al final
+        self.assertTrue(all((pathlib.Path(d) / "timeline" / f"{m}.json").exists() for m in ("LA1_9", "LA1_11", "LA1_12")))
+        self.assertIn("progreso 3/3", lineas); self.assertIn("detalles 2/2", lineas); self.assertTrue((pathlib.Path(d) / "historial.json").exists())
+
     def test_no_mezcla_otra_cuenta(self):
         d = tempfile.mkdtemp()
         pathlib.Path(d, "perfil.json").write_text(json.dumps({"account": {"puuid": "OTRO", "gameName": "Dueño", "tagLine": "LAN"}}))

@@ -77,6 +77,23 @@ def script(nombre, *args):
     buf.flush(); return code, buf.buffer.getvalue().decode("utf-8", "replace")
 
 
+def descargar(n="todo", raw=None, riot_id=None, eco=None):
+    """Corre descargar.py en este proceso para esa carpeta y esa cuenta, sin tocar sys.argv, stdout ni os.environ (con
+    gui.script se mezclaba con revision.py corriendo a la vez). eco(línea) recibe el progreso. Devuelve (código, salida)."""
+    lineas = []
+    def e(l):
+        lineas.append(l)
+        if eco: eco(l)
+    try:
+        runpy.run_path(str(REPO / "scripts" / "descargar.py"), run_name="__main__",
+                       init_globals=dict(ARGV=[str(n)], RAW_DIR=str(raw) if raw else None, RIOT_ID_G=riot_id, ECO=e)); code = 0
+    except SystemExit as x:
+        code = x.code if isinstance(x.code, int) else (0 if x.code is None else 1)
+        if isinstance(x.code, str): lineas.append(x.code)
+    except Exception as x: code = 1; lineas.append(f"falló: {x!r}")
+    return code, "\n".join(lineas)
+
+
 def parsear_revision(salida):
     """Primera fila de «Partida por partida» de revision.py: dict con las metas de la partida más reciente."""
     filas = [l for l in salida.split("## Partida por partida")[-1].splitlines() if l.startswith("| ") and not l.startswith("| Fecha")]
@@ -357,16 +374,11 @@ def guardar_del_cliente(q, espera=None, intentos=None, dormir=None):
 
 
 def _post_partida(q):
-    if not puede_descargar() or not es_base():  # sin key (amigos de la beta) u otra cuenta: desde el cliente, sin key
-        if not guardar_del_cliente(q): return
-    else:
-        q.put(("post_espera", "Esperando a que Riot publique la partida…")); time.sleep(60)
-        for intento in range(4):
-            code, _ = script("descargar.py", "5")
-            if code != 3: break
-            q.put(("post_espera", "Riot aún no publica la partida: reintento en 2 min…")); time.sleep(120)
-        if code == 2: q.put(aviso("Key de Riot caducada: copia la nueva del portal (se abrió) y guárdala con setx RIOT_KEY <key>. Mientras, la partida se guarda desde tu cliente."))
-        if code and not guardar_del_cliente(q): q.put(aviso(f"No pude descargar la partida (código {code}); queda pendiente.")); return  # key caducada o caída: el cliente
+    # 0.30: la partida recién jugada llega primero desde tu cliente (al instante y sin gastar la key, aunque la cola esté
+    # bajando tu historial); si el cliente no la da, la cola de descargas la pide a Riot con prioridad.
+    if not guardar_del_cliente(q):
+        if puede_descargar(): q.put(("bajar", 5))
+        return
     if "draft" in sys.modules:
         with DRAFT: importlib.reload(sys.modules["draft"])  # partidas nuevas para el próximo champ select
     code, out = script("revision.py", "1")

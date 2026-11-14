@@ -142,17 +142,17 @@ class PostBackend(unittest.TestCase):
     def test_descargar_codigo_0_o_3_refresca(self):
         for code in (0, 3):
             with mock.patch.object(w.gui, "puede_descargar", return_value=True), \
-                    mock.patch.object(w.gui, "script", return_value=(code, "listo\n")) as sc, \
+                    mock.patch.object(w.gui, "descargar", return_value=(code, "listo")) as sc, \
                     mock.patch.object(w, "refrescar") as rf:
                 w.descargar_todo()
-                sc.assert_called_once_with("descargar.py", "todo")
-                rf.assert_called_once()
+                self.assertEqual(sc.call_args[0][0], "todo")  # sin gui.script: no toca sys.argv ni stdout del proceso
+                rf.assert_called_once(); self.assertIn("al día", w.ESTADO["descarga"])
 
     def test_descargar_codigo_malo_no_refresca(self):
         with mock.patch.object(w.gui, "puede_descargar", return_value=True), \
-                mock.patch.object(w.gui, "script", return_value=(1, "falló\n")), \
+                mock.patch.object(w.gui, "descargar", return_value=(1, "falló")), mock.patch.object(w, "registrar_salud"), \
                 mock.patch.object(w, "refrescar") as rf:
-            w.descargar_todo(); rf.assert_not_called()
+            w.descargar_todo(); rf.assert_not_called(); self.assertEqual(w.ESTADO["descarga"], "falló")
 
     def test_descargar_sin_puede_no_corre_script(self):
         import cliente_v5  # sin invitación ni key: no corre descargar.py; baja las 20 del cliente (simulado: no toca tu cliente)
@@ -162,30 +162,30 @@ class PostBackend(unittest.TestCase):
             w.descargar_todo(); sc.assert_not_called(); cl.assert_called_once()
             self.assertIn("ya estaban bajadas", w.ESTADO["descarga"])
 
-    def test_descargar_dos_post_llama_una_vez(self):
-        entro, siga, hecho = threading.Event(), threading.Event(), threading.Event()
-        candado = ContadorLock()
+    def test_descargar_dos_post_encola_una_vez(self):  # 0.30: una sola cola; el 2.º pedido igual no se duplica
+        import queue
+        with mock.patch.object(w, "COLA", queue.PriorityQueue()), mock.patch.object(w, "EN_COLA", set()):
+            self.post("/api/descargar", b"{}"); self.post("/api/descargar", b"{}")
+            self.assertEqual(w.COLA.qsize(), 1)
 
-        def script(nombre, n):
-            entro.set(); siga.wait(5); return (0, "listo\n")
+    def test_progreso_y_refresco_en_tiempo_real(self):
+        def falso(n, raw, rid, eco):
+            for a in range(1, 61): eco(f"progreso {a}/60")
+            eco("pausa 12"); estados.append(w.ESTADO["descarga"]); eco("detalles 3/40"); estados.append(w.ESTADO["descarga"])
+            return 0, "listo"
+        estados = []
+        with mock.patch.object(w.gui, "puede_descargar", return_value=True), mock.patch.object(w.gui, "descargar", side_effect=falso), \
+             mock.patch.object(w, "refrescar") as rf, mock.patch.object(w.threading, "Thread") as th:
+            w.descargar_todo()
+        self.assertEqual(th.call_count, 2)  # refrescos a mitad de descarga: cada 25 partidas
+        self.assertIn("límite de Riot", estados[0]); self.assertIn("3 de 40", estados[1]); rf.assert_called_once()
 
-        def refrescar(): hecho.set()
-
-        with mock.patch.object(w, "DESCARGANDO", candado), \
-                mock.patch.object(w.gui, "puede_descargar", return_value=True), \
-                mock.patch.object(w.gui, "script", side_effect=script) as sc, \
-                mock.patch.object(w, "refrescar", side_effect=refrescar) as rf:
-            self.post("/api/descargar", b"{}")
-            self.assertTrue(entro.wait(5))       # el 1.er descargar_todo ya bajó y tiene el candado
-            self.post("/api/descargar", b"{}")   # el 2.º POST llega mientras el 1.º descarga
-            for _ in range(200):                 # espera a que el 2.º intente el candado y se descarte
-                if candado.adquiridos >= 2: break
-                time.sleep(0.01)
-            siga.set()                           # suelta el 1.º
-            self.assertTrue(hecho.wait(5))
-        self.assertEqual(sc.call_count, 1)       # descargar.py corrió una sola vez
-        rf.assert_called_once()
-
+    def test_encolar_sin_trabajador_no_baja(self):  # las pruebas y la demo nunca bajan nada
+        import queue
+        with mock.patch.object(w, "COLA", queue.PriorityQueue()), mock.patch.object(w, "EN_COLA", set()), \
+             mock.patch.object(w.gui, "descargar") as d:
+            w.encolar(1); w.encolar(1); w.encolar(0, n=5)
+            self.assertEqual([x[0] for x in sorted(w.COLA.queue)], [0, 1]); d.assert_not_called()
 
 if __name__ == "__main__":
     unittest.main()

@@ -18,11 +18,22 @@ def key_de_usuario():  # variable de usuario de Windows (setx), por si la termin
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import companion  # noqa: E402  (lcu y acceso al backend; solo lectura)
 
+# La app lo corre con runpy y estos globales (companion_gui.descargar): sin tocar sys.argv, stdout ni os.environ del proceso.
+_G = globals()
+ARGV = _G.get("ARGV") or sys.argv[1:]
+ECO = _G.get("ECO")  # recibe cada línea (progreso, pausa, errores) en vez de imprimirla
+
+
+def decir(texto, err=False, end="\n"):
+    if ECO: ECO(str(texto).strip())
+    else: print(texto, file=sys.stderr if err else sys.stdout, end=end)
+
 KEY = os.environ.get("RIOT_KEY") or (None if os.environ.get("RACHA_SOLO_BACKEND") else key_de_usuario())  # nunca commitear la key
 PROXY = None if KEY else companion.acceso()  # sin key propia: el backend de Racha con tu código de acceso
 if not KEY and not PROXY: sys.exit("Falta RIOT_KEY o tu código de acceso de Racha (Ajustes → Cuenta)")
 def riot_id():
     """RIOT_ID del entorno o, si no está, la cuenta con sesión en el cliente de LoL (LCU, solo lectura)."""
+    if _G.get("RIOT_ID_G"): return _G["RIOT_ID_G"]  # la cuenta dueña de la carpeta que se baja (la app)
     if os.environ.get("RIOT_ID"): return os.environ["RIOT_ID"]
     s = companion.lcu("/lol-summoner/v1/current-summoner") or {}
     if s.get("gameName") and s.get("tagLine"): return f"{s['gameName']}#{s['tagLine']}"
@@ -50,10 +61,11 @@ RUTA = {"na1": "americas", "br1": "americas", "la1": "americas", "la2": "america
         "tw2": "sea", "vn2": "sea"}.get(PLATAFORMA) or sys.exit(f"RIOT_REGION desconocida: {PLATAFORMA}")
 CUENTA = "asia" if RUTA == "sea" else RUTA  # account-v1 no existe en sea
 if not NAME or not TAG: sys.exit('RIOT_ID debe ser "Nombre#TAG"')
-TODO = len(sys.argv) > 1 and sys.argv[1] == "todo"
-N = 10 ** 6 if TODO else int(sys.argv[1]) if len(sys.argv) > 1 else 100
+TODO = bool(ARGV) and ARGV[0] == "todo"
+N = 10 ** 6 if TODO else int(ARGV[0]) if ARGV else 100
+RECIENTES = int(_G.get("RECIENTES") or 100)  # con timeline en la 1.ª pasada; las más viejas, solo la partida (los timelines viejos van al final)
 COLAS = (420, 440)  # Solo/Duo y Flex
-RAW = pathlib.Path(os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
+RAW = pathlib.Path(_G.get("RAW_DIR") or os.environ.get("DATOS_DIR") or pathlib.Path(__file__).resolve().parent.parent / "datos" / "raw")
 RAW.mkdir(parents=True, exist_ok=True)
 
 
@@ -72,17 +84,17 @@ def get(url):
                 return json.load(r)
         except urllib.error.HTTPError as e:
             if e.code == 429:  # rate limit de dev key: esperar lo que pida Riot
-                time.sleep(int(e.headers.get("Retry-After", 10)))
+                espera = int(e.headers.get("Retry-After", 10)); decir(f"pausa {espera}"); time.sleep(espera)
                 continue
             if PROXY and e.code in (401, 503):  # código inválido o la key del servidor caducó: no abrir el portal de Riot
-                print("\nTu código de acceso no sirve (revísalo en Ajustes)." if e.code == 401 else
-                      "\nEl servidor de Racha no puede hablar con Riot ahora: avísale a quien te dio el código.", file=sys.stderr)
+                decir("Tu código de acceso no sirve (revísalo en Ajustes)." if e.code == 401 else
+                      "El servidor de Racha no puede hablar con Riot ahora: avísale a quien te dio el código.", err=True)
                 sys.exit(2)
             if KEY and e.code in (401, 403) and (alt := companion.acceso()):  # tu key caducó pero tienes código: al backend
                 KEY, PROXY = None, alt; continue
             if e.code in (401, 403):  # companion.py lee el código 2
-                print(f"\nRiot respondió {e.code}: renueva RIOT_KEY (la dev key caduca en ~24 h). "
-                      "Copia la key nueva del portal (setx RIOT_KEY <key>) y córrelo otra vez.", file=sys.stderr)
+                decir(f"Riot respondió {e.code}: renueva RIOT_KEY (la dev key caduca en ~24 h). "
+                      "Copia la key nueva del portal (setx RIOT_KEY <key>) y córrelo otra vez.", err=True)
                 webbrowser.open("https://developer.riotgames.com")
                 sys.exit(2)
             if e.code < 500 or fallos >= 3: raise
@@ -104,7 +116,7 @@ try: viejo = json.loads((RAW / "perfil.json").read_text())["account"]
 except (OSError, ValueError, KeyError, TypeError): viejo = None
 nombre = lambda a: (str(a.get("gameName") or "").lower(), str(a.get("tagLine") or "").lower())
 if viejo and viejo.get("puuid") != puuid and nombre(viejo) != nombre(acc):  # el puuid cambia según la key: se compara el Riot ID
-    print(f"Esta carpeta es de {viejo.get('gameName')}#{viejo.get('tagLine')}: no se mezclan las partidas de otra cuenta.", file=sys.stderr)
+    decir(f"Esta carpeta es de {viejo.get('gameName')}#{viejo.get('tagLine')}: no se mezclan las partidas de otra cuenta.", err=True)
     sys.exit(4)
 league = get(f"https://{PLATAFORMA}.api.riotgames.com/lol/league/v4/entries/by-puuid/{puuid}")
 (RAW / "perfil.json").write_text(json.dumps({"account": acc, "league": league}, indent=1))
@@ -133,19 +145,27 @@ TL.mkdir(exist_ok=True)
 pendientes = []
 for i, mid in enumerate(ids):
     base = f"https://{RUTA}.api.riotgames.com/lol/match/v5/matches/{mid}"
-    faltan = [(f, url) for f, url in ((RAW / f"{mid}.json", base), (TL / f"{mid}.json", base + "/timeline")) if not f.exists()]
+    pares = ((RAW / f"{mid}.json", base), (TL / f"{mid}.json", base + "/timeline")) if i < RECIENTES else ((RAW / f"{mid}.json", base),)
+    faltan = [(f, url) for f, url in pares if not f.exists()]
     try:
-        datos = [(f, get(url)) for f, url in faltan]  # bajar las dos antes de guardar: nunca partida sin timeline
+        datos = [(f, get(url)) for f, url in faltan]  # las recientes, partida y timeline juntas; las viejas, la partida (timeline en la 2.ª pasada)
     except urllib.error.HTTPError as e:
         if e.code != 404: raise
         pendientes.append(mid)  # Riot aún no procesa la partida recién terminada: queda para la próxima corrida
         continue
     for f, data in datos:
         guardar(f, data)
-    print(f"{i + 1}/{len(ids)}", end="\r")
+    decir(f"progreso {i + 1}/{len(ids)}", end="\r")
+# 2.ª pasada: los timelines de las partidas viejas (la lista completa ya se ve desde la 1.ª)
+viejas = [mid for mid in ids[RECIENTES:] if (RAW / f"{mid}.json").exists() and not (TL / f"{mid}.json").exists()]
+for j, mid in enumerate(viejas):
+    try: guardar(TL / f"{mid}.json", get(f"https://{RUTA}.api.riotgames.com/lol/match/v5/matches/{mid}/timeline"))
+    except urllib.error.HTTPError as e:
+        if e.code != 404: raise
+    decir(f"detalles {j + 1}/{len(viejas)}", end="\r")
 import cliente_v5  # noqa: E402  (el perfil quedó con el puuid de la API: las partidas guardadas desde el cliente lo adoptan)
-if (rep := cliente_v5.unificar(RAW)): print(f"\nreparadas {rep} partidas con tu otro puuid (las guardadas desde el cliente)")
-if pendientes: print(f"\nRiot dio 404 en {len(pendientes)} (aún sin procesar, se bajan la próxima vez): {' '.join(pendientes)}", file=sys.stderr)
+if (rep := cliente_v5.unificar(RAW)): decir(f"reparadas {rep} partidas con tu otro puuid (las guardadas desde el cliente)")
+if pendientes: decir(f"Riot dio 404 en {len(pendientes)} (aún sin procesar, se bajan la próxima vez): {' '.join(pendientes)}", err=True)
 elif TODO: MARCA.write_text(json.dumps({"completo": True}))
-print(f"\nlisto: {len(ids) - len(pendientes)} de {len(ids)} partidas")
+decir(f"listo: {len(ids) - len(pendientes)} de {len(ids)} partidas")
 sys.exit(3 if pendientes else 0)  # companion.py: 3 = quedó alguna pendiente

@@ -132,14 +132,16 @@ class Http(unittest.TestCase):
             w.buscar_version()
         self.assertIsNone(w.ESTADO["nueva"])  # solo enlaces de GitHub
 
-    def test_primera_vez_hasta_tener_el_historial_completo(self):
-        import tempfile, os
-        with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {"DATOS_DIR": d}),                 mock.patch.object(w, "descargar_todo") as dt, mock.patch.object(w.gui, "puede_descargar", return_value=True),                 mock.patch.object(w.companion, "lcu", return_value={"gameName": "Amigo"}):  # con el cliente abierto
-            w.primera_vez(); self.assertEqual(dt.call_count, 1)
-            pathlib.Path(d, "LA1_1.json").write_text("{}"); w.primera_vez(); self.assertEqual(dt.call_count, 2)  # con partidas, sin el historial entero
-            pathlib.Path(d, "historial.json").write_text("{}"); w.primera_vez(); self.assertEqual(dt.call_count, 2)  # completo: lo nuevo llega por al_dia
-        with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {"DATOS_DIR": d}), mock.patch.object(w, "descargar_todo") as dt,              mock.patch.object(w.companion, "lcu", return_value=None):  # cliente cerrado: se reintenta al abrir LoL
-            w.primera_vez(); dt.assert_not_called()
+    def test_primera_vez_hasta_tener_el_historial_completo(self):  # 0.30: encola (nunca baja en el hilo de quien llama)
+        import tempfile, os, json
+        with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {"DATOS_DIR": d}), mock.patch.object(w, "encolar") as en,              mock.patch.object(w.companion, "lcu", return_value={"gameName": "Amigo"}):  # con el cliente abierto
+            w.primera_vez(); self.assertEqual(en.call_count, 1)
+            pathlib.Path(d, "LA1_1.json").write_text("{}"); w.primera_vez(); self.assertEqual(en.call_count, 2)  # con partidas, sin el historial entero
+            pathlib.Path(d, "historial.json").write_text("{}"); w.primera_vez(); self.assertEqual(en.call_count, 2)  # completo: lo nuevo llega por al_dia
+        with tempfile.TemporaryDirectory() as d, mock.patch.dict(os.environ, {"DATOS_DIR": d}), mock.patch.object(w, "encolar") as en,              mock.patch.object(w.companion, "lcu", return_value=None):
+            w.primera_vez(); en.assert_not_called()  # sin cliente ni cuenta conocida: espera
+            pathlib.Path(d, "perfil.json").write_text(json.dumps({"account": {"gameName": "Yo", "tagLine": "LAN"}}))
+            w.primera_vez(); en.assert_called_once_with(1, pathlib.Path(d), "Yo#LAN")  # con su perfil: al abrir Racha, aun sin cliente
 
     def test_vistas_previas(self):  # Selección y En vivo no quedan vacías fuera del champ select y de la partida
         import tempfile
@@ -289,7 +291,7 @@ class Fondo(unittest.TestCase):
                 mock.patch.object(w, "PUERTO", pathlib.Path(d) / "htc.port"), mock.patch.object(w, "autoarranque"), \
                 mock.patch.object(w, "refrescar"), mock.patch.object(w.gui, "trabajador"), \
                 mock.patch.object(w.time, "sleep", side_effect=Fin), mock.patch.object(w, "abrir") as a, \
-                mock.patch.object(w.gui, "perfil", return_value="x"), mock.patch.object(w, "vigilar_cuenta"),                 mock.patch.object(w, "buscar_version"), mock.patch.object(w, "primera_vez"):
+                mock.patch.object(w.gui, "perfil", return_value="x"), mock.patch.object(w, "vigilar_cuenta"),                 mock.patch.object(w, "buscar_version"), mock.patch.object(w, "primera_vez"), mock.patch.object(w, "bajador"):  # sin descargas reales
             with self.assertRaises(Fin): w.main(["--fondo", "--sin-overlay"])
             a.assert_not_called()                                      # --fondo no abre al arrancar...
             w.ESTADO["fase"] = "inicio"; w.evento(("fase", "Lobby")); a.assert_called_once()  # ...sino con la primera fase

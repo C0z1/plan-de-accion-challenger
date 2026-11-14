@@ -13,18 +13,13 @@ import companion_gui as g  # noqa: E402
 
 
 class AvisoDict(unittest.TestCase):
-    def test_post_partida_key_caducada_es_aviso_error(self):
+    def test_post_partida_sin_cliente_va_a_la_cola(self):  # 0.30: no corre descargar.py aquí; pide la partida a la cola de descargas
         q = queue.Queue()
-        orig = g.script, g.time.sleep, g.puede_descargar, g.guardar_del_cliente, g.es_base
-        g.script, g.time.sleep, g.puede_descargar, g.guardar_del_cliente, g.es_base = (lambda *a: (2, "")), (lambda s: None), (lambda: True), (lambda q: False), (lambda: True)
-        try:
-            g._post_partida(q)
-        finally:
-            g.script, g.time.sleep, g.puede_descargar, g.guardar_del_cliente, g.es_base = orig
-        avisos = [e[1] for e in list(q.queue) if e[0] == "aviso"]
-        self.assertEqual(len(avisos), 2)  # la key caducada y, como el cliente tampoco la tenía, «queda pendiente» (2026-11-12)
-        self.assertEqual((avisos[0]["tipo"], avisos[0]["minuto"]), ("error", None))
-        self.assertIn("RIOT_KEY", avisos[0]["texto"])
+        orig = g.script, g.puede_descargar, g.guardar_del_cliente
+        g.script, g.puede_descargar, g.guardar_del_cliente = (lambda *a: self.fail("no debe correr scripts")), (lambda: True), (lambda q: False)
+        try: g._post_partida(q)
+        finally: g.script, g.puede_descargar, g.guardar_del_cliente = orig
+        self.assertEqual(list(q.queue), [("bajar", 5)])
 
     def test_post_partida_sin_key_no_corre_descargar(self):  # beta sin key: no corre descargar.py; la partida se guarda del cliente (2026-11-12)
         q, corridos = queue.Queue(), []

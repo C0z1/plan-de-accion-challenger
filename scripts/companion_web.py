@@ -123,8 +123,10 @@ def evento(e):
         gui.CUENTA[0] = e[1]
         if gui.usar_cuenta(e[1], e[3] if len(e) > 3 else None):  # otra cuenta: su propia carpeta; se bajan sus últimas 20 del cliente
             s.update(descarga=None, previa=None, ultima=None, rendimiento=None)
-            threading.Thread(target=descargar_todo, daemon=True).start()  # incremental: el historial entero la primera vez, luego solo lo nuevo
         s.update(cuenta=e[1], perfil=gui.perfil(ESTADO["rango"], e[1]), icono=e[2] if len(e) > 2 else None)
+        encolar(1, gui.RAW, e[1])  # su historial, lo primero (incremental: si ya está completo, solo lo nuevo)
+        if not gui.es_base() and (d := gui.dueno_de(gui.BASE)) and not (gui.BASE / "historial.json").exists():
+            encolar(2, gui.BASE, d)  # la cuenta dueña de la PC también, aunque ahora juegues con otra
         threading.Thread(target=refrescar, daemon=True).start()  # si el historial en disco es de otra cuenta, se oculta
     elif tipo == "cliente": s = {"cliente": e[1]}
     elif tipo == "region": s = {"region": e[1], **({"plataforma": e[2]} if len(e) > 2 else {})}
@@ -139,6 +141,7 @@ def evento(e):
                 s["aviso"] = {**e[1], "franja": time.time()}
             s["avisos"] = (ESTADO.get("avisos") or []) + [s["aviso"]]
     elif tipo == "lobby": s = {"lobby": [{k: v for k, v in j.items() if k != "puuid"} for j in e[1]]}  # sin puuid en la página
+    elif tipo == "bajar": encolar(0, gui.RAW, gui.CUENTA[0], e[1])  # la partida recién terminada, si el cliente no la dio
     elif tipo == "pos": s = {"pos": e[1]}  # champ select antes de ver al rival: la ventana Draft
     with LOCK: ESTADO.update(s, v=ESTADO["v"] + 1)
 
@@ -384,16 +387,42 @@ def al_dia():
 
 
 def primera_vez():
-    """Alguien sin partidas: su historial se baja solo al abrir Racha con LoL abierto (con invitación, hasta 100 por el
-    servidor; sin ella, las últimas 20 desde su cliente)."""
+    """Al abrir Racha (o el cliente): encola tu historial completo si aún no está (con invitación o key, por Riot; sin
+    ellas, las últimas 20 de tu cliente). Lo bajado ya se ve al instante: refrescar() lee el disco primero."""
     import os
     raw = pathlib.Path(os.environ.get("DATOS_DIR") or gui.REPO / "datos" / "raw")
     if (raw / "historial.json").exists(): return  # historial completo: lo nuevo llega por al_dia y tras cada partida
-    if not (companion.lcu("/lol-summoner/v1/current-summoner") or {}).get("gameName"): return  # sin cliente: se reintenta al abrir LoL
-    descargar_todo()
+    if not gui.dueno_de(raw) and not (companion.lcu("/lol-summoner/v1/current-summoner") or {}).get("gameName"): return  # sin cuenta conocida ni cliente
+    encolar(1, raw, gui.dueno_de(raw))
 
 
 DESCARGANDO = threading.Lock()
+COLA, EN_COLA = queue.PriorityQueue(), set()  # descargas: una sola cola y un solo trabajador (bajador), que es el único que escribe «descarga»
+REFRESCO_CADA = 25  # partidas entre refrescos de la vista mientras baja (cada refresco relee la carpeta)
+
+
+def encolar(prio, raw=None, riot_id=None, n="todo"):
+    """Pide una descarga (0 = la partida recién jugada, 1 = tu cuenta activa, 2 = la dueña de la PC). Repetidas se ignoran.
+    Sin trabajador (pruebas, demo) solo queda en la cola: nunca baja nada."""
+    raw = pathlib.Path(raw or gui.RAW); k = (str(raw), str(n))
+    if k in EN_COLA: return
+    EN_COLA.add(k); COLA.put((prio, time.time(), str(raw), riot_id, str(n)))
+
+
+def bajador():
+    """El único que descarga: de la cola, de a una, por prioridad."""
+    while True:
+        _, _, raw, rid, n = COLA.get()
+        EN_COLA.discard((raw, n))
+        try: descargar_todo(n, pathlib.Path(raw), rid)
+        except Exception as e: registrar_salud(f"descarga: {e!r}")
+
+
+def registrar_salud(txt):
+    try:
+        f = gui.REPO / "datos" / "salud" / "descargas.log"; f.parent.mkdir(parents=True, exist_ok=True)
+        with f.open("a", encoding="utf-8") as h: h.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {txt}\n")
+    except OSError: pass
 
 
 def rango_api(puuid, region):
@@ -446,41 +475,46 @@ def buscar_cuenta(riot_id, region):
     with LOCK:
         cuenta = ESTADO.get("cuenta") or c["riot_id"]
         ESTADO.update(cuenta=cuenta, **({"rango": rango, "perfil": gui.perfil(rango, cuenta)} if rango else {}), v=ESTADO["v"] + 1)
-    threading.Thread(target=descargar_todo, daemon=True).start()
+    encolar(0, gui.RAW, c["riot_id"])  # la cuenta que buscaste, con prioridad
     hallada = r and r.get("gameName")
     return True, (f"Encontrada: {r['gameName']}#{r.get('tagLine', tag)}. Bajando tus partidas…" if hallada
                   else f"Guardada: {c['riot_id']}. Bajando tus partidas…")
 
 
-def descargar_todo(n="todo"):
-    """Baja tu historial de clasificatorias (descargar.py, con tu key o tu código; incremental) de la cuenta con sesión en
-    el cliente, aunque no sea la dueña de la PC, a su carpeta; recalcula todo. El avance va a «descarga»."""
-    if not DESCARGANDO.acquire(blocking=False):  # ya hay una en curso
-        with LOCK: ESTADO.update(descarga="Ya se están bajando tus partidas…", v=ESTADO["v"] + 1)
-        return
+def descargar_todo(n="todo", raw=None, riot_id=None):
+    """Un trabajo de la cola: baja el historial de clasificatorias (descargar.py; incremental y reanudable) de esa carpeta y
+    esa cuenta. Si es la carpeta que estás viendo, el avance va a «descarga» y la vista se refresca cada 25 partidas."""
+    raw = pathlib.Path(raw or gui.RAW)
+    if not DESCARGANDO.acquire(blocking=False): return encolar(1, raw, riot_id, n)  # otra en curso (al_dia): vuelve a la cola
     try:
+        visible = raw == pathlib.Path(gui.RAW)
         def aviso(t):
-            with LOCK: ESTADO.update(descarga=t, v=ESTADO["v"] + 1)
-        otra = not gui.es_base() and gui.CUENTA[0]  # otra cuenta tuya: se baja la suya (RIOT_ID), no la del dueño
-        if not gui.puede_descargar() or (not gui.es_base() and not otra):  # sin invitación ni key: las últimas 20 del cliente
+            if visible:
+                with LOCK: ESTADO.update(descarga=t, v=ESTADO["v"] + 1)
+        if not gui.puede_descargar():  # sin invitación ni key: las últimas 20 del cliente
             import cliente_v5
             aviso("Bajando tus últimas 20 partidas desde tu cliente de LoL…")
-            nuevas, msg = cliente_v5.descargar()
-            aviso(msg + (" Con una invitación o tu propia key se bajan hasta 100." if nuevas or "ya estaban" in msg else ""))
+            nuevas, msg = cliente_v5.descargar(raw)
+            aviso(msg + (" Con una invitación o tu propia key se baja todo tu historial." if nuevas or "ya estaban" in msg else ""))
             if nuevas: refrescar()
             return
-        if gui.es_base() and gui.ajeno(gui.CUENTA[0]):  # el historial de esta PC es de otra cuenta: bajarlo pisaría su perfil.json
+        if raw == pathlib.Path(gui.BASE) and gui.ajeno(gui.CUENTA[0]) and not riot_id:  # carpeta de otra persona: no se pisa su perfil
             return aviso(AJENA)
-        aviso("Descargando tu historial de clasificatorias… la primera vez puede tardar varios minutos.")
-        antes = os.environ.get("RIOT_ID")
-        if otra: os.environ["RIOT_ID"] = otra  # en este proceso (gui.script): la cuenta activa, no la guardada en Ajustes
-        try: code, out = gui.script("descargar.py", str(n))
-        finally:
-            if otra: os.environ.pop("RIOT_ID", None) if antes is None else os.environ.__setitem__("RIOT_ID", antes)
+        rid = riot_id or gui.dueno_de(raw) or (gui.CUENTA[0] if visible else None)
+        aviso("Revisando tu historial…")
+        ult = [0]
+        def eco(l):
+            if m := re.fullmatch(r"progreso (\d+)/(\d+)", l):
+                a, b = int(m.group(1)), int(m.group(2)); aviso(f"Bajando tu historial: {a} de {b}")
+                if visible and a - ult[0] >= REFRESCO_CADA: ult[0] = a; threading.Thread(target=refrescar, daemon=True).start()  # aparecen mientras bajan
+            elif m := re.fullmatch(r"detalles (\d+)/(\d+)", l): aviso(f"Tu historial ya está; completando los detalles de las partidas viejas: {m.group(1)} de {m.group(2)}")
+            elif m := re.fullmatch(r"pausa (\d+)", l): aviso(f"En pausa por el límite de Riot: sigue en {m.group(1)} s")
+        code, out = gui.descargar(n, raw, rid, eco)
         if code in (0, 3):
-            ult = (out.strip().splitlines() or [""])[-1].strip()
-            aviso("Listo: " + (ult[len("listo: "):] if ult.lower().startswith("listo: ") else ult) + " al día."); refrescar()
-        else: aviso((out.strip().splitlines() or [f"falló ({code})"])[-1])
+            total = sum(1 for _ in raw.glob("*_*.json"))
+            aviso(f"Listo: {total} partidas guardadas, al día."); refrescar()
+        else:
+            aviso((out.strip().splitlines() or [f"falló ({code})"])[-1]); registrar_salud(f"descargar.py {code}: {out.strip()[-300:]}")
     finally: DESCARGANDO.release()
 
 
@@ -698,7 +732,7 @@ class H(http.server.BaseHTTPRequestHandler):
         if self.path == "/api/abrir":  # un segundo arranque del .exe: la ventana la abre (o trae al frente) este proceso
             abrir(URL[0]); return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/descargar":  # «Descargar mis partidas»: con tu key o tu código de acceso, en su hilo
-            threading.Thread(target=descargar_todo, daemon=True).start(); return self.enviar(200, b"{}", "application/json")
+            encolar(0, gui.RAW, gui.CUENTA[0]); return self.enviar(200, b"{}", "application/json")
         if self.path == "/api/acceso":
             try: gui.guardar_acceso(json.loads(self.rfile.read(min(int(self.headers.get("Content-Length") or 0), 200)))["token"])
             except (ValueError, KeyError, TypeError, OSError): return self.enviar(400, b"", "text/plain")
@@ -840,7 +874,8 @@ def main(argv=None):
     if unico: threading.Thread(target=precargar, daemon=True).start()
     if "--demo" not in argv: threading.Thread(target=vigilar_cuenta, args=(q,), daemon=True).start()
     if unico:  # solo el Racha real: ni la demo ni las pruebas salen a internet ni descargan
-        threading.Thread(target=vigilar_version, daemon=True).start(); threading.Thread(target=primera_vez, daemon=True).start()
+        threading.Thread(target=vigilar_version, daemon=True).start(); threading.Thread(target=bajador, daemon=True).start()
+        threading.Thread(target=primera_vez, daemon=True).start()  # lo primero al abrir: tu historial completo, si falta
     threading.Thread(target=demo if "--demo" in argv else gui.trabajador, args=(q,), daemon=True).start()
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     print(url, flush=True)
