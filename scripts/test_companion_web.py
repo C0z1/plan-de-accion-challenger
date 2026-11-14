@@ -72,6 +72,25 @@ class Http(unittest.TestCase):
         for t in ("Tu rival", "Objetivos", "desde el 20:00"): self.assertIn(t.encode(), b)
         st, b = self.get("/api/estado"); self.assertEqual(st, 200); self.assertIn("fase", json.loads(b))
 
+    def test_partidas_y_ver_una(self):  # 0.29: Partidas lista todas (índice fuera de /api/estado) y «Ver» abre su revisión
+        import tempfile
+        idx = [dict(archivo="LA1_2", cola=440), dict(archivo="LA1_1", cola=420)]
+        with mock.patch.object(w, "INDICE", [idx]):
+            st, b = self.get("/api/partidas"); self.assertEqual((st, json.loads(b)), (200, idx))
+        with tempfile.TemporaryDirectory() as d, mock.patch.object(w.gui, "RAW", pathlib.Path(d)), mock.patch.object(w.gui, "ajeno", return_value=False),              mock.patch.object(w.gui, "ultima_partida", return_value={"muertes": ["Min 6:42: …"]}) as up:
+            pathlib.Path(d, "LA1_1.json").write_text("{}")
+            st, b = self.get("/api/partida?id=LA1_1"); self.assertEqual((st, json.loads(b)), (200, {"muertes": ["Min 6:42: …"]}))
+            up.assert_called_once_with("LA1_1")
+            self.assertEqual(self.get("/api/partida?id=LA1_9")[0], 404)          # no está en disco
+            self.assertEqual(self.get("/api/partida?id=../perfil")[0], 404)     # nada fuera de un id de partida
+            self.assertEqual(self.get("/api/partidas", host="evil.com")[0], 403)
+
+    def test_refrescar_saca_el_indice_del_estado(self):
+        r = {"resumen": {"partidas": [], "indice": [dict(archivo="LA1_1")]}, "tilt": {}}
+        with mock.patch.object(w, "rendimiento_rapido", return_value=r), mock.patch.object(w, "aplicar_coach", side_effect=lambda x: x),              mock.patch.object(w.gui, "ajeno", return_value=False), mock.patch.object(w, "vistas_previas"), mock.patch.object(w.gui, "es_base", return_value=False),              mock.patch.object(w, "builds_del_backend"), mock.patch.object(w, "sync_nube"), mock.patch.dict(w.ESTADO, rendimiento=None), mock.patch.object(w, "INDICE", [[]]):
+            w.refrescar()
+            self.assertNotIn("indice", w.ESTADO["rendimiento"]["resumen"]); self.assertEqual(w.INDICE[0], [dict(archivo="LA1_1")])
+
     def test_vigilar_cuenta_avisa_solo_al_cambiar(self):
         import queue
         c, q, n = w.companion, queue.Queue(), iter(range(6))

@@ -134,7 +134,7 @@ def partidas(raw=None):
         try: info = json.loads(f.read_text())["info"]; zs = z_partida(info)
         except (OSError, ValueError, KeyError, TypeError): continue  # una partida dañada no vacía todo el rendimiento
         me = next((p for p in info["participants"] if p["puuid"] == yo), None)
-        if zs and me: gs.append(dict(t=info["gameCreation"], fin=info["gameCreation"] + (info.get("gameDuration") or 0) * 1000, win=me["win"], champ=me["championName"], rol=me["teamPosition"],
+        if zs and me: gs.append(dict(t=info["gameCreation"], cola=info.get("queueId"), fin=info["gameCreation"] + (info.get("gameDuration") or 0) * 1000, win=me["win"], champ=me["championName"], rol=me["teamPosition"],
                                      kda=f"{me['kills']}/{me['deaths']}/{me['assists']}", zs=zs, f=f, pid=me["participantId"],
                                      pids={p["puuid"]: p["participantId"] for p in info["participants"]},
                                      jug={p["puuid"]: [p["championName"], f"{p['kills']}/{p['deaths']}/{p['assists']}"] for p in info["participants"]},
@@ -213,6 +213,9 @@ def resumen(n=10, raw=None):
                                    if g.get("jug") and g.get("mvp_id") in g["jug"] else None)
                           for g in reversed(gs[-n:])],
                 total=len(gs), media=m(gs), ultimas20=m(gs[-20:]), anteriores=m(gs[:-20]),
+                indice=[dict(archivo=g["f"].stem if g.get("f") else None, t=g["t"], fecha=datetime.fromtimestamp(g["t"] / 1000).strftime("%m-%d %H:%M"),
+                             campeon=g["champ"], rival=(g.get("jug") or {}).get(g.get("rival_id"), [None])[0], win=g["win"], kda=g["kda"],
+                             score=round(g["score"], 1), puesto_eq=g.get("puesto_eq"), cola=g.get("cola")) for g in reversed(gs)],  # todas, para Partidas
                 tendencia=[m(gs[i:i + 20]) for i in range(0, len(gs), 20)],
                 por_campeon={c: dict(n=len(v), wr=round(sum(g["win"] for g in v) / len(v), 2), score=m(v))
                              for c, v in sorted(champs.items(), key=lambda x: -len(x[1]))},

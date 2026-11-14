@@ -211,8 +211,13 @@ def aplicar_coach(r, c=None):
 AJENA = "Esta PC guarda el historial de otra cuenta: para el tuyo, usa Racha en tu PC."
 
 
+INDICE = [[]]  # todas tus partidas (score.resumen «indice»): fuera de ESTADO para no mandar ~100 KB en cada /api/estado
+
+
 def refrescar():  # lee ~300 JSON (o la caché): en su hilo, para no frenar la cola
     r = None if gui.ajeno(gui.CUENTA[0]) else aplicar_coach(rendimiento_rapido())  # historial de otra cuenta: no mostrarlo como tuyo
+    INDICE[0] = ((r or {}).get("resumen") or {}).get("indice") or []
+    if r and "indice" in (r.get("resumen") or {}): r = {**r, "resumen": {k: v for k, v in r["resumen"].items() if k != "indice"}}
     with LOCK:
         if gui.ajeno(gui.CUENTA[0]): r = None; ESTADO["descarga"] = AJENA  # la cuenta pudo llegar mientras se calculaba (hallazgo 20)
         ESTADO.update(rendimiento=r, v=ESTADO["v"] + 1, **({} if r is not None else {"previa": None}))
@@ -655,6 +660,11 @@ class H(http.server.BaseHTTPRequestHandler):
             except (ValueError, OSError) as e: msg = str(e) if isinstance(e, ValueError) else "No pude hablar con el servidor de Racha."
             pagina = f'<!doctype html><meta charset="utf-8"><title>Racha</title><body style="margin:0;display:grid;place-items:center;height:100vh;background:#24111A;color:#F2F4F7;font:600 18px Segoe UI,sans-serif"><p style="max-width:460px;text-align:center">{html.escape(msg)}</p>'
             return self.enviar(200, pagina.encode(), "text/html; charset=utf-8")
+        if self.path == "/api/partidas":  # Partidas: el índice completo, una vez; la página filtra por cola y carga de 50 en 50
+            return self.enviar(200, json.dumps(INDICE[0]).encode(), "application/json; charset=utf-8")
+        if m := re.fullmatch(r"/api/partida\?id=([A-Z0-9]{2,5}_\d{1,15})", self.path):  # «Ver»: la revisión de esa partida
+            if gui.ajeno(gui.CUENTA[0]) or not (gui.RAW / f"{m.group(1)}.json").is_file(): return self.enviar(404, b"{}", "application/json")
+            return self.enviar(200, json.dumps(gui.ultima_partida(m.group(1))).encode(), "application/json; charset=utf-8")
         if self.path == "/api/estado" or self.path.startswith("/api/estado?"):
             if self.path == f"/api/estado?desde={ESTADO['v']}":  # nada cambió desde la última vez: sin cuerpo (auditoría de DeepSeek)
                 self.send_response(304); self.send_header("Cache-Control", "no-store"); self.end_headers(); return

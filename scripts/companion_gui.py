@@ -87,11 +87,12 @@ def parsear_revision(salida):
                 oro=oro, cs=cs, m14=m14, m25=m25, cw=cw, score=sc[0] if sc else "-", racha=[l.removeprefix("- ") for l in racha if l.strip()])
 
 
-def ultima_partida():
-    """KDA, rival y duración de la partida más nueva en datos/raw (los id de partida crecen con el tiempo)."""
+def ultima_partida(archivo=None):
+    """KDA, rival, duración y revisión (estela, momentos, muertes con su causa probable) de la partida más nueva en datos/raw
+    (los id de partida crecen con el tiempo) o de `archivo` («LA1_123», la que elegiste en Partidas)."""
     try:
         puuid = json.loads((RAW / "perfil.json").read_text())["account"]["puuid"]
-        f = max(RAW.glob("*_*.json"), key=lambda p: int(p.stem.split("_")[1]))
+        f = RAW / f"{archivo}.json" if archivo else max(RAW.glob("*_*.json"), key=lambda p: int(p.stem.split("_")[1]))
         info = json.loads(f.read_text())["info"]; ps = info["participants"]
         me = next(p for p in ps if p["puuid"] == puuid)
         opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
@@ -103,6 +104,7 @@ def ultima_partida():
         m, tl = json.loads(f.read_text()), json.loads((RAW / "timeline" / f.name).read_text())
         libres = postpartida.muertes_sin_objetivo(m, tl, puuid)
         out.update(momentos=[x["texto"] for x in postpartida.momentos(m, tl, puuid)], estela=postpartida.estela(m, tl, puuid),
+                   muertes=[x["texto"] for x in postpartida.muertes(m, tl, puuid)],
                    libres=[libres["n"], libres["total"]] if libres["total"] else None, por_tipo=libres.get("por_tipo"))
     except (OSError, ValueError): pass
     return out

@@ -499,49 +499,82 @@ function partidasCliente(s, cl) {  // últimas ~20 del cliente: resultado, campe
   <div class="card"><span class="sub">El análisis completo (tu score, tus errores, tu plan) llega con tu historial en una próxima versión.</span></div>`;
 }
 
-let partSel = null, partFiltro = "todas";
+let partSel = null, partCola = "todas", partMostrar = 50, PIDX = null, PIDX_k = null, PIDX_err = false, cargandoIdx = false;
+const DET = {};  // revisión de cada partida que abriste con «Ver» (archivo → datos | "cargando" | "error")
 const CORTA = {nivel: "Nivel al 6", muertes: "Muertes 14–25", cs: "Minions al 10", kp: "Peleas del 14+"};
-function ficha(v) {  // ✓ / ✕ / – de una regla en una partida
+const COLA_N = {420: "Solo/Duo", 440: "Flex"};
+function ficha(v) {  // ✓ / ○ / – de una regla en una partida
   return `<span class="fch ${v === true ? "ok" : v === false ? "red" : ""}" role="img" aria-label="${v === true ? "lo lograste" : v === false ? "para trabajar" : "sin dato"}">${v === true ? "✓" : v === false ? "○" : "–"}</span>`;
 }
 function puestoTag(p) {
-  return p.puesto_eq === 1 ? '<span class="tag" style="background:#F5D88A;color:#3A2A08">★ MVP del equipo</span>' : p.puesto_eq === 5 ? '<span class="tag red">▼ Peor del equipo</span>'
+  return p.puesto_eq === 1 ? '<span class="tag" style="background:#F5D88A;color:#3A2A08">★ MVP del equipo</span>'
     : p.puesto_eq ? `<span class="tag" style="background:var(--dark3);color:var(--muted)">${p.puesto_eq}.º de 5</span>` : "";
 }
+async function cargarIndice(k) {  // todas tus partidas una vez por historial (la página filtra y pinta de 50 en 50)
+  cargandoIdx = true;
+  try { const r = await fetch("/api/partidas"); if (!r.ok) throw 0; PIDX = await r.json(); PIDX_err = false; }
+  catch (e) { PIDX_err = true; }
+  PIDX_k = k; cargandoIdx = false; v = -1; tick();
+}
+async function verPartida(a) {  // «Ver»: la revisión de esa partida (estela, momentos y cada muerte con su causa probable)
+  partSel = a;
+  if (!DET[a] || DET[a] === "error") {
+    DET[a] = "cargando"; v = -1; tick();
+    try { const r = await fetch("/api/partida?id=" + encodeURIComponent(a)); DET[a] = r.ok ? await r.json() : "error"; } catch (e) { DET[a] = "error"; }
+  }
+  v = -1; await tick();
+  setTimeout(() => document.getElementById("detalle")?.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"}), 120);  // tras el repintado (y la transición de vista)
+}
 
-function partidas(s) {  // Partidas_Vino: filtros, historial en tabla (score, reglas ✓/✕, equipo, error) y la partida seleccionada
+function partidas(s) {  // Partidas: todas las descargadas, filtro por cola, «Cargar más» y la revisión de la que elijas
   const cl = delCliente(s); if (cl) return partidasCliente(s, cl);
-  const ps = (s.rendimiento?.resumen?.partidas || []).slice(0, 5), V = VS(s), PP = (V && V.por_partida) || {}, RG = V ? V.reglas : [];  // las últimas 5 (pedido del usuario)
-  if (!ps.length) return `<div><h1>Partidas</h1><span class="sub">Sin partidas en disco.</span></div>`;
-  const v = ps.filter(p => p.win).length, mvp = ps.filter(p => p.puesto_eq === 1).length, peor = ps.filter(p => p.puesto_eq === 5).length;
+  const R = s.rendimiento?.resumen || {}, ps20 = R.partidas || [], V = VS(s), PP = (V && V.por_partida) || {}, RG = V ? V.reglas : [];
+  if (!ps20.length) return `<div><h1>Partidas</h1><span class="sub">Sin partidas en disco.</span></div>`;
+  const k = `${ps20[0].archivo}|${R.total || 0}`;
+  if (PIDX_k !== k && !cargandoIdx) cargarIndice(k);
+  const listo = PIDX && PIDX_k === k, todas = listo ? PIDX : ps20;  // mientras carga, las últimas 20
+  const chip = (c, t) => `<button class="filtro ${partCola === c ? "on" : ""}" onclick="partCola='${c}';partMostrar=50;v=-1;tick()">${t}</button>`;
+  const chips = `<div style="display:flex;gap:10px;flex-wrap:wrap">${chip("todas", "Todas")}${chip("420", "Solo/Duo")}${chip("440", "Flex")}${chip("otras", "ARAM y normales")}</div>`;
+  if (partCola === "otras") {  // solo existen las ~20 recientes del cliente: se dice claro
+    const ot = (s.cliente || []).filter(p => !["Solo/Duo", "Flex"].includes(p.cola));
+    return `<div><h1>Partidas</h1><span class="sub">ARAM y normales · solo las recientes que guarda tu cliente, sin análisis</span></div>${chips}
+    <div class="card" style="gap:0">${ot.map(p => `<div class="fila" style="border-color:var(--line)">
+      <span>${ic(p.win ? "ok" : "mal", 20, p.win ? "Victoria" : "Derrota")} ${img("champion", p.campeon, "item", p.campeon)} <b>${esc(p.campeon)}</b> ${esc(p.kda)}</span>
+      <span class="sub">${esc(p.cola)} · ${p.cs} CS · ${p.min} min · ${esc(FECHA.format(new Date(p.ts)))}</span></div>`).join("") || '<span class="sub" style="padding:12px">Tu cliente no tiene ARAM ni normales recientes.</span>'}</div>`;
+  }
+  const vis = todas.filter(p => partCola === "todas" || String(p.cola) === partCola), ver = vis.slice(0, partMostrar);
+  const det = Object.fromEntries(ps20.map(p => [p.archivo, p]));
   const info = p => PP[p.archivo] || {reglas: [], error: null};
-  const vis = ps.filter(p => partFiltro === "todas" ? true : partFiltro === "errores" ? !!info(p).error : info(p).reglas[+partFiltro] === false);
-  const sel = ps.find(p => p.archivo === partSel) || vis[0] || ps[0];
-  const chip = (k, t) => `<button class="filtro ${partFiltro === k ? "on" : ""}" onclick="partFiltro='${k}';v=-1;tick()">${t}</button>`;
+  const vic = vis.filter(p => p.win).length;
   const fila = p => { const i = info(p);
-    return `<div class="pfila ${p === sel ? "sel" : ""}" role="row" ${p === sel ? 'aria-current="true"' : ""}><span class="res" role="presentation" style="background:${p.win ? "var(--teal)" : "var(--red)"}"></span>
-      <span role="cell" style="display:flex;gap:10px;align-items:center;min-width:0">${img("champion", p.campeon, "item", p.campeon)}<span style="min-width:0"><b>${esc(p.campeon)}</b><br><span class="sub" style="font-size:12px">${p.rival ? "vs " + esc(p.rival) + " · " : ""}${esc(p.fecha)}</span></span></span>
+    return `<div class="pfila ${p.archivo === partSel ? "sel" : ""}" role="row" ${p.archivo === partSel ? 'aria-current="true"' : ""}><span class="res" role="presentation" style="background:${p.win ? "var(--teal)" : "var(--red)"}"></span>
+      <span role="cell" style="display:flex;gap:10px;align-items:center;min-width:0">${img("champion", p.campeon, "item", p.campeon)}<span style="min-width:0"><b>${esc(p.campeon)}</b><br><span class="sub" style="font-size:12px">${p.rival ? "vs " + esc(p.rival) + " · " : ""}${esc(p.fecha)}${COLA_N[p.cola] ? " · " + COLA_N[p.cola] : ""}</span></span></span>
       <b role="cell">${esc(p.kda)}</b>
       <span role="cell" style="display:flex;align-items:center;gap:10px"><span class="tuboH" style="flex:1"><i style="width:${Math.max(0, Math.min(100, p.score))}%;background:linear-gradient(90deg,#5E4590,#C9B0F0)"></i></span><b>${Math.round(p.score)}</b></span>
       <span role="cell" style="display:flex;gap:6px">${[0, 1, 2, 3].map(k => ficha(i.reglas[k])).join("")}</span>
       <span role="cell">${puestoTag(p)}</span>
-      <span role="cell" style="font-size:13px;color:${i.error ? "var(--red)" : "var(--muted)"}">${i.error ? esc((ERR[i.error.clave] || [i.error.clave])[0].replace(/ del 14 al 25$/, "")) + " · min " + esc(i.error.minuto.split(":")[0]) : "—"}</span>
-      <span role="cell"><button class="btn2" aria-label="Ver partida de ${esc(p.campeon)}, ${esc(p.fecha)}" onclick="partSel='${esc(p.archivo)}';v=-1;tick()">Ver</button></span></div>`; };
-  const i = info(sel), mal = RG.map((t, k) => i.reglas[k] === false ? t : null).filter(Boolean);
+      <span role="cell" style="font-size:13px;color:var(--muted)">${i.error ? esc((ERR[i.error.clave] || [i.error.clave])[0].replace(/ del 14 al 25$/, "")) + " · min " + esc(i.error.minuto.split(":")[0]) : "—"}</span>
+      <span role="cell"><button class="btn2" aria-label="Ver partida de ${esc(p.campeon)}, ${esc(p.fecha)}" onclick="verPartida('${esc(p.archivo)}')">Ver</button></span></div>`; };
+  const sel = partSel && (todas.find(p => p.archivo === partSel) || det[partSel]), d = partSel ? DET[partSel] : null, d20 = sel && det[sel.archivo];
+  const i = sel ? info(sel) : {reglas: []}, mal = RG.map((t, k) => i.reglas[k] === false ? t : null).filter(Boolean);
   const mejora = [...(i.error ? [[`${(ERR[i.error.clave] || [i.error.clave])[0]} al min ${i.error.minuto.split(":")[0]}`, (ERR[i.error.clave] || [, , ""])[2]]] : []), ...mal.map(t => [t, "Quedó pendiente en esta partida; es la que más pesa para la próxima."])].slice(0, 3);
+  const lista = (t, xs) => xs && xs.length ? `<div class="est"><span class="sub">${t}</span><ol style="margin:4px 0 0 18px;padding:0;display:flex;flex-direction:column;gap:6px">${xs.map(x => `<li>${esc(x)}</li>`).join("")}</ol></div>` : "";
+  const detalle = sel ? `<div class="card" id="detalle" style="gap:14px"><div class="cab2"><h2>${esc(sel.campeon)}${sel.rival ? " vs " + esc(sel.rival) : ""} · ${esc(sel.fecha)} · ${sel.win ? "Victoria" : "Derrota"}</h2><span class="sub" style="font-size:12px">la partida que elegiste</span></div>
+    ${d === "cargando" ? '<span class="sub" role="status">Cargando la revisión…</span>' : d === "error" || !d ? `<span class="sub" role="status">No pude abrir esta partida. <button class="btn2" onclick="verPartida('${esc(sel.archivo)}')">Reintentar</button></span>`
+      : `${estelaCard(d.estela)}${lista("Momentos clave", d.momentos)}${lista("Cada muerte y su causa probable", d.muertes)}${!(d.momentos || []).length && !(d.muertes || []).length ? '<span class="sub">Esta partida no tiene timeline guardada: solo el resumen.</span>' : ""}`}
+    ${d20 ? `<div class="tres" style="grid-template-columns:1fr 1fr 1.6fr">
+      <div class="est"><span class="sub">MVP de tu equipo</span>${d20.mvp ? `<span style="display:flex;gap:10px;align-items:center">${img("champion", d20.mvp.campeon, "item", d20.mvp.campeon)}<span><b>${esc(d20.mvp.campeon)}${d20.mvp.tu ? " (tú)" : ""}</b><br><span class="sub" style="font-size:12px">score ${Math.round(d20.mvp.score)} · ${esc(d20.mvp.kda)}</span></span></span>` : '<span class="sub">Sin dato.</span>'}</div>
+      <div class="est"><span class="sub">Tú en tu equipo</span><span style="display:flex;gap:10px;align-items:center">${img("champion", d20.campeon, "item", d20.campeon)}<span><b>${d20.puesto_eq}.º de 5</b><br><span class="sub" style="font-size:12px">score ${Math.round(d20.score)} · ${d20.puesto}.º de 10</span></span></span></div>
+      <div class="est"><span class="sub">Para trabajar</span>${mejora.length ? mejora.map(([t, x], k) => `<div style="display:flex;gap:12px"><span class="num" style="width:26px;height:26px;border-radius:50%;background:var(--dark3);font-size:13px">${k + 1}</span><div><b style="font-size:14px">${esc(t)}</b>${x ? `<br><span class="sub" style="font-size:12px">${esc(x)}</span>` : ""}</div></div>`).join("") : '<span class="sub">Nada pendiente: cumpliste el plan.</span>'}</div>
+    </div>` : ""}</div>` : "";
   return `
-  <div><h1>Partidas</h1><span class="sub">Últimas ${ps.length} · ${v}-${ps.length - v} · MVP en ${mvp} · peor del equipo en ${peor}</span></div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap">${chip("todas", "Todas")}${chip("errores", "Con errores")}${RG.map((t, k) => chip(String(k), `${k + 1} · ${CORTA[V.reglas[k].metrica] || t.slice(0, 18)}`)).join("")}</div>
-  <div class="card" style="gap:8px" role="table" aria-label="Historial de partidas"><div class="cab2" role="presentation"><h2>Historial</h2><span class="sub" style="font-size:12px">la más reciente arriba</span></div>
-    <div class="pfila cab" role="row"><span role="presentation"></span><span role="columnheader">Partida</span><span role="columnheader">KDA</span><span role="columnheader">Score (50 = tu rol)</span><span role="columnheader">Reglas 1–${RG.length}</span><span role="columnheader">En tu equipo</span><span role="columnheader">Error</span><span role="columnheader"><span class="sr">Ver</span></span></div>
-    ${vis.map(fila).join("") || '<span class="sub">Ninguna partida con ese filtro.</span>'}</div>
-  <div class="card"><div class="cab2"><h2>${esc(sel.campeon)}${sel.rival ? " vs " + esc(sel.rival) : ""} · ${esc(sel.fecha)} · ${sel.win ? "Victoria" : "Derrota"}</h2><span class="sub" style="font-size:12px">la partida seleccionada</span></div>
-    <div class="tres" style="grid-template-columns:1fr 1fr 1.6fr">
-      <div class="est"><span class="sub">MVP de tu equipo</span>${sel.mvp ? `<span style="display:flex;gap:10px;align-items:center">${img("champion", sel.mvp.campeon, "item", sel.mvp.campeon)}<span><b>${esc(sel.mvp.campeon)}${sel.mvp.tu ? " (tú)" : ""}</b><br><span class="sub" style="font-size:12px">score ${Math.round(sel.mvp.score)} · ${esc(sel.mvp.kda)}</span></span></span><span class="tag" style="background:#F5D88A;color:#3A2A08">★ MVP</span>` : '<span class="sub">Sin dato.</span>'}</div>
-      <div class="est" style="${sel.puesto_eq >= 4 ? "box-shadow:0 0 0 1px var(--acc) inset" : ""}"><span class="sub">Tú en tu equipo</span><span style="display:flex;gap:10px;align-items:center">${img("champion", sel.campeon, "item", sel.campeon)}<span><b>${sel.puesto_eq}.º de 5</b><br><span class="sub" style="font-size:12px">score ${Math.round(sel.score)} · ${sel.puesto}.º de 10</span></span></span>
-        <span class="tag ${sel.puesto_eq >= 4 ? "red" : "ok"}">${sel.puesto_eq >= 4 ? "▼ Fuiste mal" : "▲ Bien"}</span></div>
-      <div class="est"><span class="sub">Cosas a mejorar</span>${mejora.length ? mejora.map(([t, d], k) => `<div style="display:flex;gap:12px"><span class="num" style="width:26px;height:26px;border-radius:50%;background:var(--dark3);font-size:13px">${k + 1}</span><div><b style="font-size:14px">${esc(t)}</b>${d ? `<br><span class="sub" style="font-size:12px">${esc(d)}</span>` : ""}</div></div>`).join("") : '<span class="sub">Nada que marcar: cumpliste el plan.</span>'}</div>
-    </div></div>`;
+  <div><h1>Partidas</h1><span class="sub">${vis.length} partida${vis.length === 1 ? "" : "s"}${partCola !== "todas" ? " de " + COLA_N[partCola] : ""} · ${vic}-${vis.length - vic}${listo ? "" : PIDX_err ? " · no pude cargar el historial completo" : " · cargando tu historial completo…"}</span></div>
+  ${chips}
+  <div class="card" style="gap:8px" role="table" aria-label="Historial de partidas"><div class="cab2" role="presentation"><h2>Historial</h2><span class="sub" style="font-size:12px">la más reciente arriba · reglas y patrones en tus últimas 20</span></div>
+    <div class="pfila cab" role="row"><span role="presentation"></span><span role="columnheader">Partida</span><span role="columnheader">KDA</span><span role="columnheader">Score (50 = tu rol)</span><span role="columnheader">Reglas 1–${RG.length}</span><span role="columnheader">En tu equipo</span><span role="columnheader">Para trabajar</span><span role="columnheader"><span class="sr">Ver</span></span></div>
+    ${ver.map(fila).join("") || '<span class="sub">Ninguna partida con ese filtro.</span>'}
+    ${vis.length > ver.length ? `<button class="btn2" style="align-self:center;margin-top:8px" onclick="partMostrar+=50;v=-1;tick()">Cargar más (${vis.length - ver.length} restantes)</button>` : ""}</div>
+  ${detalle}`;
 }
 
 const ROL_VIVO = "";
@@ -904,11 +937,10 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
   const ult = V ? new Date(V.ultima).toLocaleString("es", {dateStyle: "medium", timeStyle: "short"}) : null;
   const av = (k, t, sub) => fila(t, sub, tog("t-" + k, aj[k] !== false, false, `ajuste('${k}',${aj[k] === false})`, t));
   return [`
-  <div><h1>Ajustes</h1><span class="sub">Racha · racha.gg</span></div>
+  <div><h1>Ajustes</h1><span class="sub">Todo se guarda en tu PC (y en tu cuenta si entras con Google)</span></div>
   <div class="dos">
     <div style="display:flex;flex-direction:column;gap:26px">
-      <div class="card"><div class="cab2"><h2>Cuenta</h2></div>
-        ${fila("Riot ID", esc([String(s.perfil || "").split(" · ")[0], s.region].filter(Boolean).join(" · ")) || "Abre el cliente de LoL", '<span class="sub" style="font-size:12px">la del cliente</span>')}
+      <div class="card"><div class="cab2"><h2>Cuenta</h2><span class="sub" style="font-size:13px">${esc([String(s.perfil || "").split(" · ")[0], s.region].filter(Boolean).join(" · ")) || "abre el cliente de LoL"}</span></div>
         ${fila("Partidas descargadas", V ? `${V.total} · última: ${esc(ult)}` : s.cliente ? `${s.cliente.length} del cliente (sin descargar)` : "sin datos", '<span style="display:flex;gap:8px"><button class="btn2" onclick="descargar()">Descargar</button><button class="btn2" onclick="recargar()">Recargar</button></span>')}
         ${s.descarga && !/Google/.test(s.descarga) ? `<span class="sub" style="font-size:13px;margin:-4px 0 4px 16px" role="status" aria-live="polite">${esc(s.descarga)}</span>` : ""}
         ${loginNube(s)}
@@ -921,8 +953,7 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
         <details class="alt"><summary>Usar un código de acceso</summary>
           ${fila("Código de acceso", s.conectado && !s.nube ? "Conectado a racha.gg: tus partidas se bajan solas." : "Te lo da quien administra Racha.", (s.conectado && !s.nube ? '<span class="tag ok" style="align-self:center">✓ Conectado</span> ' : "") + '<span style="display:flex;gap:8px"><input id="acceso" type="password" autocomplete="off" aria-label="Código de acceso" placeholder="código" style="width:130px;height:40px;background:var(--dark3);border:1px solid var(--soft);border-radius:10px;color:var(--txt);padding:8px 10px;font:inherit"><button class="btn2" onclick="guardarAcceso()">Guardar</button></span>')}</details>
 </div>
-      <div class="card"><div class="cab2"><h2>Apariencia</h2></div>
-        ${fila("Reducir movimiento", "Todo quieto: sin aurora, cometas, olas ni brillos.", tog("t-rm", rm, false, "quieto()", "Reducir movimiento"))}
+      <div class="card"><div class="cab2"><h2>Franja en partida</h2></div>
         ${fila("Siempre encima en partida", "La franja queda sobre el juego (en modo sin bordes).", tog("t-overlay", aj.overlay !== false, false, `ajuste('overlay',${aj.overlay === false})`, "Siempre encima en partida"))}
         ${fila("Posición de la franja", "Dónde se ve en partida.", `<span role="group" aria-label="Posición de la franja" style="display:flex;gap:8px">${[["arriba", "Arriba"], ["abajo", "Abajo"], ...(aj.franja_pos === "libre" ? [["libre", "Donde la dejaste"]] : [])].map(([k, t]) => `<button class="btn2" aria-pressed="${(aj.franja_pos || "arriba") === k}" ${(aj.franja_pos || "arriba") === k ? 'style="border-color:var(--rosa,#F28DB0)"' : ""} onclick="ajuste('franja_pos','${k}')">${t}</button>`).join("")}</span>`)}
         ${fila("Mover la franja", s.mover_franja ? "Arrástrala con el mouse a donde quieras: se guarda sola. Se apaga sola en 90 s (en partida, Alt+Tab a Racha y «Listo»)." : "Muéstrala y arrástrala a donde quieras (también fuera de partida).",
@@ -931,16 +962,18 @@ function ajustesV(s) {  // Ajustes_Vino: cuenta, apariencia y avisos en partida 
         ${av("franja_regla", "Franja: muertes y peleas", "Del 14 al 25: tus muertes contra tu tope y tu participación en kills.")}
         ${av("franja_build", "Franja: tu próximo ítem", "Al morir o al comprar: el siguiente ítem de tu build y el oro que falta.")}
         ${av("franja_plan", "Franja: tu match y tu plan", "Los primeros 90 s: tu récord contra tu rival, tu regla y tu nota del matchup.")}
-        ${av("franja_muerto", "Franja: marcador al morir", "Mientras esperas a revivir: dragones, torres, larvas y barón de cada equipo, y tu regla.")}
+        ${av("franja_muerto", "Franja: marcador al morir", "Mientras esperas a revivir: dragones, torres, larvas y barón de cada equipo, y tu regla.")}</div>
+      <div class="card"><div class="cab2"><h2>General</h2></div>
+        ${fila("Reducir movimiento", "Todo quieto: sin aurora, cometas, olas ni brillos.", tog("t-rm", rm, false, "quieto()", "Reducir movimiento"))}
         ${fila("Arrancar con Windows", a == null ? "Solo en la versión instalada." : "Corre en segundo plano y se abre sola cuando abres LoL.", tog("t-auto", !!a, a == null, "autoarranque(!" + !!a + ")", "Arrancar con Windows"))}</div>
     </div>
     <div class="card" style="align-self:flex-start"><div class="cab2"><h2>Avisos en partida</h2></div>
       ${av("aviso_nivel", "Nivel 6 con nivel abajo", "Te avisa al llegar al 6 si vas abajo de tu rival.")}
-      ${av("aviso_minions", "Minions al 10", "Si vas bajo tu meta de config.json al minuto 10.")}
+      ${av("aviso_minions", "Minions al 10", "Si al minuto 10 vas bajo tu meta de CS con ese campeón (la mediana de tus victorias).")}
       ${av("aviso_muertes", "Muertes del 14 al 25", "Al llegar a 2 muertes desde el 14.")}
       ${av("aviso_regreso", "Plan de regreso", "Del min 10 al 14, si vas abajo de nivel: un consejo para igualar.")}
       ${av("aviso_pico", "Pico de poder del rival", "Cuando tu rival termina un ítem completo y te saca ventaja en ítems.")}
-      ${"speechSynthesis" in window ? fila("Leer el draft en voz alta", "En champ select, Racha dice en voz alta sus comentarios nuevos.", tog("t-voz", aj.voz === true, false, `ajuste('voz',${aj.voz !== true})`, "Leer el draft en voz alta")) : ""}</div>
+      ${"speechSynthesis" in window ? `<div class="cab2" style="margin-top:14px"><h2>Selección de campeón</h2></div>` + fila("Leer el draft en voz alta", "En champ select, Racha dice en voz alta sus comentarios nuevos.", tog("t-voz", aj.voz === true, false, `ajuste('voz',${aj.voz !== true})`, "Leer el draft en voz alta")) : ""}</div>
     ${ayudaV(s, aj)}
     ${coachV(s)}
     ${glosarioV()}
