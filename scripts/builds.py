@@ -420,8 +420,8 @@ def subir():
     except (OSError, ValueError): return 0
     mejores = {k: v for k, v in d.items() if k.count("|") == 1 and v}
     ks = sorted(mejores)
-    for i in range(0, len(ks), 100):  # el backend acepta hasta 300 por envío
-        _backend("PUT", "/v1/builds", {k: mejores[k] for k in ks[i:i + 100]})
+    for i in range(0, len(ks), 50):  # el Worker corta en 64 KB por petición (~1 KB por build)
+        _backend("PUT", "/v1/builds", {k: mejores[k] for k in ks[i:i + 50]})
     return len(mejores)
 
 

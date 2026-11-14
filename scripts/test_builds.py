@@ -270,7 +270,7 @@ class Ladder(unittest.TestCase):
         envios = []
         with mock.patch.object(builds, "_backend", lambda m, r, c=None: envios.append(len(c))):
             self.assertEqual(builds.subir(), 250)
-        self.assertEqual(envios, [100, 100, 50])
+        self.assertEqual(envios, [50] * 5)
 
 
 if __name__ == "__main__":
