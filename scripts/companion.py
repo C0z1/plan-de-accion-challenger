@@ -89,21 +89,42 @@ def runas_recomendadas(cid, pos, leer=None):
     return {"keystone": ids[0], "pagina_ids": pag}
 
 
-def importar_runas(nombre, pagina, leer=None, escribir=None):
-    """Crea en el cliente la página de runas `pagina` ({primaryStyleId, subStyleId, selectedPerkIds[9]}) y la deja activa.
-    Solo en selección de campeón y solo cuando el jugador pulsa el botón: Racha nunca elige, banea ni acepta por ti.
-    Si la página activa la creó Racha («Racha: …») la reemplaza (así no se llena el límite); una página tuya nunca se borra. Devuelve (ok, mensaje)."""
+RESPALDO_RUNAS = DIR.parent / "datos" / "cache" / "runas-respaldo"  # tu página tal como estaba antes de que Racha la usara
+
+
+def importar_runas(nombre, pagina, leer=None, escribir=None, respaldo=None):
+    """Pone en el cliente la página de runas `pagina` ({primaryStyleId, subStyleId, selectedPerkIds[9]}) y la deja activa,
+    como «racha.gg <campeón>». Solo en selección de campeón y solo cuando el jugador pulsa el botón: Racha nunca elige,
+    banea ni acepta por ti. Orden (pedido del usuario, «como Blitz»): 1) reescribe la página de Racha si ya existe («racha.gg …»
+    o «Racha: …» de antes); 2) si hay espacio, crea una; 3) si está lleno, usa tu página seleccionada (editable), guardando
+    antes una copia en datos/cache/runas-respaldo. Nunca borra páginas ni toca las no editables. Devuelve (ok, mensaje)."""
     leer, escribir = leer or lcu, escribir or lcu_escribir
     ids = (pagina or {}).get("selectedPerkIds") or []
     if len(ids) != 9 or not all(isinstance(i, int) for i in ids + [pagina.get("primaryStyleId"), pagina.get("subStyleId")]):
         return False, "Esta build no trae la página completa de runas."
     if leer("/lol-gameflow/v1/gameflow-phase") != "ChampSelect": return False, "Solo se puede en la selección de campeón."
-    act = leer("/lol-perks/v1/currentpage") or {}
-    if act.get("isDeletable") and str(act.get("name") or "").startswith("Racha: ") and act.get("id") is not None:  # solo las que creó Racha:
-        escribir("DELETE", f"/lol-perks/v1/pages/{act['id']}")                                                     # las tuyas no se tocan
-    ok = escribir("POST", "/lol-perks/v1/pages", {"name": f"Racha: {nombre}"[:25], "primaryStyleId": pagina["primaryStyleId"],
-                                                 "subStyleId": pagina["subStyleId"], "selectedPerkIds": ids, "current": True})
-    return (True, "Listo: la página de runas ya está en tu cliente.") if ok else (False, "El cliente no aceptó la página (¿llegaste al límite de páginas?).")
+    nom = f"racha.gg {nombre}" if len(f"racha.gg {nombre}") <= 25 else f"racha.gg {nombre.split(' vs ')[0]}"[:25]  # «Akali vs Zed» si cabe
+    cuerpo = {"name": nom, "primaryStyleId": pagina["primaryStyleId"], "subStyleId": pagina["subStyleId"], "selectedPerkIds": ids, "current": True}
+    editable = lambda p: isinstance(p, dict) and p.get("isEditable", True) and p.get("id") is not None
+    pags = leer("/lol-perks/v1/pages") or []
+    destino = next((p for p in pags if editable(p) and str(p.get("name") or "").startswith(("racha.gg ", "Racha: "))), None)
+    tuya = None
+    if not destino:
+        if (leer("/lol-perks/v1/inventory") or {}).get("canAddCustomPage", True):  # hay espacio: una página nueva de Racha
+            ok = escribir("POST", "/lol-perks/v1/pages", cuerpo)
+            return (True, "Listo: la página de runas ya está en tu cliente.") if ok else (False, "El cliente no aceptó la página de runas.")
+        act = leer("/lol-perks/v1/currentpage")
+        destino = tuya = act if editable(act) else next((p for p in pags if editable(p)), None)
+        if not destino: return False, "Tu cliente no tiene páginas de runas editables."
+        try:  # la copia de tu página, por si la quieres de vuelta
+            d = pathlib.Path(respaldo or RESPALDO_RUNAS); d.mkdir(parents=True, exist_ok=True)
+            (d / f"{destino['id']}.json").write_text(json.dumps(destino, ensure_ascii=False), encoding="utf-8")
+        except (OSError, TypeError, ValueError): return False, "No pude guardar una copia de tu página: no la toqué."
+    if not escribir("PUT", f"/lol-perks/v1/pages/{destino['id']}", {**cuerpo, "id": destino["id"]}):
+        return False, "El cliente no aceptó la página de runas (no se borró nada)."
+    escribir("PUT", "/lol-perks/v1/currentpage", destino["id"])  # que quede seleccionada
+    if tuya: return True, f"Listo: tu cliente no tenía espacio, así que usé tu página «{tuya.get('name')}» (ahora «{nom}»). Racha la reutiliza desde ahora."
+    return True, "Listo: la página de runas ya está en tu cliente."
 
 
 def pantalla_completa(cfg=None):

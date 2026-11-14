@@ -214,20 +214,42 @@ class PicoRival(unittest.TestCase):  # A2: un aviso por ítem completo del rival
 class ImportarRunas(unittest.TestCase):  # A5: solo en selección, solo la página de runas, reemplaza la activa si es editable
     PAG = {"primaryStyleId": 8000, "subStyleId": 8400, "selectedPerkIds": [8008, 9111, 9104, 8299, 8444, 8453, 5005, 5008, 5011]}
 
-    def cliente(self, fase="ChampSelect", actual=None):
+    def cliente(self, fase="ChampSelect", actual=None, paginas=None, espacio=True):
         llamadas = []
-        leer = lambda path: {"/lol-gameflow/v1/gameflow-phase": fase, "/lol-perks/v1/currentpage": actual}.get(path)
+        leer = lambda path: {"/lol-gameflow/v1/gameflow-phase": fase, "/lol-perks/v1/currentpage": actual, "/lol-perks/v1/pages": paginas,
+                             "/lol-perks/v1/inventory": {"canAddCustomPage": espacio}}.get(path)
         escribir = lambda metodo, path, cuerpo=None: llamadas.append((metodo, path, cuerpo)) or True
         return leer, escribir, llamadas
 
     def test_crea_y_reemplaza(self):
         import companion
-        leer, escribir, ll = self.cliente(actual={"id": 77, "isDeletable": True, "name": "Racha: Ahri"})  # una que creó Racha
+        r = {"id": 77, "isEditable": True, "name": "Racha: Ahri"}  # una que creó Racha (nombre de antes), aunque no esté seleccionada
+        leer, escribir, ll = self.cliente(actual={"id": 5, "name": "Mía"}, paginas=[{"id": 5, "name": "Mía"}, r], espacio=False)
         ok, msg = companion.importar_runas("Yone", self.PAG, leer, escribir)
         self.assertTrue(ok); self.assertIn("Listo", msg)
-        self.assertEqual([(m, p) for m, p, _ in ll], [("DELETE", "/lol-perks/v1/pages/77"), ("POST", "/lol-perks/v1/pages")])
-        self.assertEqual(ll[1][2]["selectedPerkIds"], self.PAG["selectedPerkIds"]); self.assertTrue(ll[1][2]["current"])
+        self.assertEqual([(m, p) for m, p, _ in ll], [("PUT", "/lol-perks/v1/pages/77"), ("PUT", "/lol-perks/v1/currentpage")])  # nunca DELETE
+        self.assertEqual((ll[0][2]["name"], ll[0][2]["selectedPerkIds"], ll[1][2]), ("racha.gg Yone", self.PAG["selectedPerkIds"], 77))
         self.assertTrue(all(p.startswith("/lol-perks/") for _, p, _ in ll))  # nada fuera de las runas
+
+    def test_lleno_usa_tu_pagina_seleccionada_con_copia(self):  # «como Blitz»: la que tengas de primeras
+        import companion, tempfile, json, pathlib
+        a = {"id": 5, "isEditable": True, "name": "A", "selectedPerkIds": [1]}
+        leer, escribir, ll = self.cliente(actual=a, paginas=[a, {"id": 6, "name": "si"}], espacio=False)
+        with tempfile.TemporaryDirectory() as d:
+            ok, msg = companion.importar_runas("Miss Fortune vs Twisted Fate", self.PAG, leer, escribir, respaldo=d)
+            self.assertEqual(json.loads(pathlib.Path(d, "5.json").read_text(encoding="utf-8")), a)  # la copia antes de tocarla
+        self.assertTrue(ok); self.assertIn("«A»", msg)
+        self.assertEqual(ll[0][:2], ("PUT", "/lol-perks/v1/pages/5")); self.assertEqual(ll[0][2]["name"], "racha.gg Miss Fortune")  # «vs» no cabe
+        self.assertLessEqual(len(ll[0][2]["name"]), 25)
+
+    def test_lleno_sin_editables_y_put_rechazado(self):
+        import companion, tempfile
+        leer, escribir, ll = self.cliente(actual={"id": 1, "isEditable": False}, paginas=[{"id": 1, "isEditable": False}], espacio=False)
+        self.assertFalse(companion.importar_runas("Yone", self.PAG, leer, escribir)[0]); self.assertEqual(ll, [])
+        leer, _, _ = self.cliente(actual={"id": 5, "isEditable": True, "name": "A"}, espacio=False)
+        with tempfile.TemporaryDirectory() as d:
+            ok, msg = companion.importar_runas("Yone", self.PAG, leer, lambda *a: False, respaldo=d)
+        self.assertFalse(ok); self.assertIn("no se borró nada", msg)
 
     def test_nunca_borra_una_pagina_tuya(self):  # revisión de DeepSeek: una página editable del jugador no se toca
         import companion
