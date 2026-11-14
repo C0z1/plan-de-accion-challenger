@@ -143,6 +143,8 @@ for i, mid in enumerate(ids):
     for f, data in datos:
         guardar(f, data)
     print(f"{i + 1}/{len(ids)}", end="\r")
+import cliente_v5  # noqa: E402  (el perfil quedó con el puuid de la API: las partidas guardadas desde el cliente lo adoptan)
+if (rep := cliente_v5.unificar(RAW)): print(f"\nreparadas {rep} partidas con tu otro puuid (las guardadas desde el cliente)")
 if pendientes: print(f"\nRiot dio 404 en {len(pendientes)} (aún sin procesar, se bajan la próxima vez): {' '.join(pendientes)}", file=sys.stderr)
 elif TODO: MARCA.write_text(json.dumps({"completo": True}))
 print(f"\nlisto: {len(ids) - len(pendientes)} de {len(ids)} partidas")

@@ -373,7 +373,8 @@ def al_dia():
         import cliente_v5
         with DESCARGANDO:
             nuevas, _ = cliente_v5.descargar()
-        if nuevas: refrescar()
+            reparadas = cliente_v5.unificar()  # carpetas mezcladas por 0.26–0.27 (y las de los amigos)
+        if nuevas or reparadas: refrescar()
     except Exception: pass
 
 

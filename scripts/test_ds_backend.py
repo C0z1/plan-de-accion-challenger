@@ -109,7 +109,9 @@ class PostBackend(unittest.TestCase):
     @classmethod
     def tearDownClass(cls): cls.srv.shutdown()
 
-    def setUp(self): self.viejo = dict(w.ESTADO)
+    def setUp(self):
+        self.viejo = dict(w.ESTADO)
+        p = mock.patch.object(w, "primera_vez"); p.start(); self.addCleanup(p.stop)  # su hilo sobreviviría a la prueba y bajaría partidas reales al repo
 
     def tearDown(self): w.ESTADO.clear(); w.ESTADO.update(self.viejo)
 

@@ -46,7 +46,8 @@ for f in RAW.glob("*_*.json"):
     if m["gameDuration"] < 300 or m.get("gameEndedInEarlySurrender"): continue
     ps = m["participants"]
     zs = score.z_partida(m)
-    me = next(p for p in ps if p["puuid"] == puuid)
+    me = next((p for p in ps if p["puuid"] == puuid), None)
+    if not me: print(f"(saltada {f.stem}: no está tu puuid)", file=sys.stderr); continue  # una partida rara no tumba la revisión
     opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
     g = dict(win=me["win"], champ=me["championName"], t=m["gameCreation"], cw=me.get("visionWardsBoughtInGame", 0),
              zs=zs, sc=None, gd14=None, cd14=None, xd14=None, lv6=None, d14=None, d25=None, rio14=None,

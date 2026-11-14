@@ -51,4 +51,35 @@ class Adaptador(unittest.TestCase):
             self.assertNotIn("puuid-6", json.dumps(m))
 
 
+class Unificar(unittest.TestCase):
+    """0.26–0.27 mezclaron el puuid del cliente y el de la API en una carpeta: revision.py tronaba. unificar lo repara."""
+    API, CLI = "A" * 78, "c1a2b3c4-0000-1111-2222-333344445555"
+
+    def partida(self, d, mid, puuid, nombre, tag):
+        ps = [dict(puuid=puuid, riotIdGameName=nombre, riotIdTagline=tag), dict(puuid="X" * 78, riotIdGameName="Otro", riotIdTagline="LAN")]
+        (d / f"{mid}.json").write_text(json.dumps(dict(metadata=dict(participants=[p["puuid"] for p in ps]), info=dict(participants=ps))))
+        (d / "timeline" / f"{mid}.json").write_text(json.dumps(dict(info=dict(participants=[dict(participantId=1, puuid=puuid)]))))
+
+    def test_repara_cliente_y_nombre_viejo(self):
+        with tempfile.TemporaryDirectory() as t:
+            d = pathlib.Path(t); (d / "timeline").mkdir()
+            (d / "perfil.json").write_text(json.dumps(dict(account=dict(puuid=self.API, gameName="Zeriously", tagLine="cozi"))))
+            self.partida(d, "LA1_1", self.API, "Zeriously", "cozi")      # de la API: ya bien
+            self.partida(d, "LA1_2", self.CLI, "Zeriously", "cozi")      # del cliente: revela el alias
+            self.partida(d, "LA1_3", self.CLI, "FastAndZerious", "cozi")  # del cliente con tu nombre viejo: mismo puuid
+            self.assertEqual(cliente_v5.unificar(d), 4)  # 2 partidas + 2 timelines
+            for f in list(d.glob("LA1_*.json")) + list((d / "timeline").glob("*.json")):
+                self.assertNotIn(self.CLI, f.read_text()); self.assertIn(self.API, f.read_text())
+            self.assertEqual(cliente_v5.unificar(d), 0)  # idempotente
+            self.assertFalse(list(d.glob("*.tmp")))
+
+    def test_sin_perfil_o_sin_coincidencia_no_toca(self):
+        with tempfile.TemporaryDirectory() as t:
+            d = pathlib.Path(t); (d / "timeline").mkdir()
+            self.assertEqual(cliente_v5.unificar(d), 0)
+            (d / "perfil.json").write_text(json.dumps(dict(account=dict(puuid=self.API, gameName="Zeriously", tagLine="cozi"))))
+            self.partida(d, "LA1_9", self.CLI, "Desconocido", "x")  # sin tu nombre: no se adivina
+            self.assertEqual(cliente_v5.unificar(d), 0); self.assertIn(self.CLI, (d / "LA1_9.json").read_text())
+
+
 if __name__ == "__main__": unittest.main()

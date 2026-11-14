@@ -43,7 +43,8 @@ for f in RAW.glob("*_*.json"):
     m = json.loads(f.read_text())["info"]
     if m["gameDuration"] < 300: continue  # remakes
     ps = m["participants"]
-    me = next(p for p in ps if p["puuid"] == puuid)
+    me = next((p for p in ps if p["puuid"] == puuid), None)
+    if not me: continue  # sin tu puuid (carpeta a medio reparar): se salta, no tumba el champ select
     opp = next((p for p in ps if p["teamPosition"] == me["teamPosition"] and p["teamId"] != me["teamId"]), None)
     g = dict(win=me["win"], champ=me["championName"], pos=me["teamPosition"] or "?", opp=opp["championName"] if opp else "?",
              enemies={p["championName"] for p in ps if p["teamId"] != me["teamId"]}, gd14=None, t=m["gameCreation"])
